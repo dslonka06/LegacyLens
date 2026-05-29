@@ -1,0 +1,27 @@
+:host {
+  display: block;
+  width: 240px;
+  background-color: #111827;
+  padding: 20px;
+  border-right: 1px solid #1f2937;
+}
+
+h2 {
+  margin-bottom: 30px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  background-color: #4f46e5;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+nav p {
+  margin-bottom: 20px;
+  cursor: pointer;
+}

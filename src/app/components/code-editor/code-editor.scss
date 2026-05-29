@@ -1,0 +1,36 @@
+:host {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.toolbar select,
+.toolbar button {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+}
+
+.toolbar button {
+  background-color: #4f46e5;
+  color: white;
+}
+
+.code-editor {
+  flex: 1;
+  background-color: #1e293b;
+  border-radius: 12px;
+  padding: 20px;
+  font-family: Consolas, monospace;
+  color: white;
+  border: none;
+  resize: none;
+  outline: none;
+  font-size: 14px;
+}
