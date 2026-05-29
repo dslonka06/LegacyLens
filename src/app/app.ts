@@ -16,6 +16,18 @@ import { AnalysisPanel } from './components/analysis-panel/analysis-panel';
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
+
 export class App {
+
   protected readonly title = signal('legacy-lens');
+
+  analysis: any = null;
+
+  onAnalyze(result: any) {
+
+  console.log('Analysis received in App');
+
+  this.analysis = result;
+}
+
 }

@@ -36,14 +36,21 @@
   min-width: 120px;
 }
 
-.toolbar button {
+.upload-btn {
+  background-color: transparent;
+  color: white;
+  border: 1px solid #475569 !important;
+  cursor: pointer;
+}
+
+.analyze-btn {
   background-color: #4f46e5;
   color: white;
   cursor: pointer;
-  transition: background-color 0.2s;
+  border: none;
 }
 
-.toolbar button:hover {
+.analyze-btn:hover {
   background-color: #6366f1;
 }
 

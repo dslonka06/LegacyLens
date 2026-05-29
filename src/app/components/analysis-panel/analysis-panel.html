@@ -24,12 +24,44 @@
 
   </div>
 
+  <div class="metrics-grid">
+
+    <div class="metric-card">
+      <span class="label">Language</span>
+      <span class="value">
+        {{ analysis?.language || 'Unknown' }}
+      </span>
+    </div>
+
+    <div class="metric-card">
+      <span class="label">Type</span>
+      <span class="value">
+        {{ analysis?.type || 'Unknown' }}
+      </span>
+    </div>
+
+    <div class="metric-card">
+      <span class="label">Complexity</span>
+      <span class="value warning">
+        {{ analysis?.complexity || 'Unknown' }}
+      </span>
+    </div>
+
+    <div class="metric-card">
+      <span class="label">Maintainability</span>
+      <span class="value danger">
+        {{ analysis?.maintainability || 'Unknown' }}
+      </span>
+    </div>
+
+  </div>
+
   <div class="card">
 
     <h2>Plain English Summary</h2>
 
     <p>
-      Analysis results will appear here.
+      {{ analysis?.summary || 'Analysis results will appear here.' }}
     </p>
 
   </div>
@@ -38,7 +70,13 @@
 
     <h2>Risks Detected</h2>
 
-    <p>
+    <ul *ngIf="analysis?.risks?.length">
+      <li *ngFor="let risk of analysis.risks">
+        {{ risk }}
+      </li>
+    </ul>
+
+    <p *ngIf="!analysis?.risks?.length">
       Potential issues will appear here.
     </p>
 
@@ -48,9 +86,45 @@
 
     <h2>Modernization Suggestions</h2>
 
-    <p>
+    <ul *ngIf="analysis?.suggestions?.length">
+      <li *ngFor="let suggestion of analysis.suggestions">
+        {{ suggestion }}
+      </li>
+    </ul>
+
+    <p *ngIf="!analysis?.suggestions?.length">
       Suggestions will appear here.
     </p>
+
+  </div>
+
+  <div class="explore-section">
+
+    <h3>Explore Deeper</h3>
+
+    <div class="action-grid">
+
+      <button class="action-card">
+        Explain Simpler
+      </button>
+
+      <button class="action-card">
+        Trace Data Flow
+      </button>
+
+      <button class="action-card">
+        Architecture Review
+      </button>
+
+      <button class="action-card">
+        Generate Docs
+      </button>
+
+      <button class="action-card">
+        Security Review
+      </button>
+
+    </div>
 
   </div>
 

@@ -2,27 +2,16 @@
 
   <app-sidebar></app-sidebar>
 
-  <main class="editor-section">
-  <app-code-editor></app-code-editor>
-    </main>
+  <div class="main-content">
 
-    <section class="analysis-panel">
+    <app-code-editor
+      (analyze)="onAnalyze($event)">
+    </app-code-editor>
 
-    <div class="card">
-      <h3>Plain English Summary</h3>
-      <p>Analysis results will appear here.</p>
-    </div>
+    <app-analysis-panel
+      [analysis]="analysis">
+    </app-analysis-panel>
 
-    <div class="card">
-      <h3>Risks Detected</h3>
-      <p>Potential issues will appear here.</p>
-    </div>
-
-    <div class="card">
-      <h3>Modernization Suggestions</h3>
-      <p>Suggestions will appear here.</p>
-    </div>
-
-  </section>
+  </div>
 
 </div>

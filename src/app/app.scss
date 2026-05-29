@@ -1,86 +1,13 @@
-:host {
-  display: block;
-  height: 100vh;
-}
-
 .app-layout {
   display: flex;
   height: 100vh;
   background-color: #0f172a;
   color: white;
-  font-family: Arial, sans-serif;
 }
 
-.sidebar {
-  width: 240px;
-  background-color: #111827;
-  padding: 20px;
-  border-right: 1px solid #1f2937;
-}
-
-.sidebar h2 {
-  margin-bottom: 30px;
-}
-
-.sidebar button {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 20px;
-  background-color: #4f46e5;
-  border: none;
-  color: white;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.editor-section {
+.main-content {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  padding: 20px;
-}
-
-.toolbar {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.toolbar select,
-.toolbar button {
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-}
-
-.toolbar button {
-  background-color: #4f46e5;
-  color: white;
-}
-
-.code-editor {
-  flex: 1;
-  background-color: #1e293b;
-  border-radius: 12px;
-  padding: 20px;
-  font-family: Consolas, monospace;
-  color: white;
-  border: none;
-  resize: none;
-  outline: none;
-  font-size: 14px;
-}
-
-.analysis-panel {
-  width: 400px;
-  background-color: #111827;
-  padding: 20px;
-  border-left: 1px solid #1f2937;
-}
-
-.card {
-  background-color: #1e293b;
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 20px;
+  flex-direction: row;
+  overflow: hidden;
 }

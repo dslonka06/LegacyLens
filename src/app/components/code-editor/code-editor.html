@@ -12,15 +12,30 @@
       <option>SQL</option>
     </select>
 
-    <button>
+    <button
+      class="upload-btn"
+      (click)="fileInput.click()">
+      Upload File
+    </button>
+
+    <input
+      #fileInput
+      type="file"
+      accept=".cs,.ts,.sql,.txt"
+      hidden
+      (change)="onFileSelected($event)">
+
+    <button
+      class="analyze-btn"
+      (click)="analyzeCode()">
       Analyze Code
     </button>
 
   </div>
 
   <textarea
-    class="code-editor"
-    placeholder="Paste legacy code here..."
-  ></textarea>
+  class="code-editor"
+  [(ngModel)]="code">
+</textarea>
 
 </div>
