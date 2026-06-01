@@ -1,37 +1,68 @@
-<div class="page-container">
-  <h2 class="page-title">Architecture Review</h2>
+<div class="insight-page">
 
-  <ng-container *ngIf="session; else noSession">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon violet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Architecture Review</h1>
+        <p class="page-subtitle">Structural patterns and component design</p>
+      </div>
+    </div>
+  </div>
 
-    <div class="metrics-grid">
-      <div class="metric-card">
-        <span class="label">Type</span>
-        <span class="value">{{ session.analysis.type }}</span>
+  <div class="page-content" *ngIf="session; else noSession">
+
+    <div class="metrics-row">
+      <div class="metric-pill">
+        <span class="pill-label">Type</span>
+        <span class="pill-value accent">{{ session.analysis.type }}</span>
       </div>
-      <div class="metric-card">
-        <span class="label">Language</span>
-        <span class="value">{{ session.analysis.language }}</span>
+      <div class="metric-pill">
+        <span class="pill-label">Language</span>
+        <span class="pill-value">{{ session.analysis.language }}</span>
       </div>
-      <div class="metric-card">
-        <span class="label">Complexity</span>
-        <span class="value warning">{{ session.analysis.complexity }}</span>
+      <div class="metric-pill">
+        <span class="pill-label">Complexity</span>
+        <span class="pill-value" [class]="'complexity-' + session.analysis.complexity.toLowerCase()">
+          {{ session.analysis.complexity }}
+        </span>
       </div>
-      <div class="metric-card">
-        <span class="label">Maintainability</span>
-        <span class="value">{{ session.analysis.maintainability }}</span>
+      <div class="metric-pill">
+        <span class="pill-label">Maintainability</span>
+        <span class="pill-value" [class]="'maint-' + session.analysis.maintainability.toLowerCase()">
+          {{ session.analysis.maintainability }}
+        </span>
       </div>
     </div>
 
-    <div class="card">
-      <h3>Architecture Analysis</h3>
-      <p>{{ session.analysis.architecture }}</p>
+    <div class="doc-section">
+      <div class="doc-section-label">Architecture Summary</div>
+      <div class="doc-card accent-violet">
+        <p>{{ session.analysis.architecture }}</p>
+      </div>
     </div>
 
-  </ng-container>
+    <div class="doc-section">
+      <div class="doc-section-label">Diagram</div>
+      <div class="diagram-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <span>Architecture diagram generation coming in Phase 3</span>
+      </div>
+    </div>
+
+  </div>
 
   <ng-template #noSession>
-    <div class="empty-state">
-      <p>No analysis loaded. Run an analysis from the <a routerLink="/analysis">Analysis page</a>.</p>
+    <div class="no-session">
+      <p>Run an analysis first to see architecture details.</p>
+      <a routerLink="/analysis" class="go-btn">Go to Analysis</a>
     </div>
   </ng-template>
+
 </div>

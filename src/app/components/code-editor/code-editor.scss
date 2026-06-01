@@ -1,68 +1,197 @@
 :host {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  width: 40%;
+  min-width: 0;
+  border-right: 1px solid #1e3048;
+  background-color: #0e1929;
+  overflow: hidden;
 }
 
-.editor-container {
+.editor-panel {
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-.page-title {
-  color: white;
-  font-size: 28px;
-  font-weight: 600;
-  margin-bottom: 20px;
-}
-
-.toolbar {
+// ─── Toolbar ────────────────────────────────────────────
+.editor-toolbar {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  height: 44px;
+  border-bottom: 1px solid #1e3048;
+  background-color: #0b1220;
+  flex-shrink: 0;
   gap: 12px;
-  margin-bottom: 20px;
 }
 
-.toolbar select,
-.toolbar button {
-  padding: 12px 16px;
-  border-radius: 10px;
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.file-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #172033;
+  border: 1px solid #1e3048;
+  border-radius: 5px;
+  max-width: 200px;
+  overflow: hidden;
+}
+
+.file-icon {
+  width: 13px;
+  height: 13px;
+  color: #6366f1;
+  flex-shrink: 0;
+}
+
+.file-name {
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lang-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 4px;
+  padding: 2px 7px;
+  letter-spacing: 0.02em;
+}
+
+// ─── Buttons ────────────────────────────────────────────
+.btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
   border: none;
-  font-size: 14px;
+  transition: all 0.15s;
+  white-space: nowrap;
+
+  svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
 }
 
-.toolbar select {
-  min-width: 120px;
+.btn-ghost {
+  background: transparent;
+  color: #7a9bb5;
+  border: 1px solid #1e3048;
+
+  &:hover:not(:disabled) {
+    background: #172033;
+    color: #c8d8e8;
+    border-color: #334155;
+  }
 }
 
-.upload-btn {
-  background-color: transparent;
+.btn-primary {
+  background: #6366f1;
   color: white;
-  border: 1px solid #475569 !important;
-  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #818cf8;
+  }
 }
 
-.analyze-btn {
-  background-color: #4f46e5;
-  color: white;
-  cursor: pointer;
-  border: none;
-}
-
-.analyze-btn:hover {
-  background-color: #6366f1;
-}
-
-.code-editor {
+// ─── Editor body ────────────────────────────────────────
+.editor-body {
+  display: flex;
   flex: 1;
-  background-color: #1e293b;
-  border-radius: 16px;
-  padding: 20px;
-  font-family: Consolas, monospace;
-  color: white;
+  overflow: hidden;
+  position: relative;
+}
+
+.line-gutter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 14px 10px 14px 0;
+  min-width: 44px;
+  background: #0b1220;
+  border-right: 1px solid #1a2a3a;
+  overflow: hidden;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.line-number {
+  display: block;
+  font-family: 'Consolas', 'Fira Code', 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 21px;
+  color: #2d4a62;
+  text-align: right;
+  padding-right: 4px;
+}
+
+.code-textarea {
+  flex: 1;
+  background: transparent;
   border: none;
-  resize: none;
   outline: none;
-  font-size: 14px;
+  resize: none;
+  color: #c8d8e8;
+  font-family: 'Consolas', 'Fira Code', 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 21px;
+  padding: 14px 16px;
+  overflow-y: auto;
+  overflow-x: auto;
+  white-space: pre;
+  caret-color: #6366f1;
+
+  &::placeholder {
+    color: #2d4a62;
+    font-style: italic;
+  }
+}
+
+// ─── Status bar ─────────────────────────────────────────
+.editor-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  height: 24px;
+  background: #0b1220;
+  border-top: 1px solid #1a2a3a;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #3a5070;
+}
+
+.muted {
+  color: #2d4060;
 }

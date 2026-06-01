@@ -1,41 +1,58 @@
-<div class="editor-container">
+<div class="editor-panel">
 
-  <h2 class="page-title">
-    New Analysis
-  </h2>
-
-  <div class="toolbar">
-
-    <select>
-      <option>C#</option>
-      <option>TypeScript</option>
-      <option>SQL</option>
-    </select>
-
-    <button
-      class="upload-btn"
-      (click)="fileInput.click()">
-      Upload File
-    </button>
-
-    <input
-      #fileInput
-      type="file"
-      accept=".cs,.ts,.sql,.txt"
-      hidden
-      (change)="onFileSelected($event)">
-
-    <button
-      class="analyze-btn"
-      (click)="analyzeCode()">
-      Analyze Code
-    </button>
-
+  <!-- Toolbar -->
+  <div class="editor-toolbar">
+    <div class="toolbar-left">
+      <div class="file-tab">
+        <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <span class="file-name">{{ fileName }}</span>
+      </div>
+      <div class="lang-badge">{{ detectedLanguage }}</div>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn btn-ghost" (click)="fileInput.click()" [disabled]="isLoadingFile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <span>{{ isLoadingFile ? 'Loading…' : 'Upload' }}</span>
+      </button>
+      <input #fileInput type="file" accept=".cs,.ts,.sql,.txt,.js,.py" hidden (change)="onFileSelected($event)">
+      <button
+        class="btn btn-primary"
+        (click)="analyzeCode()"
+        [disabled]="!code.trim() || isAnalyzing">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        <span>{{ isAnalyzing ? 'Analyzing…' : 'Analyze' }}</span>
+      </button>
+    </div>
   </div>
 
-  <textarea
-  class="code-editor"
-  [(ngModel)]="code">
-</textarea>
+  <!-- Editor body -->
+  <div class="editor-body">
+    <div class="line-gutter">
+      <span class="line-number" *ngFor="let n of lineNumbers">{{ n }}</span>
+    </div>
+    <textarea
+      class="code-textarea"
+      [(ngModel)]="code"
+      spellcheck="false"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="off"
+      placeholder="// Paste your code here, or upload a file above"
+      (scroll)="onTextareaScroll($event)">
+    </textarea>
+  </div>
+
+  <!-- Status bar -->
+  <div class="editor-statusbar">
+    <span>{{ lineCount }} lines</span>
+    <span *ngIf="code.trim()">{{ code.length }} chars</span>
+    <span *ngIf="!code.trim()" class="muted">No file loaded</span>
+  </div>
 
 </div>

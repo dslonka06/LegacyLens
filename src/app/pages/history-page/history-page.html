@@ -1,34 +1,74 @@
-<div class="page-container">
+<div class="insight-page">
+
   <div class="page-header">
-    <h2 class="page-title">History</h2>
-    <button
-      class="clear-btn"
-      *ngIf="sessions.length"
-      (click)="clearHistory()">
+    <div class="page-title">
+      <div class="page-icon slate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div>
+        <h1>History</h1>
+        <p class="page-subtitle">Previous analysis sessions</p>
+      </div>
+    </div>
+    <button class="clear-btn" *ngIf="sessions.length" (click)="clearHistory()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+      </svg>
       Clear All
     </button>
   </div>
 
-  <ng-container *ngIf="sessions.length; else noHistory">
-    <div class="session-card" *ngFor="let session of sessions; let i = index">
-      <div class="session-info">
-        <span class="file-name">{{ session.fileName }}</span>
-        <div class="session-meta">
-          <span class="meta-tag">{{ session.analysis.type }}</span>
-          <span class="meta-tag">{{ session.analysis.complexity }}</span>
-          <span class="meta-date">{{ session.createdAt | date:'medium' }}</span>
+  <div class="page-content">
+
+    <ng-container *ngIf="sessions.length; else noHistory">
+      <div class="history-grid">
+        <div class="history-card" *ngFor="let s of sessions; let i = index">
+          <div class="history-card-header">
+            <div class="history-file">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <span>{{ s.fileName }}</span>
+            </div>
+            <div class="history-date">{{ s.createdAt | date:'MMM d, y' }}</div>
+          </div>
+          <div class="history-meta">
+            <span class="meta-tag lang">{{ s.analysis.language }}</span>
+            <span class="meta-tag">{{ s.analysis.type }}</span>
+            <span class="meta-tag" [class]="'complexity-tag-' + s.analysis.complexity.toLowerCase()">
+              {{ s.analysis.complexity }}
+            </span>
+          </div>
+          <p class="history-summary">{{ s.analysis.summary | slice:0:120 }}…</p>
+          <div class="history-actions">
+            <button class="btn-open" (click)="restoreSession(i)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              Open
+            </button>
+            <button class="btn-delete" (click)="deleteSession(i)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
-      <div class="session-actions">
-        <button class="restore-btn" (click)="restoreSession(i)">Restore</button>
-        <button class="delete-btn" (click)="deleteSession(i)">Delete</button>
-      </div>
-    </div>
-  </ng-container>
+    </ng-container>
 
-  <ng-template #noHistory>
-    <div class="empty-state">
-      <p>No analysis history yet. Run an analysis from the <a routerLink="/analysis">Analysis page</a>.</p>
-    </div>
-  </ng-template>
+    <ng-template #noHistory>
+      <div class="no-session">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <p>No analysis history yet.</p>
+        <a routerLink="/analysis" class="go-btn">Start your first analysis</a>
+      </div>
+    </ng-template>
+
+  </div>
+
 </div>

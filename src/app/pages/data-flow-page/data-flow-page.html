@@ -1,23 +1,49 @@
-<div class="page-container">
-  <h2 class="page-title">Data Flow</h2>
+<div class="insight-page">
 
-  <ng-container *ngIf="session; else noSession">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon cyan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Data Flow</h1>
+        <p class="page-subtitle">How data moves through this code</p>
+      </div>
+    </div>
+  </div>
 
-    <div class="card">
-      <h3>File</h3>
-      <p>{{ session.fileName }}</p>
+  <div class="page-content" *ngIf="session; else noSession">
+
+    <div class="doc-section">
+      <div class="doc-section-label">Flow Trace</div>
+      <div class="flow-chain">
+        <div class="flow-step" *ngFor="let step of flowSteps; let last = last">
+          <div class="flow-node">{{ step }}</div>
+          <div class="flow-arrow" *ngIf="!last">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+            </svg>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="card">
-      <h3>Data Flow Trace</h3>
-      <p class="flow-text">{{ session.analysis.dataFlow }}</p>
+    <div class="doc-section">
+      <div class="doc-section-label">Full Description</div>
+      <div class="doc-card flow-card">
+        <p>{{ session.analysis.dataFlow }}</p>
+      </div>
     </div>
 
-  </ng-container>
+  </div>
 
   <ng-template #noSession>
-    <div class="empty-state">
-      <p>No analysis loaded. Run an analysis from the <a routerLink="/analysis">Analysis page</a>.</p>
+    <div class="no-session">
+      <p>Run an analysis first to trace data flow.</p>
+      <a routerLink="/analysis" class="go-btn">Go to Analysis</a>
     </div>
   </ng-template>
+
 </div>

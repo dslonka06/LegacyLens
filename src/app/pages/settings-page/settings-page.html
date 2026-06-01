@@ -1,6 +1,73 @@
-<div class="page-container">
-  <h2 class="page-title">Settings</h2>
-  <div class="card">
-    <p>Settings configuration coming soon.</p>
+<div class="insight-page">
+
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon slate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Settings</h1>
+        <p class="page-subtitle">Application preferences and configuration</p>
+      </div>
+    </div>
   </div>
+
+  <div class="page-content">
+
+    <div class="settings-group">
+      <div class="settings-group-label">Appearance</div>
+      <div class="settings-row">
+        <div class="settings-info">
+          <span class="settings-name">Theme</span>
+          <span class="settings-desc">Choose the application color scheme</span>
+        </div>
+        <div class="settings-control">
+          <div class="select-pill active">Dark</div>
+          <div class="select-pill disabled">Light</div>
+          <div class="select-pill disabled">System</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-label">AI Model</div>
+      <div class="settings-row">
+        <div class="settings-info">
+          <span class="settings-name">Analysis Model</span>
+          <span class="settings-desc">Select the AI model used for code analysis</span>
+        </div>
+        <div class="settings-control">
+          <div class="select-pill active">Pattern Engine v1</div>
+          <div class="select-pill disabled">Claude (Phase 3)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-label">History</div>
+      <div class="settings-row">
+        <div class="settings-info">
+          <span class="settings-name">History Retention</span>
+          <span class="settings-desc">How many sessions to keep in local storage</span>
+        </div>
+        <div class="settings-control">
+          <div class="select-pill active">50 sessions</div>
+          <div class="select-pill disabled">Unlimited</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-label">About</div>
+      <div class="settings-about">
+        <div class="about-row"><span>Version</span><span>0.1.0 Beta</span></div>
+        <div class="about-row"><span>Build</span><span>Phase 2.5</span></div>
+        <div class="about-row"><span>Engine</span><span>Angular 21 · Standalone</span></div>
+      </div>
+    </div>
+
+  </div>
+
 </div>

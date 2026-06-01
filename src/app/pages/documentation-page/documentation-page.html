@@ -1,41 +1,77 @@
-<div class="page-container">
-  <h2 class="page-title">Documentation</h2>
+<div class="insight-page">
 
-  <ng-container *ngIf="session; else noSession">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon emerald">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Documentation</h1>
+        <p class="page-subtitle">Generated documentation for your code</p>
+      </div>
+    </div>
+  </div>
 
-    <div class="card">
-      <h3>File</h3>
-      <p>{{ session.fileName }}</p>
+  <div class="page-content" *ngIf="session; else noSession">
+
+    <div class="doc-section">
+      <div class="doc-section-label">File Information</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-key">File</span>
+          <span class="info-val">{{ session.fileName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-key">Language</span>
+          <span class="info-val lang-badge">{{ session.analysis.language }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-key">Type</span>
+          <span class="info-val">{{ session.analysis.type }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-key">Analyzed</span>
+          <span class="info-val muted">{{ session.createdAt | date:'medium' }}</span>
+        </div>
+      </div>
     </div>
 
-    <div class="card">
-      <h3>Summary</h3>
-      <p>{{ session.analysis.summary }}</p>
+    <div class="doc-section">
+      <div class="doc-section-label">Summary</div>
+      <div class="doc-card">
+        <p>{{ session.analysis.summary }}</p>
+      </div>
     </div>
 
-    <div class="card">
-      <h3>Business Purpose</h3>
-      <p>{{ session.analysis.businessPurpose }}</p>
+    <div class="doc-section">
+      <div class="doc-section-label">Business Purpose</div>
+      <div class="doc-card accent">
+        <p>{{ session.analysis.businessPurpose }}</p>
+      </div>
     </div>
 
-    <div class="card">
-      <h3>Modernization Suggestions</h3>
-      <ul *ngIf="session.analysis.modernizationSuggestions.length; else noSuggestions">
-        <li *ngFor="let item of session.analysis.modernizationSuggestions">
-          <span class="priority" [class]="item.priority">{{ item.priority }}</span>
-          {{ item.description }}
-        </li>
-      </ul>
-      <ng-template #noSuggestions>
-        <p>No modernization suggestions identified.</p>
-      </ng-template>
+    <div class="doc-section" *ngIf="session.analysis.modernizationSuggestions.length">
+      <div class="doc-section-label">Modernization Suggestions</div>
+      <div class="suggestion-list">
+        <div class="suggestion-item" *ngFor="let s of session.analysis.modernizationSuggestions" [class]="'priority-' + s.priority">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span>{{ s.description }}</span>
+          <span class="priority-tag">{{ s.priority }}</span>
+        </div>
+      </div>
     </div>
 
-  </ng-container>
+  </div>
 
   <ng-template #noSession>
-    <div class="empty-state">
-      <p>No analysis loaded. Run an analysis from the <a routerLink="/analysis">Analysis page</a>.</p>
+    <div class="no-session">
+      <p>Run an analysis first to generate documentation.</p>
+      <a routerLink="/analysis" class="go-btn">Go to Analysis</a>
     </div>
   </ng-template>
+
 </div>

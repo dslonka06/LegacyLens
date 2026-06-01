@@ -1,13 +1,14 @@
+:host {
+  display: block;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
 .app-layout {
   display: flex;
   height: 100vh;
-  background-color: #0f172a;
-  color: white;
-}
-
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: row;
+  width: 100vw;
+  background-color: #0b1220;
   overflow: hidden;
 }

@@ -1,23 +1,60 @@
-<div class="page-container">
-  <h2 class="page-title">Explain Simpler</h2>
+<div class="insight-page">
 
-  <ng-container *ngIf="session; else noSession">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon indigo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Explain Simpler</h1>
+        <p class="page-subtitle">Plain-language explanation for new developers</p>
+      </div>
+    </div>
+  </div>
 
-    <div class="card">
-      <h3>File</h3>
-      <p>{{ session.fileName }}</p>
+  <div class="page-content" *ngIf="session; else noSession">
+
+    <div class="doc-section">
+      <div class="doc-section-label">What does this code do?</div>
+      <div class="doc-card accent-indigo large-text">
+        <p>{{ session.analysis.simplifiedExplanation }}</p>
+      </div>
     </div>
 
-    <div class="card highlight">
-      <h3>Beginner-Friendly Explanation</h3>
-      <p>{{ session.analysis.simplifiedExplanation }}</p>
+    <div class="doc-section">
+      <div class="doc-section-label">Quick Facts</div>
+      <div class="quick-facts">
+        <div class="fact-item">
+          <span class="fact-label">Language</span>
+          <span class="fact-value">{{ session.analysis.language }}</span>
+        </div>
+        <div class="fact-item">
+          <span class="fact-label">Type</span>
+          <span class="fact-value">{{ session.analysis.type }}</span>
+        </div>
+        <div class="fact-item">
+          <span class="fact-label">Complexity</span>
+          <span class="fact-value" [class]="'complexity-' + session.analysis.complexity.toLowerCase()">{{ session.analysis.complexity }}</span>
+        </div>
+      </div>
     </div>
 
-  </ng-container>
+    <div class="doc-section">
+      <div class="doc-section-label">How to think about it</div>
+      <div class="doc-card">
+        <p>{{ session.analysis.summary }}</p>
+      </div>
+    </div>
+
+  </div>
 
   <ng-template #noSession>
-    <div class="empty-state">
-      <p>No analysis loaded. Run an analysis from the <a routerLink="/analysis">Analysis page</a>.</p>
+    <div class="no-session">
+      <p>Run an analysis first to get a simplified explanation.</p>
+      <a routerLink="/analysis" class="go-btn">Go to Analysis</a>
     </div>
   </ng-template>
+
 </div>

@@ -20,4 +20,10 @@ export class DataFlowPage implements OnInit {
   ngOnInit(): void {
     this.session = this.currentAnalysis.getSession();
   }
+
+  get flowSteps(): string[] {
+    if (!this.session) return [];
+    const raw = this.session.analysis.dataFlow;
+    return raw.split(/→|->/).map(s => s.trim()).filter(s => s.length > 0);
+  }
 }
