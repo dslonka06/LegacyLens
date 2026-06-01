@@ -1,5 +1,4 @@
 <div class="insight-page">
-
   <div class="page-header">
     <div class="page-title">
       <div class="page-icon indigo">
@@ -9,46 +8,92 @@
       </div>
       <div>
         <h1>Feedback</h1>
-        <p class="page-subtitle">Share your experience and suggest features</p>
+        <p class="page-subtitle">Help us improve LegacyLens</p>
       </div>
     </div>
   </div>
 
   <div class="page-content">
 
-    <div class="settings-group">
-      <div class="settings-group-label">Share Feedback</div>
-      <div class="feedback-form">
-        <textarea class="feedback-textarea" placeholder="Tell us what you think about LegacyLens…" rows="5"></textarea>
-        <button class="submit-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
-          Submit Feedback
-        </button>
+    <!-- Submitted confirmation -->
+    <div class="submitted-banner" *ngIf="submitted">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <div>
+        <strong>Feedback saved locally.</strong>
+        <p>Thank you for taking the time to share your thoughts.</p>
       </div>
+      <button class="dismiss-btn" (click)="reset()">Submit more</button>
     </div>
 
+    <ng-container *ngIf="!submitted">
+
+      <div class="settings-group">
+        <div class="settings-group-label">General Feedback</div>
+        <div class="feedback-field">
+          <textarea
+            class="feedback-textarea"
+            [(ngModel)]="generalFeedback"
+            placeholder="What's working well? What's confusing? What would you change?"
+            rows="4">
+          </textarea>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-label">Bug Report</div>
+        <div class="feedback-field">
+          <textarea
+            class="feedback-textarea"
+            [(ngModel)]="bugReport"
+            placeholder="Describe any bugs or unexpected behaviour you've encountered…"
+            rows="3">
+          </textarea>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-label">Feature Request</div>
+        <div class="feedback-field">
+          <textarea
+            class="feedback-textarea"
+            [(ngModel)]="featureRequest"
+            placeholder="What feature would make LegacyLens significantly more useful for you?"
+            rows="3">
+          </textarea>
+        </div>
+      </div>
+
+      <button class="submit-btn" (click)="submit()" [disabled]="!generalFeedback.trim() && !bugReport.trim() && !featureRequest.trim()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+        Submit Feedback
+      </button>
+
+    </ng-container>
+
     <div class="settings-group">
-      <div class="settings-group-label">Feature Requests</div>
+      <div class="settings-group-label">Roadmap</div>
       <div class="feature-list">
-        <div class="feature-item planned">
-          <div class="feature-status">Planned</div>
+        <div class="feature-item">
+          <div class="feature-status planned">Planned</div>
           <span>AI-powered analysis via Claude API</span>
         </div>
-        <div class="feature-item planned">
-          <div class="feature-status">Planned</div>
+        <div class="feature-item">
+          <div class="feature-status planned">Planned</div>
           <span>Architecture diagram generation</span>
         </div>
-        <div class="feature-item planned">
-          <div class="feature-status">Planned</div>
+        <div class="feature-item">
+          <div class="feature-status planned">Planned</div>
           <span>Multi-file project analysis</span>
         </div>
-        <div class="feature-item idea">
+        <div class="feature-item">
           <div class="feature-status idea">Idea</div>
           <span>Git diff analysis</span>
         </div>
-        <div class="feature-item idea">
+        <div class="feature-item">
           <div class="feature-status idea">Idea</div>
           <span>Export analysis as PDF / Markdown</span>
         </div>
@@ -56,5 +101,4 @@
     </div>
 
   </div>
-
 </div>

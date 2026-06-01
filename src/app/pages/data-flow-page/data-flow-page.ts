@@ -23,7 +23,15 @@ export class DataFlowPage implements OnInit {
 
   get flowSteps(): string[] {
     if (!this.session) return [];
-    const raw = this.session.analysis.dataFlow;
-    return raw.split(/→|->/).map(s => s.trim()).filter(s => s.length > 0);
+    return this.session.analysis.dataFlow
+      .split(/→|->/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+  }
+
+  getStepClass(index: number, total: number): string {
+    if (index === 0) return 'step-first';
+    if (index === total - 1) return 'step-last';
+    return 'step-mid';
   }
 }

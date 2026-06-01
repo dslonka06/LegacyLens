@@ -5,198 +5,137 @@
     <div class="empty-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        <path d="M11 8v6M8 11h6"/>
       </svg>
     </div>
     <h3>No analysis yet</h3>
-    <p>Paste or upload code, then click Analyze to see results here.</p>
+    <p>Paste or upload code, then click Analyze.</p>
   </div>
 
-  <!-- Results -->
   <ng-container *ngIf="analysis">
 
     <!-- Panel header -->
     <div class="panel-header">
-      <div class="panel-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-        Analysis Results
-      </div>
-      <div class="session-file" *ngIf="session">{{ session.fileName }}</div>
+      <span class="panel-label">Analysis Results</span>
+      <span class="session-file" *ngIf="session">{{ session.fileName }}</span>
     </div>
 
-    <div class="results-scroll">
+    <div class="panel-body">
 
-      <!-- Metrics row -->
+      <!-- SECTION 1: Summary -->
+      <div class="summary-card">
+        <div class="summary-label">Plain English Summary</div>
+        <p class="summary-text">{{ analysis.summary }}</p>
+      </div>
+
+      <!-- SECTION 2: Metrics 2×2 -->
       <div class="metrics-grid">
-
         <div class="metric-card">
           <span class="metric-label">Language</span>
           <span class="metric-value">{{ analysis.language }}</span>
         </div>
-
         <div class="metric-card">
           <span class="metric-label">Type</span>
           <span class="metric-value type-value">{{ analysis.type }}</span>
         </div>
-
         <div class="metric-card">
           <span class="metric-label">Complexity</span>
-          <span class="metric-value" [class]="'complexity-' + analysis.complexity.toLowerCase()">
-            <span class="metric-dot"></span>{{ analysis.complexity }}
-          </span>
+          <div class="metric-value-row">
+            <span class="status-dot" [class]="'dot-complexity-' + analysis.complexity.toLowerCase()"></span>
+            <span class="metric-value" [class]="'complexity-' + analysis.complexity.toLowerCase()">{{ analysis.complexity }}</span>
+          </div>
         </div>
-
         <div class="metric-card">
           <span class="metric-label">Maintainability</span>
-          <span class="metric-value" [class]="'maint-' + analysis.maintainability.toLowerCase()">
-            <span class="metric-dot"></span>{{ analysis.maintainability }}
-          </span>
-        </div>
-
-      </div>
-
-      <!-- Summary -->
-      <div class="result-card summary-card">
-        <div class="card-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-          </svg>
-          <span>Summary</span>
-        </div>
-        <p class="card-body">{{ analysis.summary }}</p>
-      </div>
-
-      <!-- Business Purpose -->
-      <div class="result-card">
-        <div class="card-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-          </svg>
-          <span>Business Purpose</span>
-        </div>
-        <p class="card-body">{{ analysis.businessPurpose }}</p>
-      </div>
-
-      <!-- Risks -->
-      <div class="result-card" *ngIf="analysis.risks.length">
-        <div class="card-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          <span>Risks</span>
-          <span class="card-count">{{ analysis.risks.length }}</span>
-        </div>
-        <div class="risk-list">
-          <div class="risk-item" *ngFor="let risk of analysis.risks" [class]="'risk-' + risk.severity">
-            <span class="risk-badge">{{ risk.severity }}</span>
-            <span class="risk-desc">{{ risk.description }}</span>
+          <div class="metric-value-row">
+            <span class="status-dot" [class]="'dot-maint-' + analysis.maintainability.toLowerCase()"></span>
+            <span class="metric-value" [class]="'maint-' + analysis.maintainability.toLowerCase()">{{ analysis.maintainability }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Modernization -->
-      <div class="result-card" *ngIf="analysis.modernizationSuggestions.length">
-        <div class="card-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
-          </svg>
-          <span>Modernization</span>
-          <span class="card-count">{{ analysis.modernizationSuggestions.length }}</span>
-        </div>
-        <div class="suggestion-list">
-          <div class="suggestion-item" *ngFor="let s of analysis.modernizationSuggestions" [class]="'priority-' + s.priority">
-            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
+      <!-- SECTION 3: Risks | Modernization side-by-side -->
+      <div class="findings-row">
+
+        <div class="finding-card">
+          <div class="finding-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
-            <span>{{ s.description }}</span>
-            <span class="priority-label">{{ s.priority }}</span>
+            <span>Risks</span>
+            <span class="badge-count" *ngIf="analysis.risks.length">{{ analysis.risks.length }}</span>
+          </div>
+          <div class="finding-list">
+            <div class="finding-item" *ngFor="let r of analysis.risks" [class]="'sev-' + r.severity">
+              <span class="sev-pip"></span>
+              <span class="finding-text">{{ r.description }}</span>
+            </div>
+            <div class="finding-empty" *ngIf="!analysis.risks.length">No risks detected</div>
           </div>
         </div>
+
+        <div class="finding-card">
+          <div class="finding-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+            </svg>
+            <span>Modernization</span>
+            <span class="badge-count" *ngIf="analysis.modernizationSuggestions.length">{{ analysis.modernizationSuggestions.length }}</span>
+          </div>
+          <div class="finding-list">
+            <div class="finding-item mod" *ngFor="let s of analysis.modernizationSuggestions" [class]="'pri-' + s.priority">
+              <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span class="finding-text">{{ s.description }}</span>
+            </div>
+            <div class="finding-empty" *ngIf="!analysis.modernizationSuggestions.length">No suggestions</div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Explore Deeper -->
-      <div class="explore-section">
-        <div class="explore-header">Explore Deeper</div>
-        <div class="explore-grid">
-
-          <button class="explore-card" (click)="navigateTo('/explain-simpler')">
-            <div class="explore-icon indigo">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-            </div>
-            <div class="explore-text">
-              <span class="explore-title">Explain Simpler</span>
-              <span class="explore-desc">Plain-language breakdown</span>
-            </div>
-            <svg class="explore-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
+      <!-- SECTION 4: Explore Deeper — compact row -->
+      <div class="explore-row">
+        <button class="explore-btn" (click)="navigateTo('/documentation')">
+          <div class="explore-icon emerald">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
             </svg>
-          </button>
-
-          <button class="explore-card" (click)="navigateTo('/architecture')">
-            <div class="explore-icon violet">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-              </svg>
-            </div>
-            <div class="explore-text">
-              <span class="explore-title">Architecture</span>
-              <span class="explore-desc">Structure & patterns</span>
-            </div>
-            <svg class="explore-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
+          </div>
+          <span>Docs</span>
+        </button>
+        <button class="explore-btn" (click)="navigateTo('/architecture')">
+          <div class="explore-icon violet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
             </svg>
-          </button>
-
-          <button class="explore-card" (click)="navigateTo('/data-flow')">
-            <div class="explore-icon cyan">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-              </svg>
-            </div>
-            <div class="explore-text">
-              <span class="explore-title">Data Flow</span>
-              <span class="explore-desc">Input → processing → output</span>
-            </div>
-            <svg class="explore-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
+          </div>
+          <span>Architecture</span>
+        </button>
+        <button class="explore-btn" (click)="navigateTo('/data-flow')">
+          <div class="explore-icon cyan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
             </svg>
-          </button>
-
-          <button class="explore-card" (click)="navigateTo('/documentation')">
-            <div class="explore-icon emerald">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-              </svg>
-            </div>
-            <div class="explore-text">
-              <span class="explore-title">Documentation</span>
-              <span class="explore-desc">Generated docs & purpose</span>
-            </div>
-            <svg class="explore-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
+          </div>
+          <span>Data Flow</span>
+        </button>
+        <button class="explore-btn" (click)="navigateTo('/explain-simpler')">
+          <div class="explore-icon indigo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
-          </button>
-
-          <button class="explore-card" (click)="navigateTo('/security')">
-            <div class="explore-icon amber">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-            </div>
-            <div class="explore-text">
-              <span class="explore-title">Security Review</span>
-              <span class="explore-desc">Risks & vulnerabilities</span>
-            </div>
-            <svg class="explore-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
+          </div>
+          <span>Simpler</span>
+        </button>
+        <button class="explore-btn" (click)="navigateTo('/security')">
+          <div class="explore-icon amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
-          </button>
-
-        </div>
+          </div>
+          <span>Security</span>
+        </button>
       </div>
 
     </div>

@@ -1,5 +1,4 @@
 <div class="insight-page">
-
   <div class="page-header">
     <div class="page-title">
       <div class="page-icon cyan">
@@ -16,23 +15,30 @@
 
   <div class="page-content" *ngIf="session; else noSession">
 
-    <div class="doc-section">
-      <div class="doc-section-label">Flow Trace</div>
-      <div class="flow-chain">
-        <div class="flow-step" *ngFor="let step of flowSteps; let last = last">
-          <div class="flow-node">{{ step }}</div>
-          <div class="flow-arrow" *ngIf="!last">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
-            </svg>
+    <!-- Visual flow chain -->
+    <div class="doc-block">
+      <div class="doc-block-label">Flow Trace</div>
+      <div class="flow-chain-wrap">
+        <div class="flow-chain">
+          <div class="flow-step" *ngFor="let step of flowSteps; let i = index; let last = last">
+            <div class="flow-node" [class]="getStepClass(i, flowSteps.length)">
+              <div class="flow-node-index">{{ i + 1 }}</div>
+              <span>{{ step }}</span>
+            </div>
+            <div class="flow-arrow-down" *ngIf="!last">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+              </svg>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="doc-section">
-      <div class="doc-section-label">Full Description</div>
-      <div class="doc-card flow-card">
+    <!-- Full description -->
+    <div class="doc-block">
+      <div class="doc-block-label">Description</div>
+      <div class="doc-card flow-text-card">
         <p>{{ session.analysis.dataFlow }}</p>
       </div>
     </div>
@@ -41,9 +47,12 @@
 
   <ng-template #noSession>
     <div class="no-session">
-      <p>Run an analysis first to trace data flow.</p>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      <h3>No data flow available</h3>
+      <p>Run an analysis to trace data flow.</p>
       <a routerLink="/analysis" class="go-btn">Go to Analysis</a>
     </div>
   </ng-template>
-
 </div>

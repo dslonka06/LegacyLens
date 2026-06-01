@@ -1,4 +1,8 @@
 <div class="analysis-page">
-  <app-code-editor (analyze)="onSessionCreated($event)"></app-code-editor>
+  <app-code-editor
+    [restoredFileName]="restoredFileName"
+    [restoredSourceCode]="restoredSourceCode"
+    (analyze)="onSessionCreated($event)">
+  </app-code-editor>
   <app-analysis-panel [session]="session"></app-analysis-panel>
 </div>

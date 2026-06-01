@@ -1,5 +1,4 @@
 <div class="insight-page">
-
   <div class="page-header">
     <div class="page-title">
       <div class="page-icon slate">
@@ -21,7 +20,7 @@
       <div class="settings-row">
         <div class="settings-info">
           <span class="settings-name">Theme</span>
-          <span class="settings-desc">Choose the application color scheme</span>
+          <span class="settings-desc">Application color scheme</span>
         </div>
         <div class="settings-control">
           <div class="select-pill active">Dark</div>
@@ -32,42 +31,56 @@
     </div>
 
     <div class="settings-group">
-      <div class="settings-group-label">AI Model</div>
+      <div class="settings-group-label">Analysis Preferences</div>
       <div class="settings-row">
         <div class="settings-info">
-          <span class="settings-name">Analysis Model</span>
-          <span class="settings-desc">Select the AI model used for code analysis</span>
+          <span class="settings-name">Default Language Hint</span>
+          <span class="settings-desc">Shown in the editor before analysis runs</span>
         </div>
         <div class="settings-control">
-          <div class="select-pill active">Pattern Engine v1</div>
-          <div class="select-pill disabled">Claude (Phase 3)</div>
+          <div class="select-pill active">Auto-detect</div>
+          <div class="select-pill disabled">C#</div>
+          <div class="select-pill disabled">TypeScript</div>
+          <div class="select-pill disabled">SQL</div>
         </div>
       </div>
     </div>
 
     <div class="settings-group">
-      <div class="settings-group-label">History</div>
+      <div class="settings-group-label">History Management</div>
       <div class="settings-row">
         <div class="settings-info">
           <span class="settings-name">History Retention</span>
-          <span class="settings-desc">How many sessions to keep in local storage</span>
+          <span class="settings-desc">Maximum number of sessions to keep in local storage</span>
         </div>
         <div class="settings-control">
           <div class="select-pill active">50 sessions</div>
+          <div class="select-pill disabled">25 sessions</div>
           <div class="select-pill disabled">Unlimited</div>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-info">
+          <span class="settings-name">Auto-save</span>
+          <span class="settings-desc">Automatically save each analysis to history</span>
+        </div>
+        <div class="settings-control">
+          <div class="select-pill active">Enabled</div>
+          <div class="select-pill disabled">Disabled</div>
         </div>
       </div>
     </div>
 
     <div class="settings-group">
-      <div class="settings-group-label">About</div>
+      <div class="settings-group-label">Application Information</div>
       <div class="settings-about">
-        <div class="about-row"><span>Version</span><span>0.1.0 Beta</span></div>
-        <div class="about-row"><span>Build</span><span>Phase 2.5</span></div>
-        <div class="about-row"><span>Engine</span><span>Angular 21 · Standalone</span></div>
+        <div class="about-row"><span>Version</span><span>0.1.0</span></div>
+        <div class="about-row"><span>Phase</span><span>3 — Professional MVP</span></div>
+        <div class="about-row"><span>Engine</span><span>Pattern Analysis v1</span></div>
+        <div class="about-row"><span>Framework</span><span>Angular 21 · Standalone Components</span></div>
+        <div class="about-row"><span>Storage</span><span>Browser localStorage</span></div>
       </div>
     </div>
 
   </div>
-
 </div>

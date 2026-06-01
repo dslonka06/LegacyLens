@@ -1,5 +1,4 @@
 <div class="insight-page">
-
   <div class="page-header">
     <div class="page-title">
       <div class="page-icon emerald">
@@ -9,59 +8,110 @@
       </div>
       <div>
         <h1>Documentation</h1>
-        <p class="page-subtitle">Generated documentation for your code</p>
+        <p class="page-subtitle">Generated report for {{ session?.fileName || 'no file loaded' }}</p>
       </div>
     </div>
   </div>
 
   <div class="page-content" *ngIf="session; else noSession">
 
-    <div class="doc-section">
-      <div class="doc-section-label">File Information</div>
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="info-key">File</span>
-          <span class="info-val">{{ session.fileName }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-key">Language</span>
-          <span class="info-val lang-badge">{{ session.analysis.language }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-key">Type</span>
-          <span class="info-val">{{ session.analysis.type }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-key">Analyzed</span>
-          <span class="info-val muted">{{ session.createdAt | date:'medium' }}</span>
-        </div>
-      </div>
+    <!-- File metadata strip -->
+    <div class="meta-strip">
+      <div class="meta-item"><span class="meta-key">File</span><span class="meta-val">{{ session.fileName }}</span></div>
+      <div class="meta-item"><span class="meta-key">Language</span><span class="meta-val accent">{{ session.analysis.language }}</span></div>
+      <div class="meta-item"><span class="meta-key">Type</span><span class="meta-val">{{ session.analysis.type }}</span></div>
+      <div class="meta-item"><span class="meta-key">Analyzed</span><span class="meta-val muted">{{ session.createdAt | date:'MMM d, y · h:mm a' }}</span></div>
     </div>
 
-    <div class="doc-section">
-      <div class="doc-section-label">Summary</div>
-      <div class="doc-card">
+    <!-- Overview -->
+    <div class="doc-block">
+      <div class="doc-block-label">Overview</div>
+      <div class="doc-card accent-indigo">
         <p>{{ session.analysis.summary }}</p>
       </div>
     </div>
 
-    <div class="doc-section">
-      <div class="doc-section-label">Business Purpose</div>
-      <div class="doc-card accent">
+    <!-- Business Purpose -->
+    <div class="doc-block">
+      <div class="doc-block-label">Business Purpose</div>
+      <div class="doc-card accent-violet">
         <p>{{ session.analysis.businessPurpose }}</p>
       </div>
     </div>
 
-    <div class="doc-section" *ngIf="session.analysis.modernizationSuggestions.length">
-      <div class="doc-section-label">Modernization Suggestions</div>
-      <div class="suggestion-list">
-        <div class="suggestion-item" *ngFor="let s of session.analysis.modernizationSuggestions" [class]="'priority-' + s.priority">
+    <!-- Responsibilities -->
+    <div class="doc-block" *ngIf="session.analysis.responsibilities.length">
+      <div class="doc-block-label">Responsibilities</div>
+      <div class="doc-card">
+        <ul class="bullet-list">
+          <li *ngFor="let r of session.analysis.responsibilities">{{ r }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Inputs / Outputs side-by-side -->
+    <div class="doc-two-col" *ngIf="session.analysis.inputs.length || session.analysis.outputs.length">
+      <div class="doc-block">
+        <div class="doc-block-label">Inputs</div>
+        <div class="doc-card">
+          <ul class="bullet-list" *ngIf="session.analysis.inputs.length; else noItems">
+            <li *ngFor="let i of session.analysis.inputs">{{ i }}</li>
+          </ul>
+          <ng-template #noItems><p class="muted-text">None identified</p></ng-template>
+        </div>
+      </div>
+      <div class="doc-block">
+        <div class="doc-block-label">Outputs</div>
+        <div class="doc-card">
+          <ul class="bullet-list" *ngIf="session.analysis.outputs.length; else noOutItems">
+            <li *ngFor="let o of session.analysis.outputs">{{ o }}</li>
+          </ul>
+          <ng-template #noOutItems><p class="muted-text">None identified</p></ng-template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dependencies -->
+    <div class="doc-block" *ngIf="session.analysis.dependencies.length">
+      <div class="doc-block-label">Dependencies</div>
+      <div class="doc-card">
+        <ul class="bullet-list">
+          <li *ngFor="let d of session.analysis.dependencies">{{ d }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Risks -->
+    <div class="doc-block" *ngIf="session.analysis.risks.length">
+      <div class="doc-block-label">Potential Risks</div>
+      <div class="doc-card no-pad">
+        <div class="risk-row" *ngFor="let r of session.analysis.risks" [class]="'risk-row-' + r.severity">
+          <span class="risk-pip"></span>
+          <span class="risk-row-text">{{ r.description }}</span>
+          <span class="risk-sev-tag">{{ r.severity }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modernization -->
+    <div class="doc-block" *ngIf="session.analysis.modernizationSuggestions.length">
+      <div class="doc-block-label">Modernization Suggestions</div>
+      <div class="doc-card no-pad">
+        <div class="mod-row" *ngFor="let s of session.analysis.modernizationSuggestions" [class]="'pri-' + s.priority">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
           <span>{{ s.description }}</span>
-          <span class="priority-tag">{{ s.priority }}</span>
+          <span class="mod-pri-tag">{{ s.priority }}</span>
         </div>
+      </div>
+    </div>
+
+    <!-- Developer Notes -->
+    <div class="doc-block" *ngIf="session.analysis.developerNotes">
+      <div class="doc-block-label">Developer Notes</div>
+      <div class="doc-card accent-amber">
+        <p>{{ session.analysis.developerNotes }}</p>
       </div>
     </div>
 
@@ -69,9 +119,12 @@
 
   <ng-template #noSession>
     <div class="no-session">
-      <p>Run an analysis first to generate documentation.</p>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <h3>No documentation available</h3>
+      <p>Upload a file and run an analysis to generate documentation.</p>
       <a routerLink="/analysis" class="go-btn">Go to Analysis</a>
     </div>
   </ng-template>
-
 </div>

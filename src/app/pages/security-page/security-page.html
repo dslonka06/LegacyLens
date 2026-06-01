@@ -1,5 +1,4 @@
 <div class="insight-page">
-
   <div class="page-header">
     <div class="page-title">
       <div class="page-icon amber">
@@ -12,68 +11,79 @@
         <p class="page-subtitle">Risk assessment and security findings</p>
       </div>
     </div>
+    <!-- Summary badges -->
+    <div class="severity-summary" *ngIf="session">
+      <span class="sev-badge high" *ngIf="highRisks.length">{{ highRisks.length }} High</span>
+      <span class="sev-badge medium" *ngIf="mediumRisks.length">{{ mediumRisks.length }} Medium</span>
+      <span class="sev-badge low" *ngIf="lowRisks.length">{{ lowRisks.length }} Low</span>
+      <span class="sev-badge clean" *ngIf="!session.analysis.risks.length">Clean</span>
+    </div>
   </div>
 
   <div class="page-content" *ngIf="session; else noSession">
 
-    <div class="doc-section">
-      <div class="doc-section-label">Security Analysis</div>
+    <!-- Security summary card -->
+    <div class="doc-block">
+      <div class="doc-block-label">Security Analysis</div>
       <div class="doc-card accent-amber">
         <p>{{ session.analysis.security }}</p>
       </div>
     </div>
 
-    <ng-container *ngIf="session.analysis.risks.length">
+    <!-- Clean state -->
+    <div class="clean-banner" *ngIf="!session.analysis.risks.length">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
+      </svg>
+      No security risks detected in this code.
+    </div>
 
-      <div class="doc-section" *ngIf="highRisks.length">
-        <div class="doc-section-label severity-label high">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          High Severity
-        </div>
-        <div class="risk-list">
-          <div class="risk-card high" *ngFor="let r of highRisks">
-            <span class="risk-badge">HIGH</span>
-            <span class="risk-text">{{ r.description }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="doc-section" *ngIf="mediumRisks.length">
-        <div class="doc-section-label severity-label medium">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          Medium Severity
-        </div>
-        <div class="risk-list">
-          <div class="risk-card medium" *ngFor="let r of mediumRisks">
-            <span class="risk-badge">MED</span>
-            <span class="risk-text">{{ r.description }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="doc-section" *ngIf="lowRisks.length">
-        <div class="doc-section-label severity-label low">Low Severity</div>
-        <div class="risk-list">
-          <div class="risk-card low" *ngFor="let r of lowRisks">
-            <span class="risk-badge">LOW</span>
-            <span class="risk-text">{{ r.description }}</span>
-          </div>
-        </div>
-      </div>
-
-    </ng-container>
-
-    <div class="doc-section" *ngIf="!session.analysis.risks.length">
-      <div class="clean-state">
+    <!-- HIGH -->
+    <div class="doc-block" *ngIf="highRisks.length">
+      <div class="doc-block-label sev-label-high">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          <polyline points="9 12 11 14 15 10"/>
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
-        No risks detected
+        High Severity
+      </div>
+      <div class="doc-card no-pad">
+        <div class="sec-finding high" *ngFor="let r of highRisks">
+          <div class="sec-finding-top">
+            <span class="sec-badge high">HIGH</span>
+            <span class="sec-title">{{ r.description }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDIUM -->
+    <div class="doc-block" *ngIf="mediumRisks.length">
+      <div class="doc-block-label sev-label-medium">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Medium Severity
+      </div>
+      <div class="doc-card no-pad">
+        <div class="sec-finding medium" *ngFor="let r of mediumRisks">
+          <div class="sec-finding-top">
+            <span class="sec-badge medium">MED</span>
+            <span class="sec-title">{{ r.description }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOW -->
+    <div class="doc-block" *ngIf="lowRisks.length">
+      <div class="doc-block-label">Low Severity</div>
+      <div class="doc-card no-pad">
+        <div class="sec-finding low" *ngFor="let r of lowRisks">
+          <div class="sec-finding-top">
+            <span class="sec-badge low">LOW</span>
+            <span class="sec-title">{{ r.description }}</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -81,9 +91,12 @@
 
   <ng-template #noSession>
     <div class="no-session">
-      <p>Run an analysis first to see security findings.</p>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      <h3>No security data available</h3>
+      <p>Run an analysis to see security findings.</p>
       <a routerLink="/analysis" class="go-btn">Go to Analysis</a>
     </div>
   </ng-template>
-
 </div>
