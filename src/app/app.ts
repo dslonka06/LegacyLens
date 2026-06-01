@@ -1,33 +1,12 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-
 import { Sidebar } from './components/sidebar/sidebar';
-import { CodeEditor } from './components/code-editor/code-editor';
-import { AnalysisPanel } from './components/analysis-panel/analysis-panel';
 
 @Component({
   selector: 'app-root',
-  imports: [
-    RouterOutlet,
-    Sidebar,
-    CodeEditor,
-    AnalysisPanel
-  ],
+  standalone: true,
+  imports: [RouterOutlet, Sidebar],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-
-export class App {
-
-  protected readonly title = signal('legacy-lens');
-
-  analysis: any = null;
-
-  onAnalyze(result: any) {
-
-  console.log('Analysis received in App');
-
-  this.analysis = result;
-}
-
-}
+export class App {}

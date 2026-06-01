@@ -1,0 +1,31 @@
+<div class="page-container">
+  <h2 class="page-title">Security Review</h2>
+
+  <ng-container *ngIf="session; else noSession">
+
+    <div class="card">
+      <h3>Security Findings</h3>
+      <p>{{ session.analysis.security }}</p>
+    </div>
+
+    <div class="card">
+      <h3>Risks Detected</h3>
+      <ul *ngIf="session.analysis.risks.length; else noRisks">
+        <li *ngFor="let risk of session.analysis.risks" class="risk-item">
+          <span class="severity" [class]="risk.severity">{{ risk.severity }}</span>
+          {{ risk.description }}
+        </li>
+      </ul>
+      <ng-template #noRisks>
+        <p>No risks detected.</p>
+      </ng-template>
+    </div>
+
+  </ng-container>
+
+  <ng-template #noSession>
+    <div class="empty-state">
+      <p>No analysis loaded. Run an analysis from the <a routerLink="/analysis">Analysis page</a>.</p>
+    </div>
+  </ng-template>
+</div>

@@ -1,0 +1,41 @@
+<div class="page-container">
+  <h2 class="page-title">Documentation</h2>
+
+  <ng-container *ngIf="session; else noSession">
+
+    <div class="card">
+      <h3>File</h3>
+      <p>{{ session.fileName }}</p>
+    </div>
+
+    <div class="card">
+      <h3>Summary</h3>
+      <p>{{ session.analysis.summary }}</p>
+    </div>
+
+    <div class="card">
+      <h3>Business Purpose</h3>
+      <p>{{ session.analysis.businessPurpose }}</p>
+    </div>
+
+    <div class="card">
+      <h3>Modernization Suggestions</h3>
+      <ul *ngIf="session.analysis.modernizationSuggestions.length; else noSuggestions">
+        <li *ngFor="let item of session.analysis.modernizationSuggestions">
+          <span class="priority" [class]="item.priority">{{ item.priority }}</span>
+          {{ item.description }}
+        </li>
+      </ul>
+      <ng-template #noSuggestions>
+        <p>No modernization suggestions identified.</p>
+      </ng-template>
+    </div>
+
+  </ng-container>
+
+  <ng-template #noSession>
+    <div class="empty-state">
+      <p>No analysis loaded. Run an analysis from the <a routerLink="/analysis">Analysis page</a>.</p>
+    </div>
+  </ng-template>
+</div>

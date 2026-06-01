@@ -1,131 +1,78 @@
 <div class="analysis-container">
 
   <div class="tabs">
-
-    <button class="active">
-      Overview
-    </button>
-
-    <button>
-      Data Flow
-    </button>
-
-    <button>
-      Issues
-    </button>
-
-    <button>
-      Modernization
-    </button>
-
-    <button>
-      Architecture
-    </button>
-
+    <button class="active">Overview</button>
+    <button>Data Flow</button>
+    <button>Issues</button>
+    <button>Modernization</button>
+    <button>Architecture</button>
   </div>
 
   <div class="metrics-grid">
 
     <div class="metric-card">
       <span class="label">Language</span>
-      <span class="value">
-        {{ analysis?.language || 'Unknown' }}
-      </span>
+      <span class="value">{{ analysis?.language || 'Unknown' }}</span>
     </div>
 
     <div class="metric-card">
       <span class="label">Type</span>
-      <span class="value">
-        {{ analysis?.type || 'Unknown' }}
-      </span>
+      <span class="value">{{ analysis?.type || 'Unknown' }}</span>
     </div>
 
     <div class="metric-card">
       <span class="label">Complexity</span>
-      <span class="value warning">
-        {{ analysis?.complexity || 'Unknown' }}
-      </span>
+      <span class="value warning">{{ analysis?.complexity || 'Unknown' }}</span>
     </div>
 
     <div class="metric-card">
       <span class="label">Maintainability</span>
-      <span class="value danger">
-        {{ analysis?.maintainability || 'Unknown' }}
-      </span>
+      <span class="value danger">{{ analysis?.maintainability || 'Unknown' }}</span>
     </div>
 
   </div>
 
   <div class="card">
-
     <h2>Plain English Summary</h2>
-
-    <p>
-      {{ analysis?.summary || 'Analysis results will appear here.' }}
-    </p>
-
+    <p>{{ analysis?.summary || 'Analysis results will appear here.' }}</p>
   </div>
 
   <div class="card">
+    <h2>Business Purpose</h2>
+    <p>{{ analysis?.businessPurpose || 'Run an analysis to see business purpose.' }}</p>
+  </div>
 
+  <div class="card">
     <h2>Risks Detected</h2>
-
     <ul *ngIf="analysis?.risks?.length">
-      <li *ngFor="let risk of analysis.risks">
-        {{ risk }}
+      <li *ngFor="let risk of analysis!.risks">
+        <span class="severity" [class]="risk.severity">{{ risk.severity }}</span>
+        {{ risk.description }}
       </li>
     </ul>
-
-    <p *ngIf="!analysis?.risks?.length">
-      Potential issues will appear here.
-    </p>
-
+    <p *ngIf="!analysis?.risks?.length">Potential issues will appear here.</p>
   </div>
 
   <div class="card">
-
     <h2>Modernization Suggestions</h2>
-
-    <ul *ngIf="analysis?.suggestions?.length">
-      <li *ngFor="let suggestion of analysis.suggestions">
-        {{ suggestion }}
+    <ul *ngIf="analysis?.modernizationSuggestions?.length">
+      <li *ngFor="let suggestion of analysis!.modernizationSuggestions">
+        <span class="priority" [class]="suggestion.priority">{{ suggestion.priority }}</span>
+        {{ suggestion.description }}
       </li>
     </ul>
-
-    <p *ngIf="!analysis?.suggestions?.length">
-      Suggestions will appear here.
-    </p>
-
+    <p *ngIf="!analysis?.modernizationSuggestions?.length">Suggestions will appear here.</p>
   </div>
 
   <div class="explore-section">
-
     <h3>Explore Deeper</h3>
-
     <div class="action-grid">
-
-      <button class="action-card">
-        Explain Simpler
-      </button>
-
-      <button class="action-card">
-        Trace Data Flow
-      </button>
-
-      <button class="action-card">
-        Architecture Review
-      </button>
-
-      <button class="action-card">
-        Generate Docs
-      </button>
-
-      <button class="action-card">
-        Security Review
-      </button>
-
+      <button class="action-card" (click)="navigateTo('/explain-simpler')">Explain Simpler</button>
+      <button class="action-card" (click)="navigateTo('/data-flow')">Trace Data Flow</button>
+      <button class="action-card" (click)="navigateTo('/architecture')">Architecture Review</button>
+      <button class="action-card" (click)="navigateTo('/documentation')">Generate Docs</button>
+      <button class="action-card" (click)="navigateTo('/security')">Security Review</button>
     </div>
-
   </div>
 
 </div>

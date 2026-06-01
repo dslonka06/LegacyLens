@@ -1,0 +1,34 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2 class="page-title">History</h2>
+    <button
+      class="clear-btn"
+      *ngIf="sessions.length"
+      (click)="clearHistory()">
+      Clear All
+    </button>
+  </div>
+
+  <ng-container *ngIf="sessions.length; else noHistory">
+    <div class="session-card" *ngFor="let session of sessions; let i = index">
+      <div class="session-info">
+        <span class="file-name">{{ session.fileName }}</span>
+        <div class="session-meta">
+          <span class="meta-tag">{{ session.analysis.type }}</span>
+          <span class="meta-tag">{{ session.analysis.complexity }}</span>
+          <span class="meta-date">{{ session.createdAt | date:'medium' }}</span>
+        </div>
+      </div>
+      <div class="session-actions">
+        <button class="restore-btn" (click)="restoreSession(i)">Restore</button>
+        <button class="delete-btn" (click)="deleteSession(i)">Delete</button>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template #noHistory>
+    <div class="empty-state">
+      <p>No analysis history yet. Run an analysis from the <a routerLink="/analysis">Analysis page</a>.</p>
+    </div>
+  </ng-template>
+</div>

@@ -1,0 +1,23 @@
+<div class="page-container">
+  <h2 class="page-title">Data Flow</h2>
+
+  <ng-container *ngIf="session; else noSession">
+
+    <div class="card">
+      <h3>File</h3>
+      <p>{{ session.fileName }}</p>
+    </div>
+
+    <div class="card">
+      <h3>Data Flow Trace</h3>
+      <p class="flow-text">{{ session.analysis.dataFlow }}</p>
+    </div>
+
+  </ng-container>
+
+  <ng-template #noSession>
+    <div class="empty-state">
+      <p>No analysis loaded. Run an analysis from the <a routerLink="/analysis">Analysis page</a>.</p>
+    </div>
+  </ng-template>
+</div>

@@ -51,6 +51,37 @@
   line-height: 1.5;
 }
 
+.card ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card li {
+  color: #d1d5db;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.severity,
+.priority {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  flex-shrink: 0;
+
+  &.high { background-color: #ef4444; color: white; }
+  &.medium { background-color: #f59e0b; color: black; }
+  &.low { background-color: #374151; color: #d1d5db; }
+}
+
 .explore-section {
   margin-top: 10px;
 }
@@ -105,12 +136,7 @@
 .value {
   color: white;
   font-weight: 600;
-}
 
-.warning {
-  color: #f59e0b;
-}
-
-.danger {
-  color: #ef4444;
+  &.warning { color: #f59e0b; }
+  &.danger { color: #ef4444; }
 }

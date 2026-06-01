@@ -1,17 +1,4 @@
 <div class="app-layout">
-
   <app-sidebar></app-sidebar>
-
-  <div class="main-content">
-
-    <app-code-editor
-      (analyze)="onAnalyze($event)">
-    </app-code-editor>
-
-    <app-analysis-panel
-      [analysis]="analysis">
-    </app-analysis-panel>
-
-  </div>
-
+  <router-outlet></router-outlet>
 </div>

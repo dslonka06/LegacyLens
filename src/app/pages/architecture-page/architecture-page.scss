@@ -1,0 +1,71 @@
+.page-container {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-title {
+  color: white;
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.metric-card {
+  background-color: #1e293b;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  color: #9ca3af;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.value {
+  color: white;
+  font-weight: 600;
+
+  &.warning { color: #f59e0b; }
+}
+
+.card {
+  background-color: #1e293b;
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.card h3 {
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.card p {
+  color: #d1d5db;
+  line-height: 1.6;
+}
+
+.empty-state {
+  color: #9ca3af;
+
+  a {
+    color: #6366f1;
+    text-decoration: none;
+  }
+}
