@@ -12,7 +12,6 @@ public sealed class OpenAiProvider : IAiProvider
     private readonly OpenAiOptions _options;
     private readonly ILogger<OpenAiProvider> _logger;
 
-    // JSON schema description embedded in the system prompt — no SDK schema types leak out
     private const string SystemPrompt = """
         You are a senior software architect performing code review and documentation.
 
@@ -39,7 +38,9 @@ public sealed class OpenAiProvider : IAiProvider
         Return only the JSON object. No markdown, no code fences, no additional text.
         """;
 
-    public OpenAiProvider(IOptions<OpenAiOptions> options, ILogger<OpenAiProvider> logger)
+    public OpenAiProvider(
+        IOptions<OpenAiOptions> options,
+        ILogger<OpenAiProvider> logger)
     {
         _options = options.Value;
         _logger = logger;
@@ -50,51 +51,94 @@ public sealed class OpenAiProvider : IAiProvider
         string sourceCode,
         CancellationToken cancellationToken = default)
     {
-        var client = new OpenAIClient(_options.ApiKey);
-        var chatClient = client.GetChatClient(_options.Model);
-
-        var userMessage = $"""
-            File Name: {fileName}
-
-            Source Code:
-            {sourceCode}
-            """;
-
-        var messages = new List<ChatMessage>
-        {
-            new SystemChatMessage(SystemPrompt),
-            new UserChatMessage(userMessage)
-        };
-
-        var completionOptions = new ChatCompletionOptions
-        {
-            ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
-        };
+        _logger.LogInformation(
+            "OpenAI Key Length: {Length}",
+            _options.ApiKey?.Length ?? 0);
 
         _logger.LogInformation(
-            "Requesting AI analysis for {FileName} using model {Model}",
-            fileName, _options.Model);
+            "OpenAI Model: {Model}",
+            _options.Model);
 
-        var completion = await chatClient.CompleteChatAsync(messages, completionOptions, cancellationToken);
-        var rawJson = completion.Value.Content[0].Text;
+        if (string.IsNullOrWhiteSpace(_options.ApiKey))
+        {
+            _logger.LogError(
+                "OpenAI API key is missing or empty.");
 
-        _logger.LogDebug("Raw AI response for {FileName}: {Json}", fileName, rawJson);
+            throw new InvalidOperationException(
+                "OpenAI API key is not configured.");
+        }
 
-        return ParseResponse(rawJson, _options.Model);
+        try
+        {
+            var client = new OpenAIClient(_options.ApiKey);
+            var chatClient = client.GetChatClient(_options.Model);
+
+            var userMessage = $"""
+                File Name: {fileName}
+
+                Source Code:
+                {sourceCode}
+                """;
+
+            var messages = new List<ChatMessage>
+            {
+                new SystemChatMessage(SystemPrompt),
+                new UserChatMessage(userMessage)
+            };
+
+            var completionOptions = new ChatCompletionOptions
+            {
+                ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
+            };
+
+            _logger.LogInformation(
+                "Requesting AI analysis for {FileName} using model {Model}",
+                fileName,
+                _options.Model);
+
+            var completion = await chatClient.CompleteChatAsync(
+                messages,
+                completionOptions,
+                cancellationToken);
+
+            var rawJson = completion.Value.Content[0].Text;
+
+            _logger.LogInformation(
+                "Successfully received AI response for {FileName}",
+                fileName);
+
+            _logger.LogDebug(
+                "Raw AI response for {FileName}: {Json}",
+                fileName,
+                rawJson);
+
+            return ParseResponse(rawJson, _options.Model);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "OpenAI request failed for {FileName}",
+                fileName);
+
+            throw;
+        }
     }
 
-    private AiAnalysisResponse ParseResponse(string json, string model)
+    private AiAnalysisResponse ParseResponse(
+        string json,
+        string model)
     {
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
 
         return new AiAnalysisResponse(
-            Summary:         root.GetProperty("summary").GetString() ?? string.Empty,
+            Summary: root.GetProperty("summary").GetString() ?? string.Empty,
             BusinessPurpose: root.GetProperty("businessPurpose").GetString() ?? string.Empty,
-            ExplainSimpler:  root.GetProperty("explainSimpler").GetString() ?? string.Empty,
-            Model:           model,
-            Provider:        "OpenAI",
-            GeneratedAtUtc:  DateTimeOffset.UtcNow
+            ExplainSimpler: root.GetProperty("explainSimpler").GetString() ?? string.Empty,
+            Model: model,
+            Provider: "OpenAI",
+            GeneratedAtUtc: DateTimeOffset.UtcNow
         );
     }
 }
