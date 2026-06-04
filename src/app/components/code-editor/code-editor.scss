@@ -22,7 +22,7 @@
   padding: 0 12px;
   height: 44px;
   border-bottom: 1px solid var(--border);
-  background-color: var(--bg-primary);
+  background-color: var(--editor-bg);
   flex-shrink: 0;
   gap: 10px;
 }
@@ -174,7 +174,7 @@
   align-items: flex-end;
   padding: 14px 10px 14px 0;
   min-width: 44px;
-  background: var(--bg-primary);
+  background: var(--editor-bg);
   border-right: 1px solid var(--border-subtle);
   overflow: hidden;
   user-select: none;

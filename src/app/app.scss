@@ -39,19 +39,19 @@
   align-items: center;
   gap: 8px;
   padding: 5px 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--header-control-bg);
+  border: 1px solid var(--header-control-border);
   border-radius: 7px;
-  color: var(--text-muted);
+  color: var(--header-control-text);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
   user-select: none;
 
-  svg { width: 13px; height: 13px; flex-shrink: 0; }
+  svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--header-control-text); }
 
-  .search-label { color: var(--text-muted); }
+  .search-label { color: var(--header-control-text); }
 
   .search-kbd {
     margin-left: 20px;
@@ -59,14 +59,14 @@
     padding: 1px 5px;
     border-radius: 4px;
     background: var(--bg-primary);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
+    border: 1px solid var(--header-control-border);
+    color: var(--text-secondary);
     font-family: inherit;
   }
 
   &:hover {
-    border-color: var(--text-muted);
-    .search-label { color: var(--text-secondary); }
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(124,92,255,0.15);
   }
 }
 
@@ -75,20 +75,19 @@
   align-items: center;
   gap: 6px;
   padding: 5px 11px;
-  background: transparent;
-  border: 1px solid var(--border);
+  background: var(--header-control-bg);
+  border: 1px solid var(--header-control-border);
   border-radius: 7px;
-  color: var(--text-muted);
+  color: var(--header-control-text);
   font-size: 12px;
   font-weight: 500;
-  transition: all 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
   white-space: nowrap;
-  svg { width: 14px; height: 14px; flex-shrink: 0; }
+  svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--header-control-text); }
 
   &:hover {
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
-    border-color: var(--text-muted);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(124,92,255,0.15);
   }
 
   &.icon-only {
