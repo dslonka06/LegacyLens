@@ -147,6 +147,38 @@ export class CodeEditor implements OnChanges, OnDestroy {
     return LANGUAGE_LABEL[this.currentMonacoLanguage] ?? 'Auto';
   }
 
+  // CSS modifier class for the language badge colour
+  get langBadgeClass(): string {
+    const map: Record<string, string> = {
+      csharp:     'lang-csharp',
+      typescript: 'lang-typescript',
+      javascript: 'lang-javascript',
+      sql:        'lang-sql',
+      python:     'lang-python',
+      html:       'lang-html',
+      css:        'lang-css',
+      scss:       'lang-css',
+      json:       'lang-json',
+      xml:        'lang-xml',
+      markdown:   'lang-markdown',
+    };
+    return map[this.currentMonacoLanguage] ?? 'lang-default';
+  }
+
+  // Which icon variant to show in the file tab
+  get langIconType(): string {
+    const map: Record<string, string> = {
+      csharp:     'csharp',
+      typescript: 'typescript',
+      javascript: 'javascript',
+      sql:        'database',
+      python:     'python',
+      html:       'html',
+      json:       'json',
+    };
+    return map[this.currentMonacoLanguage] ?? 'file';
+  }
+
   get lineCount(): number {
     return this.code ? this.code.split('\n').length : 1;
   }
@@ -154,6 +186,18 @@ export class CodeEditor implements OnChanges, OnDestroy {
   onEditorInit(editor: any): void {
     this.zone.run(() => {
       this.editorInstance = editor;
+
+      // Disable semantic validation — LegacyLens analyses standalone files,
+      // not full projects, so import resolution errors are always false positives.
+      const monaco = (window as any).monaco;
+      if (monaco?.languages?.typescript) {
+        const noValidation = {
+          noSemanticValidation: true,
+          noSyntaxValidation: false,  // keep syntax errors — they're meaningful
+        };
+        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(noValidation);
+        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(noValidation);
+      }
 
       if (this.code) {
         editor.setValue(this.code);
@@ -166,7 +210,6 @@ export class CodeEditor implements OnChanges, OnDestroy {
       editor.onDidChangeModelContent(() => {
         this.zone.run(() => {
           this.code = editor.getValue();
-          // Only fall back to content detection when no real filename is loaded
           if (this.fileName === 'untitled.txt') {
             this.applyMonacoLanguage(this.languageFromContent(this.code));
           }
@@ -174,12 +217,10 @@ export class CodeEditor implements OnChanges, OnDestroy {
         });
       });
 
-      // Subscribe to theme changes and update Monaco immediately
+      // Sync Monaco theme with app theme in real time
       this.themeSub = this.themeService.isDark$.subscribe(isDark => {
-        const monaco = (window as any).monaco;
-        if (monaco) {
-          monaco.editor.setTheme(isDark ? 'vs-dark' : 'vs');
-        }
+        const m = (window as any).monaco;
+        if (m) m.editor.setTheme(isDark ? 'vs-dark' : 'vs');
       });
     });
   }
