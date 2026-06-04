@@ -1,0 +1,98 @@
+<div class="insight-page">
+
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Risks &amp; Issues</h1>
+        <div class="page-subtitle" *ngIf="session">{{ session.fileName }} · {{ totalCount }} issues found</div>
+      </div>
+    </div>
+    <div class="severity-summary" *ngIf="session">
+      <span class="sev-badge high" *ngIf="highRisks.length">{{ highRisks.length }} High</span>
+      <span class="sev-badge medium" *ngIf="mediumRisks.length">{{ mediumRisks.length }} Medium</span>
+      <span class="sev-badge low" *ngIf="lowRisks.length">{{ lowRisks.length }} Low</span>
+      <span class="sev-badge clean" *ngIf="!totalCount">Clean</span>
+    </div>
+  </div>
+
+  <!-- No session -->
+  <div class="no-session" *ngIf="!session">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    </svg>
+    <h3>No analysis available</h3>
+    <p>Run an analysis first to view risks and issues.</p>
+    <button class="go-btn" (click)="goToAnalysis()">Go to Analysis</button>
+  </div>
+
+  <div class="page-content" *ngIf="session">
+
+    <!-- High risks -->
+    <div class="doc-block" *ngIf="highRisks.length">
+      <div class="doc-block-label sev-label-high">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        High Severity
+      </div>
+      <div class="doc-card no-pad">
+        <div class="risk-row risk-row-high" *ngFor="let r of highRisks">
+          <span class="risk-pip"></span>
+          <span class="risk-row-text">{{ r.description }}</span>
+          <span class="risk-sev-tag">High</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medium risks -->
+    <div class="doc-block" *ngIf="mediumRisks.length">
+      <div class="doc-block-label sev-label-medium">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        Medium Severity
+      </div>
+      <div class="doc-card no-pad">
+        <div class="risk-row risk-row-medium" *ngFor="let r of mediumRisks">
+          <span class="risk-pip"></span>
+          <span class="risk-row-text">{{ r.description }}</span>
+          <span class="risk-sev-tag">Medium</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Low risks -->
+    <div class="doc-block" *ngIf="lowRisks.length">
+      <div class="doc-block-label">
+        Low Severity
+      </div>
+      <div class="doc-card no-pad">
+        <div class="risk-row risk-row-low" *ngFor="let r of lowRisks">
+          <span class="risk-pip"></span>
+          <span class="risk-row-text">{{ r.description }}</span>
+          <span class="risk-sev-tag">Low</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clean -->
+    <div class="clean-banner" *ngIf="!totalCount">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      No risks or issues detected in this code.
+    </div>
+
+  </div>
+
+</div>

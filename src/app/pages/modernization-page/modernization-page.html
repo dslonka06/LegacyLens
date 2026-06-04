@@ -1,0 +1,83 @@
+<div class="insight-page">
+
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon indigo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+          <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Modernization</h1>
+        <div class="page-subtitle" *ngIf="session">{{ session.fileName }} · {{ totalCount }} opportunities</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No session -->
+  <div class="no-session" *ngIf="!session">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+    </svg>
+    <h3>No analysis available</h3>
+    <p>Run an analysis first to view modernization opportunities.</p>
+    <button class="go-btn" (click)="goToAnalysis()">Go to Analysis</button>
+  </div>
+
+  <div class="page-content" *ngIf="session">
+
+    <!-- High priority -->
+    <div class="doc-block" *ngIf="highPriority.length">
+      <div class="doc-block-label sev-label-high">High Priority</div>
+      <div class="doc-card no-pad">
+        <div class="mod-row pri-high" *ngFor="let s of highPriority">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          {{ s.description }}
+          <span class="mod-pri-tag">High</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medium priority -->
+    <div class="doc-block" *ngIf="mediumPriority.length">
+      <div class="doc-block-label sev-label-medium">Medium Priority</div>
+      <div class="doc-card no-pad">
+        <div class="mod-row pri-medium" *ngFor="let s of mediumPriority">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          {{ s.description }}
+          <span class="mod-pri-tag">Medium</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Low priority -->
+    <div class="doc-block" *ngIf="lowPriority.length">
+      <div class="doc-block-label">Low Priority</div>
+      <div class="doc-card no-pad">
+        <div class="mod-row pri-low" *ngFor="let s of lowPriority">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          {{ s.description }}
+          <span class="mod-pri-tag">Low</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div class="clean-banner" *ngIf="!totalCount">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      No modernization opportunities identified.
+    </div>
+
+  </div>
+
+</div>

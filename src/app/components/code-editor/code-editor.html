@@ -3,20 +3,41 @@
   <!-- Toolbar -->
   <div class="editor-toolbar">
     <div class="toolbar-left">
+
+      <!-- File tab -->
       <div class="file-tab">
         <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
         </svg>
         <span class="file-name">{{ fileName }}</span>
+        <button class="file-close-btn" (click)="clearFile()" title="Clear" *ngIf="code.trim()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
+
+      <!-- Language badge -->
       <div class="lang-badge">{{ detectedLanguage }}</div>
+
+      <!-- Line count -->
+      <span class="toolbar-meta">{{ lineCount }} lines</span>
+
+      <!-- Last analyzed status -->
+      <div class="last-analyzed" *ngIf="lastAnalyzedLabel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Last analyzed {{ lastAnalyzedLabel }}
+      </div>
+
     </div>
     <div class="toolbar-right">
       <button class="btn btn-ghost" (click)="fileInput.click()" [disabled]="isLoadingFile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
-        <span>{{ isLoadingFile ? 'Loading…' : 'Upload' }}</span>
+        <span>{{ isLoadingFile ? 'Loading…' : 'Upload File' }}</span>
       </button>
       <input #fileInput type="file" accept=".cs,.ts,.sql,.txt,.js,.py" hidden (change)="onFileSelected($event)">
       <button
@@ -26,7 +47,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="5 3 19 12 5 21 5 3"/>
         </svg>
-        <span>{{ isAnalyzing ? 'Analyzing…' : 'Analyze' }}</span>
+        <span>{{ isAnalyzing ? 'Analyzing…' : 'Analyze Code' }}</span>
       </button>
     </div>
   </div>
@@ -46,13 +67,6 @@
       placeholder="// Paste your code here, or upload a file above"
       (scroll)="onTextareaScroll($event)">
     </textarea>
-  </div>
-
-  <!-- Status bar -->
-  <div class="editor-statusbar">
-    <span>{{ lineCount }} lines</span>
-    <span *ngIf="code.trim()">{{ code.length }} chars</span>
-    <span *ngIf="!code.trim()" class="muted">No file loaded</span>
   </div>
 
 </div>

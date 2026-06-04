@@ -22,6 +22,7 @@ export class CodeEditor implements OnChanges {
   fileName = 'untitled.txt';
   isAnalyzing = false;
   isLoadingFile = false;
+  lastAnalyzedLabel: string | null = null;
 
   constructor(
     private readonly analysisService: AnalysisService,
@@ -34,6 +35,7 @@ export class CodeEditor implements OnChanges {
     }
     if (changes['restoredSourceCode'] && this.restoredSourceCode !== null) {
       this.code = this.restoredSourceCode;
+      this.lastAnalyzedLabel = 'Restored';
       this.cdr.detectChanges();
     }
   }
@@ -55,6 +57,13 @@ export class CodeEditor implements OnChanges {
     return 'Auto';
   }
 
+  clearFile(): void {
+    this.code = '';
+    this.fileName = 'untitled.txt';
+    this.lastAnalyzedLabel = null;
+    this.cdr.detectChanges();
+  }
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
@@ -67,6 +76,7 @@ export class CodeEditor implements OnChanges {
     reader.onload = () => {
       this.code = reader.result as string;
       this.isLoadingFile = false;
+      this.lastAnalyzedLabel = null;
       this.cdr.detectChanges();
     };
     reader.readAsText(file);
@@ -84,6 +94,7 @@ export class CodeEditor implements OnChanges {
       createdAt: new Date().toISOString()
     };
     this.analyze.emit(session);
+    this.lastAnalyzedLabel = 'Just now';
     this.isAnalyzing = false;
   }
 
