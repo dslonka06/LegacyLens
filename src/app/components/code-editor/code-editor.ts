@@ -1,22 +1,23 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ChangeDetectorRef } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnChanges, OnDestroy, SimpleChanges, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { AnalysisService } from '../../services/analysis.service';
 import { AnalysisSession } from '../../models/analysis-session.model';
 
 @Component({
   selector: 'app-code-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MonacoEditorModule],
   templateUrl: './code-editor.html',
   styleUrl: './code-editor.scss'
 })
-export class CodeEditor implements OnChanges {
+export class CodeEditor implements OnChanges, OnDestroy {
 
   @Input() restoredFileName: string | null = null;
   @Input() restoredSourceCode: string | null = null;
 
-  @Output() analyze = new EventEmitter<AnalysisSession>();
+  @Output() readonly analyze = new EventEmitter<AnalysisSession>();
 
   code = '';
   fileName = 'untitled.txt';
@@ -24,9 +25,37 @@ export class CodeEditor implements OnChanges {
   isLoadingFile = false;
   lastAnalyzedLabel: string | null = null;
 
+  // Monaco editor instance — typed as any since monaco global isn't in scope at compile time
+  private editorInstance: any = null;
+
+  editorOptions = {
+    theme: 'vs-dark',
+    language: 'plaintext',
+    fontSize: 13,
+    fontFamily: "'Fira Code', 'JetBrains Mono', Consolas, monospace",
+    fontLigatures: true,
+    lineNumbers: 'on' as const,
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    wordWrap: 'off' as const,
+    renderWhitespace: 'none' as const,
+    folding: true,
+    lineDecorationsWidth: 4,
+    lineNumbersMinChars: 3,
+    glyphMargin: false,
+    automaticLayout: true,
+    scrollbar: {
+      verticalScrollbarSize: 6,
+      horizontalScrollbarSize: 6
+    },
+    padding: { top: 14, bottom: 14 },
+    fixedOverflowWidgets: true,
+  };
+
   constructor(
     private readonly analysisService: AnalysisService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly zone: NgZone
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -36,31 +65,57 @@ export class CodeEditor implements OnChanges {
     if (changes['restoredSourceCode'] && this.restoredSourceCode !== null) {
       this.code = this.restoredSourceCode;
       this.lastAnalyzedLabel = 'Restored';
+      // If Monaco is already mounted, push the value directly to avoid cursor jump
+      if (this.editorInstance) {
+        const current = this.editorInstance.getValue();
+        if (current !== this.restoredSourceCode) {
+          this.editorInstance.setValue(this.restoredSourceCode);
+        }
+        this.updateLanguage(this.restoredSourceCode);
+      }
       this.cdr.detectChanges();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.editorInstance?.dispose();
+  }
+
+  get detectedLanguage(): string {
+    return this.detectLanguage(this.code);
   }
 
   get lineCount(): number {
     return this.code ? this.code.split('\n').length : 1;
   }
 
-  get lineNumbers(): number[] {
-    return Array.from({ length: this.lineCount }, (_, i) => i + 1);
-  }
+  onEditorInit(editor: any): void {
+    this.zone.run(() => {
+      this.editorInstance = editor;
 
-  get detectedLanguage(): string {
-    if (!this.code) return 'Auto';
-    if (this.code.includes('[ApiController]') || (this.code.includes('Controller') && this.code.includes('class'))) return 'C#';
-    if (this.code.includes('@Component') || this.code.includes('export class')) return 'TypeScript';
-    if (this.code.toUpperCase().includes('SELECT')) return 'SQL';
-    if (this.code.includes('interface ')) return 'C#';
-    return 'Auto';
+      // Set initial value if code already present (e.g. restored from history)
+      if (this.code) {
+        editor.setValue(this.code);
+        this.updateLanguage(this.code);
+      }
+
+      // Keep this.code in sync whenever the user types
+      editor.onDidChangeModelContent(() => {
+        this.zone.run(() => {
+          this.code = editor.getValue();
+          this.updateLanguage(this.code);
+          this.cdr.detectChanges();
+        });
+      });
+    });
   }
 
   clearFile(): void {
     this.code = '';
     this.fileName = 'untitled.txt';
     this.lastAnalyzedLabel = null;
+    this.editorInstance?.setValue('');
+    this.setMonacoLanguage('plaintext');
     this.cdr.detectChanges();
   }
 
@@ -74,9 +129,12 @@ export class CodeEditor implements OnChanges {
 
     const reader = new FileReader();
     reader.onload = () => {
-      this.code = reader.result as string;
+      const content = reader.result as string;
+      this.code = content;
       this.isLoadingFile = false;
       this.lastAnalyzedLabel = null;
+      this.editorInstance?.setValue(content);
+      this.updateLanguage(content);
       this.cdr.detectChanges();
     };
     reader.readAsText(file);
@@ -98,9 +156,39 @@ export class CodeEditor implements OnChanges {
     this.isAnalyzing = false;
   }
 
-  onTextareaScroll(event: Event): void {
-    const textarea = event.target as HTMLTextAreaElement;
-    const gutter = textarea.closest('.editor-body')?.querySelector('.line-gutter') as HTMLElement | null;
-    if (gutter) gutter.scrollTop = textarea.scrollTop;
+  // ─── Private helpers ──────────────────────────────────
+
+  private detectLanguage(code: string): string {
+    if (!code) return 'Auto';
+    if (code.includes('[ApiController]') || (code.includes('Controller') && code.includes('class'))) return 'C#';
+    if (code.includes('@Component') || code.includes('export class')) return 'TypeScript';
+    if (code.toUpperCase().includes('SELECT')) return 'SQL';
+    if (code.includes('interface ')) return 'C#';
+    return 'Auto';
+  }
+
+  private detectMonacoLanguage(code: string): string {
+    if (!code) return 'plaintext';
+    if (code.includes('[ApiController]') || (code.includes('Controller') && code.includes('class'))) return 'csharp';
+    if (code.includes('@Component') || code.includes('export class')) return 'typescript';
+    if (code.toUpperCase().includes('SELECT')) return 'sql';
+    if (code.includes('interface ')) return 'csharp';
+    return 'plaintext';
+  }
+
+  private updateLanguage(code: string): void {
+    const lang = this.detectMonacoLanguage(code);
+    this.setMonacoLanguage(lang);
+  }
+
+  private setMonacoLanguage(language: string): void {
+    if (!this.editorInstance) return;
+    const model = this.editorInstance.getModel();
+    if (!model) return;
+    // monaco global is available at runtime via the loader
+    const monaco = (window as any).monaco;
+    if (monaco) {
+      monaco.editor.setModelLanguage(model, language);
+    }
   }
 }
