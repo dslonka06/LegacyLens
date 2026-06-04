@@ -10,7 +10,11 @@
       </div>
       <div>
         <h1>Risks &amp; Issues</h1>
-        <div class="page-subtitle" *ngIf="session">{{ session.fileName }} · {{ totalCount }} issues found</div>
+        <div class="page-subtitle" *ngIf="session">
+          {{ session.fileName }} · {{ totalCount }} issues found
+          <span class="source-badge ai" *ngIf="isAiPowered">AI</span>
+          <span class="source-badge pattern" *ngIf="!isAiPowered">Pattern</span>
+        </div>
       </div>
     </div>
     <div class="severity-summary" *ngIf="session">
@@ -32,7 +36,7 @@
 
   <div class="page-content" *ngIf="session">
 
-    <!-- Risk Score summary card -->
+    <!-- Risk Score card -->
     <div class="risk-score-card">
       <div class="risk-score-left">
         <div class="risk-score-number" [ngClass]="riskScoreClass">{{ riskScore }}</div>
@@ -42,17 +46,17 @@
       <div class="risk-score-breakdown">
         <div class="risk-score-row">
           <span class="rsr-dot high"></span>
-          <span class="rsr-label">High Risks</span>
+          <span class="rsr-label">High</span>
           <span class="rsr-count">{{ highRisks.length }}</span>
         </div>
         <div class="risk-score-row">
           <span class="rsr-dot medium"></span>
-          <span class="rsr-label">Medium Risks</span>
+          <span class="rsr-label">Medium</span>
           <span class="rsr-count">{{ mediumRisks.length }}</span>
         </div>
         <div class="risk-score-row">
           <span class="rsr-dot low"></span>
-          <span class="rsr-label">Low Risks</span>
+          <span class="rsr-label">Low</span>
           <span class="rsr-count">{{ lowRisks.length }}</span>
         </div>
       </div>
@@ -64,38 +68,34 @@
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
         <polyline points="22 4 12 14.01 9 11.01"/>
       </svg>
-      No risks or issues detected in this code.
+      No significant risks detected in this code.
     </div>
 
-    <!-- High risks -->
+    <!-- High -->
     <div class="doc-block" *ngIf="highRisks.length">
       <div class="doc-block-label sev-label-high">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
         High Severity
       </div>
-      <div class="expandable-risk-list">
-        <div class="expandable-risk" *ngFor="let r of highRisks; let i = index"
-             [class.expanded]="isExpanded(i)"
-             (click)="toggleRisk(i)">
-          <div class="expandable-risk-header">
-            <span class="risk-pip-lg high"></span>
-            <span class="expandable-risk-title">{{ r.description }}</span>
+      <div class="risk-card-list">
+        <div class="risk-card risk-card-high" *ngFor="let r of highRisks; let i = index"
+             [class.expanded]="isExpanded(i)" (click)="toggleRisk(i)">
+          <div class="risk-card-header">
+            <span class="risk-sev-pip high"></span>
+            <div class="risk-card-titles">
+              <span class="risk-card-title">{{ r.title }}</span>
+              <span class="risk-card-desc" *ngIf="isAiPowered && r.description !== r.title">{{ r.description }}</span>
+            </div>
             <span class="risk-sev-tag risk-tag-high">High</span>
             <svg class="expand-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline [attr.points]="isExpanded(i) ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
             </svg>
           </div>
           <div class="expandable-risk-body" *ngIf="isExpanded(i)">
-            <div class="risk-detail-row">
-              <span class="risk-detail-label">Why It Matters</span>
-              <span class="risk-detail-val">This issue can lead to runtime failures, security vulnerabilities, or unexpected behaviour in production environments.</span>
-            </div>
-            <div class="risk-detail-row">
-              <span class="risk-detail-label">Suggested Fix</span>
-              <span class="risk-detail-val">Review the affected area and apply the appropriate defensive pattern or refactoring to address the root cause.</span>
-            </div>
             <div class="risk-detail-row">
               <span class="risk-detail-label">Severity Impact</span>
               <span class="risk-detail-val risk-detail-high">High — should be addressed before production deployment.</span>
@@ -104,14 +104,14 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
               </svg>
-              Jump to Code — coming in Phase 2
+              Jump to Code — coming in a future phase
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Medium risks -->
+    <!-- Medium -->
     <div class="doc-block" *ngIf="mediumRisks.length">
       <div class="doc-block-label sev-label-medium">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -120,27 +120,21 @@
         </svg>
         Medium Severity
       </div>
-      <div class="expandable-risk-list">
-        <div class="expandable-risk" *ngFor="let r of mediumRisks; let i = index"
-             [class.expanded]="isExpanded(100 + i)"
-             (click)="toggleRisk(100 + i)">
-          <div class="expandable-risk-header">
-            <span class="risk-pip-lg medium"></span>
-            <span class="expandable-risk-title">{{ r.description }}</span>
+      <div class="risk-card-list">
+        <div class="risk-card risk-card-medium" *ngFor="let r of mediumRisks; let i = index"
+             [class.expanded]="isExpanded(100 + i)" (click)="toggleRisk(100 + i)">
+          <div class="risk-card-header">
+            <span class="risk-sev-pip medium"></span>
+            <div class="risk-card-titles">
+              <span class="risk-card-title">{{ r.title }}</span>
+              <span class="risk-card-desc" *ngIf="isAiPowered && r.description !== r.title">{{ r.description }}</span>
+            </div>
             <span class="risk-sev-tag risk-tag-medium">Medium</span>
             <svg class="expand-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline [attr.points]="isExpanded(100 + i) ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
             </svg>
           </div>
           <div class="expandable-risk-body" *ngIf="isExpanded(100 + i)">
-            <div class="risk-detail-row">
-              <span class="risk-detail-label">Why It Matters</span>
-              <span class="risk-detail-val">This issue may cause problems under certain conditions or at scale and should be addressed during normal development cycles.</span>
-            </div>
-            <div class="risk-detail-row">
-              <span class="risk-detail-label">Suggested Fix</span>
-              <span class="risk-detail-val">Review the affected area and apply the appropriate defensive pattern or refactoring to address the root cause.</span>
-            </div>
             <div class="risk-detail-row">
               <span class="risk-detail-label">Severity Impact</span>
               <span class="risk-detail-val risk-detail-medium">Medium — schedule for the next sprint or refactoring pass.</span>
@@ -149,23 +143,25 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
               </svg>
-              Jump to Code — coming in Phase 2
+              Jump to Code — coming in a future phase
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Low risks -->
+    <!-- Low -->
     <div class="doc-block" *ngIf="lowRisks.length">
       <div class="doc-block-label">Low Severity</div>
-      <div class="expandable-risk-list">
-        <div class="expandable-risk" *ngFor="let r of lowRisks; let i = index"
-             [class.expanded]="isExpanded(200 + i)"
-             (click)="toggleRisk(200 + i)">
-          <div class="expandable-risk-header">
-            <span class="risk-pip-lg low"></span>
-            <span class="expandable-risk-title">{{ r.description }}</span>
+      <div class="risk-card-list">
+        <div class="risk-card risk-card-low" *ngFor="let r of lowRisks; let i = index"
+             [class.expanded]="isExpanded(200 + i)" (click)="toggleRisk(200 + i)">
+          <div class="risk-card-header">
+            <span class="risk-sev-pip low"></span>
+            <div class="risk-card-titles">
+              <span class="risk-card-title">{{ r.title }}</span>
+              <span class="risk-card-desc" *ngIf="isAiPowered && r.description !== r.title">{{ r.description }}</span>
+            </div>
             <span class="risk-sev-tag risk-tag-low">Low</span>
             <svg class="expand-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline [attr.points]="isExpanded(200 + i) ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
@@ -173,18 +169,14 @@
           </div>
           <div class="expandable-risk-body" *ngIf="isExpanded(200 + i)">
             <div class="risk-detail-row">
-              <span class="risk-detail-label">Why It Matters</span>
-              <span class="risk-detail-val">Minor issue that may affect code quality or long-term maintainability. Low urgency.</span>
-            </div>
-            <div class="risk-detail-row">
-              <span class="risk-detail-label">Suggested Fix</span>
-              <span class="risk-detail-val">Address during routine refactoring or technical debt sprints.</span>
+              <span class="risk-detail-label">Severity Impact</span>
+              <span class="risk-detail-val">Low — address during routine refactoring or technical debt sprints.</span>
             </div>
             <div class="risk-jump-placeholder">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
               </svg>
-              Jump to Code — coming in Phase 2
+              Jump to Code — coming in a future phase
             </div>
           </div>
         </div>

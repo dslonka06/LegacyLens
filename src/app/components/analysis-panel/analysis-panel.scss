@@ -300,15 +300,41 @@
   gap: 5px;
 }
 
+.findings-empty-state {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--success);
+  padding: 4px 0;
+  svg { width: 14px; height: 14px; flex-shrink: 0; }
+}
+
 .findings-preview-item {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  font-size: 12px;    /* #6 up from 11px */
+  font-size: 12px;
   color: var(--text-content);
   line-height: 1.4;
 
   &.mod .check-dot { color: #22C55E; flex-shrink: 0; margin-top: 2px; }
+}
+
+.findings-preview-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.findings-preview-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 // #2 severity dots — larger and more vibrant

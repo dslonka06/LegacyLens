@@ -3,7 +3,15 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { AnalysisSession } from '../../models/analysis-session.model';
-import { RiskItem } from '../../models/risk-item.model';
+import { AiRisk } from '../../models/ai-analysis-result.model';
+
+// Unified risk shape used throughout the page regardless of source
+interface DisplayRisk {
+  title: string;
+  severity: string;   // 'high' | 'medium' | 'low' (lower-cased)
+  description: string;
+  source: 'ai' | 'pattern';
+}
 
 @Component({
   selector: 'app-risks-page',
@@ -26,21 +34,33 @@ export class RisksPage implements OnInit {
     this.session = this.currentAnalysis.getSession();
   }
 
-  get highRisks(): RiskItem[] {
-    return this.session?.analysis.risks.filter(r => r.severity === 'high') ?? [];
+  get isAiPowered(): boolean {
+    return (this.session?.aiAnalysis?.risks?.length ?? 0) > 0;
   }
 
-  get mediumRisks(): RiskItem[] {
-    return this.session?.analysis.risks.filter(r => r.severity === 'medium') ?? [];
+  // All risks normalised to DisplayRisk, preferring AI source
+  get allRisks(): DisplayRisk[] {
+    if (this.isAiPowered) {
+      return (this.session!.aiAnalysis!.risks as AiRisk[]).map(r => ({
+        title:       r.title,
+        severity:    r.severity.toLowerCase(),
+        description: r.description,
+        source:      'ai' as const
+      }));
+    }
+    return (this.session?.analysis.risks ?? []).map(r => ({
+      title:       r.description,
+      severity:    r.severity,
+      description: r.description,
+      source:      'pattern' as const
+    }));
   }
 
-  get lowRisks(): RiskItem[] {
-    return this.session?.analysis.risks.filter(r => r.severity === 'low') ?? [];
-  }
+  get highRisks():   DisplayRisk[] { return this.allRisks.filter(r => r.severity === 'high'); }
+  get mediumRisks(): DisplayRisk[] { return this.allRisks.filter(r => r.severity === 'medium'); }
+  get lowRisks():    DisplayRisk[] { return this.allRisks.filter(r => r.severity === 'low'); }
 
-  get totalCount(): number {
-    return this.session?.analysis.risks.length ?? 0;
-  }
+  get totalCount(): number { return this.allRisks.length; }
 
   get riskScore(): number {
     if (!this.totalCount) return 100;

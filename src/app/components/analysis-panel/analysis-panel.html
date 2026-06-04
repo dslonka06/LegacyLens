@@ -110,16 +110,31 @@
               <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
           </div>
-          <span class="findings-summary-title">Risks / Issues Detected ({{ analysis.risks.length }})</span>
+          <span class="findings-summary-title">Risks / Issues Detected ({{ displayRisks.length }})</span>
         </div>
-        <div class="findings-preview-list">
-          <div class="findings-preview-item" *ngFor="let r of analysis.risks | slice:0:5">
+
+        <!-- Empty state -->
+        <div class="findings-empty-state" *ngIf="!displayRisks.length">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          No significant risks detected.
+        </div>
+
+        <div class="findings-preview-list" *ngIf="displayRisks.length">
+          <div class="findings-preview-item" *ngFor="let r of displayRisks | slice:0:4">
             <span class="sev-dot" [ngClass]="'dot-' + r.severity"></span>
-            <span>{{ r.description }}</span>
+            <span class="findings-preview-text">
+              <span class="findings-preview-title" *ngIf="hasAiRisks">{{ r.title }}</span>
+              <span>{{ r.description }}</span>
+            </span>
           </div>
         </div>
-        <a class="view-all-link" (click)="navigateTo('/risks'); $event.stopPropagation()">
-          View all {{ analysis.risks.length }} issues →
+
+        <a class="view-all-link" *ngIf="displayRisks.length"
+           (click)="navigateTo('/risks'); $event.stopPropagation()">
+          View all {{ displayRisks.length }} issues →
         </a>
       </div>
 

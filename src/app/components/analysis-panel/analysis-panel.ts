@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { AnalysisResult } from '../../models/analysis-result.model';
-import { AiAnalysisResult } from '../../models/ai-analysis-result.model';
+import { AiAnalysisResult, AiRisk } from '../../models/ai-analysis-result.model';
+import { RiskItem } from '../../models/risk-item.model';
 
 @Component({
   selector: 'app-analysis-panel',
@@ -44,6 +45,27 @@ export class AnalysisPanel {
   get aiProviderLabel(): string | null {
     if (!this.ai) return null;
     return `${this.ai.provider} · ${this.ai.model}`;
+  }
+
+  // Prefer AI risks when available; fall back to pattern-based RiskItems.
+  get displayRisks(): { title: string; severity: string; description: string }[] {
+    if (this.ai?.risks?.length) {
+      return this.ai.risks.map(r => ({
+        title: r.title,
+        severity: r.severity.toLowerCase(),
+        description: r.description
+      }));
+    }
+    // Pattern fallback: RiskItem has no title, so use description as both
+    return (this.analysis?.risks ?? []).map((r: RiskItem) => ({
+      title: r.description,
+      severity: r.severity,
+      description: r.description
+    }));
+  }
+
+  get hasAiRisks(): boolean {
+    return (this.ai?.risks?.length ?? 0) > 0;
   }
 
   // How many segments to fill for complexity
