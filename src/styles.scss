@@ -1952,6 +1952,37 @@ ul, ol { list-style: none; }
   &:hover { background: var(--bg-secondary); border-color: var(--text-muted); }
 }
 
+// ─── Architecture empty states and responsibilities ──────
+.arch-empty-state {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 2px;
+}
+
+.arch-responsibility-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.arch-responsibility-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-content);
+  transition: border-color 0.15s, background 0.15s;
+
+  svg { width: 14px; height: 14px; color: var(--success); flex-shrink: 0; margin-top: 1px; }
+
+  &:hover { background: var(--bg-secondary); border-color: var(--text-muted); }
+}
+
 // ─── Print / PDF export styles ───────────────────────────
 @media print {
   app-sidebar,

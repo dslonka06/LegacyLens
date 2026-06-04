@@ -20,4 +20,32 @@ export class ArchitecturePage implements OnInit {
   ngOnInit(): void {
     this.session = this.currentAnalysis.getSession();
   }
+
+  get isAiPowered(): boolean {
+    const arch = this.session?.aiAnalysis?.architecture;
+    return !!(arch && (
+      arch.patterns.length > 0 ||
+      arch.responsibilities.length > 0 ||
+      arch.dependencies.length > 0
+    ));
+  }
+
+  // Prefer AI patterns; fall back to pattern-based analysis
+  get patterns(): string[] {
+    if (this.isAiPowered)
+      return this.session!.aiAnalysis!.architecture.patterns;
+    return this.session?.analysis.patterns ?? [];
+  }
+
+  get responsibilities(): string[] {
+    if (this.isAiPowered)
+      return this.session!.aiAnalysis!.architecture.responsibilities;
+    return this.session?.analysis.responsibilities ?? [];
+  }
+
+  get dependencies(): string[] {
+    if (this.isAiPowered)
+      return this.session!.aiAnalysis!.architecture.dependencies;
+    return this.session?.analysis.dependencies ?? [];
+  }
 }

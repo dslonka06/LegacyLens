@@ -27,7 +27,12 @@ public sealed class OpenAiProvider : IAiProvider
               "severity": string,
               "description": string
             }
-          ]
+          ],
+          "architecture": {
+            "patterns": [],
+            "responsibilities": [],
+            "dependencies": []
+          }
         }
 
         summary:
@@ -60,7 +65,31 @@ public sealed class OpenAiProvider : IAiProvider
         description: a clear explanation of the specific risk in this code
 
         Only return risks that are genuinely present. Do not invent risks.
-        If no meaningful risks exist, return an empty array: "risks": []
+        If no meaningful risks exist, return: "risks": []
+
+        architecture:
+        Identify the architectural characteristics of the code.
+
+        patterns:
+        List recognisable architectural and design patterns present.
+        Examples: "Repository Pattern", "Service Layer", "Dependency Injection",
+        "Factory Pattern", "Strategy Pattern", "CQRS", "Domain Model",
+        "MVC", "API Controller", "Event Driven".
+        Only include patterns clearly evidenced by the code. Do not invent patterns.
+        If none apply, return: "patterns": []
+
+        responsibilities:
+        List the major responsibilities of this code as short, clear phrases.
+        Examples: "Retrieves funding orders by user ID", "Maps entities to DTOs",
+        "Validates user requests", "Publishes domain events".
+        If none, return: "responsibilities": []
+
+        dependencies:
+        List meaningful dependencies referenced or injected into this code.
+        Examples: "IFundingOrderRepository", "ILogger", "HttpClient", "Entity Framework",
+        "IMapper", "IOptions<T>".
+        Only list dependencies that are visibly present. Do not invent them.
+        If none, return: "dependencies": []
 
         Return only the JSON object. No markdown, no code fences, no additional text.
         """;
@@ -136,39 +165,75 @@ public sealed class OpenAiProvider : IAiProvider
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
 
-        var risks = new List<AiRisk>();
-
-        if (root.TryGetProperty("risks", out var risksElement) &&
-            risksElement.ValueKind == JsonValueKind.Array)
-        {
-            foreach (var r in risksElement.EnumerateArray())
-            {
-                var title       = r.TryGetProperty("title",       out var t) ? t.GetString() ?? string.Empty : string.Empty;
-                var severity    = r.TryGetProperty("severity",    out var s) ? s.GetString() ?? "Low"        : "Low";
-                var description = r.TryGetProperty("description", out var d) ? d.GetString() ?? string.Empty : string.Empty;
-
-                // Normalise severity to expected casing; reject unknown values
-                var normalisedSeverity = severity.Trim() switch
-                {
-                    "High"   or "high"   => "High",
-                    "Medium" or "medium" => "Medium",
-                    "Low"    or "low"    => "Low",
-                    _                    => "Low"
-                };
-
-                if (!string.IsNullOrWhiteSpace(title))
-                    risks.Add(new AiRisk(title, normalisedSeverity, description));
-            }
-        }
-
         return new AiAnalysisResponse(
             Summary:         root.GetProperty("summary").GetString()         ?? string.Empty,
             BusinessPurpose: root.GetProperty("businessPurpose").GetString() ?? string.Empty,
             ExplainSimpler:  root.GetProperty("explainSimpler").GetString()  ?? string.Empty,
-            Risks:           risks.AsReadOnly(),
+            Risks:           ParseRisks(root),
+            Architecture:    ParseArchitecture(root),
             Model:           model,
             Provider:        "OpenAI",
             GeneratedAtUtc:  DateTimeOffset.UtcNow
         );
     }
+
+    private static IReadOnlyList<AiRisk> ParseRisks(JsonElement root)
+    {
+        var risks = new List<AiRisk>();
+
+        if (!root.TryGetProperty("risks", out var risksEl) ||
+            risksEl.ValueKind != JsonValueKind.Array)
+            return risks.AsReadOnly();
+
+        foreach (var r in risksEl.EnumerateArray())
+        {
+            var title       = r.TryGetProperty("title",       out var t) ? t.GetString() ?? string.Empty : string.Empty;
+            var severity    = r.TryGetProperty("severity",    out var s) ? s.GetString() ?? "Low"        : "Low";
+            var description = r.TryGetProperty("description", out var d) ? d.GetString() ?? string.Empty : string.Empty;
+
+            var normalisedSeverity = severity.Trim() switch
+            {
+                "High"   or "high"   => "High",
+                "Medium" or "medium" => "Medium",
+                _                    => "Low"
+            };
+
+            if (!string.IsNullOrWhiteSpace(title))
+                risks.Add(new AiRisk(title, normalisedSeverity, description));
+        }
+
+        return risks.AsReadOnly();
+    }
+
+    private static ArchitectureAnalysis ParseArchitecture(JsonElement root)
+    {
+        if (!root.TryGetProperty("architecture", out var archEl) ||
+            archEl.ValueKind != JsonValueKind.Object)
+            return EmptyArchitecture();
+
+        return new ArchitectureAnalysis(
+            Patterns:         ParseStringArray(archEl, "patterns"),
+            Responsibilities: ParseStringArray(archEl, "responsibilities"),
+            Dependencies:     ParseStringArray(archEl, "dependencies")
+        );
+    }
+
+    private static IReadOnlyList<string> ParseStringArray(JsonElement parent, string propertyName)
+    {
+        if (!parent.TryGetProperty(propertyName, out var el) ||
+            el.ValueKind != JsonValueKind.Array)
+            return Array.Empty<string>();
+
+        var result = new List<string>();
+        foreach (var item in el.EnumerateArray())
+        {
+            var value = item.GetString();
+            if (!string.IsNullOrWhiteSpace(value))
+                result.Add(value.Trim());
+        }
+        return result.AsReadOnly();
+    }
+
+    private static ArchitectureAnalysis EmptyArchitecture() =>
+        new(Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>());
 }

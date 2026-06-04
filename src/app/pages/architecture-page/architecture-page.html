@@ -10,22 +10,19 @@
       </div>
       <div>
         <h1>Architecture</h1>
-        <p class="page-subtitle">Structural patterns and component design</p>
+        <p class="page-subtitle" *ngIf="session">
+          {{ session.fileName }}
+          <span class="source-badge ai" *ngIf="isAiPowered">AI</span>
+          <span class="source-badge pattern" *ngIf="!isAiPowered">Pattern</span>
+        </p>
+        <p class="page-subtitle" *ngIf="!session">Structural patterns and component design</p>
       </div>
     </div>
   </div>
 
   <div class="page-content" *ngIf="session; else noSession">
 
-    <!-- Overview -->
-    <div class="doc-block">
-      <div class="doc-block-label">Architecture Overview</div>
-      <div class="doc-card accent-violet">
-        <p>{{ session.analysis.architecture }}</p>
-      </div>
-    </div>
-
-    <!-- Metrics strip -->
+    <!-- Metrics strip — always from pattern analysis -->
     <div class="doc-block">
       <div class="doc-block-label">Metrics</div>
       <div class="metrics-strip">
@@ -48,33 +45,21 @@
       </div>
     </div>
 
-    <!-- Architecture layer diagram -->
-    <div class="doc-block" *ngIf="session.analysis.architectureLayers.length">
-      <div class="doc-block-label">Layer Diagram</div>
-      <div class="arch-diagram">
-        <div class="arch-layer-node" *ngFor="let layer of session.analysis.architectureLayers; let last = last">
-          <div class="arch-layer-card">
-            <svg class="arch-layer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-            </svg>
-            <span class="arch-layer-name">{{ layer }}</span>
-          </div>
-          <div class="arch-connector" *ngIf="!last">
-            <div class="arch-connector-line"></div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="19 12 12 19 5 12"/>
-            </svg>
-          </div>
-        </div>
+    <!-- Patterns -->
+    <div class="doc-block">
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Patterns Detected
       </div>
-    </div>
 
-    <!-- Pattern cards -->
-    <div class="doc-block" *ngIf="session.analysis.patterns.length">
-      <div class="doc-block-label">Patterns Detected</div>
-      <div class="arch-pattern-grid">
-        <div class="arch-pattern-card" *ngFor="let p of session.analysis.patterns">
+      <div class="arch-empty-state" *ngIf="!patterns.length">
+        No architectural patterns detected.
+      </div>
+
+      <div class="arch-pattern-grid" *ngIf="patterns.length">
+        <div class="arch-pattern-card" *ngFor="let p of patterns">
           <div class="arch-pattern-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -88,11 +73,45 @@
       </div>
     </div>
 
-    <!-- Related components -->
-    <div class="doc-block" *ngIf="session.analysis.dependencies.length">
-      <div class="doc-block-label">Related Components</div>
-      <div class="arch-component-list">
-        <div class="arch-component-item" *ngFor="let d of session.analysis.dependencies">
+    <!-- Responsibilities -->
+    <div class="doc-block">
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        Responsibilities
+      </div>
+
+      <div class="arch-empty-state" *ngIf="!responsibilities.length">
+        No responsibilities identified.
+      </div>
+
+      <div class="arch-responsibility-list" *ngIf="responsibilities.length">
+        <div class="arch-responsibility-item" *ngFor="let r of responsibilities">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span>{{ r }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dependencies -->
+    <div class="doc-block">
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/>
+          <path d="M6 21V9a9 9 0 0 0 9 9"/>
+        </svg>
+        Dependencies
+      </div>
+
+      <div class="arch-empty-state" *ngIf="!dependencies.length">
+        No significant dependencies identified.
+      </div>
+
+      <div class="arch-component-list" *ngIf="dependencies.length">
+        <div class="arch-component-item" *ngFor="let d of dependencies">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/>
             <path d="M6 21V9a9 9 0 0 0 9 9"/>

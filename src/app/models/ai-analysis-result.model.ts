@@ -1,3 +1,5 @@
+import { ArchitectureAnalysis } from './architecture-analysis.model';
+
 export interface AiRisk {
   title: string;
   severity: string;
@@ -9,6 +11,7 @@ export interface AiAnalysisResult {
   businessPurpose: string;
   explainSimpler: string;
   risks: AiRisk[];
+  architecture: ArchitectureAnalysis;
   model: string;
   provider: string;
   generatedAtUtc: string;

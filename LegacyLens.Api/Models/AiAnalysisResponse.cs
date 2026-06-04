@@ -5,6 +5,7 @@ public sealed record AiAnalysisResponse(
     string BusinessPurpose,
     string ExplainSimpler,
     IReadOnlyList<AiRisk> Risks,
+    ArchitectureAnalysis Architecture,
     string Model,
     string Provider,
     DateTimeOffset GeneratedAtUtc
