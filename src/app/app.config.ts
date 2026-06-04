@@ -10,7 +10,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     {
       provide: NGX_MONACO_EDITOR_CONFIG,
-      useValue: { baseUrl: 'assets/monaco' }
+      useValue: { baseUrl: 'assets' }
     }
   ]
 };
