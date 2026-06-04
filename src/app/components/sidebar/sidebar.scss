@@ -30,15 +30,15 @@
   padding: 14px 12px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  min-height: 48px;
+  min-height: 56px;   /* taller to fit subtitle */
   overflow: hidden;
 }
 
 .brand-icon {
-  width: 30px;
-  height: 30px;
+  width: 36px;    /* #12 up from 30px */
+  height: 36px;
   background: linear-gradient(135deg, var(--accent), #8b5cf6);
-  border-radius: 8px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,17 +48,21 @@
 
 .brand-text {
   display: flex;
-  align-items: baseline;
-  gap: 5px;
+  flex-direction: column;
+  gap: 2px;
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  opacity: 1;
-  transition: opacity 0.15s ease;
+}
+
+.brand-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
 }
 
 .brand-name {
-  font-size: 14px;
+  font-size: 15px;   /* #12 up from 14px */
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.3px;
@@ -74,6 +78,16 @@
   border-radius: 4px;
   letter-spacing: 0.5px;
   white-space: nowrap;
+}
+
+/* #13 tagline */
+.brand-subtitle {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .collapse-btn {
@@ -193,8 +207,8 @@
 }
 
 .nav-icon {
-  width: 15px;
-  height: 15px;
+  width: 18px;    /* #1 up from 15px */
+  height: 18px;
   flex-shrink: 0;
   stroke: currentColor;
 }
@@ -229,7 +243,7 @@
   }
 
   .nav-icon {
-    width: 17px;
-    height: 17px;
+    width: 20px;
+    height: 20px;
   }
 }
