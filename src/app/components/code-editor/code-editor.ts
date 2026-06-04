@@ -25,7 +25,6 @@ export class CodeEditor implements OnChanges, OnDestroy {
   isLoadingFile = false;
   lastAnalyzedLabel: string | null = null;
 
-  // Monaco editor instance — typed as any since monaco global isn't in scope at compile time
   private editorInstance: any = null;
 
   editorOptions = {
@@ -44,10 +43,7 @@ export class CodeEditor implements OnChanges, OnDestroy {
     lineNumbersMinChars: 3,
     glyphMargin: false,
     automaticLayout: true,
-    scrollbar: {
-      verticalScrollbarSize: 6,
-      horizontalScrollbarSize: 6
-    },
+    scrollbar: { verticalScrollbarSize: 6, horizontalScrollbarSize: 6 },
     padding: { top: 14, bottom: 14 },
     fixedOverflowWidgets: true,
   };
@@ -65,10 +61,8 @@ export class CodeEditor implements OnChanges, OnDestroy {
     if (changes['restoredSourceCode'] && this.restoredSourceCode !== null) {
       this.code = this.restoredSourceCode;
       this.lastAnalyzedLabel = 'Restored';
-      // If Monaco is already mounted, push the value directly to avoid cursor jump
       if (this.editorInstance) {
-        const current = this.editorInstance.getValue();
-        if (current !== this.restoredSourceCode) {
+        if (this.editorInstance.getValue() !== this.restoredSourceCode) {
           this.editorInstance.setValue(this.restoredSourceCode);
         }
         this.updateLanguage(this.restoredSourceCode);
@@ -93,13 +87,11 @@ export class CodeEditor implements OnChanges, OnDestroy {
     this.zone.run(() => {
       this.editorInstance = editor;
 
-      // Set initial value if code already present (e.g. restored from history)
       if (this.code) {
         editor.setValue(this.code);
         this.updateLanguage(this.code);
       }
 
-      // Keep this.code in sync whenever the user types
       editor.onDidChangeModelContent(() => {
         this.zone.run(() => {
           this.code = editor.getValue();
@@ -156,8 +148,6 @@ export class CodeEditor implements OnChanges, OnDestroy {
     this.isAnalyzing = false;
   }
 
-  // ─── Private helpers ──────────────────────────────────
-
   private detectLanguage(code: string): string {
     if (!code) return 'Auto';
     if (code.includes('[ApiController]') || (code.includes('Controller') && code.includes('class'))) return 'C#';
@@ -177,15 +167,13 @@ export class CodeEditor implements OnChanges, OnDestroy {
   }
 
   private updateLanguage(code: string): void {
-    const lang = this.detectMonacoLanguage(code);
-    this.setMonacoLanguage(lang);
+    this.setMonacoLanguage(this.detectMonacoLanguage(code));
   }
 
   private setMonacoLanguage(language: string): void {
     if (!this.editorInstance) return;
     const model = this.editorInstance.getModel();
     if (!model) return;
-    // monaco global is available at runtime via the loader
     const monaco = (window as any).monaco;
     if (monaco) {
       monaco.editor.setModelLanguage(model, language);
