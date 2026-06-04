@@ -38,7 +38,14 @@ public sealed class OpenAiProvider : IAiProvider
               "title": string,
               "description": string
             }
-          ]
+          ],
+          "documentation": {
+            "overview": string,
+            "responsibilities": string,
+            "workflow": string,
+            "keyDependencies": string,
+            "technicalNotes": string
+          }
         }
 
         summary:
@@ -117,6 +124,34 @@ public sealed class OpenAiProvider : IAiProvider
 
         Only return recommendations that are genuinely applicable. Do not invent improvements.
         If no meaningful modernizations apply, return: "modernizations": []
+
+        documentation:
+        Generate structured developer documentation for this code.
+
+        overview:
+        Describe what the code is and why it exists. Combine the summary and business
+        purpose into a single cohesive paragraph suitable for a developer onboarding document.
+
+        responsibilities:
+        Describe the major responsibilities and behaviours of this code in prose form.
+        Write it as a single paragraph or a few sentences.
+
+        workflow:
+        Describe step-by-step how the code executes — from entry point to output.
+        Write it as a flowing description, not as a bullet list.
+
+        keyDependencies:
+        List the important classes, services, repositories, APIs, frameworks, and
+        injected dependencies. Write as a single paragraph or comma-separated list.
+
+        technicalNotes:
+        Any additional implementation details, assumptions, limitations, or design
+        considerations a developer should be aware of.
+        If nothing notable, write an empty string.
+
+        Do not use markdown formatting in documentation fields.
+        Do not use bullet points or code blocks in documentation fields.
+        Write in plain prose.
 
         Return only the JSON object. No markdown, no code fences, no additional text.
         """;
@@ -199,6 +234,7 @@ public sealed class OpenAiProvider : IAiProvider
             Risks:           ParseRisks(root),
             Architecture:    ParseArchitecture(root),
             Modernizations:  ParseModernizations(root),
+            Documentation:   ParseDocumentation(root),
             Model:           model,
             Provider:        "OpenAI",
             GeneratedAtUtc:  DateTimeOffset.UtcNow
@@ -265,6 +301,27 @@ public sealed class OpenAiProvider : IAiProvider
 
         return result.AsReadOnly();
     }
+
+    private static GeneratedDocumentation ParseDocumentation(JsonElement root)
+    {
+        if (!root.TryGetProperty("documentation", out var docEl) ||
+            docEl.ValueKind != JsonValueKind.Object)
+            return EmptyDocumentation();
+
+        return new GeneratedDocumentation(
+            Overview:         GetString(docEl, "overview"),
+            Responsibilities: GetString(docEl, "responsibilities"),
+            Workflow:         GetString(docEl, "workflow"),
+            KeyDependencies:  GetString(docEl, "keyDependencies"),
+            TechnicalNotes:   GetString(docEl, "technicalNotes")
+        );
+    }
+
+    private static string GetString(JsonElement el, string propertyName) =>
+        el.TryGetProperty(propertyName, out var prop) ? prop.GetString() ?? string.Empty : string.Empty;
+
+    private static GeneratedDocumentation EmptyDocumentation() =>
+        new(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
 
     private static IReadOnlyList<string> ParseStringArray(JsonElement parent, string propertyName)
     {

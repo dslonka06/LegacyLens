@@ -1,5 +1,6 @@
 import { ArchitectureAnalysis } from './architecture-analysis.model';
 import { ModernizationRecommendation } from './modernization-recommendation.model';
+import { GeneratedDocumentation } from './generated-documentation.model';
 
 export interface AiRisk {
   title: string;
@@ -14,6 +15,7 @@ export interface AiAnalysisResult {
   risks: AiRisk[];
   architecture: ArchitectureAnalysis;
   modernizations: ModernizationRecommendation[];
+  documentation: GeneratedDocumentation;
   model: string;
   provider: string;
   generatedAtUtc: string;

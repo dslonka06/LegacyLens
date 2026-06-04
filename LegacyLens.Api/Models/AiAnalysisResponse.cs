@@ -7,6 +7,7 @@ public sealed record AiAnalysisResponse(
     IReadOnlyList<AiRisk> Risks,
     ArchitectureAnalysis Architecture,
     IReadOnlyList<ModernizationRecommendation> Modernizations,
+    GeneratedDocumentation Documentation,
     string Model,
     string Provider,
     DateTimeOffset GeneratedAtUtc

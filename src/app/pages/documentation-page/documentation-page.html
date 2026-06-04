@@ -9,7 +9,12 @@
       </div>
       <div>
         <h1>Documentation</h1>
-        <p class="page-subtitle">Generated report for {{ session?.fileName || 'no file loaded' }}</p>
+        <p class="page-subtitle" *ngIf="session">
+          {{ session.fileName }}
+          <span class="source-badge ai" *ngIf="isAiPowered">AI</span>
+          <span class="source-badge pattern" *ngIf="!isAiPowered">Pattern</span>
+        </p>
+        <p class="page-subtitle" *ngIf="!session">Generated technical documentation</p>
       </div>
     </div>
     <button class="doc-export-btn" *ngIf="session" (click)="exportPdf()">
@@ -24,6 +29,7 @@
 
   <div class="page-content" *ngIf="session; else noSession">
 
+    <!-- Metadata strip -->
     <div class="meta-strip">
       <div class="meta-item"><span class="meta-key">File</span><span class="meta-val">{{ session.fileName }}</span></div>
       <div class="meta-item"><span class="meta-key">Language</span><span class="meta-val accent">{{ session.analysis.language }}</span></div>
@@ -33,108 +39,76 @@
       <div class="meta-item"><span class="meta-key">Generated</span><span class="meta-val muted">{{ session.createdAt | date:'MMM d, y · h:mm a' }}</span></div>
     </div>
 
+    <!-- Overview -->
     <div class="doc-block">
-      <div class="doc-block-label">Executive Summary</div>
-      <div class="doc-card accent-indigo large-text">
-        <p>{{ session.analysis.summary }}</p>
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Overview
+      </div>
+      <div class="doc-card accent-indigo">
+        <p *ngIf="overview">{{ overview }}</p>
+        <p class="muted-text" *ngIf="!overview">No information available.</p>
       </div>
     </div>
 
+    <!-- Responsibilities -->
     <div class="doc-block">
-      <div class="doc-block-label">Business Purpose</div>
-      <div class="doc-card accent-violet">
-        <p>{{ session.analysis.businessPurpose }}</p>
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        Responsibilities
       </div>
-    </div>
-
-    <div class="doc-block" *ngIf="session.analysis.architecture">
-      <div class="doc-block-label">Architecture Overview</div>
-      <div class="doc-card accent-violet">
-        <p>{{ session.analysis.architecture }}</p>
-      </div>
-    </div>
-
-    <div class="doc-block" *ngIf="session.analysis.responsibilities.length">
-      <div class="doc-block-label">Responsibilities</div>
       <div class="doc-card">
-        <ul class="bullet-list">
-          <li *ngFor="let r of session.analysis.responsibilities">{{ r }}</li>
-        </ul>
+        <p *ngIf="responsibilities">{{ responsibilities }}</p>
+        <p class="muted-text" *ngIf="!responsibilities">No information available.</p>
       </div>
     </div>
 
-    <div class="doc-two-col" *ngIf="session.analysis.inputs.length || session.analysis.outputs.length">
-      <div class="doc-block">
-        <div class="doc-block-label">Inputs</div>
-        <div class="doc-card">
-          <ul class="bullet-list" *ngIf="session.analysis.inputs.length; else noItems">
-            <li *ngFor="let i of session.analysis.inputs">{{ i }}</li>
-          </ul>
-          <ng-template #noItems><p class="muted-text">None identified</p></ng-template>
-        </div>
+    <!-- Workflow -->
+    <div class="doc-block">
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Workflow
       </div>
-      <div class="doc-block">
-        <div class="doc-block-label">Outputs</div>
-        <div class="doc-card">
-          <ul class="bullet-list" *ngIf="session.analysis.outputs.length; else noOutItems">
-            <li *ngFor="let o of session.analysis.outputs">{{ o }}</li>
-          </ul>
-          <ng-template #noOutItems><p class="muted-text">None identified</p></ng-template>
-        </div>
-      </div>
-    </div>
-
-    <div class="doc-block" *ngIf="session.analysis.dataFlow">
-      <div class="doc-block-label">Data Flow Summary</div>
-      <div class="doc-card flow-text-card">
-        <p>{{ session.analysis.dataFlow }}</p>
-      </div>
-    </div>
-
-    <div class="doc-block" *ngIf="session.analysis.dependencies.length">
-      <div class="doc-block-label">Dependencies</div>
       <div class="doc-card">
-        <ul class="bullet-list">
-          <li *ngFor="let d of session.analysis.dependencies">{{ d }}</li>
-        </ul>
+        <p *ngIf="workflow">{{ workflow }}</p>
+        <p class="muted-text" *ngIf="!workflow">No information available.</p>
       </div>
     </div>
 
-    <div class="doc-block" *ngIf="session.analysis.risks.length">
-      <div class="doc-block-label">Detected Risks</div>
-      <div class="doc-card no-pad">
-        <div class="risk-row" *ngFor="let r of session.analysis.risks" [class]="'risk-row-' + r.severity">
-          <span class="risk-pip"></span>
-          <span class="risk-row-text">{{ r.description }}</span>
-          <span class="risk-sev-tag">{{ r.severity }}</span>
-        </div>
+    <!-- Key Dependencies -->
+    <div class="doc-block">
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/>
+          <path d="M6 21V9a9 9 0 0 0 9 9"/>
+        </svg>
+        Key Dependencies
+      </div>
+      <div class="doc-card">
+        <p *ngIf="keyDependencies">{{ keyDependencies }}</p>
+        <p class="muted-text" *ngIf="!keyDependencies">No information available.</p>
       </div>
     </div>
 
-    <div class="doc-block" *ngIf="session.analysis.modernizationSuggestions.length">
-      <div class="doc-block-label">Modernization Recommendations</div>
-      <div class="doc-card no-pad">
-        <div class="mod-row" *ngFor="let s of session.analysis.modernizationSuggestions" [class]="'pri-' + s.priority">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          <span>{{ s.description }}</span>
-          <span class="mod-pri-tag">{{ s.priority }}</span>
-        </div>
+    <!-- Technical Notes -->
+    <div class="doc-block">
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        Technical Notes
       </div>
-    </div>
-
-    <div class="doc-block" *ngIf="session.analysis.security">
-      <div class="doc-block-label">Security Findings</div>
       <div class="doc-card accent-amber">
-        <p>{{ session.analysis.security }}</p>
-      </div>
-    </div>
-
-    <div class="doc-block" *ngIf="session.analysis.developerNotes">
-      <div class="doc-block-label">Developer Notes</div>
-      <div class="doc-card">
-        <p>{{ session.analysis.developerNotes }}</p>
+        <p *ngIf="technicalNotes">{{ technicalNotes }}</p>
+        <p class="muted-text" *ngIf="!technicalNotes">No information available.</p>
       </div>
     </div>
 
