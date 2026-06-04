@@ -14,13 +14,13 @@
   height: 100%;
 }
 
-// ─── Tab row ────────────────────────────────────────────
+// ─── Tab row — larger, no heavy border below ─────────────
 .editor-tabs {
   display: flex;
   align-items: flex-end;
-  height: 36px;
+  height: 42px;           /* up from 36px */
   background: var(--bg-primary);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(40, 53, 72, 0.5);  /* subtle */
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -28,22 +28,23 @@
 .editor-tab {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 14px;
+  gap: 8px;
+  padding: 0 18px;        /* more horizontal padding */
   height: 100%;
-  font-size: 12px;
+  font-size: 13px;        /* up from 12px */
   font-weight: 500;
   color: var(--text-muted);
   background: var(--editor-bg);
-  border-right: 1px solid var(--border);
+  border-right: 1px solid rgba(40, 53, 72, 0.4);
   cursor: pointer;
   position: relative;
-  max-width: 220px;
+  max-width: 260px;
   overflow: hidden;
   transition: color 0.15s;
 
   &.active {
     color: var(--text-primary);
+    font-weight: 600;
 
     &::after {
       content: '';
@@ -58,10 +59,10 @@
 }
 
 .tab-file-icon {
-  width: 13px;
-  height: 13px;
+  width: 15px;            /* up from 13px */
+  height: 15px;
   flex-shrink: 0;
-  color: var(--accent); // fallback
+  color: var(--accent);
 
   &.lang-icon-csharp     { color: #a78bfa; }
   &.lang-icon-typescript { color: #60a5fa; }
@@ -81,8 +82,8 @@
 }
 
 .tab-close-btn {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   background: transparent;
   border: none;
   color: var(--text-muted);
@@ -93,7 +94,7 @@
   border-radius: 3px;
   padding: 0;
   transition: color 0.15s, background 0.15s;
-  svg { width: 10px; height: 10px; }
+  svg { width: 11px; height: 11px; }
 
   &:hover {
     color: var(--error);
@@ -101,14 +102,14 @@
   }
 }
 
-// ─── Toolbar ────────────────────────────────────────────
+// ─── Toolbar — no heavy border, subtle separator ─────────
 .editor-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
-  height: 40px;
-  border-bottom: 1px solid var(--border);
+  padding: 0 14px;
+  height: 42px;
+  border-bottom: 1px solid rgba(40, 53, 72, 0.4);  /* subtle — blends with Monaco */
   background-color: var(--editor-bg);
   flex-shrink: 0;
   gap: 10px;
@@ -137,10 +138,7 @@
   letter-spacing: 0.02em;
   flex-shrink: 0;
 
-  // Default / fallback
-  &.lang-default  { color: var(--accent);  background: rgba(124,92,255,0.1); border: 1px solid rgba(124,92,255,0.2); }
-
-  // Language-specific colours
+  &.lang-default    { color: var(--accent);  background: rgba(124,92,255,0.1); border: 1px solid rgba(124,92,255,0.2); }
   &.lang-csharp     { color: #a78bfa; background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.25); }
   &.lang-typescript { color: #60a5fa; background: rgba(96,165,250,0.12);  border: 1px solid rgba(96,165,250,0.25); }
   &.lang-javascript { color: #fbbf24; background: rgba(251,191,36,0.12);  border: 1px solid rgba(251,191,36,0.25); }
@@ -169,13 +167,13 @@
   svg { width: 12px; height: 12px; color: var(--success); }
 }
 
-// ─── Buttons ────────────────────────────────────────────
+// ─── Buttons ─────────────────────────────────────────────
 .btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 11px;
-  border-radius: 6px;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 7px;
   font-size: 12px;
   font-weight: 500;
   border: none;
@@ -199,14 +197,22 @@
   }
 }
 
+// Primary Analyze button — deliberately more prominent
 .btn-primary {
   background: var(--accent);
   color: white;
+  padding: 7px 16px;      /* taller and wider than btn-ghost */
+  font-size: 13px;
+  font-weight: 600;
+  svg { width: 15px; height: 15px; }
 
-  &:hover:not(:disabled) { background: var(--accent-hover); }
+  &:hover:not(:disabled) {
+    background: var(--accent-hover);
+    box-shadow: 0 0 0 3px rgba(124,92,255,0.25);
+  }
 }
 
-// ─── Monaco container ────────────────────────────────────
+// ─── Monaco container — no additional border ─────────────
 .monaco-container {
   flex: 1;
   min-height: 0;
@@ -219,8 +225,6 @@
   height: 100%;
 }
 
-// Override Monaco's default background to match app theme
-// These target Monaco's injected DOM — :host scoping won't reach them
 ::ng-deep .monaco-editor,
 ::ng-deep .monaco-editor-background,
 ::ng-deep .monaco-editor .margin {

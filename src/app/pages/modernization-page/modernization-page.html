@@ -15,7 +15,6 @@
     </div>
   </div>
 
-  <!-- No session -->
   <div class="no-session" *ngIf="!session">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
@@ -27,44 +26,46 @@
 
   <div class="page-content" *ngIf="session">
 
-    <!-- High priority -->
-    <div class="doc-block" *ngIf="highPriority.length">
-      <div class="doc-block-label sev-label-high">High Priority</div>
-      <div class="doc-card no-pad">
-        <div class="mod-row pri-high" *ngFor="let s of highPriority">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          {{ s.description }}
-          <span class="mod-pri-tag">High</span>
-        </div>
+    <!-- Summary strip -->
+    <div class="mod-summary-strip">
+      <div class="mod-summary-item">
+        <span class="mod-sum-number impact-high">{{ highCount }}</span>
+        <span class="mod-sum-label">High Impact</span>
+      </div>
+      <div class="mod-summary-divider"></div>
+      <div class="mod-summary-item">
+        <span class="mod-sum-number impact-medium">{{ mediumCount }}</span>
+        <span class="mod-sum-label">Medium Impact</span>
+      </div>
+      <div class="mod-summary-divider"></div>
+      <div class="mod-summary-item">
+        <span class="mod-sum-number impact-low">{{ lowCount }}</span>
+        <span class="mod-sum-label">Low Impact</span>
+      </div>
+      <div class="mod-summary-divider"></div>
+      <div class="mod-summary-item">
+        <span class="mod-sum-number impact-total">{{ totalCount }}</span>
+        <span class="mod-sum-label">Total</span>
       </div>
     </div>
 
-    <!-- Medium priority -->
-    <div class="doc-block" *ngIf="mediumPriority.length">
-      <div class="doc-block-label sev-label-medium">Medium Priority</div>
-      <div class="doc-card no-pad">
-        <div class="mod-row pri-medium" *ngFor="let s of mediumPriority">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          {{ s.description }}
-          <span class="mod-pri-tag">Medium</span>
-        </div>
+    <!-- Grouped by category -->
+    <div class="doc-block" *ngFor="let cat of categories">
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+        </svg>
+        {{ cat.label }}
       </div>
-    </div>
-
-    <!-- Low priority -->
-    <div class="doc-block" *ngIf="lowPriority.length">
-      <div class="doc-block-label">Low Priority</div>
-      <div class="doc-card no-pad">
-        <div class="mod-row pri-low" *ngFor="let s of lowPriority">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          {{ s.description }}
-          <span class="mod-pri-tag">Low</span>
+      <div class="mod-card-list">
+        <div class="mod-item-card" *ngFor="let item of cat.items" [ngClass]="'mod-card-' + item.priority">
+          <div class="mod-item-header">
+            <span class="mod-item-title">{{ item.description }}</span>
+            <div class="mod-item-badges">
+              <span class="mod-badge impact" [ngClass]="'impact-badge-' + item.priority">{{ impactLabel(item.priority) }}</span>
+              <span class="mod-badge effort" [ngClass]="'effort-badge-' + item.priority">{{ effortLabel(item.priority) }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -79,5 +80,4 @@
     </div>
 
   </div>
-
 </div>

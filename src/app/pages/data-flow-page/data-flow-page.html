@@ -1,4 +1,5 @@
 <div class="insight-page">
+
   <div class="page-header">
     <div class="page-title">
       <div class="page-icon cyan">
@@ -15,19 +16,45 @@
 
   <div class="page-content" *ngIf="session; else noSession">
 
-    <!-- Visual flow chain -->
+    <!-- Flow Summary card -->
+    <div class="flow-summary-card">
+      <div class="flow-summary-item">
+        <span class="flow-sum-number">{{ flowSteps.length }}</span>
+        <span class="flow-sum-label">Steps</span>
+      </div>
+      <div class="flow-summary-divider"></div>
+      <div class="flow-summary-item">
+        <span class="flow-sum-number">{{ flowSteps.length > 0 ? 1 : 0 }}</span>
+        <span class="flow-sum-label">Entry Point</span>
+      </div>
+      <div class="flow-summary-divider"></div>
+      <div class="flow-summary-item">
+        <span class="flow-sum-number">{{ flowSteps.length > 1 ? 1 : 0 }}</span>
+        <span class="flow-sum-label">Exit Point</span>
+      </div>
+      <div class="flow-summary-divider"></div>
+      <div class="flow-summary-item">
+        <span class="flow-sum-number">{{ flowSteps.length > 2 ? flowSteps.length - 2 : 0 }}</span>
+        <span class="flow-sum-label">Transformations</span>
+      </div>
+    </div>
+
+    <!-- Visual flow -->
     <div class="doc-block">
       <div class="doc-block-label">Flow Trace</div>
       <div class="flow-chain-wrap">
         <div class="flow-chain">
           <div class="flow-step" *ngFor="let step of flowSteps; let i = index; let last = last">
-            <div class="flow-node" [class]="getStepClass(i, flowSteps.length)">
-              <div class="flow-node-index">{{ i + 1 }}</div>
-              <span>{{ step }}</span>
+            <div class="flow-node-card" [class]="getStepClass(i, flowSteps.length)">
+              <div class="flow-node-header">
+                <div class="flow-node-index">{{ i + 1 }}</div>
+                <span class="flow-node-name">{{ step }}</span>
+              </div>
             </div>
-            <div class="flow-arrow-down" *ngIf="!last">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+            <div class="flow-connector" *ngIf="!last">
+              <div class="flow-connector-line"></div>
+              <svg class="flow-connector-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="19 12 12 19 5 12"/>
               </svg>
             </div>
           </div>
@@ -35,7 +62,7 @@
       </div>
     </div>
 
-    <!-- Full description -->
+    <!-- Description -->
     <div class="doc-block">
       <div class="doc-block-label">Description</div>
       <div class="doc-card flow-text-card">

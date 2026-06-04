@@ -1,4 +1,5 @@
 <div class="insight-page">
+
   <div class="page-header">
     <div class="page-title">
       <div class="page-icon emerald">
@@ -11,27 +12,34 @@
         <p class="page-subtitle">Generated report for {{ session?.fileName || 'no file loaded' }}</p>
       </div>
     </div>
+    <button class="doc-export-btn" *ngIf="session" (click)="exportPdf()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Export PDF
+    </button>
   </div>
 
   <div class="page-content" *ngIf="session; else noSession">
 
-    <!-- File metadata strip -->
     <div class="meta-strip">
       <div class="meta-item"><span class="meta-key">File</span><span class="meta-val">{{ session.fileName }}</span></div>
       <div class="meta-item"><span class="meta-key">Language</span><span class="meta-val accent">{{ session.analysis.language }}</span></div>
       <div class="meta-item"><span class="meta-key">Type</span><span class="meta-val">{{ session.analysis.type }}</span></div>
-      <div class="meta-item"><span class="meta-key">Analyzed</span><span class="meta-val muted">{{ session.createdAt | date:'MMM d, y · h:mm a' }}</span></div>
+      <div class="meta-item"><span class="meta-key">Complexity</span><span class="meta-val" [class]="'complexity-' + session.analysis.complexity.toLowerCase()">{{ session.analysis.complexity }}</span></div>
+      <div class="meta-item"><span class="meta-key">Maintainability</span><span class="meta-val" [class]="'maint-' + session.analysis.maintainability.toLowerCase()">{{ session.analysis.maintainability }}</span></div>
+      <div class="meta-item"><span class="meta-key">Generated</span><span class="meta-val muted">{{ session.createdAt | date:'MMM d, y · h:mm a' }}</span></div>
     </div>
 
-    <!-- Overview -->
     <div class="doc-block">
-      <div class="doc-block-label">Overview</div>
-      <div class="doc-card accent-indigo">
+      <div class="doc-block-label">Executive Summary</div>
+      <div class="doc-card accent-indigo large-text">
         <p>{{ session.analysis.summary }}</p>
       </div>
     </div>
 
-    <!-- Business Purpose -->
     <div class="doc-block">
       <div class="doc-block-label">Business Purpose</div>
       <div class="doc-card accent-violet">
@@ -39,7 +47,13 @@
       </div>
     </div>
 
-    <!-- Responsibilities -->
+    <div class="doc-block" *ngIf="session.analysis.architecture">
+      <div class="doc-block-label">Architecture Overview</div>
+      <div class="doc-card accent-violet">
+        <p>{{ session.analysis.architecture }}</p>
+      </div>
+    </div>
+
     <div class="doc-block" *ngIf="session.analysis.responsibilities.length">
       <div class="doc-block-label">Responsibilities</div>
       <div class="doc-card">
@@ -49,7 +63,6 @@
       </div>
     </div>
 
-    <!-- Inputs / Outputs side-by-side -->
     <div class="doc-two-col" *ngIf="session.analysis.inputs.length || session.analysis.outputs.length">
       <div class="doc-block">
         <div class="doc-block-label">Inputs</div>
@@ -71,7 +84,13 @@
       </div>
     </div>
 
-    <!-- Dependencies -->
+    <div class="doc-block" *ngIf="session.analysis.dataFlow">
+      <div class="doc-block-label">Data Flow Summary</div>
+      <div class="doc-card flow-text-card">
+        <p>{{ session.analysis.dataFlow }}</p>
+      </div>
+    </div>
+
     <div class="doc-block" *ngIf="session.analysis.dependencies.length">
       <div class="doc-block-label">Dependencies</div>
       <div class="doc-card">
@@ -81,9 +100,8 @@
       </div>
     </div>
 
-    <!-- Risks -->
     <div class="doc-block" *ngIf="session.analysis.risks.length">
-      <div class="doc-block-label">Potential Risks</div>
+      <div class="doc-block-label">Detected Risks</div>
       <div class="doc-card no-pad">
         <div class="risk-row" *ngFor="let r of session.analysis.risks" [class]="'risk-row-' + r.severity">
           <span class="risk-pip"></span>
@@ -93,9 +111,8 @@
       </div>
     </div>
 
-    <!-- Modernization -->
     <div class="doc-block" *ngIf="session.analysis.modernizationSuggestions.length">
-      <div class="doc-block-label">Modernization Suggestions</div>
+      <div class="doc-block-label">Modernization Recommendations</div>
       <div class="doc-card no-pad">
         <div class="mod-row" *ngFor="let s of session.analysis.modernizationSuggestions" [class]="'pri-' + s.priority">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -107,10 +124,16 @@
       </div>
     </div>
 
-    <!-- Developer Notes -->
+    <div class="doc-block" *ngIf="session.analysis.security">
+      <div class="doc-block-label">Security Findings</div>
+      <div class="doc-card accent-amber">
+        <p>{{ session.analysis.security }}</p>
+      </div>
+    </div>
+
     <div class="doc-block" *ngIf="session.analysis.developerNotes">
       <div class="doc-block-label">Developer Notes</div>
-      <div class="doc-card accent-amber">
+      <div class="doc-card">
         <p>{{ session.analysis.developerNotes }}</p>
       </div>
     </div>

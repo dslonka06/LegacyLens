@@ -15,6 +15,7 @@ import { RiskItem } from '../../models/risk-item.model';
 export class RisksPage implements OnInit {
 
   session: AnalysisSession | null = null;
+  expandedRisks = new Set<number>();
 
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
@@ -39,6 +40,39 @@ export class RisksPage implements OnInit {
 
   get totalCount(): number {
     return this.session?.analysis.risks.length ?? 0;
+  }
+
+  get riskScore(): number {
+    if (!this.totalCount) return 100;
+    const penalty = this.highRisks.length * 20 + this.mediumRisks.length * 10 + this.lowRisks.length * 4;
+    return Math.max(0, 100 - penalty);
+  }
+
+  get riskScoreLabel(): string {
+    const s = this.riskScore;
+    if (s >= 80) return 'Low Risk';
+    if (s >= 60) return 'Moderate';
+    if (s >= 40) return 'High Risk';
+    return 'Critical';
+  }
+
+  get riskScoreClass(): string {
+    const s = this.riskScore;
+    if (s >= 80) return 'score-good';
+    if (s >= 60) return 'score-warn';
+    return 'score-bad';
+  }
+
+  toggleRisk(index: number): void {
+    if (this.expandedRisks.has(index)) {
+      this.expandedRisks.delete(index);
+    } else {
+      this.expandedRisks.add(index);
+    }
+  }
+
+  isExpanded(index: number): boolean {
+    return this.expandedRisks.has(index);
   }
 
   goToAnalysis(): void {
