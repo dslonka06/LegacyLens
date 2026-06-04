@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { GeneratedDocumentation } from '../../models/generated-documentation.model';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
+import { PdfExportService } from '../../services/pdf-export.service';
 
 @Component({
   selector: 'app-documentation-page',
@@ -15,8 +16,12 @@ import { CurrentAnalysisService } from '../../services/current-analysis.service'
 export class DocumentationPage implements OnInit {
 
   session: AnalysisSession | null = null;
+  isExporting = false;
 
-  constructor(private readonly currentAnalysis: CurrentAnalysisService) {}
+  constructor(
+    private readonly currentAnalysis: CurrentAnalysisService,
+    private readonly pdfExport: PdfExportService
+  ) {}
 
   ngOnInit(): void {
     this.session = this.currentAnalysis.getSession();
@@ -31,7 +36,6 @@ export class DocumentationPage implements OnInit {
     return this.session?.aiAnalysis?.documentation ?? null;
   }
 
-  // Each section prefers the AI-generated field; falls back to pattern-based content.
   get overview(): string {
     return this.doc?.overview || this.session?.analysis.summary || '';
   }
@@ -52,7 +56,13 @@ export class DocumentationPage implements OnInit {
     return this.doc?.technicalNotes || this.session?.analysis.developerNotes || '';
   }
 
-  exportPdf(): void {
-    window.print();
+  async exportPdf(): Promise<void> {
+    if (!this.session || this.isExporting) return;
+    this.isExporting = true;
+    try {
+      await this.pdfExport.export(this.session);
+    } finally {
+      this.isExporting = false;
+    }
   }
 }
