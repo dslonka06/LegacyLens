@@ -34,7 +34,16 @@
           </svg>
         </button>
       </div>
-      <p class="summary-text">{{ analysis.summary }}</p>
+      <!-- AI provider badge -->
+      <div class="ai-provider-badge" *ngIf="aiProviderLabel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
+          <path d="M12 8v4l3 3"/>
+        </svg>
+        {{ aiProviderLabel }}
+      </div>
+
+      <p class="summary-text">{{ summary }}</p>
 
       <!-- 2. Simple Explanation (expandable) -->
       <div class="simpler-section" *ngIf="simplerOpen">
@@ -46,7 +55,7 @@
           </svg>
           Simple Explanation
         </div>
-        <p class="simpler-text">{{ analysis.simplifiedExplanation }}</p>
+        <p class="simpler-text">{{ explainSimpler }}</p>
       </div>
     </div>
 
@@ -157,7 +166,7 @@
           </svg>
         </button>
       </div>
-      <p class="business-text">{{ analysis.businessPurpose }}</p>
+      <p class="business-text">{{ businessPurpose }}</p>
     </div>
 
     <!-- 6. Explore Deeper -->

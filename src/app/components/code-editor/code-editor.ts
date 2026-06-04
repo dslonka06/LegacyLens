@@ -2,8 +2,9 @@ import { Component, EventEmitter, Input, Output, OnChanges, OnDestroy, SimpleCha
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
-import { Subscription } from 'rxjs';
+import { Subscription, firstValueFrom } from 'rxjs';
 import { AnalysisService } from '../../services/analysis.service';
+import { AiAnalysisService } from '../../services/ai-analysis.service';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { ThemeService } from '../../services/theme.service';
 
@@ -104,8 +105,11 @@ export class CodeEditor implements OnChanges, OnDestroy {
     cursorSmoothCaretAnimation: 'on' as const,
   };
 
+  aiError: string | null = null;
+
   constructor(
     private readonly analysisService: AnalysisService,
+    private readonly aiAnalysisService: AiAnalysisService,
     private readonly cdr: ChangeDetectorRef,
     private readonly zone: NgZone,
     private readonly themeService: ThemeService
@@ -261,20 +265,42 @@ export class CodeEditor implements OnChanges, OnDestroy {
     reader.readAsText(file);
   }
 
-  analyzeCode(): void {
+  async analyzeCode(): Promise<void> {
     if (!this.code.trim() || this.isAnalyzing) return;
 
     this.isAnalyzing = true;
-    const result = this.analysisService.analyze(this.code);
+    this.aiError = null;
+    this.cdr.detectChanges();
+
+    // Step 1: pattern-based analysis runs synchronously and always succeeds.
+    // This gives the panel something to render immediately while AI is in flight.
+    const patternResult = this.analysisService.analyze(this.code);
     const session: AnalysisSession = {
       fileName: this.fileName,
       sourceCode: this.code,
-      analysis: result,
+      analysis: patternResult,
       createdAt: new Date().toISOString()
     };
     this.analyze.emit(session);
-    this.lastAnalyzedLabel = 'Just now';
-    this.isAnalyzing = false;
+    this.cdr.detectChanges();
+
+    // Step 2: attempt AI enrichment. On any failure, the session already has
+    // pattern-based content so the user is never left with an empty panel.
+    try {
+      const aiResult = await firstValueFrom(
+        this.aiAnalysisService.analyze(this.fileName, this.code)
+      );
+      const enrichedSession: AnalysisSession = { ...session, aiAnalysis: aiResult };
+      this.analyze.emit(enrichedSession);
+      this.lastAnalyzedLabel = `AI · ${aiResult.model}`;
+    } catch {
+      // AI unavailable — pattern-based results remain visible, no crash.
+      this.aiError = 'AI analysis unavailable. Showing pattern-based results.';
+      this.lastAnalyzedLabel = 'Just now';
+    } finally {
+      this.isAnalyzing = false;
+      this.cdr.detectChanges();
+    }
   }
 
   // ─── Language detection ───────────────────────────────

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { AnalysisResult } from '../../models/analysis-result.model';
+import { AiAnalysisResult } from '../../models/ai-analysis-result.model';
 
 @Component({
   selector: 'app-analysis-panel',
@@ -21,6 +22,28 @@ export class AnalysisPanel {
 
   get analysis(): AnalysisResult | null {
     return this.session?.analysis ?? null;
+  }
+
+  get ai(): AiAnalysisResult | null {
+    return this.session?.aiAnalysis ?? null;
+  }
+
+  // Displayed text prefers AI-generated content when available.
+  get summary(): string {
+    return this.ai?.summary ?? this.analysis?.summary ?? '';
+  }
+
+  get businessPurpose(): string {
+    return this.ai?.businessPurpose ?? this.analysis?.businessPurpose ?? '';
+  }
+
+  get explainSimpler(): string {
+    return this.ai?.explainSimpler ?? this.analysis?.simplifiedExplanation ?? '';
+  }
+
+  get aiProviderLabel(): string | null {
+    if (!this.ai) return null;
+    return `${this.ai.provider} · ${this.ai.model}`;
   }
 
   // How many segments to fill for complexity
@@ -69,8 +92,9 @@ export class AnalysisPanel {
   }
 
   copyBusinessPurpose(): void {
-    if (this.analysis?.businessPurpose) {
-      navigator.clipboard.writeText(this.analysis.businessPurpose).catch(() => {});
+    const text = this.businessPurpose;
+    if (text) {
+      navigator.clipboard.writeText(text).catch(() => {});
     }
   }
 }

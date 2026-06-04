@@ -101,6 +101,21 @@
   line-height: 1.7;
 }
 
+.ai-provider-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(124,92,255,0.1);
+  border: 1px solid rgba(124,92,255,0.2);
+  border-radius: 20px;
+  padding: 2px 8px;
+  margin-bottom: 8px;
+  svg { width: 11px; height: 11px; }
+}
+
 .explain-simpler-btn {
   display: flex;
   align-items: center;
