@@ -209,45 +209,72 @@ export class PdfExportService {
     ctx.sectionHeader('Risks & Issues');
 
     for (const risk of risks) {
-      ctx.checkPage(22);
+      // Pre-compute line counts so we can reserve space before drawing anything
+      const pillW = 16;
+      const pillH = 6;
+      const titleAvailW = CONTENT_W - pillW - 6;
+      const descAvailW  = CONTENT_W - pillW - 6;
+
+      // Measure title and description before touching ctx.y
+      ctx.doc.setFontSize(9.5);
+      const titleLines = ctx.doc.splitTextToSize(risk.title, titleAvailW) as string[];
+
+      const hasDesc = !!(risk.description && risk.description !== risk.title);
+      ctx.doc.setFontSize(9);
+      const descLines: string[] = hasDesc
+        ? ctx.doc.splitTextToSize(risk.description, descAvailW) as string[]
+        : [];
+
+      // Total height = badge/title row + optional description + bottom gap
+      const titleRowH = Math.max(pillH, titleLines.length * SMALL_LH + 2);
+      const descH     = hasDesc ? descLines.length * BODY_LH + 2 : 0;
+      const totalH    = titleRowH + descH + 6;
+
+      ctx.checkPage(totalH);
 
       const sev = risk.severity.toLowerCase();
       const sevColor: [number, number, number] =
-        sev === 'high'   ? [C.high[0],     C.high[1],     C.high[2]]    :
-        sev === 'medium' ? [C.medium[0],   C.medium[1],   C.medium[2]]  :
+        sev === 'high'   ? [C.high[0],     C.high[1],     C.high[2]]   :
+        sev === 'medium' ? [C.medium[0],   C.medium[1],   C.medium[2]] :
                            [C.lowGreen[0], C.lowGreen[1], C.lowGreen[2]];
-      const pillW = 16;
-      const pillH = 5;
 
-      // Severity pill
+      // ── Draw severity pill ──
       ctx.doc.setFillColor(sevColor[0], sevColor[1], sevColor[2]);
-      ctx.doc.roundedRect(MARGIN, ctx.y, pillW, pillH, 1.2, 1.2, 'F');
+      ctx.doc.roundedRect(MARGIN, ctx.y, pillW, pillH, 1.5, 1.5, 'F');
       ctx.doc.setFont('helvetica', 'bold');
       ctx.doc.setFontSize(6.5);
       ctx.doc.setTextColor(...C.white);
-      ctx.doc.text(risk.severity.toUpperCase(), MARGIN + pillW / 2, ctx.y + 3.4, { align: 'center' });
+      ctx.doc.text(
+        risk.severity.toUpperCase(),
+        MARGIN + pillW / 2,
+        ctx.y + pillH / 2 + 1.2,
+        { align: 'center' }
+      );
 
-      // Title
+      // ── Draw title — vertically centered with the pill ──
+      const titleX    = MARGIN + pillW + 4;
+      const titleBaseY = ctx.y + pillH / 2 + 1.5;  // baseline of first line, aligned to pill center
       ctx.doc.setFont('helvetica', 'bold');
       ctx.doc.setFontSize(9.5);
       ctx.doc.setTextColor(...C.text);
-      const titleLines = ctx.doc.splitTextToSize(risk.title, CONTENT_W - pillW - 5) as string[];
-      ctx.doc.text(titleLines, MARGIN + pillW + 4, ctx.y + 3.5);
-      ctx.y += Math.max(pillH, titleLines.length * SMALL_LH) + 2;
+      ctx.doc.text(titleLines, titleX, titleBaseY);
 
-      // Description
-      if (risk.description && risk.description !== risk.title) {
+      // Advance past the entire title/badge row — use the measured titleRowH
+      ctx.y += titleRowH + 2;
+
+      // ── Draw description ──
+      if (hasDesc) {
         ctx.doc.setFont('helvetica', 'normal');
         ctx.doc.setFontSize(9);
         ctx.doc.setTextColor(...C.muted);
-        const descLines = ctx.doc.splitTextToSize(risk.description, CONTENT_W - 4) as string[];
         for (const line of descLines) {
           ctx.checkPage(BODY_LH + 1);
-          ctx.doc.text(line, MARGIN + 2, ctx.y);
+          ctx.doc.text(line, MARGIN + pillW + 4, ctx.y);
           ctx.y += BODY_LH;
         }
       }
-      ctx.y += 5;
+
+      ctx.y += 6;  // gap between risk entries
     }
   }
 
