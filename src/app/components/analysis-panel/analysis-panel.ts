@@ -5,6 +5,7 @@ import { AnalysisSession } from '../../models/analysis-session.model';
 import { AnalysisResult } from '../../models/analysis-result.model';
 import { AiAnalysisResult, AiRisk } from '../../models/ai-analysis-result.model';
 import { RiskItem } from '../../models/risk-item.model';
+import { ModernizationItem } from '../../models/modernization-item.model';
 
 @Component({
   selector: 'app-analysis-panel',
@@ -66,6 +67,24 @@ export class AnalysisPanel {
 
   get hasAiRisks(): boolean {
     return (this.ai?.risks?.length ?? 0) > 0;
+  }
+
+  // Prefer AI modernizations; fall back to pattern-based ModernizationItems.
+  get displayModernizations(): { title: string; description: string }[] {
+    if (this.ai?.modernizations?.length) {
+      return this.ai.modernizations.map(m => ({
+        title: m.title,
+        description: m.description
+      }));
+    }
+    return (this.analysis?.modernizationSuggestions ?? []).map((m: ModernizationItem) => ({
+      title: m.description,
+      description: m.description
+    }));
+  }
+
+  get hasAiModernizations(): boolean {
+    return (this.ai?.modernizations?.length ?? 0) > 0;
   }
 
   // How many segments to fill for complexity

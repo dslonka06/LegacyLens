@@ -1,4 +1,5 @@
 import { ArchitectureAnalysis } from './architecture-analysis.model';
+import { ModernizationRecommendation } from './modernization-recommendation.model';
 
 export interface AiRisk {
   title: string;
@@ -12,6 +13,7 @@ export interface AiAnalysisResult {
   explainSimpler: string;
   risks: AiRisk[];
   architecture: ArchitectureAnalysis;
+  modernizations: ModernizationRecommendation[];
   model: string;
   provider: string;
   generatedAtUtc: string;

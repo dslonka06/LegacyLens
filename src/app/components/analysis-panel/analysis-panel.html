@@ -146,18 +146,33 @@
               <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
             </svg>
           </div>
-          <span class="findings-summary-title">Modernization Opportunities ({{ analysis.modernizationSuggestions.length }})</span>
+          <span class="findings-summary-title">Modernization Opportunities ({{ displayModernizations.length }})</span>
         </div>
-        <div class="findings-preview-list">
-          <div class="findings-preview-item mod" *ngFor="let s of analysis.modernizationSuggestions | slice:0:5">
+
+        <!-- Empty state -->
+        <div class="findings-empty-state" *ngIf="!displayModernizations.length">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          No modernization opportunities detected.
+        </div>
+
+        <div class="findings-preview-list" *ngIf="displayModernizations.length">
+          <div class="findings-preview-item mod" *ngFor="let m of displayModernizations | slice:0:3">
             <svg class="check-dot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
-            <span>{{ s.description }}</span>
+            <span class="findings-preview-text">
+              <span class="findings-preview-title" *ngIf="hasAiModernizations">{{ m.title }}</span>
+              <span>{{ m.description }}</span>
+            </span>
           </div>
         </div>
-        <a class="view-all-link" (click)="navigateTo('/modernization'); $event.stopPropagation()">
-          View all {{ analysis.modernizationSuggestions.length }} opportunities →
+
+        <a class="view-all-link" *ngIf="displayModernizations.length"
+           (click)="navigateTo('/modernization'); $event.stopPropagation()">
+          View all {{ displayModernizations.length }} opportunities →
         </a>
       </div>
 

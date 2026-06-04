@@ -32,7 +32,13 @@ public sealed class OpenAiProvider : IAiProvider
             "patterns": [],
             "responsibilities": [],
             "dependencies": []
-          }
+          },
+          "modernizations": [
+            {
+              "title": string,
+              "description": string
+            }
+          ]
         }
 
         summary:
@@ -90,6 +96,27 @@ public sealed class OpenAiProvider : IAiProvider
         "IMapper", "IOptions<T>".
         Only list dependencies that are visibly present. Do not invent them.
         If none, return: "dependencies": []
+
+        modernizations:
+        Identify meaningful opportunities to improve, modernise, or refactor the code.
+        Consider:
+        - Converting synchronous operations to async/await
+        - Introducing dependency abstractions or interfaces
+        - Improving input validation
+        - Reducing code duplication
+        - Replacing legacy patterns or framework usage
+        - Improving error handling
+        - Improving logging
+        - Improving testability
+        - Improving separation of concerns
+        - Improving maintainability
+
+        For each recommendation provide:
+        title: a short name (e.g. "Add Async/Await", "Extract Interface", "Add Input Validation")
+        description: a clear explanation of the improvement and why it matters for this code
+
+        Only return recommendations that are genuinely applicable. Do not invent improvements.
+        If no meaningful modernizations apply, return: "modernizations": []
 
         Return only the JSON object. No markdown, no code fences, no additional text.
         """;
@@ -171,6 +198,7 @@ public sealed class OpenAiProvider : IAiProvider
             ExplainSimpler:  root.GetProperty("explainSimpler").GetString()  ?? string.Empty,
             Risks:           ParseRisks(root),
             Architecture:    ParseArchitecture(root),
+            Modernizations:  ParseModernizations(root),
             Model:           model,
             Provider:        "OpenAI",
             GeneratedAtUtc:  DateTimeOffset.UtcNow
@@ -216,6 +244,26 @@ public sealed class OpenAiProvider : IAiProvider
             Responsibilities: ParseStringArray(archEl, "responsibilities"),
             Dependencies:     ParseStringArray(archEl, "dependencies")
         );
+    }
+
+    private static IReadOnlyList<ModernizationRecommendation> ParseModernizations(JsonElement root)
+    {
+        var result = new List<ModernizationRecommendation>();
+
+        if (!root.TryGetProperty("modernizations", out var modEl) ||
+            modEl.ValueKind != JsonValueKind.Array)
+            return result.AsReadOnly();
+
+        foreach (var m in modEl.EnumerateArray())
+        {
+            var title       = m.TryGetProperty("title",       out var t) ? t.GetString() ?? string.Empty : string.Empty;
+            var description = m.TryGetProperty("description", out var d) ? d.GetString() ?? string.Empty : string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(title))
+                result.Add(new ModernizationRecommendation(title, description));
+        }
+
+        return result.AsReadOnly();
     }
 
     private static IReadOnlyList<string> ParseStringArray(JsonElement parent, string propertyName)

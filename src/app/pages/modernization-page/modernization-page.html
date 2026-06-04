@@ -10,7 +10,11 @@
       </div>
       <div>
         <h1>Modernization</h1>
-        <div class="page-subtitle" *ngIf="session">{{ session.fileName }} · {{ totalCount }} opportunities</div>
+        <div class="page-subtitle" *ngIf="session">
+          {{ session.fileName }} · {{ totalCount }} opportunities
+          <span class="source-badge ai" *ngIf="isAiPowered">AI</span>
+          <span class="source-badge pattern" *ngIf="!isAiPowered">Pattern</span>
+        </div>
       </div>
     </div>
   </div>
@@ -26,57 +30,36 @@
 
   <div class="page-content" *ngIf="session">
 
-    <!-- Summary strip -->
-    <div class="mod-summary-strip">
-      <div class="mod-summary-item">
-        <span class="mod-sum-number impact-high">{{ highCount }}</span>
-        <span class="mod-sum-label">High Impact</span>
-      </div>
-      <div class="mod-summary-divider"></div>
-      <div class="mod-summary-item">
-        <span class="mod-sum-number impact-medium">{{ mediumCount }}</span>
-        <span class="mod-sum-label">Medium Impact</span>
-      </div>
-      <div class="mod-summary-divider"></div>
-      <div class="mod-summary-item">
-        <span class="mod-sum-number impact-low">{{ lowCount }}</span>
-        <span class="mod-sum-label">Low Impact</span>
-      </div>
-      <div class="mod-summary-divider"></div>
-      <div class="mod-summary-item">
-        <span class="mod-sum-number impact-total">{{ totalCount }}</span>
-        <span class="mod-sum-label">Total</span>
-      </div>
-    </div>
-
-    <!-- Grouped by category -->
-    <div class="doc-block" *ngFor="let cat of categories">
-      <div class="doc-block-label">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-        </svg>
-        {{ cat.label }}
-      </div>
-      <div class="mod-card-list">
-        <div class="mod-item-card" *ngFor="let item of cat.items" [ngClass]="'mod-card-' + item.priority">
-          <div class="mod-item-header">
-            <span class="mod-item-title">{{ item.description }}</span>
-            <div class="mod-item-badges">
-              <span class="mod-badge impact" [ngClass]="'impact-badge-' + item.priority">{{ impactLabel(item.priority) }}</span>
-              <span class="mod-badge effort" [ngClass]="'effort-badge-' + item.priority">{{ effortLabel(item.priority) }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Empty -->
+    <!-- Empty state -->
     <div class="clean-banner" *ngIf="!totalCount">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
         <polyline points="22 4 12 14.01 9 11.01"/>
       </svg>
-      No modernization opportunities identified.
+      No significant modernization opportunities detected.
+    </div>
+
+    <!-- Recommendation cards -->
+    <div class="doc-block" *ngIf="totalCount">
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+        </svg>
+        Modernization Opportunities
+      </div>
+      <div class="mod-recommendation-list">
+        <div class="mod-recommendation-card" *ngFor="let rec of recommendations">
+          <div class="mod-rec-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="mod-rec-body">
+            <span class="mod-rec-title">{{ rec.title }}</span>
+            <span class="mod-rec-description" *ngIf="isAiPowered && rec.description !== rec.title">{{ rec.description }}</span>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
