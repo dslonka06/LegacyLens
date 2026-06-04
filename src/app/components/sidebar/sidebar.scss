@@ -22,7 +22,7 @@
   height: 100%;
 }
 
-// ─── Brand ──────────────────────────────────────────────
+// ─── Brand — expanded ───────────────────────────────────
 .sidebar-brand {
   display: flex;
   align-items: center;
@@ -30,8 +30,40 @@
   padding: 14px 12px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  min-height: 56px;   /* taller to fit subtitle */
+  min-height: 56px;
   overflow: hidden;
+}
+
+// ─── Brand — collapsed ──────────────────────────────────
+.sidebar-brand-collapsed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.collapse-btn-collapsed {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s, box-shadow 0.15s;
+  svg { width: 13px; height: 13px; }
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(124,92,255,0.15);
+  }
 }
 
 .brand-icon {
@@ -215,16 +247,6 @@
 
 // ─── Collapsed icon-only mode ────────────────────────────
 :host.collapsed {
-  .sidebar-brand {
-    padding: 14px 0;
-    justify-content: center;
-    gap: 0;
-  }
-
-  .collapse-btn {
-    margin-left: 0;
-  }
-
   .sidebar-nav {
     padding: 10px 6px 0;
     align-items: center;
