@@ -110,9 +110,8 @@ export class PdfExportService {
     ctx.y += 10;
 
     // ── File metadata box ──
-    const ai       = session.aiAnalysis;
     const analysis = session.analysis;
-    const date     = new Date(session.createdAt).toLocaleString('en-GB', {
+    const metaDate = new Date(session.createdAt).toLocaleString('en-GB', {
       day: '2-digit', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit'
     });
@@ -123,7 +122,7 @@ export class PdfExportService {
       ['Type',            analysis.type],
       ['Complexity',      analysis.complexity],
       ['Maintainability', analysis.maintainability],
-      ['Generated',       date],
+      ['Generated',       metaDate],
     ];
     if (ai) rows.push(['AI Model', `${ai.provider} / ${ai.model}`]);
 
@@ -212,13 +211,16 @@ export class PdfExportService {
     for (const risk of risks) {
       ctx.checkPage(22);
 
-      const sev      = risk.severity.toLowerCase();
-      const sevColor = sev === 'high' ? C.high : sev === 'medium' ? C.medium : C.lowGreen;
-      const pillW    = 16;
-      const pillH    = 5;
+      const sev = risk.severity.toLowerCase();
+      const sevColor: [number, number, number] =
+        sev === 'high'   ? [C.high[0],     C.high[1],     C.high[2]]    :
+        sev === 'medium' ? [C.medium[0],   C.medium[1],   C.medium[2]]  :
+                           [C.lowGreen[0], C.lowGreen[1], C.lowGreen[2]];
+      const pillW = 16;
+      const pillH = 5;
 
       // Severity pill
-      ctx.doc.setFillColor(...sevColor);
+      ctx.doc.setFillColor(sevColor[0], sevColor[1], sevColor[2]);
       ctx.doc.roundedRect(MARGIN, ctx.y, pillW, pillH, 1.2, 1.2, 'F');
       ctx.doc.setFont('helvetica', 'bold');
       ctx.doc.setFontSize(6.5);
