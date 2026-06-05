@@ -62,6 +62,15 @@
         <span *ngIf="!collapsed">Analysis</span>
       </a>
 
+      <a routerLink="/repository-analysis" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Repository Analysis' : ''">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+          <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+          <line x1="12" y1="12" x2="12" y2="15"/>
+        </svg>
+        <span *ngIf="!collapsed">Repository Analysis</span>
+      </a>
+
       <a routerLink="/history" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'History' : ''">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>

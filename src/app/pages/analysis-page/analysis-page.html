@@ -5,21 +5,20 @@
       [restoredFileName]="restoredFileName"
       [restoredSourceCode]="restoredSourceCode"
       (analyze)="onSessionCreated($event)"
-      (workspaceReady)="onWorkspaceReady($event)"
-      (knowledgeReady)="onKnowledgeReady($event)">
+      (workspaceReady)="onWorkspaceReady($event)">
     </app-code-editor>
   </div>
 
   <div class="results-column">
 
-    <div class="workspace-panels" *ngIf="showWorkspacePanels">
+    <!-- Lightweight workspace context — visible for all workspace types -->
+    <div class="workspace-context-strip" *ngIf="showWorkspaceSummary">
       <app-workspace-summary [profile]="workspaceProfile"></app-workspace-summary>
-      <app-repository-preview [profile]="workspaceProfile"></app-repository-preview>
-      <app-repository-intelligence
-        *ngIf="showIntelligence"
-        [knowledge]="repositoryKnowledge"
-        [state]="knowledgeState">
-      </app-repository-intelligence>
+      <!-- Repository bridge — only for Project / Repository uploads -->
+      <app-repository-callout
+        *ngIf="showRepositoryCallout"
+        [context]="workspaceContext">
+      </app-repository-callout>
     </div>
 
     <app-analysis-panel [session]="session"></app-analysis-panel>

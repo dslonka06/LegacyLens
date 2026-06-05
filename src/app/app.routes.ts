@@ -12,6 +12,11 @@ export const routes: Routes = [
       import('./pages/analysis-page/analysis-page').then(m => m.AnalysisPage)
   },
   {
+    path: 'repository-analysis',
+    loadComponent: () =>
+      import('./pages/repository-analysis-page/repository-analysis-page').then(m => m.RepositoryAnalysisPage)
+  },
+  {
     path: 'history',
     loadComponent: () =>
       import('./pages/history-page/history-page').then(m => m.HistoryPage)

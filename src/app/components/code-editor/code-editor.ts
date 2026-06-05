@@ -8,6 +8,7 @@ import { AiAnalysisService } from '../../services/ai-analysis.service';
 import { FileInventoryService } from '../../services/file-inventory.service';
 import { WorkspaceClassifierService } from '../../services/workspace-classifier.service';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
+import { CurrentWorkspaceService } from '../../services/current-workspace.service';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { WorkspaceProfile } from '../../models/workspace.model';
 import { RepositoryKnowledge } from '../../models/knowledge.model';
@@ -124,6 +125,7 @@ export class CodeEditor implements OnChanges, OnDestroy {
     private readonly fileInventory: FileInventoryService,
     private readonly workspaceClassifier: WorkspaceClassifierService,
     private readonly knowledgeService: RepositoryKnowledgeService,
+    private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly cdr: ChangeDetectorRef,
     private readonly zone: NgZone,
     private readonly themeService: ThemeService
@@ -259,6 +261,7 @@ export class CodeEditor implements OnChanges, OnDestroy {
     this.uploadedFiles = [];
     this.workspaceProfile = null;
     this.knowledgeService.clear();
+    this.currentWorkspace.clear();
     this.workspaceReady.emit(null);
     this.editorInstance?.setValue('');
     this.applyMonacoLanguage('plaintext');
@@ -299,6 +302,7 @@ export class CodeEditor implements OnChanges, OnDestroy {
     // are visible while Stage 3 content acquisition runs in the background.
     const metadata = this.fileInventory.buildMetadata(files);
     this.workspaceProfile = this.workspaceClassifier.classify(metadata);
+    this.currentWorkspace.set(this.workspaceProfile, files);
     this.workspaceReady.emit(this.workspaceProfile);
 
     // Stage 3: async knowledge pipeline — starts after workspaceReady so the

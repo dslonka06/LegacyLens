@@ -1,0 +1,403 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.repo-analysis-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+// ─── Empty state ─────────────────────────────────────────
+.rpa-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 56px;
+  height: 56px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  svg { width: 26px; height: 26px; }
+}
+
+.rpa-empty h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.rpa-empty p {
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 260px;
+  line-height: 1.6;
+}
+
+// ─── Main content ────────────────────────────────────────
+.rpa-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// ─── Page header ─────────────────────────────────────────
+.rpa-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.rpa-header-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(34, 197, 94, 0.12);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--success);
+  flex-shrink: 0;
+  svg { width: 18px; height: 18px; }
+}
+
+.rpa-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.rpa-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-heading);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.rpa-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+// ─── Two-column grid ─────────────────────────────────────
+.rpa-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.rpa-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  padding: 14px;
+  gap: 10px;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+}
+
+.rpa-col-left {
+  border-right: 1px solid var(--border);
+}
+
+// ─── Cards ───────────────────────────────────────────────
+.rpa-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(40, 53, 72, 0.7);
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  // Remove inner component borders when nested inside a card
+  app-workspace-summary,
+  app-repository-preview,
+  app-repository-intelligence {
+    .workspace-summary,
+    .repo-preview,
+    .repo-intelligence {
+      border: none;
+      border-radius: 0;
+      padding: 10px 14px;
+    }
+  }
+}
+
+.rpa-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(40, 53, 72, 0.5);
+}
+
+.rpa-card-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  svg { width: 13px; height: 13px; }
+
+  &.overview-icon  { background: rgba(124,92,255,0.12); color: var(--accent); }
+  &.structure-icon { background: rgba(56,189,248,0.12);  color: var(--info); }
+  &.dep-icon       { background: rgba(34,197,94,0.12);   color: var(--success); }
+  &.insights-icon  { background: rgba(245,158,11,0.12);  color: var(--warning); }
+  &.arch-icon      { background: rgba(245,158,11,0.12);  color: var(--warning); }
+}
+
+.rpa-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+// ─── Section toggles ─────────────────────────────────────
+.section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--bg-secondary);
+  border: none;
+  border-top: 1px solid rgba(40, 53, 72, 0.4);
+  border-bottom: 1px solid rgba(40, 53, 72, 0.4);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.12s;
+
+  &:hover { background: var(--bg-primary); }
+}
+
+.toggle-chevron {
+  width: 13px;
+  height: 13px;
+  color: var(--text-muted);
+}
+
+// ─── Dependency rankings ─────────────────────────────────
+.dep-rankings { flex-shrink: 0; }
+
+.rankings-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.rankings-header {
+  display: grid;
+  grid-template-columns: 24px 1fr 36px 36px 44px;
+  gap: 4px;
+  padding: 6px 14px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border-bottom: 1px solid rgba(40, 53, 72, 0.35);
+}
+
+.rankings-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 36px 36px 44px;
+  gap: 4px;
+  padding: 6px 14px;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(40, 53, 72, 0.25);
+  align-items: center;
+  transition: background 0.1s;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--bg-secondary); }
+}
+
+.col-rank {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.file-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-content);
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 11px;
+}
+
+.col-in, .col-out {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.total-val {
+  text-align: center;
+  font-weight: 700;
+  color: var(--success);
+  font-size: 11px;
+}
+
+// ─── Insights ────────────────────────────────────────────
+.insights-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.insight-row {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(40, 53, 72, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &:last-child { border-bottom: none; }
+
+  &.sev-high   .insight-sev-dot { background: #EF4444; }
+  &.sev-medium .insight-sev-dot { background: #F59E0B; }
+  &.sev-low    .insight-sev-dot { background: #94A3B8; }
+  &.sev-info   .insight-sev-dot { background: var(--accent); }
+}
+
+.insight-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.insight-sev-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.insight-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.insight-desc {
+  font-size: 12px;
+  color: var(--text-content);
+  line-height: 1.6;
+  padding-left: 14px;
+  margin: 0;
+}
+
+.insight-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-left: 14px;
+}
+
+.insight-file {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+}
+
+// ─── Architecture patterns ───────────────────────────────
+.arch-patterns {
+  display: flex;
+  flex-direction: column;
+}
+
+.arch-row {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(40, 53, 72, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &:last-child { border-bottom: none; }
+}
+
+.arch-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.arch-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.arch-conf-badge {
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 2px 7px;
+  flex-shrink: 0;
+
+  &.conf-high   { color: var(--success);  background: rgba(34,197,94,0.12);  border: 1px solid rgba(34,197,94,0.2); }
+  &.conf-medium { color: var(--warning);  background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.2); }
+  &.conf-low    { color: var(--text-muted); background: var(--bg-secondary); border: 1px solid var(--border); }
+}
+
+.arch-indicators {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.arch-ind {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid rgba(40, 53, 72, 0.5);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+}

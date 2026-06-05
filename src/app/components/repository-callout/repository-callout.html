@@ -1,0 +1,36 @@
+<div class="repo-callout" *ngIf="context">
+
+  <div class="callout-left">
+    <div class="callout-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+        <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+        <line x1="12" y1="12" x2="12" y2="15"/>
+      </svg>
+    </div>
+    <div class="callout-body">
+      <span class="callout-title">Repository Detected</span>
+      <div class="callout-stats">
+        <span class="callout-stat" *ngIf="projectCount > 0">
+          <strong>{{ projectCount }}</strong> {{ projectCount === 1 ? 'Project' : 'Projects' }}
+        </span>
+        <span class="callout-sep" *ngIf="projectCount > 0">·</span>
+        <span class="callout-stat">
+          <strong>{{ fileCount }}</strong> {{ fileCount === 1 ? 'File' : 'Files' }}
+        </span>
+        <ng-container *ngIf="techSummary">
+          <span class="callout-sep">·</span>
+          <span class="callout-stat callout-tech">{{ techSummary }}</span>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <button class="callout-action" (click)="openRepositoryAnalysis()">
+    Open Repository Analysis
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+    </svg>
+  </button>
+
+</div>
