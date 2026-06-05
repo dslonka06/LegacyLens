@@ -1,8 +1,29 @@
 <div class="analysis-page">
-  <app-code-editor
-    [restoredFileName]="restoredFileName"
-    [restoredSourceCode]="restoredSourceCode"
-    (analyze)="onSessionCreated($event)">
-  </app-code-editor>
-  <app-analysis-panel [session]="session"></app-analysis-panel>
+
+  <div class="editor-column">
+    <app-code-editor
+      [restoredFileName]="restoredFileName"
+      [restoredSourceCode]="restoredSourceCode"
+      (analyze)="onSessionCreated($event)"
+      (workspaceReady)="onWorkspaceReady($event)"
+      (knowledgeReady)="onKnowledgeReady($event)">
+    </app-code-editor>
+  </div>
+
+  <div class="results-column">
+
+    <div class="workspace-panels" *ngIf="showWorkspacePanels">
+      <app-workspace-summary [profile]="workspaceProfile"></app-workspace-summary>
+      <app-repository-preview [profile]="workspaceProfile"></app-repository-preview>
+      <app-repository-intelligence
+        *ngIf="showIntelligence"
+        [knowledge]="repositoryKnowledge"
+        [state]="knowledgeState">
+      </app-repository-intelligence>
+    </div>
+
+    <app-analysis-panel [session]="session"></app-analysis-panel>
+
+  </div>
+
 </div>

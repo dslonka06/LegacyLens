@@ -99,13 +99,31 @@
 
     </div>
     <div class="toolbar-right">
+
+      <!-- Multi-file count badge -->
+      <div class="multi-file-badge" *ngIf="isMultiFileWorkspace" [title]="uploadedFiles.length + ' files uploaded'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+        +{{ additionalFileCount }} more
+      </div>
+
       <button class="btn btn-ghost" (click)="fileInput.click()" [disabled]="isLoadingFile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
-        <span>{{ isLoadingFile ? 'Loading…' : 'Upload File' }}</span>
+        <span>{{ isLoadingFile ? 'Loading…' : 'Files' }}</span>
       </button>
-      <input #fileInput type="file" accept=".cs,.ts,.sql,.txt,.js,.py,.html,.css,.scss,.json,.xml,.md,.csproj,.yaml,.yml" hidden (change)="onFileSelected($event)">
+      <input #fileInput type="file" accept=".cs,.ts,.sql,.txt,.js,.py,.html,.css,.scss,.json,.xml,.md,.csproj,.yaml,.yml" multiple hidden (change)="onFileSelected($event)">
+
+      <button class="btn btn-ghost" (click)="folderInput.click()" [disabled]="isLoadingFile" title="Upload a folder or project">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span>Folder</span>
+      </button>
+      <input #folderInput type="file" [attr.webkitdirectory]="''" hidden (change)="onFolderSelected($event)">
+
       <button
         class="btn btn-primary"
         (click)="analyzeCode()"

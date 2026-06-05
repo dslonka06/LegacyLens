@@ -1,0 +1,129 @@
+<div class="repo-preview" *ngIf="profile && hasContent">
+
+  <!-- ── Structure Tree ───────────────────────────────────────────────── -->
+  <div class="rp-section" *ngIf="treeRows.length">
+
+    <button class="rp-section-header" (click)="toggleTree()">
+      <div class="rp-section-icon tree-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
+      <span class="rp-section-title">Structure</span>
+      <span class="rp-section-meta">{{ totalFiles }} files</span>
+      <svg class="rp-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline [attr.points]="treeExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+      </svg>
+    </button>
+
+    <div class="rp-tree" *ngIf="treeExpanded">
+      <div
+        *ngFor="let row of treeRows"
+        class="tree-row"
+        [ngClass]="row.kind"
+        [ngStyle]="indentStyle(row.depth)">
+
+        <!-- Folder row -->
+        <ng-container *ngIf="row.kind === 'folder'">
+          <svg class="row-icon folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span class="row-name">{{ row.name }}</span>
+          <span class="row-count" *ngIf="row.fileCount">{{ row.fileCount }}</span>
+        </ng-container>
+
+        <!-- File row -->
+        <ng-container *ngIf="row.kind === 'file'">
+          <svg class="row-icon file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span class="row-name">{{ row.name }}</span>
+          <span class="row-lang" *ngIf="row.language && row.language !== 'Unknown'">{{ row.language }}</span>
+        </ng-container>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Projects ─────────────────────────────────────────────────────── -->
+  <div class="rp-section" *ngIf="projects.length">
+
+    <button class="rp-section-header" (click)="toggleProjects()">
+      <div class="rp-section-icon project-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+      </div>
+      <span class="rp-section-title">Projects</span>
+      <span class="rp-section-meta">{{ projects.length }} detected</span>
+      <svg class="rp-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline [attr.points]="projectsExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+      </svg>
+    </button>
+
+    <div class="rp-project-list" *ngIf="projectsExpanded">
+      <div class="project-row" *ngFor="let p of projects">
+        <div class="project-row-left">
+          <span class="project-name">{{ p.name }}</span>
+          <span class="project-type-badge">{{ projectTypeLabel(p.type) }}</span>
+        </div>
+        <div class="project-row-right">
+          <span class="project-lang-badge">{{ p.language }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Technologies & Frameworks ─────────────────────────────────────── -->
+  <div class="rp-section" *ngIf="frameworks.length || otherTechnologies.length">
+
+    <button class="rp-section-header" (click)="toggleTech()">
+      <div class="rp-section-icon tech-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          <path d="M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        </svg>
+      </div>
+      <span class="rp-section-title">Technologies</span>
+      <span class="rp-section-meta">{{ frameworks.length + otherTechnologies.length }} detected</span>
+      <svg class="rp-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline [attr.points]="techExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+      </svg>
+    </button>
+
+    <div class="rp-tech-list" *ngIf="techExpanded">
+
+      <!-- Frameworks subsection -->
+      <div class="tech-group" *ngIf="frameworks.length">
+        <span class="tech-group-label">Frameworks</span>
+        <div class="tech-chip-row">
+          <div class="tech-chip framework-chip" *ngFor="let t of frameworks"
+               [title]="'Detected via ' + t.detectionMethod + ' (' + confidencePercent(t.confidence) + '% confidence) — ' + t.sourceFile">
+            <span class="tech-chip-name">{{ t.technology }}</span>
+            <span class="tech-chip-conf">{{ confidencePercent(t.confidence) }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Other technologies grouped by category -->
+      <div class="tech-group" *ngIf="otherTechnologies.length">
+        <span class="tech-group-label">Other</span>
+        <div class="tech-chip-row">
+          <div class="tech-chip other-chip" *ngFor="let t of otherTechnologies"
+               [title]="categoryLabel(t.category) + ' · ' + t.detectionMethod + ' (' + confidencePercent(t.confidence) + '%)' + ' — ' + t.sourceFile">
+            <span class="tech-chip-name">{{ t.technology }}</span>
+            <span class="tech-chip-cat">{{ categoryLabel(t.category) }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

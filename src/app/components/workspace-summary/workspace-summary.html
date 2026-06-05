@@ -1,0 +1,81 @@
+<div class="workspace-summary" *ngIf="profile">
+
+  <div class="ws-header">
+    <div class="ws-type-badge" [ngClass]="typeIconClass">
+
+      <!-- Single File -->
+      <ng-container *ngIf="profile.workspaceType === 'SingleFile'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+      </ng-container>
+
+      <!-- Multi-File -->
+      <ng-container *ngIf="profile.workspaceType === 'MultiFile'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+      </ng-container>
+
+      <!-- Project -->
+      <ng-container *ngIf="profile.workspaceType === 'Project'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+      </ng-container>
+
+      <!-- Repository -->
+      <ng-container *ngIf="profile.workspaceType === 'Repository'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+          <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+          <line x1="12" y1="12" x2="12" y2="15"/>
+        </svg>
+      </ng-container>
+
+    </div>
+
+    <div class="ws-title-group">
+      <span class="ws-label">Workspace</span>
+      <span class="ws-type-name">{{ workspaceTypeLabel }}</span>
+    </div>
+
+    <div class="ws-confidence" [title]="'Classification confidence: ' + confidencePercent + '%'">
+      <span class="confidence-value">{{ confidencePercent }}%</span>
+      <span class="confidence-label">confidence</span>
+    </div>
+  </div>
+
+  <div class="ws-stats">
+
+    <div class="ws-stat">
+      <span class="ws-stat-value">{{ profile.totalFiles }}</span>
+      <span class="ws-stat-label">{{ profile.totalFiles === 1 ? 'File' : 'Files' }}</span>
+    </div>
+
+    <div class="ws-stat-divider"></div>
+
+    <div class="ws-stat">
+      <span class="ws-stat-value">{{ profile.languages.length }}</span>
+      <span class="ws-stat-label">{{ profile.languages.length === 1 ? 'Language' : 'Languages' }}</span>
+    </div>
+
+    <div class="ws-stat-divider" *ngIf="profile.technologies.length"></div>
+
+    <div class="ws-stat" *ngIf="profile.technologies.length">
+      <span class="ws-stat-value">{{ profile.technologies.length }}</span>
+      <span class="ws-stat-label">{{ profile.technologies.length === 1 ? 'Technology' : 'Technologies' }}</span>
+    </div>
+
+  </div>
+
+  <div class="ws-tags" *ngIf="profile.languages.length || profile.technologies.length">
+
+    <span class="ws-tag lang-tag" *ngFor="let lang of profile.languages">{{ lang }}</span>
+    <span class="ws-tag tech-tag" *ngFor="let tech of profile.technologies">{{ tech }}</span>
+
+  </div>
+
+</div>

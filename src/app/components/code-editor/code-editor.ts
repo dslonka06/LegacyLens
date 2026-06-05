@@ -5,7 +5,12 @@ import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { AnalysisService } from '../../services/analysis.service';
 import { AiAnalysisService } from '../../services/ai-analysis.service';
+import { FileInventoryService } from '../../services/file-inventory.service';
+import { WorkspaceClassifierService } from '../../services/workspace-classifier.service';
+import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { AnalysisSession } from '../../models/analysis-session.model';
+import { WorkspaceProfile } from '../../models/workspace.model';
+import { RepositoryKnowledge } from '../../models/knowledge.model';
 import { ThemeService } from '../../services/theme.service';
 
 // Extension → Monaco language ID
@@ -67,12 +72,18 @@ export class CodeEditor implements OnChanges, OnDestroy {
   @Input() restoredSourceCode: string | null = null;
 
   @Output() readonly analyze = new EventEmitter<AnalysisSession>();
+  @Output() readonly workspaceReady = new EventEmitter<WorkspaceProfile | null>();
+  @Output() readonly knowledgeReady = new EventEmitter<RepositoryKnowledge>();
 
   code = '';
   fileName = 'untitled.txt';
   isAnalyzing = false;
   isLoadingFile = false;
   lastAnalyzedLabel: string | null = null;
+
+  // Multi-file state: files beyond the primary display file
+  uploadedFiles: File[] = [];
+  workspaceProfile: WorkspaceProfile | null = null;
 
   private editorInstance: any = null;
   private currentMonacoLanguage = 'plaintext';
@@ -110,6 +121,9 @@ export class CodeEditor implements OnChanges, OnDestroy {
   constructor(
     private readonly analysisService: AnalysisService,
     private readonly aiAnalysisService: AiAnalysisService,
+    private readonly fileInventory: FileInventoryService,
+    private readonly workspaceClassifier: WorkspaceClassifierService,
+    private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly cdr: ChangeDetectorRef,
     private readonly zone: NgZone,
     private readonly themeService: ThemeService
@@ -187,6 +201,14 @@ export class CodeEditor implements OnChanges, OnDestroy {
     return this.code ? this.code.split('\n').length : 1;
   }
 
+  get isMultiFileWorkspace(): boolean {
+    return this.uploadedFiles.length > 1;
+  }
+
+  get additionalFileCount(): number {
+    return Math.max(0, this.uploadedFiles.length - 1);
+  }
+
   onEditorInit(editor: any): void {
     this.zone.run(() => {
       this.editorInstance = editor;
@@ -234,18 +256,64 @@ export class CodeEditor implements OnChanges, OnDestroy {
     this.fileName = 'untitled.txt';
     this.lastAnalyzedLabel = null;
     this.currentMonacoLanguage = 'plaintext';
+    this.uploadedFiles = [];
+    this.workspaceProfile = null;
+    this.knowledgeService.clear();
+    this.workspaceReady.emit(null);
     this.editorInstance?.setValue('');
     this.applyMonacoLanguage('plaintext');
     this.cdr.detectChanges();
   }
 
+  // Single or multi-file selection
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
 
-    const file = input.files[0];
-    this.fileName = file.name;
+    const files = Array.from(input.files);
+    this.processFiles(files);
+
+    // Reset so the same selection can be re-uploaded if needed
+    input.value = '';
+  }
+
+  // Folder upload via webkitdirectory
+  onFolderSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const files = Array.from(input.files).filter(f => !this.isIgnoredPath(f));
+    this.processFiles(files);
+
+    input.value = '';
+  }
+
+  private processFiles(files: File[]): void {
+    if (files.length === 0) return;
+
     this.isLoadingFile = true;
+    this.uploadedFiles = files;
+
+    // Stage 1+2: build workspace profile synchronously from metadata.
+    // This fires immediately so the workspace summary and repository preview
+    // are visible while Stage 3 content acquisition runs in the background.
+    const metadata = this.fileInventory.buildMetadata(files);
+    this.workspaceProfile = this.workspaceClassifier.classify(metadata);
+    this.workspaceReady.emit(this.workspaceProfile);
+
+    // Stage 3: async knowledge pipeline — starts after workspaceReady so the
+    // UI can render the structure panels before file reading begins.
+    const profile = this.workspaceProfile;
+    this.knowledgeService.build(files, profile).then(knowledge => {
+      this.zone.run(() => {
+        this.knowledgeReady.emit(knowledge);
+        this.cdr.detectChanges();
+      });
+    });
+
+    // Load the primary file into the editor
+    const primaryFile = this.selectPrimaryFile(files);
+    this.fileName = primaryFile.name;
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -254,15 +322,33 @@ export class CodeEditor implements OnChanges, OnDestroy {
       this.isLoadingFile = false;
       this.lastAnalyzedLabel = null;
 
-      // Extension is the primary source; content is fallback for extensionless files
-      const lang = this.languageFromFileName(file.name)
+      const lang = this.languageFromFileName(primaryFile.name)
         ?? this.languageFromContent(content);
       this.applyMonacoLanguage(lang);
 
       this.editorInstance?.setValue(content);
       this.cdr.detectChanges();
     };
-    reader.readAsText(file);
+    reader.readAsText(primaryFile);
+  }
+
+  // Pick the most representative file to show in the editor
+  private selectPrimaryFile(files: File[]): File {
+    // Prefer source code files over project/config files
+    const sourceExtensions = new Set(['cs', 'ts', 'js', 'py', 'java', 'go', 'rs', 'rb', 'php', 'cpp', 'c']);
+    const sourceFile = files.find(f => {
+      const ext = f.name.split('.').pop()?.toLowerCase() ?? '';
+      return sourceExtensions.has(ext);
+    });
+    return sourceFile ?? files[0];
+  }
+
+  // Skip build artifacts, hidden directories, and binary assets when uploading folders
+  private isIgnoredPath(file: File): boolean {
+    const path = (file as any).webkitRelativePath || file.name;
+    const segments = path.split('/');
+    const ignoredDirs = new Set(['node_modules', '.git', 'bin', 'obj', 'dist', '.angular', 'coverage', '.nyc_output']);
+    return segments.some((seg: string) => ignoredDirs.has(seg));
   }
 
   async analyzeCode(): Promise<void> {
@@ -279,7 +365,8 @@ export class CodeEditor implements OnChanges, OnDestroy {
       fileName: this.fileName,
       sourceCode: this.code,
       analysis: patternResult,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      workspaceContext: this.workspaceProfile ?? undefined,
     };
     this.analyze.emit(session);
     this.cdr.detectChanges();

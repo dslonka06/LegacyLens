@@ -13,3 +13,43 @@
   overflow: hidden;
   height: 100%;
 }
+
+// Editor stays at its fixed width
+.editor-column {
+  display: flex;
+  flex-direction: column;
+  width: 42%;
+  min-width: 0;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+// Results column: workspace panels scroll, analysis panel fills remaining space
+.results-column {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+
+  // Workspace summary + repository preview stacked, scrollable if tall
+  .workspace-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px 0;
+    flex-shrink: 0;
+    max-height: 55%;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  }
+
+  app-analysis-panel {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
