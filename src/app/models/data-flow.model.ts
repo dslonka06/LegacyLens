@@ -1,6 +1,8 @@
 // Stage 7 — Behavior & Data Flow Intelligence models
 // These answer "What happens when this runs?" not "What files exist?"
 
+// DataFlowNode and DataFlow are used internally by DataFlowDiscoveryService
+// to build intermediate representations before converting to WorkflowSummary.
 export interface DataFlowNode {
   id: string;
   name: string;
@@ -53,13 +55,7 @@ export interface ChangeImpactAnalysis {
   summary: string;
 }
 
-export interface BehaviorInsight {
-  title: string;
-  description: string;
-  items: string[];
-  category: 'entry-points' | 'services' | 'repositories' | 'bottlenecks';
-}
-
+// Aggregate behavior insights — derived from dependency graph analysis
 export interface BehaviorInsights {
   entryPoints: string[];
   mostReferencedServices: string[];

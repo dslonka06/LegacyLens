@@ -20,16 +20,3 @@ export interface TechnologyDetectionResult {
   sourceFile: string;
 }
 
-// Convenience view — derived from TechnologyDetectionResult where category === 'Framework'
-export interface FrameworkInfo {
-  name: string;
-  confidence: number;
-  detectionMethod: DetectionMethod;
-}
-
-// Generic named technology — for display purposes
-export interface TechnologyInfo {
-  name: string;
-  category: TechnologyCategory;
-  confidence: number;
-}

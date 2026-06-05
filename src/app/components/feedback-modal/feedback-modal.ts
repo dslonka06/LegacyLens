@@ -6,7 +6,8 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-feedback-modal',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './feedback-modal.html'
+  templateUrl: './feedback-modal.html',
+  styleUrl: './feedback-modal.scss'
 })
 export class FeedbackModal {
   @Output() close = new EventEmitter<void>();

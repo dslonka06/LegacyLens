@@ -28,7 +28,3 @@ export interface WorkspaceProfile {
   repositoryStructure?: RepositoryStructure;
 }
 
-export interface Workspace {
-  profile: WorkspaceProfile;
-  rawFiles: File[];
-}

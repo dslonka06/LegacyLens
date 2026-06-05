@@ -1,1 +1,196 @@
-:host { display: flex; flex: 1; min-width: 0; overflow: hidden; }
+:host {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+// ─── Risk score card ──────────────────────────────────────
+.risk-score-card {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  flex-shrink: 0;
+}
+
+.risk-score-left {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-direction: column;
+}
+
+.risk-score-number {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -2px;
+
+  &.score-good { color: var(--success); }
+  &.score-warn { color: var(--warning); }
+  &.score-bad  { color: var(--error); }
+}
+
+.risk-score-denom {
+  font-size: 16px;
+  color: var(--text-muted);
+  font-weight: 500;
+  align-self: flex-end;
+  margin-bottom: 6px;
+}
+
+.risk-score-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+
+  &.score-good { color: var(--success); }
+  &.score-warn { color: var(--warning); }
+  &.score-bad  { color: var(--error); }
+}
+
+.risk-score-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-left: 1px solid var(--border);
+  padding-left: 32px;
+}
+
+.risk-score-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rsr-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.high   { background: var(--error); }
+  &.medium { background: var(--warning); }
+  &.low    { background: #94a3b8; }
+}
+
+.rsr-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.rsr-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+// ─── Expandable risk list ─────────────────────────────────
+.expandable-risk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.expandable-risk {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:hover { border-color: var(--text-muted); }
+  &.expanded { border-color: rgba(124,92,255,0.3); }
+}
+
+.expandable-risk-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.risk-pip-lg {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.high   { background: var(--error); }
+  &.medium { background: var(--warning); }
+  &.low    { background: #94a3b8; }
+}
+
+.expandable-risk-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-content);
+  line-height: 1.4;
+}
+
+.risk-tag-high   { background: rgba(239,68,68,0.15);   color: #fca5a5 !important; }
+.risk-tag-medium { background: rgba(245,158,11,0.15);  color: #fcd34d !important; }
+.risk-tag-low    { background: rgba(148,163,184,0.15); color: #94a3b8 !important; }
+
+.expand-chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.expandable-risk-body {
+  border-top: 1px solid var(--border);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg-secondary);
+}
+
+.risk-detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.risk-detail-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.risk-detail-val {
+  font-size: 13px;
+  color: var(--text-content);
+  line-height: 1.55;
+
+  &.risk-detail-high   { color: var(--error); font-weight: 500; }
+  &.risk-detail-medium { color: var(--warning); font-weight: 500; }
+}
+
+.risk-jump-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  svg { width: 13px; height: 13px; color: var(--accent); flex-shrink: 0; }
+}

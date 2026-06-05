@@ -1,1 +1,83 @@
-:host { display: flex; flex: 1; min-width: 0; overflow: hidden; }
+:host {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+// ─── Settings groups ──────────────────────────────────────
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+}
+
+.settings-row {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.settings-info { display: flex; flex-direction: column; gap: 2px; }
+
+.settings-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.settings-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.settings-control {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.select-pill {
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: default;
+  &.active   { background: rgba(124,92,255,0.12); border-color: rgba(124,92,255,0.3); color: #a5b4fc; }
+  &.disabled { opacity: 0.35; }
+}
+
+// ─── About table ──────────────────────────────────────────
+.settings-about {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.about-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 16px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+  &:last-child { border-bottom: none; }
+  span:first-child { color: var(--text-muted); }
+  span:last-child  { color: var(--text-secondary); font-weight: 500; }
+}

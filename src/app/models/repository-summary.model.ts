@@ -48,7 +48,9 @@ export interface RiskSummaryItem {
   severity: string;
 }
 
-export interface ModernizationItem {
+// Named ModernizationSummaryItem to distinguish from ModernizationItem in modernization-item.model.ts
+// (which carries a priority field). This is the simplified form used in RepositorySummary.
+export interface ModernizationSummaryItem {
   title: string;
   description: string;
 }
@@ -77,7 +79,7 @@ export interface RepositorySummary {
   dependencySummary?: string;
   dependencyStats?: { nodes: number; edges: number; averageConnectivity: number };
   risks?: RiskSummaryItem[];
-  modernizations?: ModernizationItem[];
+  modernizations?: ModernizationSummaryItem[];
   keyFiles?: KeyFile[];
   keyProjects?: KeyProject[];
   insights?: InsightSummaryItem[];

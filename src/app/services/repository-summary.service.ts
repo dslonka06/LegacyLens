@@ -8,7 +8,7 @@ import {
   InsightSummaryItem,
   KeyFile,
   KeyProject,
-  ModernizationItem,
+  ModernizationSummaryItem,
   RepositorySummary,
   RiskSummaryItem,
 } from '../models/repository-summary.model';
@@ -279,7 +279,7 @@ export class RepositorySummaryService {
     return items;
   }
 
-  private buildModernizations(session: AnalysisSession | null): ModernizationItem[] {
+  private buildModernizations(session: AnalysisSession | null): ModernizationSummaryItem[] {
     if (session?.aiAnalysis?.modernizations?.length) {
       return session.aiAnalysis.modernizations.map(m => ({ title: m.title, description: m.description }));
     }
