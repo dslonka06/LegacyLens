@@ -96,6 +96,19 @@
   }
 }
 
+.header-btn-guide {
+  border-color: rgba(124,92,255,0.3);
+  color: var(--accent);
+
+  svg { color: var(--accent); }
+
+  &:hover {
+    background: rgba(124,92,255,0.1);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(124,92,255,0.2);
+  }
+}
+
 .app-body {
   display: flex;
   flex: 1;

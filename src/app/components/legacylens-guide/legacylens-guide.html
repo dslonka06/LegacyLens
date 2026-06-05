@@ -1,0 +1,113 @@
+<div class="guide-overlay" (click)="close()">
+  <div class="guide-modal" (click)="$event.stopPropagation()">
+
+    <!-- ── Header ──────────────────────────────────────────────────────────── -->
+    <div class="guide-header">
+      <div class="guide-header-left">
+        <div class="guide-brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            <path d="M11 8v6M8 11h6"/>
+          </svg>
+        </div>
+        <div class="guide-brand-text">
+          <span class="guide-title">LegacyLens Guide</span>
+          <span class="guide-subtitle">{{ progressLabel }}</span>
+        </div>
+      </div>
+      <button class="guide-close-btn" (click)="close()" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- ── Question view (Q1 or Q2) ────────────────────────────────────────── -->
+    <div class="guide-body" *ngIf="view === 'q1' || view === 'q2'">
+
+      <h2 class="guide-question-title">{{ currentQuestion?.title }}</h2>
+
+      <div class="guide-options">
+        <button
+          *ngFor="let opt of currentQuestion?.options"
+          class="guide-option"
+          [ngClass]="{'selected': (view === 'q1' ? selectedQ1 : selectedQ2) === opt.id}"
+          (click)="view === 'q1' ? selectQ1(opt.id) : selectQ2(opt.id)">
+          <span class="option-label">{{ opt.label }}</span>
+          <svg class="option-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ── Recommendation view ──────────────────────────────────────────────── -->
+    <div class="guide-body" *ngIf="view === 'recommendation' && recommendation">
+
+      <div class="rec-headline-row">
+        <div class="rec-check-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="rec-headline">{{ recommendation.headline }}</h2>
+          <p class="rec-summary">{{ recommendation.summary }}</p>
+        </div>
+      </div>
+
+      <div class="rec-section">
+        <span class="rec-section-label">Recommended Workflow</span>
+        <ol class="rec-steps">
+          <li *ngFor="let step of recommendation.steps; let i = index" class="rec-step">
+            <span class="step-num">{{ i + 1 }}</span>
+            <span class="step-text">{{ step }}</span>
+          </li>
+        </ol>
+      </div>
+
+      <div class="rec-section">
+        <span class="rec-section-label">Open These Pages</span>
+        <div class="rec-pages">
+          <button
+            *ngFor="let page of recommendation.recommendedPages"
+            class="rec-page-btn"
+            (click)="navigateTo(page)"
+            [title]="page.reason">
+            <span class="page-label">{{ page.label }}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Footer ───────────────────────────────────────────────────────────── -->
+    <div class="guide-footer">
+      <div class="guide-footer-left">
+        <button class="guide-back-btn" *ngIf="showBack" (click)="back()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+          </svg>
+          Back
+        </button>
+        <button class="guide-restart-btn" *ngIf="view === 'recommendation'" (click)="restart()">
+          Start Over
+        </button>
+      </div>
+      <div class="guide-footer-right">
+        <label class="dont-show-label">
+          <input type="checkbox" [(ngModel)]="dontShowAgain">
+          Don't show automatically
+        </label>
+        <button class="guide-done-btn" (click)="close()">
+          {{ view === 'recommendation' ? 'Close Guide' : 'Skip' }}
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -16,6 +16,48 @@
   <!-- ── Main content ─────────────────────────────────────────────────────── -->
   <div class="rpa-content" *ngIf="!hasNoWorkspace">
 
+    <!-- Onboarding panel — outcome-first orientation -->
+    <div class="rpa-onboarding">
+      <span class="rpa-onboarding-title">What can Repository Analysis help me do?</span>
+      <div class="rpa-onboarding-goals">
+        <div class="rpa-onboarding-goal">
+          <div class="ob-goal-icon ob-understand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+          </div>
+          <div class="ob-goal-text">
+            <span class="ob-goal-title">Understand This System</span>
+            <span class="ob-goal-desc">Explore structure, projects, and architecture to quickly understand how the application works.</span>
+          </div>
+        </div>
+        <div class="rpa-onboarding-goal">
+          <div class="ob-goal-icon ob-modify">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <div class="ob-goal-text">
+            <span class="ob-goal-title">Safely Modify This Code</span>
+            <span class="ob-goal-desc">Find dependency hotspots, tightly coupled components, and high-risk areas before making changes.</span>
+          </div>
+        </div>
+        <div class="rpa-onboarding-goal">
+          <div class="ob-goal-icon ob-modernize">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+              <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+            </svg>
+          </div>
+          <div class="ob-goal-text">
+            <span class="ob-goal-title">Modernize Legacy Components</span>
+            <span class="ob-goal-desc">Identify architectural patterns, outdated dependencies, and opportunities to improve maintainability.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Page header -->
     <div class="rpa-header">
       <div class="rpa-header-icon">
