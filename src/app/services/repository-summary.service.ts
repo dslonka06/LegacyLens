@@ -14,6 +14,8 @@ import {
 } from '../models/repository-summary.model';
 import { DependencyExplorerService } from './dependency-explorer.service';
 import { RepositoryInsightsService } from './repository-insights.service';
+import { DataFlowDiscoveryService } from './data-flow-discovery.service';
+import { WorkflowExplorerService } from './workflow-explorer.service';
 
 @Injectable({ providedIn: 'root' })
 export class RepositorySummaryService {
@@ -21,6 +23,8 @@ export class RepositorySummaryService {
   constructor(
     private readonly explorer: DependencyExplorerService,
     private readonly insights: RepositoryInsightsService,
+    private readonly dataFlowDiscovery: DataFlowDiscoveryService,
+    private readonly workflowExplorer: WorkflowExplorerService,
   ) {}
 
   // Primary entry: builds a RepositorySummary from all available intelligence.
@@ -116,6 +120,15 @@ export class RepositorySummaryService {
     // ── Onboarding ────────────────────────────────────────────────────────
     summary.onboardingNotes = this.buildOnboardingNotes(workspaceContext, knowledge, session);
     summary.onboardingSteps = this.buildOnboardingSteps(guideRecommendation, profile);
+
+    // ── Stage 7: Behavior & Data Flow Intelligence ────────────────────────
+    if (knowledge) {
+      const flows = this.dataFlowDiscovery.discoverWorkflows(knowledge, profile?.repositoryStructure ?? undefined);
+      if (flows.length) {
+        summary.workflowSummaries = this.workflowExplorer.buildSummaries(flows);
+      }
+      summary.behaviorInsights = this.dataFlowDiscovery.extractBehaviorInsights(knowledge);
+    }
 
     return summary;
   }

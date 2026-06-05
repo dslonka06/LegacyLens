@@ -2,6 +2,8 @@
 // It aggregates RepositoryKnowledge, RepositoryStructure, WorkspaceProfile, and AnalysisSession
 // into a single source of truth regardless of workspace type.
 
+import { BehaviorInsights, WorkflowSummary } from './data-flow.model';
+
 export type DocumentationSectionId =
   | 'executive-summary'
   | 'repository-overview'
@@ -81,4 +83,7 @@ export interface RepositorySummary {
   insights?: InsightSummaryItem[];
   onboardingNotes?: string;
   onboardingSteps?: string[];
+  // Stage 7: behavior & data flow intelligence
+  workflowSummaries?: WorkflowSummary[];
+  behaviorInsights?: BehaviorInsights;
 }
