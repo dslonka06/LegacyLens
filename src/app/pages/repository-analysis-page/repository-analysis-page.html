@@ -112,6 +112,7 @@
                   {{ confidencePercent(p.confidence) }}%
                 </span>
               </div>
+              <p class="arch-desc">{{ architectureDescription(p.name) }}</p>
               <div class="arch-indicators" *ngIf="p.indicators.length">
                 <span class="arch-ind" *ngFor="let ind of p.indicators">{{ ind }}</span>
               </div>
@@ -124,7 +125,7 @@
       <!-- ── Right column: dependency analysis + insights ───────────────── -->
       <div class="rpa-col rpa-col-right">
 
-        <!-- Knowledge progress / Dependency Explorer -->
+        <!-- Dependency graph / Key Components -->
         <div class="rpa-card">
           <div class="rpa-card-header">
             <div class="rpa-card-icon dep-icon">
@@ -133,37 +134,12 @@
                 <path d="M6 9v12"/><path d="M18 9v3"/>
               </svg>
             </div>
-            <span class="rpa-card-title">Dependency Explorer</span>
+            <span class="rpa-card-title">Key Components</span>
           </div>
           <app-repository-intelligence
             [knowledge]="knowledge"
             [state]="knowledgeState">
           </app-repository-intelligence>
-
-          <!-- Rankings table — shown after knowledge is ready -->
-          <div class="dep-rankings" *ngIf="rankings.length">
-            <button class="section-toggle" (click)="toggleDeps()">
-              <span>Dependency Rankings</span>
-              <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline [attr.points]="depsExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
-              </svg>
-            </button>
-            <div class="rankings-table" *ngIf="depsExpanded">
-              <div class="rankings-header">
-                <span class="col-name">File</span>
-                <span class="col-in">In</span>
-                <span class="col-out">Out</span>
-                <span class="col-total">Total</span>
-              </div>
-              <div class="rankings-row" *ngFor="let r of rankings; let i = index">
-                <span class="col-rank">{{ i + 1 }}</span>
-                <span class="col-name file-name">{{ r.node.name }}</span>
-                <span class="col-in">{{ r.inbound }}</span>
-                <span class="col-out">{{ r.outbound }}</span>
-                <span class="col-total total-val">{{ r.total }}</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Repository Insights -->

@@ -262,7 +262,7 @@ export class RepositorySummaryService {
       }));
     }
 
-    // Supplement with knowledge-based risks (god classes, bottlenecks)
+    // Supplement with knowledge-based risks (high-coupling, broad-scope, hubs)
     if (knowledge) {
       const insightRisks = this.insights.analyze(knowledge)
         .filter(i => i.severity === 'high' || i.severity === 'medium')

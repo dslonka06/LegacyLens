@@ -4,10 +4,8 @@ import { Subscription } from 'rxjs';
 import { WorkspaceContext } from '../../models/workspace-context.model';
 import { RepositoryKnowledge, KnowledgeState } from '../../models/knowledge.model';
 import { RepositoryInsight } from '../../services/repository-insights.service';
-import { FileRanking } from '../../services/dependency-explorer.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
-import { DependencyExplorerService } from '../../services/dependency-explorer.service';
 import { RepositoryInsightsService } from '../../services/repository-insights.service';
 import { AiKnowledgeService } from '../../services/ai-knowledge.service';
 import { WorkspaceSummary } from '../../components/workspace-summary/workspace-summary';
@@ -29,9 +27,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   knowledgeState: KnowledgeState = KnowledgeState.NotStarted;
 
   insights: RepositoryInsight[] = [];
-  rankings: FileRanking[] = [];
 
-  depsExpanded = true;
   insightsExpanded = true;
   archExpanded = true;
 
@@ -48,7 +44,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   constructor(
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly knowledgeService: RepositoryKnowledgeService,
-    private readonly explorer: DependencyExplorerService,
     private readonly insightsService: RepositoryInsightsService,
     private readonly aiKnowledge: AiKnowledgeService,
   ) {}
@@ -111,7 +106,19 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     return 'conf-low';
   }
 
-  toggleDeps(): void    { this.depsExpanded    = !this.depsExpanded; }
+  architectureDescription(patternName: string): string {
+    const descriptions: Record<string, string> = {
+      'Clean Architecture':      'Business logic is isolated from infrastructure. Dependencies point inward — the domain layer has no knowledge of frameworks, databases, or delivery mechanisms.',
+      'MVC':                     'Responsibilities are divided into Models (data), Views (presentation), and Controllers (request handling). Each layer has a distinct role and can evolve independently.',
+      'CQRS':                    'Read and write operations are handled separately. Queries return data without side effects; commands change state without returning data. This reduces coupling between read and write paths.',
+      'Layered Architecture':    'Code is organised into horizontal layers — typically presentation, business logic, and data access. Each layer only depends on the layer directly below it.',
+      'Microservice Architecture': 'The system is decomposed into independently deployable services. Each service owns its data and communicates over well-defined interfaces.',
+      'Feature-Sliced Design':   'Code is grouped by feature or domain slice rather than by technical layer. Each feature contains its own components, services, and models.',
+      'Hexagonal Architecture':  'The application core is surrounded by ports (interfaces) and adapters (implementations). External systems — databases, APIs, UIs — plug in through adapters without touching the core.',
+    };
+    return descriptions[patternName] ?? 'Architectural pattern detected from folder structure and dependency analysis.';
+  }
+
   toggleInsights(): void { this.insightsExpanded = !this.insightsExpanded; }
   toggleArch(): void    { this.archExpanded    = !this.archExpanded; }
 
@@ -149,9 +156,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   }
 
   private buildDerivedData(knowledge: RepositoryKnowledge): void {
-    if (knowledge.dependencyGraph) {
-      this.rankings = this.explorer.rankByConnectivity(knowledge.dependencyGraph, 10);
-    }
     this.insights = this.insightsService.analyze(knowledge);
   }
 }

@@ -25,7 +25,7 @@
     </div>
   </div>
 
-  <!-- ── Dependency Summary ───────────────────────────────────────────────── -->
+  <!-- ── Key Components ──────────────────────────────────────────────────── -->
   <div class="ri-section" *ngIf="!isBuilding && hasGraph">
 
     <button class="ri-section-header" (click)="toggleDeps()">
@@ -35,7 +35,7 @@
           <path d="M6 9v12"/><path d="M18 9v3"/>
         </svg>
       </div>
-      <span class="ri-section-title">Dependency Graph</span>
+      <span class="ri-section-title">Key Components</span>
       <span class="ri-section-meta">{{ nodeCount }} nodes · {{ edgeCount }} edges</span>
       <svg class="ri-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline [attr.points]="depsExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
@@ -43,76 +43,32 @@
     </button>
 
     <div class="ri-dep-body" *ngIf="depsExpanded">
-
-      <div class="dep-stats">
-        <div class="dep-stat">
-          <span class="dep-stat-value">{{ sourceFileCount }}</span>
-          <span class="dep-stat-label">Source Files</span>
+      <div class="key-component-row" *ngFor="let c of keyComponents">
+        <div class="kc-header">
+          <span class="kc-name">{{ c.ranking.node.name }}</span>
+          <span class="kc-role-badge" [ngClass]="c.roleClass">{{ c.role }}</span>
         </div>
-        <div class="dep-stat-divider"></div>
-        <div class="dep-stat">
-          <span class="dep-stat-value">{{ nodeCount }}</span>
-          <span class="dep-stat-label">Nodes</span>
-        </div>
-        <div class="dep-stat-divider"></div>
-        <div class="dep-stat">
-          <span class="dep-stat-value">{{ edgeCount }}</span>
-          <span class="dep-stat-label">Relationships</span>
-        </div>
-      </div>
-
-      <div class="dep-connected" *ngIf="mostConnected.length">
-        <span class="dep-connected-label">Most Connected</span>
-        <div class="dep-connected-list">
-          <div class="dep-connected-row" *ngFor="let f of mostConnected; let i = index">
-            <span class="dep-rank">{{ i + 1 }}</span>
-            <span class="dep-file-name">{{ f.name }}</span>
-            <span class="dep-degree-badge">{{ f.degree }}</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ── Architecture Detection ───────────────────────────────────────────── -->
-  <div class="ri-section" *ngIf="!isBuilding && hasArchitecture">
-
-    <button class="ri-section-header" (click)="toggleArch()">
-      <div class="ri-section-icon arch-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-        </svg>
-      </div>
-      <span class="ri-section-title">Architecture</span>
-      <span class="ri-section-meta">{{ architecturePatterns.length }} pattern{{ architecturePatterns.length === 1 ? '' : 's' }} detected</span>
-      <svg class="ri-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline [attr.points]="archExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
-      </svg>
-    </button>
-
-    <div class="ri-arch-body" *ngIf="archExpanded">
-      <div class="arch-pattern-row" *ngFor="let p of architecturePatterns">
-
-        <div class="arch-pattern-header">
-          <span class="arch-pattern-name">{{ p.name }}</span>
-          <span class="arch-confidence-badge" [ngClass]="confidenceClass(p.confidence)">
-            {{ confidencePercent(p.confidence) }}%
+        <p class="kc-desc">{{ c.description }}</p>
+        <div class="kc-counts">
+          <span class="kc-count inbound-count" title="Files that depend on this component">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+            </svg>
+            {{ c.ranking.inbound }} in
+          </span>
+          <span class="kc-count outbound-count" title="Files this component depends on">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+            </svg>
+            {{ c.ranking.outbound }} out
           </span>
         </div>
-
-        <div class="arch-indicators" *ngIf="p.indicators.length">
-          <span class="arch-indicator" *ngFor="let ind of p.indicators">{{ ind }}</span>
-        </div>
-
       </div>
     </div>
-
   </div>
 
   <!-- ── Complete but no meaningful results ──────────────────────────────── -->
-  <div class="ri-empty" *ngIf="!isBuilding && !hasGraph && !hasArchitecture && isComplete">
+  <div class="ri-empty" *ngIf="!isBuilding && !hasGraph && isComplete">
     <span class="ri-empty-text">No dependency relationships detected in uploaded files.</span>
   </div>
 

@@ -8,13 +8,13 @@ export interface RepositoryInsight {
   title: string;
   description: string;
   severity: InsightSeverity;
-  category: 'bottleneck' | 'god-class' | 'hotspot' | 'orphan' | 'stat';
+  category: 'broad-scope' | 'high-coupling' | 'hub' | 'orphan' | 'stat';
   affectedFiles?: string[];
 }
 
 // Thresholds — deliberately conservative for pattern-only analysis
-const GOD_CLASS_INBOUND_THRESHOLD = 8;
-const BOTTLENECK_OUTBOUND_THRESHOLD = 10;
+const HIGH_INBOUND_THRESHOLD = 8;
+const HIGH_OUTBOUND_THRESHOLD = 10;
 const HUB_DEGREE_MULTIPLIER = 2.5;
 
 @Injectable({ providedIn: 'root' })
@@ -49,40 +49,40 @@ export class RepositoryInsightsService {
       }];
     }
 
-    // ── God classes (high inbound) ────────────────────────────────────────
+    // ── High inbound coupling — widely referenced files ───────────────────
     const rankings = this.explorer.rankByConnectivity(graph, graph.nodes.length);
-    const godCandidates = rankings.filter(r => r.inbound >= GOD_CLASS_INBOUND_THRESHOLD);
-    for (const r of godCandidates.slice(0, 3)) {
+    const highInbound = rankings.filter(r => r.inbound >= HIGH_INBOUND_THRESHOLD);
+    for (const r of highInbound.slice(0, 3)) {
       insights.push({
-        title: `Potential God Class: ${r.node.name}`,
-        description: `${r.node.name} is imported by ${r.inbound} other files. High inbound coupling makes this file a change risk.`,
-        severity: r.inbound >= GOD_CLASS_INBOUND_THRESHOLD * 2 ? 'high' : 'medium',
-        category: 'god-class',
+        title: `Widely Referenced: ${r.node.name}`,
+        description: `Used by ${r.inbound} other files. Changes to this file have a broad blast radius — verify all consumers before modifying.`,
+        severity: r.inbound >= HIGH_INBOUND_THRESHOLD * 2 ? 'high' : 'medium',
+        category: 'high-coupling',
         affectedFiles: [r.node.name],
       });
     }
 
-    // ── Bottlenecks (high outbound) ───────────────────────────────────────
-    const bottlenecks = rankings.filter(r => r.outbound >= BOTTLENECK_OUTBOUND_THRESHOLD);
-    for (const r of bottlenecks.slice(0, 3)) {
+    // ── Broad scope — high outbound (depends on many others) ─────────────
+    const broadScope = rankings.filter(r => r.outbound >= HIGH_OUTBOUND_THRESHOLD);
+    for (const r of broadScope.slice(0, 3)) {
       insights.push({
-        title: `Potential Bottleneck: ${r.node.name}`,
-        description: `${r.node.name} depends on ${r.outbound} other files. High outbound coupling suggests broad responsibilities.`,
+        title: `Broad Scope: ${r.node.name}`,
+        description: `Depends on ${r.outbound} other files. This component spans many concerns — a candidate for decomposition if responsibilities are unrelated.`,
         severity: 'medium',
-        category: 'bottleneck',
+        category: 'broad-scope',
         affectedFiles: [r.node.name],
       });
     }
 
-    // ── Dependency hotspots (hubs) ────────────────────────────────────────
+    // ── Dependency hubs — significantly above-average connectivity ────────
     const hubs = this.explorer.dependencyHubs(graph, HUB_DEGREE_MULTIPLIER);
     if (hubs.length > 0) {
       const names = hubs.slice(0, 5).map(h => h.node.name);
       insights.push({
-        title: `Dependency Hotspot${hubs.length > 1 ? 's' : ''} Detected`,
-        description: `${names.join(', ')} ${hubs.length === 1 ? 'has' : 'have'} significantly more connections than average. Changes here ripple widely.`,
+        title: `System Hub${hubs.length > 1 ? 's' : ''}: ${names.slice(0, 2).join(', ')}${names.length > 2 ? ` +${names.length - 2} more` : ''}`,
+        description: `${hubs.length === 1 ? 'This component sits' : 'These components sit'} at the centre of the dependency graph with significantly more connections than average. Changes here have the widest impact.`,
         severity: 'medium',
-        category: 'hotspot',
+        category: 'hub',
         affectedFiles: names,
       });
     }

@@ -191,9 +191,9 @@ const RECOMMENDATIONS: Record<string, GuideRecommendation> = {
     [
       'Upload the repository.',
       'Open Repository Analysis.',
-      'Find the target file in Dependency Rankings.',
+      'Find the target file in Key Components.',
       'Review its incoming and outgoing dependencies.',
-      'Check Risks for known hotspots in that area.',
+      'Check Risks for known high-coupling areas.',
     ],
     [PAGES.repository, PAGES.risks, PAGES.analysis]
   ),
@@ -204,9 +204,9 @@ const RECOMMENDATIONS: Record<string, GuideRecommendation> = {
     'Map the full dependency graph to understand the scope and risk of your change.',
     [
       'Upload the repository.',
-      'Open Repository Analysis and review the dependency graph.',
-      'Use Dependency Rankings to find highly connected files.',
-      'Review Repository Insights for bottlenecks and god classes.',
+      'Open Repository Analysis and review Key Components.',
+      'Identify system hubs and widely-referenced files.',
+      'Review Repository Insights for broad-scope components and coupling hotspots.',
       'Review Risks before proceeding.',
     ],
     [PAGES.repository, PAGES.risks, PAGES.dataFlow]
@@ -258,11 +258,11 @@ const RECOMMENDATIONS: Record<string, GuideRecommendation> = {
   'modernize:refactor-targets': rec(
     'modernize', 'refactor-targets',
     'Finding Refactoring Candidates',
-    'Use dependency analysis to identify god classes, bottlenecks, and tightly coupled components.',
+    'Use dependency analysis to identify system hubs, broad-scope components, and tightly coupled files.',
     [
       'Upload the repository.',
-      'Open Repository Analysis and review Dependency Explorer.',
-      'Look for god classes and dependency hotspots in Repository Insights.',
+      'Open Repository Analysis and review Key Components.',
+      'Look for system hubs and high-coupling findings in Repository Insights.',
       'Review Modernization for pattern-based refactoring suggestions.',
       'Analyze individual candidates on the Analysis page.',
     ],

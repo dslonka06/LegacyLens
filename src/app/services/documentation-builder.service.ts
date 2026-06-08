@@ -56,7 +56,7 @@ const ALL_SECTIONS: Omit<DocumentationSection, 'available' | 'recommended'>[] = 
   {
     id: 'repository-insights',
     title: 'Repository Insights',
-    description: 'God classes, bottlenecks, hotspots, and orphaned files.',
+    description: 'High-coupling components, system hubs, broad-scope files, and orphans.',
   },
   {
     id: 'onboarding-guide',
