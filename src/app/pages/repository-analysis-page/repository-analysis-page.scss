@@ -214,6 +214,7 @@
   &.dep-icon       { background: rgba(34,197,94,0.12);   color: var(--success); }
   &.insights-icon  { background: rgba(245,158,11,0.12);  color: var(--warning); }
   &.arch-icon      { background: rgba(245,158,11,0.12);  color: var(--warning); }
+  &.flow-icon      { background: rgba(56,189,248,0.12);  color: var(--info); }
 }
 
 .rpa-card-title {
@@ -380,4 +381,148 @@
   border-radius: 4px;
   padding: 1px 6px;
   font-family: 'JetBrains Mono', Consolas, monospace;
+}
+
+// ─── Architecture body ───────────────────────────────────
+.arch-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.arch-subsection-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-secondary);
+  padding: 8px 14px 4px;
+  border-top: 1px solid rgba(40, 53, 72, 0.35);
+}
+
+.arch-layers {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 6px;
+}
+
+.arch-layer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 14px 8px;
+}
+
+.arch-layer-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(40, 53, 72, 0.2);
+
+  &:last-child { border-bottom: none; }
+}
+
+.arch-layer-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.arch-layer-folders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+// ─── Data Flow body ──────────────────────────────────────
+.flow-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.flow-categories {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid rgba(40, 53, 72, 0.35);
+}
+
+.flow-cat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(40, 53, 72, 0.2);
+
+  &:last-child { border-bottom: none; }
+}
+
+.flow-cat-label {
+  color: var(--text-content);
+  font-weight: 500;
+}
+
+.flow-cat-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--info, #38bdf8);
+  background: rgba(56,189,248,0.1);
+  border: 1px solid rgba(56,189,248,0.2);
+  border-radius: 10px;
+  padding: 1px 7px;
+}
+
+.flow-roles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 14px;
+}
+
+.flow-role-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.flow-role-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.flow-role-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.flow-chip {
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+
+  &.entry-chip {
+    color: var(--accent);
+    background: rgba(124,92,255,0.1);
+    border: 1px solid rgba(124,92,255,0.2);
+  }
+
+  &.service-chip {
+    color: var(--success);
+    background: rgba(34,197,94,0.08);
+    border: 1px solid rgba(34,197,94,0.15);
+  }
+
+  &.repo-chip {
+    color: var(--info, #38bdf8);
+    background: rgba(56,189,248,0.08);
+    border: 1px solid rgba(56,189,248,0.15);
+  }
 }

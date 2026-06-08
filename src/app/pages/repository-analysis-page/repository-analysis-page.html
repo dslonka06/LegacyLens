@@ -57,7 +57,7 @@
 
     <div class="rpa-grid">
 
-      <!-- ── Left column: structure + architecture ──────────────────────── -->
+      <!-- ── Left column: identity, structure, architecture ────────────────── -->
       <div class="rpa-col rpa-col-left">
 
         <!-- Repository Overview -->
@@ -87,7 +87,7 @@
           <app-repository-preview [profile]="profile"></app-repository-preview>
         </div>
 
-        <!-- Architecture Summary -->
+        <!-- Repository Architecture -->
         <div class="rpa-card" *ngIf="architecturePatterns.length">
           <div class="rpa-card-header">
             <div class="rpa-card-icon arch-icon">
@@ -96,36 +96,109 @@
                 <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
               </svg>
             </div>
-            <span class="rpa-card-title">Architecture Summary</span>
+            <span class="rpa-card-title">Repository Architecture</span>
           </div>
+
           <button class="section-toggle" (click)="toggleArch()">
             <span>{{ architecturePatterns.length }} pattern{{ architecturePatterns.length === 1 ? '' : 's' }} detected</span>
             <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline [attr.points]="archExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
             </svg>
           </button>
-          <div class="arch-patterns" *ngIf="archExpanded">
-            <div class="arch-row" *ngFor="let p of architecturePatterns">
-              <div class="arch-row-header">
-                <span class="arch-name">{{ p.name }}</span>
-                <span class="arch-conf-badge" [ngClass]="confidenceClass(p.confidence)">
-                  {{ confidencePercent(p.confidence) }}%
-                </span>
-              </div>
-              <p class="arch-desc">{{ architectureDescription(p.name) }}</p>
-              <div class="arch-indicators" *ngIf="p.indicators.length">
-                <span class="arch-ind" *ngFor="let ind of p.indicators">{{ ind }}</span>
+
+          <div class="arch-body" *ngIf="archExpanded">
+
+            <!-- Detected Patterns with descriptions -->
+            <div class="arch-patterns">
+              <div class="arch-row" *ngFor="let p of architecturePatterns">
+                <div class="arch-row-header">
+                  <span class="arch-name">{{ p.name }}</span>
+                  <span class="arch-conf-badge" [ngClass]="confidenceClass(p.confidence)">
+                    {{ confidencePercent(p.confidence) }}%
+                  </span>
+                </div>
+                <p class="arch-desc">{{ architectureDescription(p.name) }}</p>
+                <div class="arch-indicators" *ngIf="p.indicators.length">
+                  <span class="arch-ind" *ngFor="let ind of p.indicators">{{ ind }}</span>
+                </div>
               </div>
             </div>
+
+            <!-- Detected Layers -->
+            <div class="arch-layers" *ngIf="detectedLayers.length">
+              <div class="arch-subsection-title">Detected Layers</div>
+              <div class="arch-layer-list">
+                <div class="arch-layer-row" *ngFor="let layer of detectedLayers">
+                  <span class="arch-layer-name">{{ layer.name }}</span>
+                  <div class="arch-layer-folders">
+                    <span class="arch-ind" *ngFor="let f of layer.folders">{{ f }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
 
       </div>
 
-      <!-- ── Right column: dependency analysis + insights ───────────────── -->
+      <!-- ── Right column: behavior, components, insights ───────────────────── -->
       <div class="rpa-col rpa-col-right">
 
-        <!-- Dependency graph / Key Components -->
+        <!-- Repository Data Flow -->
+        <div class="rpa-card" *ngIf="hasDataFlow">
+          <div class="rpa-card-header">
+            <div class="rpa-card-icon flow-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+            <span class="rpa-card-title">Repository Data Flow</span>
+          </div>
+
+          <button class="section-toggle" (click)="toggleDataFlow()">
+            <span>{{ workflowSummaries.length }} workflow{{ workflowSummaries.length === 1 ? '' : 's' }} detected</span>
+            <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline [attr.points]="dataFlowExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+            </svg>
+          </button>
+
+          <div class="flow-body" *ngIf="dataFlowExpanded">
+
+            <!-- Workflow category breakdown -->
+            <div class="flow-categories" *ngIf="workflowCategoryGroups.length">
+              <div class="flow-cat-row" *ngFor="let cat of workflowCategoryGroups">
+                <span class="flow-cat-label">{{ cat.label }}</span>
+                <span class="flow-cat-count">{{ cat.count }}</span>
+              </div>
+            </div>
+
+            <!-- Entry points + key services -->
+            <div class="flow-roles" *ngIf="behaviorInsights">
+              <div class="flow-role-group" *ngIf="behaviorInsights.entryPoints.length">
+                <span class="flow-role-label">Entry Points</span>
+                <div class="flow-role-chips">
+                  <span class="flow-chip entry-chip" *ngFor="let e of behaviorInsights.entryPoints">{{ e }}</span>
+                </div>
+              </div>
+              <div class="flow-role-group" *ngIf="behaviorInsights.mostReferencedServices.length">
+                <span class="flow-role-label">Core Services</span>
+                <div class="flow-role-chips">
+                  <span class="flow-chip service-chip" *ngFor="let s of behaviorInsights.mostReferencedServices">{{ s }}</span>
+                </div>
+              </div>
+              <div class="flow-role-group" *ngIf="behaviorInsights.frequentlyUsedRepositories.length">
+                <span class="flow-role-label">Data Access</span>
+                <div class="flow-role-chips">
+                  <span class="flow-chip repo-chip" *ngFor="let r of behaviorInsights.frequentlyUsedRepositories">{{ r }}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Key Components -->
         <div class="rpa-card">
           <div class="rpa-card-header">
             <div class="rpa-card-icon dep-icon">

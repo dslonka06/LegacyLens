@@ -117,35 +117,72 @@
       <!-- Intelligence panels -->
       <div class="rnp-intelligence" *ngIf="selectedNode && intelligence">
 
-        <!-- ── Section 1: Selected File ───────────────────────────────── -->
-        <div class="rnp-intel-section rnp-section-file">
-          <div class="rnp-section-header">
-            <div class="rnp-section-icon file-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-              </svg>
-            </div>
-            <span class="rnp-section-title">Selected File</span>
+        <!-- ── Section 1: File Overview ──────────────────────────────── -->
+        <div class="rnp-intel-section rnp-section-overview">
+
+          <!-- File name + path -->
+          <div class="fo-identity">
+            <div class="fo-filename">{{ intelligence.node.name }}</div>
+            <div class="fo-path">{{ intelligence.node.path }}</div>
+          </div>
+
+          <!-- Classification row: type · role · importance -->
+          <div class="fo-classification">
+            <span class="fo-type-pill">{{ intelligence.node.type }}</span>
+            <span class="fo-role-badge" [ngClass]="nodeRoleClass" *ngIf="nodeRole">{{ nodeRole }}</span>
+            <span class="fo-imp-badge" [ngClass]="nodeImportanceClass">{{ nodeImportance }} importance</span>
             <span class="rnp-rank-badge" *ngIf="intelligence.connectivityRank !== null">
-              #{{ intelligence.connectivityRank }} by connectivity
+              #{{ intelligence.connectivityRank }}
             </span>
           </div>
-          <div class="rnp-file-info">
-            <div class="rnp-file-name">{{ intelligence.node.name }}</div>
-            <div class="rnp-file-path">{{ intelligence.node.path }}</div>
-            <div class="rnp-file-meta">
-              <span class="rnp-file-type-pill">{{ intelligence.node.type }}</span>
-              <span class="rnp-dep-counts">
-                <span class="rnp-dep-in" title="Incoming dependencies">
-                  ↓ {{ intelligence.incoming.length }}
-                </span>
-                <span class="rnp-dep-out" title="Outgoing dependencies">
-                  ↑ {{ intelligence.outgoing.length }}
-                </span>
+
+          <!-- Purpose -->
+          <div class="fo-block" *ngIf="nodePurpose">
+            <div class="fo-block-label">Purpose</div>
+            <p class="fo-block-text">{{ nodePurpose }}</p>
+          </div>
+
+          <!-- Why It Matters -->
+          <div class="fo-block" *ngIf="nodeWhyItMatters">
+            <div class="fo-block-label">Why It Matters</div>
+            <p class="fo-block-text">{{ nodeWhyItMatters }}</p>
+          </div>
+
+          <!-- Quick Facts -->
+          <div class="fo-facts">
+            <div class="fo-fact">
+              <span class="fo-fact-label">Incoming</span>
+              <span class="fo-fact-val fo-val-in">{{ intelligence.incoming.length }}</span>
+            </div>
+            <div class="fo-fact">
+              <span class="fo-fact-label">Outgoing</span>
+              <span class="fo-fact-val fo-val-out">{{ intelligence.outgoing.length }}</span>
+            </div>
+            <div class="fo-fact">
+              <span class="fo-fact-label">Workflows</span>
+              <span class="fo-fact-val">{{ intelligence.touchingWorkflows.length }}</span>
+            </div>
+            <div class="fo-fact">
+              <span class="fo-fact-label">Change Impact</span>
+              <span class="fo-fact-val fo-val-risk" [ngClass]="riskClass(intelligence.changeImpact.riskLevel)">
+                {{ intelligence.changeImpact.riskLevel }}
               </span>
             </div>
           </div>
+
+          <!-- Explore Next — only when workflow co-participants exist -->
+          <div class="fo-explore" *ngIf="exploreNextFiles.length">
+            <div class="fo-block-label">Explore Next</div>
+            <div class="fo-explore-chips">
+              <button class="fo-explore-chip"
+                      *ngFor="let name of exploreNextFiles"
+                      (click)="navigateToName(name, 'dependency-link')"
+                      [title]="name">
+                {{ name }}
+              </button>
+            </div>
+          </div>
+
         </div>
 
         <!-- ── Section 2: Dependencies ────────────────────────────────── -->

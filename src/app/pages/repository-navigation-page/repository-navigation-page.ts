@@ -286,6 +286,128 @@ export class RepositoryNavigationPage implements OnInit, OnDestroy {
     return this.selectedNode?.id === entry.nodeId;
   }
 
+  // ── File overview helpers ──────────────────────────────────────────────────
+
+  // Classify the selected node's role based on connectivity pattern
+  get nodeRole(): string {
+    if (!this.intelligence) return '';
+    const inb = this.intelligence.incoming.length;
+    const out = this.intelligence.outgoing.length;
+    if (inb >= 6 && out >= 6) return 'System Hub';
+    if (inb > out * 2 && inb >= 4) return 'Widely Referenced';
+    if (out > inb * 2 && out >= 5) return 'Broad Scope';
+    if (inb > 0 || out > 0) return 'Connected';
+    return 'Standalone';
+  }
+
+  get nodeRoleClass(): string {
+    const map: Record<string, string> = {
+      'System Hub':       'role-hub',
+      'Widely Referenced':'role-used',
+      'Broad Scope':      'role-broad',
+      'Connected':        'role-connected',
+      'Standalone':       'role-standalone',
+    };
+    return map[this.nodeRole] ?? 'role-connected';
+  }
+
+  get nodeImportance(): string {
+    if (!this.intelligence) return 'Unknown';
+    const inb  = this.intelligence.incoming.length;
+    const wfs  = this.intelligence.touchingWorkflows.length;
+    const risk = this.intelligence.changeImpact.riskLevel;
+    if (risk === 'High' || inb >= 8 || wfs >= 3) return 'High';
+    if (risk === 'Medium' || inb >= 4 || wfs >= 1) return 'Medium';
+    return 'Low';
+  }
+
+  get nodeImportanceClass(): string {
+    const map: Record<string, string> = { High: 'imp-high', Medium: 'imp-medium', Low: 'imp-low' };
+    return map[this.nodeImportance] ?? 'imp-low';
+  }
+
+  // Pattern-derived purpose sentence from structural signals
+  get nodePurpose(): string {
+    if (!this.intelligence) return '';
+    const node = this.intelligence.node;
+    const inb  = this.intelligence.incoming.length;
+    const out  = this.intelligence.outgoing.length;
+    const wfs  = this.intelligence.touchingWorkflows.length;
+    const type = node.type;
+
+    const typeLabel = this.nodeTypeLabel(type);
+    const wfPart = wfs > 0 ? ` Participates in ${wfs} workflow${wfs === 1 ? '' : 's'}.` : '';
+
+    if (inb >= 6 && out >= 6) {
+      return `Central ${typeLabel} referenced by ${inb} files and depending on ${out} others. Acts as a coordination point across multiple subsystems.${wfPart}`;
+    }
+    if (inb > out * 2 && inb >= 4) {
+      return `Widely referenced ${typeLabel} imported by ${inb} other files. Changes here propagate broadly.${wfPart}`;
+    }
+    if (out > inb * 2 && out >= 5) {
+      return `${typeLabel} with broad dependencies — relies on ${out} other files. Likely an orchestration or aggregation layer.${wfPart}`;
+    }
+    if (wfs > 0) {
+      return `${typeLabel} involved in ${wfs} detected workflow${wfs === 1 ? '' : 's'}.${inb > 0 ? ` Used by ${inb} file${inb === 1 ? '' : 's'}.` : ''}`;
+    }
+    if (inb > 0 || out > 0) {
+      return `${typeLabel} with ${inb} inbound and ${out} outbound dependencies.`;
+    }
+    return `${typeLabel} with no detected dependency relationships. May be an entry point, utility, or standalone file.`;
+  }
+
+  get nodeWhyItMatters(): string {
+    if (!this.intelligence) return '';
+    const inb   = this.intelligence.incoming.length;
+    const risk  = this.intelligence.changeImpact.riskLevel;
+    const wfs   = this.intelligence.touchingWorkflows.length;
+    const total = this.intelligence.changeImpact.directImpacts.length
+                + this.intelligence.changeImpact.indirectImpacts.length;
+
+    if (risk === 'High' && inb >= 6) {
+      return `High-risk. Used by ${inb} files and affects ${total} components on change. Modifications require careful review of all consumers.`;
+    }
+    if (risk === 'High') {
+      return `Changes here carry high impact — ${total} components are affected. Review change impact before modifying.`;
+    }
+    if (wfs >= 2) {
+      return `Participates in ${wfs} workflows. Breaking changes here may affect multiple user-visible operations.`;
+    }
+    if (inb >= 4) {
+      return `Referenced by ${inb} other files. Even small changes may require updates across multiple consumers.`;
+    }
+    if (total > 0) {
+      return `Changes affect ${total} component${total === 1 ? '' : 's'} directly or indirectly.`;
+    }
+    return 'Low coupling — changes here are unlikely to affect other components.';
+  }
+
+  // Files to explore next: other participants in the same workflows, excluding current node
+  get exploreNextFiles(): string[] {
+    if (!this.intelligence || this.intelligence.touchingWorkflows.length === 0) return [];
+    const currentName = this.intelligence.node.name;
+    const seen = new Set<string>([currentName]);
+    const suggestions: string[] = [];
+    for (const wf of this.intelligence.touchingWorkflows) {
+      for (const step of wf.flowPath) {
+        if (!seen.has(step) && suggestions.length < 6) {
+          seen.add(step);
+          suggestions.push(step);
+        }
+      }
+    }
+    return suggestions;
+  }
+
+  private nodeTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      module: 'Module', class: 'Class', query: 'SQL Query',
+      template: 'Template', component: 'Component',
+      table: 'Table', namespace: 'Namespace', external: 'External reference', file: 'File',
+    };
+    return labels[type] ?? 'File';
+  }
+
   // ── Display helpers ───────────────────────────────────────────────────────
 
   fileIcon(ext: string): string {
