@@ -47,7 +47,6 @@
 
   &.tree-icon    { background: rgba(56,189,248,0.12);  color: var(--info); }
   &.project-icon { background: rgba(245,158,11,0.12);  color: var(--warning); }
-  &.tech-icon    { background: rgba(124,92,255,0.12);  color: var(--accent); }
 }
 
 .rp-section-title {
@@ -199,73 +198,3 @@
   white-space: nowrap;
 }
 
-// ─── Technologies ─────────────────────────────────────────
-.rp-tech-list {
-  border-top: 1px solid rgba(40, 53, 72, 0.5);
-  padding: 10px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.tech-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.tech-group-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-secondary);
-}
-
-.tech-chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.tech-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: default;
-
-  &.framework-chip {
-    background: rgba(124,92,255,0.1);
-    border: 1px solid rgba(124,92,255,0.2);
-    color: var(--accent);
-  }
-
-  &.other-chip {
-    background: rgba(56,189,248,0.08);
-    border: 1px solid rgba(56,189,248,0.18);
-    color: var(--info);
-  }
-}
-
-.tech-chip-name {
-  white-space: nowrap;
-}
-
-.tech-chip-conf {
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--text-muted);
-  opacity: 0.8;
-}
-
-.tech-chip-cat {
-  font-size: 9px;
-  font-weight: 600;
-  color: var(--text-muted);
-  opacity: 0.75;
-  white-space: nowrap;
-}

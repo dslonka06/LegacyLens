@@ -2,7 +2,6 @@ import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WorkspaceProfile } from '../../models/workspace.model';
 import { FolderNode, ProjectNode, RepositoryStructure } from '../../models/repository.model';
-import { TechnologyDetectionResult } from '../../models/technology.model';
 
 interface TreeRow {
   kind: 'folder' | 'file';
@@ -27,7 +26,6 @@ export class RepositoryPreview implements OnChanges {
   treeRows: TreeRow[] = [];
   treeExpanded = true;
   projectsExpanded = true;
-  techExpanded = true;
 
   // Max folders shown in collapsed state before "show more" is needed
   private readonly TREE_PREVIEW_DEPTH = 3;
@@ -40,20 +38,8 @@ export class RepositoryPreview implements OnChanges {
     return this.structure?.projects ?? [];
   }
 
-  get frameworks(): TechnologyDetectionResult[] {
-    return (this.profile?.detectedTechnologies ?? [])
-      .filter(t => t.category === 'Framework')
-      .sort((a, b) => b.confidence - a.confidence);
-  }
-
-  get otherTechnologies(): TechnologyDetectionResult[] {
-    return (this.profile?.detectedTechnologies ?? [])
-      .filter(t => t.category !== 'Framework')
-      .sort((a, b) => a.category.localeCompare(b.category) || a.technology.localeCompare(b.technology));
-  }
-
   get hasContent(): boolean {
-    return this.treeRows.length > 0 || this.projects.length > 0 || this.frameworks.length > 0;
+    return this.treeRows.length > 0 || this.projects.length > 0;
   }
 
   get totalFiles(): number {
@@ -68,26 +54,6 @@ export class RepositoryPreview implements OnChanges {
 
   toggleTree(): void { this.treeExpanded = !this.treeExpanded; }
   toggleProjects(): void { this.projectsExpanded = !this.projectsExpanded; }
-  toggleTech(): void { this.techExpanded = !this.techExpanded; }
-
-  confidencePercent(confidence: number): number {
-    return Math.round(confidence * 100);
-  }
-
-  categoryLabel(category: string): string {
-    const labels: Record<string, string> = {
-      Framework:                'Framework',
-      Runtime:                  'Runtime',
-      BuildTool:                'Build',
-      ContainerOrOrchestration: 'Container',
-      CI_CD:                    'CI/CD',
-      Database:                 'Database',
-      TestingFramework:         'Testing',
-      PackageManager:           'Package Manager',
-      Other:                    'Other',
-    };
-    return labels[category] ?? category;
-  }
 
   projectTypeLabel(type: string): string {
     const labels: Record<string, string> = {

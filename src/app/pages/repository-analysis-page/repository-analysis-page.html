@@ -42,9 +42,22 @@
       </div>
     </div>
 
+    <!-- AI Explanation Card — below header, above grid -->
+    <div class="rpa-explanation-wrap"
+         *ngIf="explanationLoading || explanationContent || explanationError">
+      <app-explanation-card
+        [title]="explanationTitle"
+        [content]="explanationContent"
+        [isLoading]="explanationLoading"
+        [error]="explanationError"
+        (dismiss)="dismissExplanation()"
+        (regenerate)="explainSystem()">
+      </app-explanation-card>
+    </div>
+
     <div class="rpa-grid">
 
-      <!-- ── Left column: structure ───────────────────────────────────────── -->
+      <!-- ── Left column: structure + architecture ──────────────────────── -->
       <div class="rpa-col rpa-col-left">
 
         <!-- Repository Overview -->
@@ -61,7 +74,7 @@
           <app-workspace-summary [profile]="profile"></app-workspace-summary>
         </div>
 
-        <!-- Structure + Technology -->
+        <!-- Repository Structure -->
         <div class="rpa-card">
           <div class="rpa-card-header">
             <div class="rpa-card-icon structure-icon">
@@ -74,9 +87,41 @@
           <app-repository-preview [profile]="profile"></app-repository-preview>
         </div>
 
+        <!-- Architecture Summary -->
+        <div class="rpa-card" *ngIf="architecturePatterns.length">
+          <div class="rpa-card-header">
+            <div class="rpa-card-icon arch-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+              </svg>
+            </div>
+            <span class="rpa-card-title">Architecture Summary</span>
+          </div>
+          <button class="section-toggle" (click)="toggleArch()">
+            <span>{{ architecturePatterns.length }} pattern{{ architecturePatterns.length === 1 ? '' : 's' }} detected</span>
+            <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline [attr.points]="archExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+            </svg>
+          </button>
+          <div class="arch-patterns" *ngIf="archExpanded">
+            <div class="arch-row" *ngFor="let p of architecturePatterns">
+              <div class="arch-row-header">
+                <span class="arch-name">{{ p.name }}</span>
+                <span class="arch-conf-badge" [ngClass]="confidenceClass(p.confidence)">
+                  {{ confidencePercent(p.confidence) }}%
+                </span>
+              </div>
+              <div class="arch-indicators" *ngIf="p.indicators.length">
+                <span class="arch-ind" *ngFor="let ind of p.indicators">{{ ind }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- ── Right column: intelligence ──────────────────────────────────── -->
+      <!-- ── Right column: dependency analysis + insights ───────────────── -->
       <div class="rpa-col rpa-col-right">
 
         <!-- Knowledge progress / Dependency Explorer -->
@@ -152,52 +197,7 @@
           </div>
         </div>
 
-        <!-- Architecture Summary -->
-        <div class="rpa-card" *ngIf="architecturePatterns.length">
-          <div class="rpa-card-header">
-            <div class="rpa-card-icon arch-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-              </svg>
-            </div>
-            <span class="rpa-card-title">Architecture Summary</span>
-          </div>
-          <button class="section-toggle" (click)="toggleArch()">
-            <span>{{ architecturePatterns.length }} pattern{{ architecturePatterns.length === 1 ? '' : 's' }} detected</span>
-            <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline [attr.points]="archExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
-            </svg>
-          </button>
-          <div class="arch-patterns" *ngIf="archExpanded">
-            <div class="arch-row" *ngFor="let p of architecturePatterns">
-              <div class="arch-row-header">
-                <span class="arch-name">{{ p.name }}</span>
-                <span class="arch-conf-badge" [ngClass]="confidenceClass(p.confidence)">
-                  {{ confidencePercent(p.confidence) }}%
-                </span>
-              </div>
-              <div class="arch-indicators" *ngIf="p.indicators.length">
-                <span class="arch-ind" *ngFor="let ind of p.indicators">{{ ind }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
-    </div>
-
-    <!-- AI Explanation Card — spans full width below the grid -->
-    <div class="rpa-explanation-wrap"
-         *ngIf="explanationLoading || explanationContent || explanationError">
-      <app-explanation-card
-        [title]="explanationTitle"
-        [content]="explanationContent"
-        [isLoading]="explanationLoading"
-        [error]="explanationError"
-        (dismiss)="dismissExplanation()"
-        (regenerate)="explainSystem()">
-      </app-explanation-card>
     </div>
 
   </div>
