@@ -198,7 +198,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
         ctx?.profile.repositoryStructure ?? undefined,
       );
       this.workflowSummaries = this.workflowExplorer.buildSummaries(flows);
-      this.behaviorInsights = this.dataFlowDiscovery.behaviorInsights(knowledge);
+      this.behaviorInsights = this.dataFlowDiscovery.extractBehaviorInsights(knowledge);
     } else {
       this.workflowSummaries = [];
       this.behaviorInsights = null;
