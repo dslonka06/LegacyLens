@@ -10,14 +10,16 @@ import { CurrentWorkspaceService } from '../../services/current-workspace.servic
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { DependencyExplorerService } from '../../services/dependency-explorer.service';
 import { RepositoryInsightsService } from '../../services/repository-insights.service';
+import { AiKnowledgeService } from '../../services/ai-knowledge.service';
 import { WorkspaceSummary } from '../../components/workspace-summary/workspace-summary';
 import { RepositoryPreview } from '../../components/repository-preview/repository-preview';
 import { RepositoryIntelligence } from '../../components/repository-intelligence/repository-intelligence';
+import { ExplanationCard } from '../../components/explanation-card/explanation-card';
 
 @Component({
   selector: 'app-repository-analysis-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, WorkspaceSummary, RepositoryPreview, RepositoryIntelligence],
+  imports: [CommonModule, RouterLink, WorkspaceSummary, RepositoryPreview, RepositoryIntelligence, ExplanationCard],
   templateUrl: './repository-analysis-page.html',
   styleUrl: './repository-analysis-page.scss',
 })
@@ -34,6 +36,12 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   insightsExpanded = true;
   archExpanded = true;
 
+  // AI explanation state
+  explanationContent: string | null = null;
+  explanationTitle = '';
+  explanationLoading = false;
+  explanationError: string | null = null;
+
   private subs: Subscription[] = [];
 
   readonly KnowledgeState = KnowledgeState;
@@ -43,6 +51,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly explorer: DependencyExplorerService,
     private readonly insightsService: RepositoryInsightsService,
+    private readonly aiKnowledge: AiKnowledgeService,
   ) {}
 
   ngOnInit(): void {
@@ -106,6 +115,60 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   toggleDeps(): void    { this.depsExpanded    = !this.depsExpanded; }
   toggleInsights(): void { this.insightsExpanded = !this.insightsExpanded; }
   toggleArch(): void    { this.archExpanded    = !this.archExpanded; }
+
+  // ── AI actions ────────────────────────────────────────────────────────────
+
+  get canExplain(): boolean {
+    return !!this.context && !!this.knowledge && !this.isBuilding;
+  }
+
+  explainSystem(): void {
+    if (!this.context || !this.knowledge) return;
+    this.explanationTitle = 'Explain This System';
+    this.explanationContent = null;
+    this.explanationError = null;
+    this.explanationLoading = true;
+
+    this.subs.push(
+      this.aiKnowledge.explainRepository(this.context, this.knowledge).subscribe({
+        next: text => {
+          this.explanationContent = text;
+          this.explanationLoading = false;
+        },
+        error: err => {
+          this.explanationError = err?.message ?? 'AI explanation service is unavailable.';
+          this.explanationLoading = false;
+        },
+      })
+    );
+  }
+
+  generateOnboarding(): void {
+    if (!this.context || !this.knowledge) return;
+    this.explanationTitle = 'Onboarding Guide';
+    this.explanationContent = null;
+    this.explanationError = null;
+    this.explanationLoading = true;
+
+    this.subs.push(
+      this.aiKnowledge.generateOnboardingGuide(this.context, this.knowledge).subscribe({
+        next: text => {
+          this.explanationContent = text;
+          this.explanationLoading = false;
+        },
+        error: err => {
+          this.explanationError = err?.message ?? 'AI explanation service is unavailable.';
+          this.explanationLoading = false;
+        },
+      })
+    );
+  }
+
+  dismissExplanation(): void {
+    this.explanationContent = null;
+    this.explanationError = null;
+    this.explanationLoading = false;
+  }
 
   private buildDerivedData(knowledge: RepositoryKnowledge): void {
     if (knowledge.dependencyGraph) {

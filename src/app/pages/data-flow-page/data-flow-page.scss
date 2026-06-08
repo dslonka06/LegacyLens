@@ -636,6 +636,37 @@
   &.bottleneck { color: #EF4444;        background: rgba(239,68,68,0.08);  border: 1px solid rgba(239,68,68,0.2); }
 }
 
+// ─── Workflow AI explain ──────────────────────────────────
+.wf-ai-row {
+  display: flex;
+  align-items: center;
+  padding-top: 4px;
+  border-top: 1px solid rgba(40, 53, 72, 0.35);
+}
+
+.wf-explain-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 7px;
+  border: 1px solid rgba(124, 92, 255, 0.35);
+  background: rgba(124, 92, 255, 0.08);
+  color: var(--accent);
+  white-space: nowrap;
+  transition: all 0.15s;
+  svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+  &:hover:not(:disabled) {
+    background: rgba(124, 92, 255, 0.15);
+    border-color: var(--accent);
+  }
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
 // ─── Legacy single-file flow ──────────────────────────────
 .df-legacy { padding: 16px 20px; }
 

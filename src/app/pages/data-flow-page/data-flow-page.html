@@ -139,6 +139,29 @@
               </ol>
             </div>
 
+            <!-- AI: Explain this workflow -->
+            <div class="wf-ai-row">
+              <button class="wf-explain-btn"
+                      (click)="explainWorkflow(i, wf)"
+                      [disabled]="getWorkflowExplanation(i)?.loading">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
+                  <path d="M12 8v4l3 3"/>
+                </svg>
+                {{ getWorkflowExplanation(i)?.loading ? 'Generating…' : 'Explain This Workflow' }}
+              </button>
+            </div>
+
+            <app-explanation-card
+              *ngIf="hasWorkflowExplanation(i)"
+              [title]="'Explaining: ' + wf.title"
+              [content]="getWorkflowExplanation(i)?.content ?? null"
+              [isLoading]="getWorkflowExplanation(i)?.loading ?? false"
+              [error]="getWorkflowExplanation(i)?.error ?? null"
+              (dismiss)="dismissWorkflowExplanation(i)"
+              (regenerate)="explainWorkflow(i, wf)">
+            </app-explanation-card>
+
           </div>
         </div>
       </div>

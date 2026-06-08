@@ -11,11 +11,13 @@ import { RepositoryKnowledgeService } from '../../services/repository-knowledge.
 import { DataFlowDiscoveryService } from '../../services/data-flow-discovery.service';
 import { WorkflowExplorerService } from '../../services/workflow-explorer.service';
 import { ChangeImpactService } from '../../services/change-impact.service';
+import { AiKnowledgeService } from '../../services/ai-knowledge.service';
+import { ExplanationCard } from '../../components/explanation-card/explanation-card';
 
 @Component({
   selector: 'app-data-flow-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ExplanationCard],
   templateUrl: './data-flow-page.html',
   styleUrl: './data-flow-page.scss',
 })
@@ -37,6 +39,10 @@ export class DataFlowPage implements OnInit, OnDestroy {
   legacyDescription = '';
 
   hasRepositoryData = false;
+
+  // AI explanation state — keyed by workflow index so each card is independent
+  workflowExplanations = new Map<number, { content: string | null; loading: boolean; error: string | null }>();
+
   private subs: Subscription[] = [];
 
   constructor(
@@ -46,6 +52,7 @@ export class DataFlowPage implements OnInit, OnDestroy {
     private readonly discovery: DataFlowDiscoveryService,
     private readonly workflowExplorer: WorkflowExplorerService,
     private readonly impactService: ChangeImpactService,
+    private readonly aiKnowledge: AiKnowledgeService,
   ) {}
 
   ngOnInit(): void {
@@ -169,5 +176,43 @@ export class DataFlowPage implements OnInit, OnDestroy {
     if (index === 0) return 'step-first';
     if (index === total - 1) return 'step-last';
     return 'step-mid';
+  }
+
+  // ── Workflow AI explanation ───────────────────────────────────────────────
+
+  explainWorkflow(index: number, workflow: WorkflowSummary): void {
+    const ctx = this.currentWorkspace.context;
+    const knowledge = this.knowledgeService.knowledge;
+    if (!ctx || !knowledge) return;
+
+    this.workflowExplanations.set(index, { content: null, loading: true, error: null });
+
+    this.subs.push(
+      this.aiKnowledge.explainWorkflow(ctx, knowledge, workflow).subscribe({
+        next: text => {
+          this.workflowExplanations.set(index, { content: text, loading: false, error: null });
+        },
+        error: err => {
+          this.workflowExplanations.set(index, {
+            content: null,
+            loading: false,
+            error: err?.message ?? 'AI explanation service is unavailable.',
+          });
+        },
+      })
+    );
+  }
+
+  dismissWorkflowExplanation(index: number): void {
+    this.workflowExplanations.delete(index);
+  }
+
+  getWorkflowExplanation(index: number) {
+    return this.workflowExplanations.get(index) ?? null;
+  }
+
+  hasWorkflowExplanation(index: number): boolean {
+    const e = this.workflowExplanations.get(index);
+    return !!e && (e.loading || !!e.content || !!e.error);
   }
 }

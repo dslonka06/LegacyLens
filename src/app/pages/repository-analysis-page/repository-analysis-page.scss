@@ -156,7 +156,12 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 }
 
 // ─── Page header ─────────────────────────────────────────
@@ -167,6 +172,53 @@
   padding: 14px 20px 10px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+}
+
+.rpa-ai-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.rpa-ai-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 7px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: white;
+  white-space: nowrap;
+  transition: all 0.15s;
+  svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+  &:hover:not(:disabled) {
+    background: var(--accent-hover, #6d4ce6);
+    box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.25);
+  }
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &.rpa-ai-btn-secondary {
+    background: transparent;
+    color: var(--accent);
+
+    &:hover:not(:disabled) {
+      background: rgba(124, 92, 255, 0.1);
+    }
+  }
+}
+
+// ─── Explanation panel ────────────────────────────────────
+.rpa-explanation-wrap {
+  padding: 16px 20px;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(124, 92, 255, 0.15);
+  background: rgba(124, 92, 255, 0.02);
 }
 
 .rpa-header-icon {
@@ -209,22 +261,14 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .rpa-col {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  overflow-y: auto;
-  padding: 14px;
   gap: 10px;
-
-  &::-webkit-scrollbar { width: 4px; }
-  &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  padding: 14px;
 }
 
 .rpa-col-left {
