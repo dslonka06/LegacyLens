@@ -61,6 +61,10 @@ export class AnalysisPage implements OnInit, OnDestroy {
 
   onSessionCreated(session: AnalysisSession): void {
     this.session = session;
+    // Keep restored bindings in sync so navigation away and back restores correctly,
+    // and so the editor bindings always reflect the active file.
+    this.restoredFileName   = session.fileName;
+    this.restoredSourceCode = session.sourceCode;
     this.currentAnalysis.setSession(session);
     this.history.addSession(session);
   }

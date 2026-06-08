@@ -102,32 +102,31 @@
   }
 }
 
-// ─── Toolbar — no heavy border, subtle separator ─────────
+// ─── Toolbar — two rows ───────────────────────────────────
 .editor-toolbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 14px;
-  height: 42px;
-  border-bottom: 1px solid rgba(40, 53, 72, 0.4);  /* subtle — blends with Monaco */
+  flex-direction: column;
+  border-bottom: 1px solid rgba(40, 53, 72, 0.4);
   background-color: var(--editor-bg);
   flex-shrink: 0;
-  gap: 10px;
 }
 
-.toolbar-left {
+// Row 1: language, line count, analysis status
+.toolbar-meta-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 0;
-  flex: 1;
+  padding: 5px 14px 4px;
+  min-height: 30px;
+  border-bottom: 1px solid rgba(40, 53, 72, 0.22);
 }
 
-.toolbar-right {
+// Row 2: upload buttons + analyze
+.toolbar-action-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+  padding: 6px 14px;
 }
 
 .lang-badge {

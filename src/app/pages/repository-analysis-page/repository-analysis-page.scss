@@ -54,6 +54,27 @@
   border-radius: 8px;
   flex: 1;
   min-width: 200px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    background: var(--bg-secondary);
+    border-color: rgba(124, 92, 255, 0.4);
+
+    .ob-goal-arrow { opacity: 1; transform: translateX(2px); }
+  }
+}
+
+.ob-goal-arrow {
+  width: 13px;
+  height: 13px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.15s;
 }
 
 .ob-goal-icon {

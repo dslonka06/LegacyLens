@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceContext } from '../../models/workspace-context.model';
 import { RepositoryKnowledge, KnowledgeState } from '../../models/knowledge.model';
@@ -16,7 +17,7 @@ import { RepositoryIntelligence } from '../../components/repository-intelligence
 @Component({
   selector: 'app-repository-analysis-page',
   standalone: true,
-  imports: [CommonModule, WorkspaceSummary, RepositoryPreview, RepositoryIntelligence],
+  imports: [CommonModule, RouterLink, WorkspaceSummary, RepositoryPreview, RepositoryIntelligence],
   templateUrl: './repository-analysis-page.html',
   styleUrl: './repository-analysis-page.scss',
 })

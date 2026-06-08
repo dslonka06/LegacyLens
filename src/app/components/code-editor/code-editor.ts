@@ -142,16 +142,20 @@ export class CodeEditor implements OnChanges, OnDestroy {
       this.fileName = this.restoredFileName;
     }
     if (changes['restoredSourceCode'] && this.restoredSourceCode !== null) {
-      this.code = this.restoredSourceCode;
+      const incomingCode = this.restoredSourceCode;
+      // Only overwrite editor content when value differs — prevents a stale ngModel
+      // write from blanking a file that was loaded directly into the editor via FileReader.
+      if (this.code !== incomingCode) {
+        this.code = incomingCode;
+      }
       this.lastAnalyzedLabel = 'Restored';
       if (this.editorInstance) {
-        if (this.editorInstance.getValue() !== this.restoredSourceCode) {
-          this.editorInstance.setValue(this.restoredSourceCode);
+        if (this.editorInstance.getValue() !== incomingCode) {
+          this.editorInstance.setValue(incomingCode);
         }
-        // Use filename for language if available, otherwise fall back to content
         const lang = this.restoredFileName
           ? this.languageFromFileName(this.restoredFileName)
-          : this.languageFromContent(this.restoredSourceCode);
+          : this.languageFromContent(incomingCode);
         this.applyMonacoLanguage(lang);
       }
       this.cdr.detectChanges();
