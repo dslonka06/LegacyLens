@@ -215,8 +215,7 @@ export class RepositorySummaryService {
     session: AnalysisSession | null,
     knowledge: RepositoryKnowledge | null,
   ): string | undefined {
-    const flow = session?.aiAnalysis?.architecture?.dataFlow
-      ?? session?.analysis?.dataFlow;
+    const flow = session?.analysis?.dataFlow;
     if (flow) return flow;
     if (knowledge?.dependencyGraph) {
       const g = knowledge.dependencyGraph;

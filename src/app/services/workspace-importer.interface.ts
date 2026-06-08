@@ -1,5 +1,5 @@
-import { Workspace } from '../models/workspace.model';
+import { WorkspaceProfile } from '../models/workspace.model';
 
 export interface IWorkspaceImporter {
-  import(files: File[]): Promise<Workspace>;
+  import(files: File[]): Promise<WorkspaceProfile>;
 }

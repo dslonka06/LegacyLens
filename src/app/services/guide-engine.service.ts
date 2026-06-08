@@ -78,7 +78,17 @@ const Q2_BY_GOAL: Record<string, GuideQuestion> = {
 
 // ── Page catalogue ────────────────────────────────────────────────────────────
 
-const PAGES: Record<string, RecommendedPage> = {
+interface PageCatalogue {
+  analysis:     RecommendedPage;
+  repository:   RecommendedPage;
+  architecture: RecommendedPage;
+  dataFlow:     RecommendedPage;
+  risks:        RecommendedPage;
+  modernization:RecommendedPage;
+  documentation:RecommendedPage;
+}
+
+const PAGES: PageCatalogue = {
   analysis:     { label: 'Analysis',              route: '/analysis',              reason: 'Understand what individual files do in plain English.' },
   repository:   { label: 'Repository Analysis',   route: '/repository-analysis',   reason: 'Explore the full structure, dependencies, and architecture.' },
   architecture: { label: 'Architecture',          route: '/architecture',          reason: 'See architectural patterns and how layers are organized.' },
