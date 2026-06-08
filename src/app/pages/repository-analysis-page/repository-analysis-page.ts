@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceContext } from '../../models/workspace-context.model';
 import { RepositoryKnowledge, KnowledgeState } from '../../models/knowledge.model';
@@ -19,7 +18,7 @@ import { ExplanationCard } from '../../components/explanation-card/explanation-c
 @Component({
   selector: 'app-repository-analysis-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, WorkspaceSummary, RepositoryPreview, RepositoryIntelligence, ExplanationCard],
+  imports: [CommonModule, WorkspaceSummary, RepositoryPreview, RepositoryIntelligence, ExplanationCard],
   templateUrl: './repository-analysis-page.html',
   styleUrl: './repository-analysis-page.scss',
 })
@@ -131,27 +130,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
     this.subs.push(
       this.aiKnowledge.explainRepository(this.context, this.knowledge).subscribe({
-        next: text => {
-          this.explanationContent = text;
-          this.explanationLoading = false;
-        },
-        error: err => {
-          this.explanationError = err?.message ?? 'AI explanation service is unavailable.';
-          this.explanationLoading = false;
-        },
-      })
-    );
-  }
-
-  generateOnboarding(): void {
-    if (!this.context || !this.knowledge) return;
-    this.explanationTitle = 'Onboarding Guide';
-    this.explanationContent = null;
-    this.explanationError = null;
-    this.explanationLoading = true;
-
-    this.subs.push(
-      this.aiKnowledge.generateOnboardingGuide(this.context, this.knowledge).subscribe({
         next: text => {
           this.explanationContent = text;
           this.explanationLoading = false;

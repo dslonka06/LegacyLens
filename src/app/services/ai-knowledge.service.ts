@@ -5,7 +5,6 @@ import { catchError, map, timeout } from 'rxjs/operators';
 import {
   RepositoryExplanationContext,
   WorkflowExplanationContext,
-  OnboardingGuideContext,
 } from '../models/ai-explanation-context.model';
 import { WorkspaceContext } from '../models/workspace-context.model';
 import { RepositoryKnowledge } from '../models/knowledge.model';
@@ -17,7 +16,6 @@ import { WorkflowExplorerService } from './workflow-explorer.service';
 import { RepositoryInsightsService } from './repository-insights.service';
 import { RepositoryExplanationPromptBuilder } from './prompts/repository-explanation-prompt';
 import { WorkflowExplanationPromptBuilder } from './prompts/workflow-explanation-prompt';
-import { OnboardingGuidePromptBuilder } from './prompts/onboarding-guide-prompt';
 
 interface ExplainRequest {
   prompt: string;
@@ -41,7 +39,6 @@ export class AiKnowledgeService {
     private readonly insightsService: RepositoryInsightsService,
     private readonly repoPrompt: RepositoryExplanationPromptBuilder,
     private readonly workflowPrompt: WorkflowExplanationPromptBuilder,
-    private readonly onboardingPrompt: OnboardingGuidePromptBuilder,
   ) {}
 
   // ── Public API ────────────────────────────────────────────────────────────
@@ -65,15 +62,6 @@ export class AiKnowledgeService {
     return this.callApi(prompt);
   }
 
-  generateOnboardingGuide(
-    ctx: WorkspaceContext,
-    knowledge: RepositoryKnowledge,
-  ): Observable<string> {
-    const context = this.buildOnboardingContext(ctx, knowledge);
-    const prompt = this.onboardingPrompt.build(context);
-    return this.callApi(prompt);
-  }
-
   // ── Context builders ──────────────────────────────────────────────────────
   // These aggregate LegacyLens knowledge — no raw source code is passed to AI.
 
@@ -82,7 +70,7 @@ export class AiKnowledgeService {
     knowledge: RepositoryKnowledge,
   ): RepositoryExplanationContext {
     const summary = this.summaryService.build(ctx, knowledge, null, null);
-    const insights = this.insightsService.analyze(knowledge);
+    const insights: RepositoryInsight[] = this.insightsService.analyze(knowledge);
     const flows = this.dataFlowDiscovery.discoverWorkflows(
       knowledge,
       ctx.profile.repositoryStructure ?? undefined,
@@ -117,11 +105,10 @@ export class AiKnowledgeService {
     knowledge: RepositoryKnowledge,
     workflow: WorkflowSummary,
   ): WorkflowExplanationContext {
-    // Resolve node names that appear in the flow path from the dependency graph
     const graphNodes = knowledge.dependencyGraph?.nodes ?? [];
     const relatedNodeNames = workflow.flowPath
       .map(name => graphNodes.find(n => n.name === name || n.id === name)?.name ?? name)
-      .filter((v, i, arr) => arr.indexOf(v) === i); // deduplicate
+      .filter((v, i, arr) => arr.indexOf(v) === i);
 
     const architecturePatterns = (knowledge.architecture?.patterns ?? []).map(p => p.name);
 
@@ -130,43 +117,6 @@ export class AiKnowledgeService {
       workflow,
       relatedNodeNames,
       architecturePatterns,
-    };
-  }
-
-  private buildOnboardingContext(
-    ctx: WorkspaceContext,
-    knowledge: RepositoryKnowledge,
-  ): OnboardingGuideContext {
-    const summary = this.summaryService.build(ctx, knowledge, null, null);
-    const insights: RepositoryInsight[] = this.insightsService.analyze(knowledge);
-    const flows = this.dataFlowDiscovery.discoverWorkflows(
-      knowledge,
-      ctx.profile.repositoryStructure ?? undefined,
-    );
-    const workflows = this.workflowExplorer.buildSummaries(flows);
-
-    return {
-      workspaceName:        ctx.workspaceName,
-      workspaceType:        ctx.profile.workspaceType,
-      languages:            ctx.profile.languages,
-      technologies:         ctx.profile.technologies,
-      totalFiles:           ctx.profile.totalFiles,
-      projectNames:         (ctx.profile.repositoryStructure?.projects ?? []).map(p => p.name),
-      architecturePatterns: (summary.architecturePatterns ?? []).map(p => ({
-        name:       p.name,
-        confidence: p.confidence,
-      })),
-      topWorkflows:     workflows.slice(0, 5),
-      keyFiles:         (summary.keyFiles ?? []).slice(0, 8).map(kf => ({ name: kf.name, reason: kf.reason })),
-      insights:         insights.slice(0, 6).map(i => ({
-        title:       i.title,
-        description: i.description,
-        severity:    i.severity,
-      })),
-      dependencyStats: summary.dependencyStats
-        ? { nodes: summary.dependencyStats.nodes, edges: summary.dependencyStats.edges }
-        : undefined,
-      executiveSummary: summary.executiveSummary,
     };
   }
 

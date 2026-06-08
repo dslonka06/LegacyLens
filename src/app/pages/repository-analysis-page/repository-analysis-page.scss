@@ -15,103 +15,6 @@
   overflow: hidden;
 }
 
-// ─── Onboarding panel ────────────────────────────────────
-.rpa-onboarding {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 10px 20px;
-  background: rgba(124,92,255,0.04);
-  border-bottom: 1px solid rgba(124,92,255,0.12);
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.rpa-onboarding-title {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-muted);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.rpa-onboarding-goals {
-  display: flex;
-  gap: 10px;
-  flex: 1;
-  flex-wrap: wrap;
-}
-
-.rpa-onboarding-goal {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 12px;
-  background: var(--bg-card);
-  border: 1px solid rgba(40, 53, 72, 0.6);
-  border-radius: 8px;
-  flex: 1;
-  min-width: 200px;
-  cursor: pointer;
-  text-decoration: none;
-  color: inherit;
-  transition: border-color 0.15s, background 0.15s;
-
-  &:hover {
-    background: var(--bg-secondary);
-    border-color: rgba(124, 92, 255, 0.4);
-
-    .ob-goal-arrow { opacity: 1; transform: translateX(2px); }
-  }
-}
-
-.ob-goal-arrow {
-  width: 13px;
-  height: 13px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  margin-left: auto;
-  opacity: 0;
-  transition: opacity 0.15s, transform 0.15s;
-}
-
-.ob-goal-icon {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  svg { width: 13px; height: 13px; }
-
-  &.ob-understand { background: rgba(56,189,248,0.12);  color: var(--info); }
-  &.ob-modify     { background: rgba(245,158,11,0.12);  color: var(--warning); }
-  &.ob-modernize  { background: rgba(34,197,94,0.12);   color: var(--success); }
-}
-
-.ob-goal-text {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-
-.ob-goal-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-primary);
-  white-space: nowrap;
-}
-
-.ob-goal-desc {
-  font-size: 11px;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
 // ─── Empty state ─────────────────────────────────────────
 .rpa-empty {
   flex: 1;
@@ -202,15 +105,6 @@
   }
 
   &:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  &.rpa-ai-btn-secondary {
-    background: transparent;
-    color: var(--accent);
-
-    &:hover:not(:disabled) {
-      background: rgba(124, 92, 255, 0.1);
-    }
-  }
 }
 
 // ─── Explanation panel ────────────────────────────────────

@@ -16,57 +16,6 @@
   <!-- ── Main content ─────────────────────────────────────────────────────── -->
   <div class="rpa-content" *ngIf="!hasNoWorkspace">
 
-    <!-- Quick actions — outcome-first navigation -->
-    <div class="rpa-onboarding">
-      <span class="rpa-onboarding-title">Quick Actions</span>
-      <div class="rpa-onboarding-goals">
-        <a class="rpa-onboarding-goal" routerLink="/architecture">
-          <div class="ob-goal-icon ob-understand">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-          </div>
-          <div class="ob-goal-text">
-            <span class="ob-goal-title">Understand This System</span>
-            <span class="ob-goal-desc">Explore structure, projects, and architecture to quickly understand how the application works.</span>
-          </div>
-          <svg class="ob-goal-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </a>
-        <a class="rpa-onboarding-goal" routerLink="/risks">
-          <div class="ob-goal-icon ob-modify">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-          </div>
-          <div class="ob-goal-text">
-            <span class="ob-goal-title">Safely Modify This Code</span>
-            <span class="ob-goal-desc">Find dependency hotspots, tightly coupled components, and high-risk areas before making changes.</span>
-          </div>
-          <svg class="ob-goal-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </a>
-        <a class="rpa-onboarding-goal" routerLink="/modernization">
-          <div class="ob-goal-icon ob-modernize">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-              <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
-            </svg>
-          </div>
-          <div class="ob-goal-text">
-            <span class="ob-goal-title">Modernize Legacy Components</span>
-            <span class="ob-goal-desc">Identify architectural patterns, outdated dependencies, and opportunities to improve maintainability.</span>
-          </div>
-          <svg class="ob-goal-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
     <!-- Page header -->
     <div class="rpa-header">
       <div class="rpa-header-icon">
@@ -88,15 +37,7 @@
             <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
             <path d="M12 8v4l3 3"/>
           </svg>
-          Explain This System
-        </button>
-        <button class="rpa-ai-btn rpa-ai-btn-secondary" (click)="generateOnboarding()" [disabled]="explanationLoading" title="Generate developer onboarding guide">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-          </svg>
-          Onboarding Guide
+          {{ explanationLoading ? 'Generating…' : 'Explain This System' }}
         </button>
       </div>
     </div>
@@ -255,7 +196,7 @@
         [isLoading]="explanationLoading"
         [error]="explanationError"
         (dismiss)="dismissExplanation()"
-        (regenerate)="explanationTitle === 'Onboarding Guide' ? generateOnboarding() : explainSystem()">
+        (regenerate)="explainSystem()">
       </app-explanation-card>
     </div>
 

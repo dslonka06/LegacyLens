@@ -8,16 +8,15 @@ export class RepositoryExplanationPromptBuilder {
     const parts: string[] = [];
 
     parts.push(
-      `You are a senior software architect explaining a codebase to a developer joining the team.`,
-      `Explain the repository clearly and concisely based only on the structured knowledge provided below.`,
-      `Do not invent details. Do not ask for more information.`,
-      `Write in plain, direct prose. No bullet lists unless the section naturally calls for them.`,
+      `You are a senior software architect helping a developer understand a codebase they are joining.`,
+      `Write a practical explanation that answers both "what does this system do?" and "how should I learn it?".`,
+      `Base the explanation only on the structured knowledge provided below. Do not invent details.`,
+      `Write in plain, direct prose. Use # section headings.`,
       ``,
     );
 
     parts.push(`## Repository: ${ctx.workspaceName}`);
-    parts.push(`Type: ${ctx.workspaceType}`);
-    parts.push(`Files: ${ctx.totalFiles}`);
+    parts.push(`Type: ${ctx.workspaceType} | Files: ${ctx.totalFiles}`);
     parts.push(`Languages: ${ctx.languages.join(', ') || 'unknown'}`);
     parts.push(`Technologies: ${ctx.technologies.join(', ') || 'none detected'}`);
 
@@ -43,11 +42,18 @@ export class RepositoryExplanationPromptBuilder {
 
     if (ctx.topWorkflows.length > 0) {
       parts.push(``, `## Key Application Workflows`);
-      for (const wf of ctx.topWorkflows.slice(0, 4)) {
+      for (const wf of ctx.topWorkflows.slice(0, 5)) {
         parts.push(`- ${wf.title}: ${wf.description}`);
         if (wf.flowPath.length > 0) {
           parts.push(`  Flow: ${wf.flowPath.slice(0, 6).join(' → ')}`);
         }
+      }
+    }
+
+    if (ctx.keyFiles.length > 0) {
+      parts.push(``, `## Key Files`);
+      for (const kf of ctx.keyFiles.slice(0, 8)) {
+        parts.push(`- ${kf.name}: ${kf.reason}`);
       }
     }
 
@@ -58,25 +64,27 @@ export class RepositoryExplanationPromptBuilder {
       }
     }
 
-    if (ctx.keyFiles.length > 0) {
-      parts.push(``, `## Key Files`);
-      for (const kf of ctx.keyFiles.slice(0, 6)) {
-        parts.push(`- ${kf.name}: ${kf.reason}`);
-      }
-    }
-
     parts.push(
       ``,
       `## Your Task`,
-      `Write a structured explanation covering:`,
-      `1. What this system does and its purpose`,
-      `2. The main technologies and why they matter`,
-      `3. How the architecture is organized`,
-      `4. The most important workflows`,
-      `5. Notable risks or areas that need attention`,
-      `6. The most important areas for a new developer to focus on`,
+      `Write a structured explanation with these sections:`,
       ``,
-      `Keep each section to 2-4 sentences. Total response should be 300-500 words.`,
+      `# Repository Overview`,
+      `What this system does and the problem it solves. Who uses it.`,
+      ``,
+      `# Technologies & Architecture`,
+      `The tech stack and how the code is organized. What patterns dominate.`,
+      ``,
+      `# Critical Workflows`,
+      `The 2-3 most important workflows to understand first. Why each matters.`,
+      ``,
+      `# Recommended Learning Order`,
+      `A concrete sequence: what to read first, what depends on what. Name specific components or files from the data.`,
+      ``,
+      `# Risks & Areas to Watch`,
+      `What to be careful about when making changes. Known issues or fragile areas.`,
+      ``,
+      `Each section: 3-5 sentences. Total: 400-600 words. Be specific — name actual components and workflows from the data above.`,
     );
 
     return parts.join('\n');

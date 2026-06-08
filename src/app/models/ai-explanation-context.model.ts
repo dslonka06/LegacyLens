@@ -1,4 +1,4 @@
-import { WorkflowSummary, BehaviorInsights } from './data-flow.model';
+import { WorkflowSummary } from './data-flow.model';
 import { RepositoryInsight } from '../services/repository-insights.service';
 
 // Context passed to AI for a repository-level explanation.
@@ -26,24 +26,7 @@ export interface WorkflowExplanationContext {
   architecturePatterns: string[];
 }
 
-// Context passed to AI for onboarding guide generation.
-export interface OnboardingGuideContext {
-  workspaceName: string;
-  workspaceType: string;
-  languages: string[];
-  technologies: string[];
-  totalFiles?: number;
-  architecturePatterns: Array<{ name: string; confidence: number }>;
-  topWorkflows: WorkflowSummary[];
-  keyFiles: Array<{ name: string; reason: string }>;
-  projectNames: string[];
-  insights: Pick<RepositoryInsight, 'title' | 'description' | 'severity'>[];
-  dependencyStats?: { nodes: number; edges: number };
-  executiveSummary?: string;
-}
-
-// Union discriminant for the explanation panel to know what it is displaying.
-export type ExplanationType = 'repository' | 'workflow' | 'onboarding';
+export type ExplanationType = 'repository' | 'workflow';
 
 export interface ExplanationResult {
   type: ExplanationType;
