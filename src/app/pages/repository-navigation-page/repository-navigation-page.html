@@ -65,6 +65,13 @@
     <a routerLink="/repository-analysis" class="rnp-action-btn">Go to Repository Analysis</a>
   </div>
 
+  <!-- ── Knowledge status bar ─────────────────────────────────────────────── -->
+  <div class="rnp-knowledge-status" *ngIf="hasWorkspace && knowledgeStatusLabel"
+       [ngClass]="knowledgeStatusClass">
+    <div class="rnp-ks-dot" [class.rnp-ks-pulse]="isKnowledgeBuilding"></div>
+    <span class="rnp-ks-label">{{ knowledgeStatusLabel }}</span>
+  </div>
+
   <!-- ── Main layout ───────────────────────────────────────────────────────── -->
   <div class="rnp-layout" *ngIf="hasWorkspace && hasStructure">
 
@@ -239,11 +246,13 @@
               <div class="rnp-wf-detail" *ngIf="isWorkflowExpanded(i)">
                 <p class="rnp-wf-description">{{ wf.description }}</p>
                 <div class="rnp-wf-path">
-                  <span class="rnp-wf-path-node"
-                        *ngFor="let step of wf.flowPath; let last = last"
-                        [class.rnp-wf-path-active]="step === intelligence!.node.name">
+                  <button class="rnp-wf-path-node"
+                          *ngFor="let step of wf.flowPath; let last = last"
+                          [class.rnp-wf-path-active]="step === intelligence!.node.name"
+                          (click)="navigateToName(step, 'workflow-step')"
+                          [title]="'Navigate to ' + step">
                     {{ step }}<span class="rnp-wf-path-arrow" *ngIf="!last"> →</span>
-                  </span>
+                  </button>
                 </div>
               </div>
 
@@ -296,24 +305,30 @@
               <div class="rnp-impact-group" *ngIf="intelligence.changeImpact.directImpacts.length">
                 <span class="rnp-impact-group-label">Directly Affected</span>
                 <div class="rnp-file-chips">
-                  <span class="rnp-file-chip direct"
-                        *ngFor="let f of intelligence.changeImpact.directImpacts">{{ f }}</span>
+                  <button class="rnp-file-chip direct"
+                          *ngFor="let f of intelligence.changeImpact.directImpacts"
+                          (click)="navigateToName(f, 'dependency-link')"
+                          [title]="'Navigate to ' + f">{{ f }}</button>
                 </div>
               </div>
 
               <div class="rnp-impact-group" *ngIf="intelligence.changeImpact.indirectImpacts.length">
                 <span class="rnp-impact-group-label">Indirectly Affected</span>
                 <div class="rnp-file-chips">
-                  <span class="rnp-file-chip indirect"
-                        *ngFor="let f of intelligence.changeImpact.indirectImpacts">{{ f }}</span>
+                  <button class="rnp-file-chip indirect"
+                          *ngFor="let f of intelligence.changeImpact.indirectImpacts"
+                          (click)="navigateToName(f, 'dependency-link')"
+                          [title]="'Navigate to ' + f">{{ f }}</button>
                 </div>
               </div>
 
               <div class="rnp-impact-group" *ngIf="intelligence.changeImpact.affectedWorkflows.length">
                 <span class="rnp-impact-group-label">Affected Workflows</span>
                 <div class="rnp-file-chips">
-                  <span class="rnp-file-chip workflow"
-                        *ngFor="let w of intelligence.changeImpact.affectedWorkflows">{{ w }}</span>
+                  <button class="rnp-file-chip workflow"
+                          *ngFor="let w of intelligence.changeImpact.affectedWorkflows"
+                          (click)="navigateToName(w, 'workflow-step')"
+                          [title]="'Navigate to ' + w">{{ w }}</button>
                 </div>
               </div>
 
@@ -344,6 +359,36 @@
               </div>
               <p class="rnp-insight-desc">{{ insight.description }}</p>
             </div>
+          </div>
+        </div>
+
+        <!-- ── Section 6: Navigation History ────────────────────────── -->
+        <div class="rnp-intel-section rnp-section-history" *ngIf="navHistory.length > 0">
+          <div class="rnp-section-header">
+            <div class="rnp-section-icon history-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <span class="rnp-section-title">Navigation History</span>
+            <span class="rnp-section-count">{{ navHistory.length }}</span>
+          </div>
+
+          <div class="rnp-history-list">
+            <button class="rnp-history-item"
+                    *ngFor="let entry of navHistory; let i = index"
+                    [class.rnp-history-current]="isCurrentHistoryEntry(entry)"
+                    (click)="navigateToHistoryEntry(entry)"
+                    [title]="entry.nodePath">
+              <div class="rnp-history-connector" *ngIf="i > 0">
+                <span class="rnp-history-line"></span>
+                <span class="rnp-history-arrow">↓</span>
+              </div>
+              <div class="rnp-history-row">
+                <span class="rnp-history-name">{{ entry.nodeName }}</span>
+                <span class="rnp-history-source">{{ entry.source }}</span>
+              </div>
+            </button>
           </div>
         </div>
 

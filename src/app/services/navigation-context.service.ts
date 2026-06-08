@@ -18,6 +18,7 @@ export class NavigationContextService {
   private readonly _canGoBack$       = new BehaviorSubject<boolean>(false);
   private readonly _canGoForward$    = new BehaviorSubject<boolean>(false);
   private readonly _navigationReset$ = new Subject<void>();
+  private readonly _history$         = new BehaviorSubject<NavigationEntry[]>([]);
 
   readonly selectedNode$     = this._selectedNode$.asObservable();
   readonly selectedWorkflow$ = this._selectedWorkflow$.asObservable();
@@ -26,6 +27,8 @@ export class NavigationContextService {
   readonly canGoForward$     = this._canGoForward$.asObservable();
   // Emits when clear() is called — components use this for teardown.
   readonly navigationReset$  = this._navigationReset$.asObservable();
+  // Ordered most-recent first; does NOT include the current node.
+  readonly history$          = this._history$.asObservable();
 
   private backStack:    NavigationEntry[] = [];
   private forwardStack: NavigationEntry[] = [];
@@ -51,6 +54,7 @@ export class NavigationContextService {
     this._selectedNode$.next(node);
     this._breadcrumbs$.next(this.deriveBreadcrumbs(node));
     this.updateNavFlags();
+    this._history$.next([...this.backStack]);
   }
 
   selectWorkflow(workflow: WorkflowSummary): void {
@@ -79,6 +83,7 @@ export class NavigationContextService {
     this._selectedNode$.next(node);
     this._breadcrumbs$.next(this.deriveBreadcrumbs(node));
     this.updateNavFlags();
+    this._history$.next([...this.backStack]);
   }
 
   forward(): void {
@@ -98,6 +103,7 @@ export class NavigationContextService {
     this._selectedNode$.next(node);
     this._breadcrumbs$.next(this.deriveBreadcrumbs(node));
     this.updateNavFlags();
+    this._history$.next([...this.backStack]);
   }
 
   // Called when a new workspace is loaded — resets all navigation state.
@@ -107,6 +113,7 @@ export class NavigationContextService {
     this._selectedNode$.next(null);
     this._selectedWorkflow$.next(null);
     this._breadcrumbs$.next([]);
+    this._history$.next([]);
     this.updateNavFlags();
     this._navigationReset$.next();
   }
@@ -114,9 +121,12 @@ export class NavigationContextService {
   // ── Synchronous snapshots ─────────────────────────────────────────────────
 
   get selectedNode(): DependencyNode | null { return this._selectedNode$.value; }
+  get breadcrumbs(): Breadcrumb[] { return this._breadcrumbs$.value; }
+  get canGoBack(): boolean { return this._canGoBack$.value; }
+  get canGoForward(): boolean { return this._canGoForward$.value; }
 
   // Ordered from most-recent to oldest; does NOT include the current node.
-  get navigationHistory(): NavigationEntry[] { return [...this.backStack]; }
+  get navigationHistory(): NavigationEntry[] { return this._history$.value; }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 

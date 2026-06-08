@@ -2,9 +2,9 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { DependencyNode, RepositoryKnowledge } from '../../models/knowledge.model';
+import { DependencyNode, KnowledgeState, RepositoryKnowledge } from '../../models/knowledge.model';
 import { DataFlow, WorkflowSummary } from '../../models/data-flow.model';
-import { Breadcrumb, NodeIntelligence } from '../../models/navigation.model';
+import { Breadcrumb, NavigationEntry, NodeIntelligence } from '../../models/navigation.model';
 import { FolderNode, FileNode, RepositoryStructure } from '../../models/repository.model';
 import { NavigationContextService } from '../../services/navigation-context.service';
 import { NodeIntelligenceFacade } from '../../services/node-intelligence.facade';
@@ -55,10 +55,16 @@ export class RepositoryNavigationPage implements OnInit, OnDestroy {
 
   hasWorkspace = false;
   hasStructure = false;
+  knowledgeState: KnowledgeState = KnowledgeState.NotStarted;
+  navHistory: NavigationEntry[] = [];
+
+  // Exposes KnowledgeState enum values to the template
+  readonly KnowledgeState = KnowledgeState;
 
   private knowledge: RepositoryKnowledge | null = null;
   private flows: DataFlow[] = [];
   private summaries: WorkflowSummary[] = [];
+  private lastStructure: RepositoryStructure | null = null;
   private subs: Subscription[] = [];
 
   constructor(
@@ -76,13 +82,23 @@ export class RepositoryNavigationPage implements OnInit, OnDestroy {
         this.hasWorkspace = ctx !== null;
         const structure = ctx?.profile.repositoryStructure ?? null;
         this.hasStructure = structure !== null;
-        if (structure) this.buildTree(structure);
+        // Only rebuild tree when structure identity changes — preserves folder expanded state
+        if (structure && structure !== this.lastStructure) {
+          this.lastStructure = structure;
+          this.buildTree(structure);
+        }
+      }),
+      this.knowledgeService.state$.subscribe(s => {
+        this.knowledgeState = s;
       }),
       this.knowledgeService.knowledge$.subscribe(k => {
         this.knowledge = k;
         this.rebuildFlows(k);
-        // Re-resolve dep nodes in tree after knowledge arrives
         if (k) this.resolveDepNodes(k);
+        // Re-run intelligence with fresh knowledge if a node is selected
+        if (this.selectedNode && k) {
+          this.intelligence = this.buildIntelligence(this.selectedNode);
+        }
       }),
       this.nav.selectedNode$.subscribe(node => {
         this.selectedNode = node;
@@ -93,21 +109,29 @@ export class RepositoryNavigationPage implements OnInit, OnDestroy {
       this.nav.breadcrumbs$.subscribe(b => this.breadcrumbs = b),
       this.nav.canGoBack$.subscribe(v => this.canGoBack = v),
       this.nav.canGoForward$.subscribe(v => this.canGoForward = v),
+      this.nav.history$.subscribe(h => this.navHistory = h),
     );
 
-    // Sync initial state
+    // Sync initial state — observables above won't fire for values already emitted
     const ctx = this.workspace.context;
     this.hasWorkspace = ctx !== null;
     const structure = ctx?.profile.repositoryStructure ?? null;
     this.hasStructure = structure !== null;
-    if (structure) this.buildTree(structure);
+    if (structure) {
+      this.lastStructure = structure;
+      this.buildTree(structure);
+    }
 
+    this.knowledgeState = this.knowledgeService.state;
     this.knowledge = this.knowledgeService.knowledge;
     this.rebuildFlows(this.knowledge);
     if (this.knowledge) this.resolveDepNodes(this.knowledge);
 
     this.selectedNode = this.nav.selectedNode;
-    this.breadcrumbs  = this.nav.breadcrumbs$.pipe ? [] : [];
+    this.breadcrumbs  = this.nav.breadcrumbs;
+    this.canGoBack    = this.nav.canGoBack;
+    this.canGoForward = this.nav.canGoForward;
+    this.navHistory   = this.nav.navigationHistory;
     if (this.selectedNode) {
       this.intelligence = this.buildIntelligence(this.selectedNode);
     }
@@ -217,6 +241,28 @@ export class RepositoryNavigationPage implements OnInit, OnDestroy {
     this.nav.selectNode(node, 'file-tree');
   }
 
+  // Navigate to a node by name — used by workflow step clicks and impact file chips.
+  // Resolves from the dependency graph first; falls back to a synthetic node so
+  // navigation always succeeds (intelligence will show limited data for unknown nodes).
+  navigateToName(name: string, source: 'workflow-step' | 'dependency-link'): void {
+    const dep = this.knowledge?.dependencyGraph?.nodes.find(n =>
+      n.name === name || n.path === name || n.path?.endsWith('/' + name) || n.path?.endsWith('\\' + name)
+    );
+    const node: DependencyNode = dep ?? { id: name, name, path: name, type: 'module' };
+    this.nav.selectNode(node, source);
+  }
+
+  navigateToHistoryEntry(entry: NavigationEntry): void {
+    const dep = this.knowledge?.dependencyGraph?.nodes.find(n => n.id === entry.nodeId);
+    const node: DependencyNode = dep ?? {
+      id:   entry.nodeId,
+      name: entry.nodeName,
+      path: entry.nodePath,
+      type: 'module',
+    };
+    this.nav.selectNode(node, 'direct');
+  }
+
   toggleFolder(folder: FolderTreeNode): void {
     folder.expanded = !folder.expanded;
   }
@@ -234,6 +280,10 @@ export class RepositoryNavigationPage implements OnInit, OnDestroy {
 
   isWorkflowExpanded(i: number): boolean {
     return this.expandedWorkflowIndex === i;
+  }
+
+  isCurrentHistoryEntry(entry: NavigationEntry): boolean {
+    return this.selectedNode?.id === entry.nodeId;
   }
 
   // ── Display helpers ───────────────────────────────────────────────────────
@@ -284,6 +334,31 @@ export class RepositoryNavigationPage implements OnInit, OnDestroy {
 
   get workspaceName(): string {
     return this.workspace.context?.workspaceName ?? 'Workspace';
+  }
+
+  get knowledgeStatusLabel(): string {
+    switch (this.knowledgeState) {
+      case KnowledgeState.ReadingFiles:          return 'Reading files...';
+      case KnowledgeState.BuildingDependencies:  return 'Building dependency graph...';
+      case KnowledgeState.DetectingArchitecture: return 'Detecting architecture...';
+      case KnowledgeState.Complete:              return 'Repository knowledge ready';
+      case KnowledgeState.Failed:                return 'Knowledge build failed';
+      default:                                   return '';
+    }
+  }
+
+  get knowledgeStatusClass(): string {
+    switch (this.knowledgeState) {
+      case KnowledgeState.Complete: return 'ks-ready';
+      case KnowledgeState.Failed:   return 'ks-failed';
+      default:                      return 'ks-building';
+    }
+  }
+
+  get isKnowledgeBuilding(): boolean {
+    return this.knowledgeState !== KnowledgeState.Complete
+        && this.knowledgeState !== KnowledgeState.NotStarted
+        && this.knowledgeState !== KnowledgeState.Failed;
   }
 
   isSelected(fileNode: FileTreeNode): boolean {
