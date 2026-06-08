@@ -32,6 +32,7 @@ export interface OnboardingGuideContext {
   workspaceType: string;
   languages: string[];
   technologies: string[];
+  totalFiles?: number;
   architecturePatterns: Array<{ name: string; confidence: number }>;
   topWorkflows: WorkflowSummary[];
   keyFiles: Array<{ name: string; reason: string }>;
