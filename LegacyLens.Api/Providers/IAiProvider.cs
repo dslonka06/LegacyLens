@@ -12,4 +12,8 @@ public interface IAiProvider
         string fileName,
         string sourceCode,
         CancellationToken cancellationToken = default);
+
+    Task<string> ExplainAsync(
+        string prompt,
+        CancellationToken cancellationToken = default);
 }

@@ -13,6 +13,7 @@ builder.Services.Configure<OpenAiOptions>(
 // OpenAiProvider → AnthropicProvider → OllamaProvider, etc.
 builder.Services.AddScoped<IAiProvider, OpenAiProvider>();
 builder.Services.AddScoped<IAiAnalysisService, AiAnalysisService>();
+builder.Services.AddScoped<IAiExplainService, AiExplainService>();
 
 // ─── API ─────────────────────────────────────────────────
 builder.Services.AddControllers();

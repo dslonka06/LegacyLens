@@ -222,6 +222,48 @@ public sealed class OpenAiProvider : IAiProvider
         }
     }
 
+    public async Task<string> ExplainAsync(
+        string prompt,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(_options.ApiKey))
+        {
+            _logger.LogError("OpenAI API key is missing or empty.");
+            throw new InvalidOperationException("OpenAI API key is not configured.");
+        }
+
+        try
+        {
+            var client = new OpenAIClient(_options.ApiKey);
+            var chatClient = client.GetChatClient(_options.Model);
+
+            var messages = new List<ChatMessage>
+            {
+                new SystemChatMessage(
+                    "You are a senior software engineer writing clear, practical explanations for developer audiences. " +
+                    "Respond in plain prose. Use section headings prefixed with # where the prompt requests sections. " +
+                    "Do not use markdown code blocks. Be specific and grounded in the information provided."),
+                new UserChatMessage(prompt)
+            };
+
+            _logger.LogInformation("Requesting AI explanation using model {Model}", _options.Model);
+
+            var completion = await chatClient.CompleteChatAsync(
+                messages, cancellationToken: cancellationToken);
+
+            var text = completion.Value.Content[0].Text;
+
+            _logger.LogInformation("Successfully received AI explanation response");
+
+            return text;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "OpenAI explain request failed");
+            throw;
+        }
+    }
+
     private AiAnalysisResponse ParseResponse(string json, string model)
     {
         using var doc = JsonDocument.Parse(json);
