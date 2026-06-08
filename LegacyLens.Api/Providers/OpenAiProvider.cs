@@ -240,9 +240,12 @@ public sealed class OpenAiProvider : IAiProvider
             var messages = new List<ChatMessage>
             {
                 new SystemChatMessage(
-                    "You are a senior software engineer writing clear, practical explanations for developer audiences. " +
-                    "Respond in plain prose. Use section headings prefixed with # where the prompt requests sections. " +
-                    "Do not use markdown code blocks. Be specific and grounded in the information provided."),
+                    "You are a senior software engineer writing practical explanations for developer audiences. " +
+                    "Write in plain prose. Use ## for section headings — no other heading levels. " +
+                    "Do not use bullet lists unless the content is genuinely list-like. " +
+                    "Do not use markdown code blocks. Do not write in ALL CAPS. " +
+                    "Be specific, interpretive, and grounded in the information provided. " +
+                    "Favour understanding over description — explain what things mean, not just what they are."),
                 new UserChatMessage(prompt)
             };
 

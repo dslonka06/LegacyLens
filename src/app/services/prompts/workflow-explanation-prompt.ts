@@ -8,14 +8,20 @@ export class WorkflowExplanationPromptBuilder {
     const parts: string[] = [];
     const wf = ctx.workflow;
 
+    // ── Persona and constraints ───────────────────────────────────────────────
     parts.push(
-      `You are a senior software architect explaining a specific application workflow to a developer.`,
-      `Explain the workflow clearly based only on the structured knowledge provided.`,
-      `Do not invent details. Focus on what actually happens and why it matters.`,
+      `You are a senior engineer helping a developer understand a specific workflow before they modify it.`,
+      `The developer can already see the component sequence and step list in the UI.`,
+      `Do not describe the flow path. Do not list the components in order.`,
+      `Instead explain what the workflow means: why it exists, what it produces, where it can fail,`,
+      `and what a developer must understand before changing it.`,
+      `Write in plain prose. Use ## section headings. No bullet lists unless genuinely helpful.`,
+      `Do not invent details not present in the data below.`,
       ``,
     );
 
-    parts.push(`## Repository: ${ctx.workspaceName}`);
+    // ── Structured knowledge — context only, not to be narrated ──────────────
+    parts.push(`Repository: ${ctx.workspaceName}`);
 
     if (ctx.architecturePatterns.length > 0) {
       parts.push(`Architecture: ${ctx.architecturePatterns.join(', ')}`);
@@ -23,37 +29,47 @@ export class WorkflowExplanationPromptBuilder {
 
     parts.push(
       ``,
-      `## Workflow: ${wf.title}`,
+      `Workflow: ${wf.title}`,
       `Category: ${wf.category}`,
       `Confidence: ${Math.round(wf.confidence * 100)}%`,
       `Description: ${wf.description}`,
     );
 
     if (wf.flowPath.length > 0) {
-      parts.push(``, `## Component Flow`, wf.flowPath.join(' → '));
+      parts.push(`Component sequence: ${wf.flowPath.join(' → ')}`);
     }
 
     if (wf.steps.length > 0) {
-      parts.push(``, `## Detected Steps`);
+      parts.push(``, `Detected steps:`);
       wf.steps.forEach((step, i) => parts.push(`${i + 1}. ${step}`));
     }
 
     if (ctx.relatedNodeNames.length > 0) {
-      parts.push(``, `## Components Involved`, ctx.relatedNodeNames.slice(0, 10).join(', '));
+      parts.push(``, `Related components: ${ctx.relatedNodeNames.slice(0, 10).join(', ')}`);
     }
 
+    // ── Task ─────────────────────────────────────────────────────────────────
     parts.push(
       ``,
-      `## Your Task`,
-      `Write a structured explanation covering:`,
-      `1. What this workflow does and its business purpose`,
-      `2. Where it starts (entry point) and how it is triggered`,
-      `3. The most important components and what each one does`,
-      `4. How data or control moves through the workflow`,
-      `5. Key dependencies a developer must understand before modifying this workflow`,
-      `6. Any risk areas or things that could break if modified carelessly`,
+      `Write an explanation with exactly these four sections. Each section should be 2-3 sentences.`,
+      `Total length: 200-300 words. Reference specific components from the data where it adds insight.`,
       ``,
-      `Keep each section to 2-3 sentences. Total response should be 200-350 words.`,
+      `## What This Workflow Produces`,
+      `What business outcome or user-facing result this workflow delivers.`,
+      `Explain the purpose — not the steps. Why does this workflow need to exist?`,
+      ``,
+      `## Where It Can Break`,
+      `What are the fragile points in this workflow. Where does it depend on external state,`,
+      `timing, or contracts that could silently fail. What failure looks like from the outside.`,
+      ``,
+      `## What Couples This Workflow`,
+      `Which components in this workflow carry the most responsibility or have the most dependencies.`,
+      `What implicit contracts exist between components that a developer must not break.`,
+      ``,
+      `## Before You Modify This`,
+      `What a developer should verify, test, or check before changing any part of this workflow.`,
+      `Name specific things to look for — not generic advice like "write tests".`,
+      `What downstream effects could a change here cause that are not immediately obvious.`,
     );
 
     return parts.join('\n');

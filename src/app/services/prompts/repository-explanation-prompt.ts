@@ -7,84 +7,85 @@ export class RepositoryExplanationPromptBuilder {
   build(ctx: RepositoryExplanationContext): string {
     const parts: string[] = [];
 
+    // ── Persona and constraints ───────────────────────────────────────────────
     parts.push(
-      `You are a senior software architect helping a developer understand a codebase they are joining.`,
-      `Write a practical explanation that answers both "what does this system do?" and "how should I learn it?".`,
-      `Base the explanation only on the structured knowledge provided below. Do not invent details.`,
-      `Write in plain, direct prose. Use # section headings.`,
+      `You are a senior engineer explaining a codebase to a developer who is joining the team.`,
+      `Your goal is interpretation, not description. The developer can already see the file list,`,
+      `technology stack, architecture patterns, and dependency graph on the page.`,
+      `Do not repeat those facts. Instead explain what they mean — why the system is built this way,`,
+      `what the implications are, and what a developer needs to understand to work in it safely.`,
+      `Write in plain prose. Use ## section headings. No bullet lists unless a list genuinely helps.`,
+      `Do not invent details not present in the data below.`,
       ``,
     );
 
-    parts.push(`## Repository: ${ctx.workspaceName}`);
+    // ── Structured knowledge — context only, not to be repeated ──────────────
+    parts.push(`Repository: ${ctx.workspaceName}`);
     parts.push(`Type: ${ctx.workspaceType} | Files: ${ctx.totalFiles}`);
-    parts.push(`Languages: ${ctx.languages.join(', ') || 'unknown'}`);
-    parts.push(`Technologies: ${ctx.technologies.join(', ') || 'none detected'}`);
 
     if (ctx.projectNames.length > 0) {
       parts.push(`Projects: ${ctx.projectNames.join(', ')}`);
     }
 
-    if (ctx.dependencyStats) {
-      parts.push(`Dependency graph: ${ctx.dependencyStats.nodes} nodes, ${ctx.dependencyStats.edges} edges`);
-    }
-
     if (ctx.executiveSummary) {
-      parts.push(``, `## Existing Summary`, ctx.executiveSummary);
+      parts.push(`Summary: ${ctx.executiveSummary}`);
     }
 
     if (ctx.architecturePatterns.length > 0) {
-      parts.push(``, `## Architecture Patterns`);
-      for (const p of ctx.architecturePatterns) {
-        const pct = Math.round(p.confidence * 100);
-        parts.push(`- ${p.name} (${pct}% confidence)${p.indicators.length ? ': ' + p.indicators.slice(0, 3).join(', ') : ''}`);
-      }
+      const patternNames = ctx.architecturePatterns
+        .map(p => `${p.name} (${Math.round(p.confidence * 100)}%)`)
+        .join(', ');
+      parts.push(`Architecture: ${patternNames}`);
     }
 
     if (ctx.topWorkflows.length > 0) {
-      parts.push(``, `## Key Application Workflows`);
+      parts.push(``, `Key workflows:`);
       for (const wf of ctx.topWorkflows.slice(0, 5)) {
         parts.push(`- ${wf.title}: ${wf.description}`);
-        if (wf.flowPath.length > 0) {
-          parts.push(`  Flow: ${wf.flowPath.slice(0, 6).join(' → ')}`);
-        }
       }
     }
 
     if (ctx.keyFiles.length > 0) {
-      parts.push(``, `## Key Files`);
-      for (const kf of ctx.keyFiles.slice(0, 8)) {
+      parts.push(``, `Key files:`);
+      for (const kf of ctx.keyFiles.slice(0, 6)) {
         parts.push(`- ${kf.name}: ${kf.reason}`);
       }
     }
 
     if (ctx.insights.length > 0) {
-      parts.push(``, `## Repository Insights`);
-      for (const ins of ctx.insights.slice(0, 6)) {
-        parts.push(`- [${ins.severity.toUpperCase()}] ${ins.title}: ${ins.description}`);
+      parts.push(``, `Known issues and risks:`);
+      for (const ins of ctx.insights.slice(0, 5)) {
+        parts.push(`- [${ins.severity}] ${ins.title}: ${ins.description}`);
       }
     }
 
+    if (ctx.dependencyStats) {
+      parts.push(`Dependency graph: ${ctx.dependencyStats.nodes} components, ${ctx.dependencyStats.edges} connections`);
+    }
+
+    // ── Task ─────────────────────────────────────────────────────────────────
     parts.push(
       ``,
-      `## Your Task`,
-      `Write a structured explanation with these sections:`,
+      `Write an explanation with exactly these four sections. Each section should be 2-4 sentences.`,
+      `Total length: 250-400 words. Be specific — reference actual components and workflows from the data.`,
       ``,
-      `# Repository Overview`,
-      `What this system does and the problem it solves. Who uses it.`,
+      `## Why This System Exists`,
+      `What problem this repository solves. What business capability it provides. Who depends on it.`,
+      `Explain the purpose, not the technology.`,
       ``,
-      `# Technologies & Architecture`,
-      `The tech stack and how the code is organized. What patterns dominate.`,
+      `## How It Is Built`,
+      `What the architectural approach means in practice for this specific codebase.`,
+      `Do not list technologies — explain why the architecture was chosen and what trade-offs it creates.`,
+      `Focus on what a new developer needs to understand about how the pieces fit together.`,
       ``,
-      `# Critical Workflows`,
-      `The 2-3 most important workflows to understand first. Why each matters.`,
+      `## Where To Start`,
+      `Name the 2-3 most important workflows or components a developer should understand first, and explain`,
+      `why those are the right starting points. Give a concrete learning path, not a generic recommendation.`,
       ``,
-      `# Recommended Learning Order`,
-      `A concrete sequence: what to read first, what depends on what. Name specific components or files from the data.`,
-      ``,
-      `# Risks & Areas to Watch`,
-      `What to be careful about when making changes. Known issues or fragile areas.`,
-      ``,
-      `Each section: 3-5 sentences. Total: 400-600 words. Be specific — name actual components and workflows from the data above.`,
+      `## What To Be Careful Changing`,
+      `Based on the known risks and the dependency structure, what areas carry the highest modification risk.`,
+      `Explain the implication — not just that a risk exists, but what could go wrong and why.`,
+      `Do not repeat the risk titles verbatim. Synthesise them into developer guidance.`,
     );
 
     return parts.join('\n');
