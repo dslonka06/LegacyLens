@@ -1,0 +1,394 @@
+<div class="rnp-page">
+
+  <!-- ── Toolbar ──────────────────────────────────────────────────────────── -->
+  <div class="rnp-toolbar">
+    <div class="rnp-toolbar-left">
+      <div class="rnp-page-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <span class="rnp-page-title">Repository Navigation</span>
+    </div>
+
+    <!-- Breadcrumbs -->
+    <div class="rnp-breadcrumbs" *ngIf="breadcrumbs.length > 0">
+      <ng-container *ngFor="let crumb of breadcrumbs; let last = last">
+        <span class="rnp-crumb" [class.rnp-crumb-file]="crumb.type === 'file'">
+          {{ crumb.label }}
+        </span>
+        <span class="rnp-crumb-sep" *ngIf="!last">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </span>
+      </ng-container>
+    </div>
+
+    <!-- Back / Forward -->
+    <div class="rnp-nav-btns">
+      <button class="rnp-nav-btn" [disabled]="!canGoBack" (click)="back()" title="Go back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <button class="rnp-nav-btn" [disabled]="!canGoForward" (click)="forward()" title="Go forward">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── No workspace ──────────────────────────────────────────────────────── -->
+  <div class="rnp-empty" *ngIf="!hasWorkspace">
+    <div class="rnp-empty-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+      </svg>
+    </div>
+    <h3>No repository loaded</h3>
+    <p>Upload a repository to explore its structure and file intelligence.</p>
+    <a routerLink="/repository-analysis" class="rnp-action-btn">Go to Repository Analysis</a>
+  </div>
+
+  <!-- ── No structure (files loaded but tree unavailable) ─────────────────── -->
+  <div class="rnp-empty" *ngIf="hasWorkspace && !hasStructure">
+    <div class="rnp-empty-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <h3>Repository structure not available</h3>
+    <p>Upload a full project or repository folder to enable navigation.</p>
+    <a routerLink="/repository-analysis" class="rnp-action-btn">Go to Repository Analysis</a>
+  </div>
+
+  <!-- ── Main layout ───────────────────────────────────────────────────────── -->
+  <div class="rnp-layout" *ngIf="hasWorkspace && hasStructure">
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         LEFT PANEL — Repository Structure
+         ════════════════════════════════════════════════════════════════════ -->
+    <div class="rnp-panel-left">
+
+      <div class="rnp-panel-header">
+        <div class="rnp-panel-icon structure-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <span class="rnp-panel-title">{{ workspaceName }}</span>
+      </div>
+
+      <div class="rnp-tree">
+        <ng-container *ngFor="let node of treeRoots">
+          <ng-container *ngTemplateOutlet="treeNodeTpl; context: { node: node, depth: 0 }"/>
+        </ng-container>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         RIGHT PANEL — Node Intelligence
+         ════════════════════════════════════════════════════════════════════ -->
+    <div class="rnp-panel-right">
+
+      <!-- No selection prompt -->
+      <div class="rnp-no-selection" *ngIf="!selectedNode">
+        <div class="rnp-no-sel-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <p class="rnp-no-sel-text">Select a file to explore repository intelligence.</p>
+      </div>
+
+      <!-- Intelligence panels -->
+      <div class="rnp-intelligence" *ngIf="selectedNode && intelligence">
+
+        <!-- ── Section 1: Selected File ───────────────────────────────── -->
+        <div class="rnp-intel-section rnp-section-file">
+          <div class="rnp-section-header">
+            <div class="rnp-section-icon file-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <span class="rnp-section-title">Selected File</span>
+            <span class="rnp-rank-badge" *ngIf="intelligence.connectivityRank !== null">
+              #{{ intelligence.connectivityRank }} by connectivity
+            </span>
+          </div>
+          <div class="rnp-file-info">
+            <div class="rnp-file-name">{{ intelligence.node.name }}</div>
+            <div class="rnp-file-path">{{ intelligence.node.path }}</div>
+            <div class="rnp-file-meta">
+              <span class="rnp-file-type-pill">{{ intelligence.node.type }}</span>
+              <span class="rnp-dep-counts">
+                <span class="rnp-dep-in" title="Incoming dependencies">
+                  ↓ {{ intelligence.incoming.length }}
+                </span>
+                <span class="rnp-dep-out" title="Outgoing dependencies">
+                  ↑ {{ intelligence.outgoing.length }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Section 2: Dependencies ────────────────────────────────── -->
+        <div class="rnp-intel-section">
+          <div class="rnp-section-header">
+            <div class="rnp-section-icon dep-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+                <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+                <line x1="12" y1="12" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <span class="rnp-section-title">Dependencies</span>
+          </div>
+
+          <div class="rnp-dep-split">
+
+            <!-- Incoming -->
+            <div class="rnp-dep-group">
+              <div class="rnp-dep-group-label">
+                <span class="rnp-dep-arrow incoming">↓</span>
+                Incoming
+                <span class="rnp-dep-group-count">{{ intelligence.incoming.length }}</span>
+              </div>
+              <div class="rnp-dep-empty" *ngIf="intelligence.incoming.length === 0">
+                No files import this file.
+              </div>
+              <div class="rnp-dep-list">
+                <div class="rnp-dep-item" *ngFor="let dep of intelligence.incoming"
+                     (click)="nav.selectNode(dep, 'dependency-link')"
+                     title="{{ dep.path }}">
+                  <span class="rnp-dep-type-dot" [ngClass]="'dot-' + dep.type"></span>
+                  <span class="rnp-dep-name">{{ dep.name }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Outgoing -->
+            <div class="rnp-dep-group">
+              <div class="rnp-dep-group-label">
+                <span class="rnp-dep-arrow outgoing">↑</span>
+                Outgoing
+                <span class="rnp-dep-group-count">{{ intelligence.outgoing.length }}</span>
+              </div>
+              <div class="rnp-dep-empty" *ngIf="intelligence.outgoing.length === 0">
+                This file imports nothing.
+              </div>
+              <div class="rnp-dep-list">
+                <div class="rnp-dep-item" *ngFor="let dep of intelligence.outgoing"
+                     (click)="nav.selectNode(dep, 'dependency-link')"
+                     title="{{ dep.path }}">
+                  <span class="rnp-dep-type-dot" [ngClass]="'dot-' + dep.type"></span>
+                  <span class="rnp-dep-name">{{ dep.name }}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── Section 3: Workflow Participation ──────────────────────── -->
+        <div class="rnp-intel-section">
+          <div class="rnp-section-header">
+            <div class="rnp-section-icon wf-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+              </svg>
+            </div>
+            <span class="rnp-section-title">Workflow Participation</span>
+            <span class="rnp-section-count">{{ intelligence.touchingWorkflows.length }}</span>
+          </div>
+
+          <div class="rnp-wf-empty" *ngIf="intelligence.touchingWorkflows.length === 0">
+            This file does not participate in any detected workflows.
+          </div>
+
+          <div class="rnp-wf-list" *ngIf="intelligence.touchingWorkflows.length > 0">
+            <div class="rnp-wf-card"
+                 *ngFor="let wf of intelligence.touchingWorkflows; let i = index"
+                 [class.rnp-wf-expanded]="isWorkflowExpanded(i)">
+
+              <button class="rnp-wf-header" (click)="toggleWorkflow(i)">
+                <div class="rnp-wf-header-left">
+                  <span class="rnp-wf-title">{{ wf.title }}</span>
+                  <div class="rnp-wf-meta">
+                    <span class="rnp-wf-cat">{{ categoryLabel(wf.category) }}</span>
+                    <span class="rnp-wf-conf" [ngClass]="confidenceClass(wf.confidence)">
+                      {{ confidencePercent(wf.confidence) }}%
+                    </span>
+                  </div>
+                </div>
+                <svg class="rnp-wf-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline [attr.points]="isWorkflowExpanded(i) ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+                </svg>
+              </button>
+
+              <div class="rnp-wf-detail" *ngIf="isWorkflowExpanded(i)">
+                <p class="rnp-wf-description">{{ wf.description }}</p>
+                <div class="rnp-wf-path">
+                  <span class="rnp-wf-path-node"
+                        *ngFor="let step of wf.flowPath; let last = last"
+                        [class.rnp-wf-path-active]="step === intelligence!.node.name">
+                    {{ step }}<span class="rnp-wf-path-arrow" *ngIf="!last"> →</span>
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Section 4: Change Impact ───────────────────────────────── -->
+        <div class="rnp-intel-section">
+          <div class="rnp-section-header">
+            <div class="rnp-section-icon impact-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <span class="rnp-section-title">Change Impact</span>
+            <span class="rnp-risk-badge" [ngClass]="riskClass(intelligence.changeImpact.riskLevel)">
+              {{ intelligence.changeImpact.riskLevel }} Risk
+            </span>
+          </div>
+
+          <div class="rnp-impact-body">
+            <div class="rnp-impact-counts">
+              <div class="rnp-impact-stat">
+                <span class="rnp-impact-num">{{ intelligence.changeImpact.directImpacts.length }}</span>
+                <span class="rnp-impact-label">direct</span>
+              </div>
+              <div class="rnp-impact-divider"></div>
+              <div class="rnp-impact-stat">
+                <span class="rnp-impact-num">{{ intelligence.changeImpact.indirectImpacts.length }}</span>
+                <span class="rnp-impact-label">indirect</span>
+              </div>
+              <div class="rnp-impact-divider" *ngIf="intelligence.changeImpact.affectedWorkflows.length"></div>
+              <div class="rnp-impact-stat" *ngIf="intelligence.changeImpact.affectedWorkflows.length">
+                <span class="rnp-impact-num">{{ intelligence.changeImpact.affectedWorkflows.length }}</span>
+                <span class="rnp-impact-label">workflows</span>
+              </div>
+            </div>
+
+            <p class="rnp-impact-summary">{{ intelligence.changeImpact.summary }}</p>
+
+            <button class="rnp-detail-toggle" (click)="toggleImpactDetail()"
+                    *ngIf="intelligence.changeImpact.directImpacts.length > 0 || intelligence.changeImpact.indirectImpacts.length > 0">
+              {{ impactDetailOpen ? 'Hide affected files' : 'Show affected files' }}
+            </button>
+
+            <div class="rnp-impact-detail" *ngIf="impactDetailOpen">
+
+              <div class="rnp-impact-group" *ngIf="intelligence.changeImpact.directImpacts.length">
+                <span class="rnp-impact-group-label">Directly Affected</span>
+                <div class="rnp-file-chips">
+                  <span class="rnp-file-chip direct"
+                        *ngFor="let f of intelligence.changeImpact.directImpacts">{{ f }}</span>
+                </div>
+              </div>
+
+              <div class="rnp-impact-group" *ngIf="intelligence.changeImpact.indirectImpacts.length">
+                <span class="rnp-impact-group-label">Indirectly Affected</span>
+                <div class="rnp-file-chips">
+                  <span class="rnp-file-chip indirect"
+                        *ngFor="let f of intelligence.changeImpact.indirectImpacts">{{ f }}</span>
+                </div>
+              </div>
+
+              <div class="rnp-impact-group" *ngIf="intelligence.changeImpact.affectedWorkflows.length">
+                <span class="rnp-impact-group-label">Affected Workflows</span>
+                <div class="rnp-file-chips">
+                  <span class="rnp-file-chip workflow"
+                        *ngFor="let w of intelligence.changeImpact.affectedWorkflows">{{ w }}</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Section 5: Repository Insights ────────────────────────── -->
+        <div class="rnp-intel-section" *ngIf="intelligence.insights.length > 0">
+          <div class="rnp-section-header">
+            <div class="rnp-section-icon insights-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v4l3 3"/>
+              </svg>
+            </div>
+            <span class="rnp-section-title">Repository Insights</span>
+            <span class="rnp-section-count">{{ intelligence.insights.length }}</span>
+          </div>
+
+          <div class="rnp-insight-list">
+            <div class="rnp-insight-row"
+                 *ngFor="let insight of intelligence.insights"
+                 [ngClass]="severityClass(insight.severity)">
+              <div class="rnp-insight-header">
+                <span class="rnp-insight-dot"></span>
+                <span class="rnp-insight-title">{{ insight.title }}</span>
+              </div>
+              <p class="rnp-insight-desc">{{ insight.description }}</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ── Tree node template ─────────────────────────────────────────────────── -->
+<ng-template #treeNodeTpl let-node="node" let-depth="depth">
+
+  <!-- Folder -->
+  <div *ngIf="node.type === 'folder'">
+    <button class="rnp-folder-row" [style.padding-left.px]="12 + depth * 14" (click)="toggleFolder(node)">
+      <svg class="rnp-folder-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline [attr.points]="node.expanded ? '6 9 12 15 18 9' : '9 18 15 12 9 6'"/>
+      </svg>
+      <svg class="rnp-folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path [attr.d]="node.expanded
+          ? 'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'
+          : 'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'"/>
+      </svg>
+      <span class="rnp-folder-name">{{ node.name }}</span>
+      <span class="rnp-folder-count">{{ node.fileCount }}</span>
+    </button>
+
+    <div class="rnp-folder-children" *ngIf="node.expanded">
+      <ng-container *ngFor="let child of node.children">
+        <ng-container *ngTemplateOutlet="treeNodeTpl; context: { node: child, depth: depth + 1 }"/>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- File -->
+  <button *ngIf="node.type === 'file'"
+          class="rnp-file-row"
+          [class.rnp-file-selected]="isSelected(node)"
+          [style.padding-left.px]="12 + depth * 14"
+          (click)="selectFile(node)"
+          title="{{ node.path }}">
+    <span class="rnp-file-icon">{{ fileIcon(node.extension) }}</span>
+    <span class="rnp-file-name-tree">{{ node.name }}</span>
+    <span class="rnp-file-lang" *ngIf="node.language && node.language !== 'Unknown'">{{ node.language }}</span>
+  </button>
+
+</ng-template>

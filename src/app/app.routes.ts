@@ -57,6 +57,11 @@ export const routes: Routes = [
       import('./pages/settings-page/settings-page').then(m => m.SettingsPage)
   },
   {
+    path: 'repository-navigation',
+    loadComponent: () =>
+      import('./pages/repository-navigation-page/repository-navigation-page').then(m => m.RepositoryNavigationPage)
+  },
+  {
     path: 'nav-playground',
     loadComponent: () =>
       import('./pages/nav-playground-page/nav-playground-page').then(m => m.NavPlaygroundPage)

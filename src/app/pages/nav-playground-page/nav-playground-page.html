@@ -29,7 +29,7 @@
           *ngFor="let node of availableNodes"
           [class.active]="selectedNode?.id === node.id"
           (click)="selectNode(node)">
-          <span class="node-type-pill" [class]="'nt-' + node.type">{{ node.type }}</span>
+          <span class="node-type-pill" [ngClass]="'nt-' + node.type">{{ node.type }}</span>
           <span class="node-name">{{ node.name }}</span>
         </button>
       </div>
@@ -65,7 +65,7 @@
           <div class="pg-panel-title">Selected Node</div>
           <div class="pg-node-header">
             <span class="pg-node-name">{{ intelligence.node.name }}</span>
-            <span class="node-type-pill" [class]="'nt-' + intelligence.node.type">{{ intelligence.node.type }}</span>
+            <span class="node-type-pill" [ngClass]="'nt-' + intelligence.node.type">{{ intelligence.node.type }}</span>
             <span class="pg-rank" *ngIf="intelligence.connectivityRank !== null">
               Rank #{{ intelligence.connectivityRank }}
             </span>
@@ -77,7 +77,7 @@
         <div class="pg-panel">
           <div class="pg-panel-title">
             Change Impact
-            <span class="pg-risk-badge" [class]="riskClass(intelligence.changeImpact.riskLevel)">
+            <span class="pg-risk-badge" [ngClass]="riskClass(intelligence.changeImpact.riskLevel)">
               {{ intelligence.changeImpact.riskLevel }}
             </span>
           </div>
@@ -98,7 +98,7 @@
           <div class="pg-empty-panel" *ngIf="intelligence.incoming.length === 0">No files import this node.</div>
           <div class="pg-dep-list">
             <div class="pg-dep-item" *ngFor="let dep of intelligence.incoming">
-              <span class="node-type-pill sm" [class]="'nt-' + dep.type">{{ dep.type }}</span>
+              <span class="node-type-pill sm" [ngClass]="'nt-' + dep.type">{{ dep.type }}</span>
               <span class="pg-dep-name">{{ dep.name }}</span>
             </div>
           </div>
@@ -113,7 +113,7 @@
           <div class="pg-empty-panel" *ngIf="intelligence.outgoing.length === 0">This node imports nothing.</div>
           <div class="pg-dep-list">
             <div class="pg-dep-item" *ngFor="let dep of intelligence.outgoing">
-              <span class="node-type-pill sm" [class]="'nt-' + dep.type">{{ dep.type }}</span>
+              <span class="node-type-pill sm" [ngClass]="'nt-' + dep.type">{{ dep.type }}</span>
               <span class="pg-dep-name">{{ dep.name }}</span>
             </div>
           </div>
@@ -147,7 +147,7 @@
           </div>
           <div class="pg-insight-list">
             <div class="pg-insight-item" *ngFor="let insight of intelligence.insights">
-              <span class="pg-sev-dot" [class]="severityClass(insight.severity)"></span>
+              <span class="pg-sev-dot" [ngClass]="severityClass(insight.severity)"></span>
               <div class="pg-insight-body">
                 <span class="pg-insight-title">{{ insight.title }}</span>
                 <span class="pg-insight-desc">{{ insight.description }}</span>
