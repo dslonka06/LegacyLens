@@ -4,6 +4,15 @@ import { DataFlow, WorkflowSummary } from '../models/data-flow.model';
 @Injectable({ providedIn: 'root' })
 export class WorkflowExplorerService {
 
+  // Returns summaries for workflows that include a specific node by name or id.
+  // Delegates to buildSummaries() on the filtered flow subset — no new analysis logic.
+  summariesForNode(nodeId: string, flows: DataFlow[]): WorkflowSummary[] {
+    const relevant = flows.filter(flow =>
+      flow.nodes.some(n => n.id === nodeId || n.name === nodeId)
+    );
+    return this.buildSummaries(relevant);
+  }
+
   // Converts raw DataFlow objects into human-readable WorkflowSummary objects.
   buildSummaries(flows: DataFlow[]): WorkflowSummary[] {
     return flows.map(flow => this.buildSummary(flow));

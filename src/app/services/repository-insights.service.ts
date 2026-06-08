@@ -22,6 +22,20 @@ export class RepositoryInsightsService {
 
   constructor(private readonly explorer: DependencyExplorerService) {}
 
+  // Returns only insights that reference a specific node by name or path.
+  // Delegates to analyze() and filters — no separate detection logic.
+  insightsForNode(nodeId: string, knowledge: RepositoryKnowledge): RepositoryInsight[] {
+    const node = knowledge.dependencyGraph?.nodes.find(n => n.id === nodeId);
+    if (!node) return [];
+
+    const all = this.analyze(knowledge);
+    return all.filter(insight =>
+      insight.affectedFiles?.some(f =>
+        f === node.name || f === node.path || node.name.includes(f) || f.includes(node.name)
+      )
+    );
+  }
+
   analyze(knowledge: RepositoryKnowledge): RepositoryInsight[] {
     const insights: RepositoryInsight[] = [];
     const graph = knowledge.dependencyGraph;

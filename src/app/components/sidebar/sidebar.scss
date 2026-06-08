@@ -245,6 +245,17 @@
   stroke: currentColor;
 }
 
+// Dev-only nav items are visually distinguished to prevent confusion with production nav.
+.nav-item-dev {
+  opacity: 0.6;
+  color: #f59e0b !important;
+
+  .nav-icon { color: #f59e0b; }
+
+  &:hover { opacity: 1; background: rgba(245, 158, 11, 0.08) !important; }
+  &.active { opacity: 1; background: rgba(245, 158, 11, 0.12) !important; border-color: rgba(245, 158, 11, 0.3) !important; }
+}
+
 // ─── Collapsed icon-only mode ────────────────────────────
 :host.collapsed {
   .sidebar-nav {
