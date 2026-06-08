@@ -383,57 +383,209 @@
   font-family: 'JetBrains Mono', Consolas, monospace;
 }
 
-// ─── Architecture body ───────────────────────────────────
-.arch-body {
+// ─── Architecture card collapse-all button ───────────────
+.arch-collapse-all {
+  margin-left: auto;
+  width: 22px;
+  height: 22px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+  svg { width: 13px; height: 13px; }
+
+  &:hover { color: var(--text-secondary); background: var(--bg-secondary); }
 }
 
-.arch-subsection-title {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-secondary);
-  padding: 8px 14px 4px;
+// ─── Architecture sub-accordions ─────────────────────────
+.arch-sub {
   border-top: 1px solid rgba(40, 53, 72, 0.35);
+
+  &:first-child { border-top: none; }
 }
 
-.arch-layers {
+.arch-sub-toggle {
+  width: 100%;
   display: flex;
-  flex-direction: column;
-  padding-bottom: 6px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--bg-secondary);
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s;
+
+  &:hover { background: var(--bg-primary); }
 }
 
+.arch-sub-label {
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.arch-sub-count {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+// ─── Repository Layers ────────────────────────────────────
 .arch-layer-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 0 14px 8px;
 }
 
 .arch-layer-row {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 5px 0;
+  gap: 10px;
+  padding: 8px 14px;
   border-bottom: 1px solid rgba(40, 53, 72, 0.2);
 
   &:last-child { border-bottom: none; }
 }
 
+.arch-layer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 110px;
+  flex-shrink: 0;
+}
+
 .arch-layer-name {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text-primary);
-  width: 90px;
-  flex-shrink: 0;
+}
+
+.arch-layer-desc {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 .arch-layer-folders {
   display: flex;
   flex-wrap: wrap;
   gap: 3px;
+  padding-top: 2px;
+}
+
+// ─── Major Responsibilities ───────────────────────────────
+.arch-resp-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.arch-resp-row {
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(40, 53, 72, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &:last-child { border-bottom: none; }
+}
+
+.arch-resp-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.arch-resp-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.arch-resp-desc {
+  font-size: 12px;
+  color: var(--text-content);
+  line-height: 1.6;
+  margin: 0;
+}
+
+// ─── Repository Data Flow pipeline ───────────────────────
+.arch-flow-pipeline {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 10px 14px 12px;
+  gap: 0;
+}
+
+.arch-flow-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.arch-flow-stage-inner {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 10px;
+  background: var(--bg-card);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 6px;
+}
+
+.arch-flow-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--info, #38bdf8);
+  white-space: nowrap;
+  min-width: 90px;
+}
+
+.arch-flow-detail {
+  font-size: 11px;
+  color: var(--text-content);
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arch-flow-arrow {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0;
+  color: var(--text-muted);
+  svg { width: 14px; height: 14px; }
+}
+
+// ─── Architecture Summary prose ───────────────────────────
+.arch-summary-body {
+  padding: 10px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.arch-summary-para {
+  font-size: 12px;
+  color: var(--text-content);
+  line-height: 1.75;
+  margin: 0;
 }
 
 // ─── Data Flow body ──────────────────────────────────────

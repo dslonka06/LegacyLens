@@ -88,7 +88,7 @@
         </div>
 
         <!-- Repository Architecture -->
-        <div class="rpa-card" *ngIf="architecturePatterns.length">
+        <div class="rpa-card" *ngIf="hasArchSection">
           <div class="rpa-card-header">
             <div class="rpa-card-icon arch-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -97,43 +97,118 @@
               </svg>
             </div>
             <span class="rpa-card-title">Repository Architecture</span>
+            <button class="arch-collapse-all" (click)="toggleArch()" [title]="archExpanded ? 'Collapse all' : 'Expand all'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline [attr.points]="archExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+              </svg>
+            </button>
           </div>
 
-          <button class="section-toggle" (click)="toggleArch()">
-            <span>{{ architecturePatterns.length }} pattern{{ architecturePatterns.length === 1 ? '' : 's' }} detected</span>
-            <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline [attr.points]="archExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
-            </svg>
-          </button>
+          <div *ngIf="archExpanded">
 
-          <div class="arch-body" *ngIf="archExpanded">
-
-            <!-- Detected Patterns with descriptions -->
-            <div class="arch-patterns">
-              <div class="arch-row" *ngFor="let p of architecturePatterns">
-                <div class="arch-row-header">
-                  <span class="arch-name">{{ p.name }}</span>
-                  <span class="arch-conf-badge" [ngClass]="confidenceClass(p.confidence)">
-                    {{ confidencePercent(p.confidence) }}%
-                  </span>
-                </div>
-                <p class="arch-desc">{{ architectureDescription(p.name) }}</p>
-                <div class="arch-indicators" *ngIf="p.indicators.length">
-                  <span class="arch-ind" *ngFor="let ind of p.indicators">{{ ind }}</span>
+            <!-- ▼ Architectural Style -->
+            <div class="arch-sub" *ngIf="architecturePatterns.length">
+              <button class="arch-sub-toggle" (click)="toggleArchStyle()">
+                <span class="arch-sub-label">Architectural Style</span>
+                <span class="arch-sub-count">{{ architecturePatterns.length }} pattern{{ architecturePatterns.length === 1 ? '' : 's' }}</span>
+                <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline [attr.points]="archStyleExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+                </svg>
+              </button>
+              <div class="arch-patterns" *ngIf="archStyleExpanded">
+                <div class="arch-row" *ngFor="let p of architecturePatterns">
+                  <div class="arch-row-header">
+                    <span class="arch-name">{{ p.name }}</span>
+                    <span class="arch-conf-badge" [ngClass]="confidenceClass(p.confidence)">
+                      {{ confidencePercent(p.confidence) }}%
+                    </span>
+                  </div>
+                  <p class="arch-desc">{{ architectureDescription(p.name) }}</p>
+                  <div class="arch-indicators" *ngIf="p.indicators.length">
+                    <span class="arch-ind" *ngFor="let ind of p.indicators">{{ ind }}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Detected Layers -->
-            <div class="arch-layers" *ngIf="detectedLayers.length">
-              <div class="arch-subsection-title">Detected Layers</div>
-              <div class="arch-layer-list">
+            <!-- ▼ Repository Layers -->
+            <div class="arch-sub" *ngIf="detectedLayers.length">
+              <button class="arch-sub-toggle" (click)="toggleArchLayers()">
+                <span class="arch-sub-label">Repository Layers</span>
+                <span class="arch-sub-count">{{ detectedLayers.length }} layer{{ detectedLayers.length === 1 ? '' : 's' }}</span>
+                <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline [attr.points]="archLayersExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+                </svg>
+              </button>
+              <div class="arch-layer-list" *ngIf="archLayersExpanded">
                 <div class="arch-layer-row" *ngFor="let layer of detectedLayers">
-                  <span class="arch-layer-name">{{ layer.name }}</span>
+                  <div class="arch-layer-info">
+                    <span class="arch-layer-name">{{ layer.name }}</span>
+                    <span class="arch-layer-desc">{{ layer.description }}</span>
+                  </div>
                   <div class="arch-layer-folders">
                     <span class="arch-ind" *ngFor="let f of layer.folders">{{ f }}</span>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <!-- ▼ Major Responsibilities -->
+            <div class="arch-sub" *ngIf="responsibilities.length">
+              <button class="arch-sub-toggle" (click)="toggleArchResp()">
+                <span class="arch-sub-label">Major Responsibilities</span>
+                <span class="arch-sub-count">{{ responsibilities.length }} area{{ responsibilities.length === 1 ? '' : 's' }}</span>
+                <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline [attr.points]="archRespExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+                </svg>
+              </button>
+              <div class="arch-resp-list" *ngIf="archRespExpanded">
+                <div class="arch-resp-row" *ngFor="let r of responsibilities">
+                  <div class="arch-resp-header">
+                    <span class="arch-resp-name">{{ r.name }}</span>
+                  </div>
+                  <p class="arch-resp-desc">{{ r.description }}</p>
+                  <div class="arch-indicators">
+                    <span class="arch-ind" *ngFor="let f of r.keyFiles">{{ f }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ▼ Repository Data Flow -->
+            <div class="arch-sub" *ngIf="archFlowStages.length">
+              <button class="arch-sub-toggle" (click)="toggleArchFlow()">
+                <span class="arch-sub-label">Repository Data Flow</span>
+                <span class="arch-sub-count">{{ archFlowStages.length }} stage{{ archFlowStages.length === 1 ? '' : 's' }}</span>
+                <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline [attr.points]="archFlowExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+                </svg>
+              </button>
+              <div class="arch-flow-pipeline" *ngIf="archFlowExpanded">
+                <div class="arch-flow-stage" *ngFor="let stage of archFlowStages; let last = last">
+                  <div class="arch-flow-stage-inner">
+                    <span class="arch-flow-label">{{ stage.label }}</span>
+                    <span class="arch-flow-detail">{{ stage.detail }}</span>
+                  </div>
+                  <div class="arch-flow-arrow" *ngIf="!last">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ▼ Architecture Summary -->
+            <div class="arch-sub" *ngIf="archSummaryText">
+              <button class="arch-sub-toggle" (click)="toggleArchSummary()">
+                <span class="arch-sub-label">Architecture Summary</span>
+                <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline [attr.points]="archSummaryExpanded ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+                </svg>
+              </button>
+              <div class="arch-summary-body" *ngIf="archSummaryExpanded">
+                <p class="arch-summary-para" *ngFor="let para of archSummaryText.split('\n\n')">{{ para }}</p>
               </div>
             </div>
 

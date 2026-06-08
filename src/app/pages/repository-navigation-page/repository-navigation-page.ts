@@ -326,34 +326,178 @@ export class RepositoryNavigationPage implements OnInit, OnDestroy {
     return map[this.nodeImportance] ?? 'imp-low';
   }
 
-  // Pattern-derived purpose sentence from structural signals
+  // Purpose: what does this file exist to do?
+  // Derived from file name, path, type, and source content — not from dependency counts.
   get nodePurpose(): string {
     if (!this.intelligence) return '';
-    const node = this.intelligence.node;
-    const inb  = this.intelligence.incoming.length;
-    const out  = this.intelligence.outgoing.length;
-    const wfs  = this.intelligence.touchingWorkflows.length;
-    const type = node.type;
+    const node    = this.intelligence.node;
+    const content = this.resolveSourceContent(node.path ?? node.name);
+    return this.buildPurpose(node.name, node.path ?? '', node.type, content);
+  }
 
-    const typeLabel = this.nodeTypeLabel(type);
-    const wfPart = wfs > 0 ? ` Participates in ${wfs} workflow${wfs === 1 ? '' : 's'}.` : '';
+  private resolveSourceContent(nodePath: string): string {
+    if (!this.knowledge?.sourceFiles?.length || !nodePath) return '';
+    const normalise = (p: string) => p.replace(/\\/g, '/').toLowerCase();
+    const target = normalise(nodePath);
+    const file = this.knowledge.sourceFiles.find(f => {
+      const fp = normalise(f.path);
+      return fp === target || fp.endsWith('/' + target) || target.endsWith('/' + normalise(f.path));
+    });
+    return file?.content ?? '';
+  }
 
-    if (inb >= 6 && out >= 6) {
-      return `Central ${typeLabel} referenced by ${inb} files and depending on ${out} others. Acts as a coordination point across multiple subsystems.${wfPart}`;
+  private buildPurpose(name: string, path: string, type: string, content: string): string {
+    // ── Step 1: classify by name suffix ──────────────────────────────────────
+    const lower = name.toLowerCase();
+    const subject = this.stripKnownSuffix(name);
+
+    // ── Step 2: read decorator from content to override role ─────────────────
+    const decorator = content ? this.detectDecorator(content) : null;
+
+    // ── Step 3: derive a role verb + framing ──────────────────────────────────
+    const role = decorator ?? this.roleFromName(lower, path, type);
+
+    // ── Step 4: extract key public methods if content available ───────────────
+    const methods = content ? this.extractPublicMethods(content) : [];
+    const methodPart = methods.length > 0
+      ? ` Provides: ${methods.slice(0, 2).map(m => m + '()').join(', ')}.`
+      : '';
+
+    // ── Step 5: assemble 1–2 sentence description ─────────────────────────────
+    const statement = role.template
+      .replace('{subject}', subject)
+      .replace('{name}', name);
+
+    return statement + methodPart;
+  }
+
+  private stripKnownSuffix(name: string): string {
+    // Remove file extension fragments and known role suffixes to get the subject
+    const withoutExt = name.replace(/\.[^.]+$/, '');
+    const suffixes = [
+      'Service', 'Controller', 'Component', 'Repository', 'Provider',
+      'Module', 'Page', 'Guard', 'Interceptor', 'Resolver', 'Pipe',
+      'Directive', 'Facade', 'Store', 'Effect', 'Reducer', 'Action',
+      'Builder', 'Factory', 'Handler', 'Manager', 'Engine', 'Processor',
+      'Exporter', 'Importer', 'Adapter', 'Gateway', 'Mapper', 'Validator',
+      'Model', 'Entity', 'Dto', 'ViewModel', 'Request', 'Response',
+    ];
+    for (const suffix of suffixes) {
+      if (withoutExt.endsWith(suffix) && withoutExt.length > suffix.length) {
+        // Insert spaces before capital letters: "AiKnowledge" → "Ai Knowledge"
+        return withoutExt.slice(0, -suffix.length)
+          .replace(/([a-z])([A-Z])/g, '$1 $2')
+          .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+          .trim();
+      }
     }
-    if (inb > out * 2 && inb >= 4) {
-      return `Widely referenced ${typeLabel} imported by ${inb} other files. Changes here propagate broadly.${wfPart}`;
+    // No known suffix — return the name with spaces inserted
+    return withoutExt
+      .replace(/[-_.]/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+      .trim();
+  }
+
+  private detectDecorator(content: string): { template: string } | null {
+    if (/@Injectable\b/.test(content))
+      return { template: '{subject} service — manages {subject} logic and operations.' };
+    if (/@Component\b/.test(content))
+      return { template: '{subject} component — renders the {subject} UI and handles user interactions.' };
+    if (/@Directive\b/.test(content))
+      return { template: '{subject} directive — extends element behaviour for {subject} scenarios.' };
+    if (/@Pipe\b/.test(content))
+      return { template: '{subject} pipe — transforms {subject} values for display.' };
+    if (/@NgModule\b/.test(content))
+      return { template: '{subject} module — declares and configures the {subject} feature module.' };
+    if (/@Controller\b/.test(content))
+      return { template: '{subject} controller — handles HTTP requests and responses for {subject}.' };
+    return null;
+  }
+
+  private roleFromName(lower: string, path: string, nodeType = ''): { template: string } {
+    const pathLower = path.toLowerCase().replace(/\\/g, '/');
+
+    if (lower.endsWith('.service.ts') || lower.endsWith('service'))
+      return { template: '{subject} service — manages {subject} logic and operations.' };
+    if (lower.endsWith('.component.ts') || lower.endsWith('component'))
+      return { template: '{subject} component — renders the {subject} view and handles user interactions.' };
+    if (lower.endsWith('.page.ts') || lower.endsWith('page') || pathLower.includes('/pages/'))
+      return { template: '{subject} page — the top-level routable view for the {subject} feature.' };
+    if (lower.endsWith('.controller.ts') || lower.endsWith('controller') || pathLower.includes('/controllers/'))
+      return { template: '{subject} controller — routes and handles {subject} HTTP requests.' };
+    if (lower.endsWith('.repository.ts') || lower.endsWith('repository') || pathLower.includes('/repositories/'))
+      return { template: '{subject} repository — provides data access operations for {subject}.' };
+    if (lower.endsWith('.model.ts') || lower.endsWith('model') || pathLower.includes('/models/'))
+      return { template: 'Defines the {subject} data model and type contracts.' };
+    if (lower.endsWith('.module.ts') || lower.endsWith('module'))
+      return { template: '{subject} module — declares and wires the {subject} feature.' };
+    if (lower.endsWith('.guard.ts') || lower.endsWith('guard'))
+      return { template: '{subject} guard — controls route access for {subject} routes.' };
+    if (lower.endsWith('.interceptor.ts') || lower.endsWith('interceptor'))
+      return { template: '{subject} interceptor — intercepts and transforms {subject} requests or responses.' };
+    if (lower.endsWith('.pipe.ts') || lower.endsWith('pipe'))
+      return { template: '{subject} pipe — transforms {subject} values for template display.' };
+    if (lower.endsWith('.directive.ts') || lower.endsWith('directive'))
+      return { template: '{subject} directive — applies {subject} behaviour to DOM elements.' };
+    if (lower.endsWith('.facade.ts') || lower.endsWith('facade'))
+      return { template: '{subject} facade — simplifies access to the {subject} subsystem.' };
+    if (lower.endsWith('builder') || lower.endsWith('factory'))
+      return { template: 'Constructs and assembles {subject} objects or structures.' };
+    if (lower.endsWith('handler'))
+      return { template: 'Handles {subject} events or commands.' };
+    if (lower.endsWith('provider'))
+      return { template: 'Provides {subject} integration or configuration.' };
+    if (lower.endsWith('adapter'))
+      return { template: 'Adapts the {subject} interface for integration with external systems.' };
+    if (lower.endsWith('mapper'))
+      return { template: 'Maps between {subject} data structures and formats.' };
+    if (lower.endsWith('validator'))
+      return { template: 'Validates {subject} input and data integrity.' };
+    if (lower.endsWith('exporter') || lower.endsWith('importer'))
+      return { template: 'Handles {subject} import and export operations.' };
+    if (lower.endsWith('config') || lower.endsWith('settings') || lower.endsWith('configuration'))
+      return { template: 'Configuration and settings for {subject}.' };
+    if (lower.endsWith('.spec.ts') || lower.endsWith('.test.ts') || lower.endsWith('spec') || lower.endsWith('test'))
+      return { template: 'Test suite for {subject} — covers expected behaviour and edge cases.' };
+
+    // Path-based fallbacks
+    if (pathLower.includes('/services/'))  return { template: '{subject} service — manages {subject} logic.' };
+    if (pathLower.includes('/models/'))    return { template: 'Defines the {subject} data structures and type contracts.' };
+    if (pathLower.includes('/components/'))return { template: '{subject} component — renders the {subject} UI.' };
+    if (pathLower.includes('/guards/'))    return { template: '{subject} guard — controls access to {subject} routes.' };
+    if (pathLower.includes('/pipes/'))     return { template: '{subject} pipe — transforms {subject} values.' };
+    if (pathLower.includes('/directives/'))return { template: '{subject} directive — adds {subject} behaviour to elements.' };
+    if (pathLower.includes('/utils/') || pathLower.includes('/helpers/'))
+      return { template: '{subject} utilities — shared helper functions and tools.' };
+
+    // SQL / DB
+    if (lower.endsWith('.sql') || lower.endsWith('.sql') || lower.includes('query') || lower.includes('migration'))
+      return { template: 'SQL definition or migration for {subject} data.' };
+
+    // Generic fallback — at minimum name the type correctly
+    const typeLabel = this.nodeTypeLabel(nodeType);
+    return { template: `{name} — ${typeLabel.toLowerCase()} in this repository.` };
+  }
+
+  private extractPublicMethods(content: string): string[] {
+    const methods: string[] = [];
+    // Match public method declarations: optional 'public'/'async' + identifier + '('
+    // Excludes constructors and lifecycle hooks
+    const LIFECYCLE = new Set([
+      'constructor', 'ngOnInit', 'ngOnDestroy', 'ngOnChanges', 'ngAfterViewInit',
+      'ngAfterContentInit', 'ngAfterViewChecked', 'ngAfterContentChecked',
+    ]);
+    const pattern = /(?:^|\n)\s*(?:public\s+)?(?:async\s+)?([a-zA-Z][a-zA-Z0-9_]*)\s*\(/gm;
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(content)) !== null && methods.length < 5) {
+      const candidate = match[1];
+      if (!LIFECYCLE.has(candidate) && !candidate.startsWith('_') && candidate !== 'if' && candidate !== 'for') {
+        methods.push(candidate);
+      }
     }
-    if (out > inb * 2 && out >= 5) {
-      return `${typeLabel} with broad dependencies — relies on ${out} other files. Likely an orchestration or aggregation layer.${wfPart}`;
-    }
-    if (wfs > 0) {
-      return `${typeLabel} involved in ${wfs} detected workflow${wfs === 1 ? '' : 's'}.${inb > 0 ? ` Used by ${inb} file${inb === 1 ? '' : 's'}.` : ''}`;
-    }
-    if (inb > 0 || out > 0) {
-      return `${typeLabel} with ${inb} inbound and ${out} outbound dependencies.`;
-    }
-    return `${typeLabel} with no detected dependency relationships. May be an entry point, utility, or standalone file.`;
+    // Return unique names, capped at 3
+    return [...new Set(methods)].slice(0, 3);
   }
 
   get nodeWhyItMatters(): string {
