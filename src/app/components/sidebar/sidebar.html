@@ -71,13 +71,6 @@
         <span *ngIf="!collapsed">Repository Analysis</span>
       </a>
 
-      <a routerLink="/history" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'History' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
-        <span *ngIf="!collapsed">History</span>
-      </a>
-
       <a routerLink="/data-flow" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Data Flow' : ''">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -135,8 +128,14 @@
 
     </div>
 
-    <!-- Settings pinned at bottom -->
+    <!-- Utility section pinned at bottom -->
     <div class="nav-bottom">
+      <a routerLink="/history" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'History' : ''">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span *ngIf="!collapsed">History</span>
+      </a>
       <a routerLink="/settings" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Settings' : ''">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
