@@ -1,0 +1,118 @@
+<div class="gs-container" [class.gs-open]="isOpen">
+
+  <!-- Search input -->
+  <div class="gs-input-wrap">
+    <svg class="gs-icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+
+    <input
+      class="gs-input"
+      type="text"
+      [value]="query"
+      (input)="onQueryChange($any($event.target).value)"
+      (focus)="onFocus()"
+      placeholder="Search repository…"
+      autocomplete="off"
+      spellcheck="false"
+      aria-label="Search repository">
+
+    <!-- No index yet -->
+    <span class="gs-hint" *ngIf="!hasIndex && !query">No repository loaded</span>
+
+    <!-- Keyboard shortcut hint when idle -->
+    <kbd class="gs-kbd" *ngIf="!query">⌘K</kbd>
+
+    <!-- Clear button when typing -->
+    <button class="gs-clear" *ngIf="query" (click)="clearQuery()" title="Clear search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Results panel -->
+  <div class="gs-panel" *ngIf="isOpen">
+
+    <!-- No results -->
+    <div class="gs-empty" *ngIf="hasNoResults">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <span>No results for <strong>{{ query }}</strong></span>
+    </div>
+
+    <!-- Grouped results -->
+    <div class="gs-group" *ngFor="let group of groups">
+      <div class="gs-group-label">
+
+        <!-- Workflow icon -->
+        <svg *ngIf="group.icon === 'workflow'" class="gs-group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+
+        <!-- File icon -->
+        <svg *ngIf="group.icon === 'file'" class="gs-group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+
+        <!-- Folder icon -->
+        <svg *ngIf="group.icon === 'folder'" class="gs-group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+
+        <!-- Project icon -->
+        <svg *ngIf="group.icon === 'project'" class="gs-group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
+        </svg>
+
+        <!-- Insight icon -->
+        <svg *ngIf="group.icon === 'insight'" class="gs-group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+
+        <!-- Documentation icon -->
+        <svg *ngIf="group.icon === 'doc'" class="gs-group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+
+        <!-- Section icon -->
+        <svg *ngIf="group.icon === 'section'" class="gs-group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+          <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+          <line x1="12" y1="12" x2="12" y2="15"/>
+        </svg>
+
+        <span>{{ group.label }}</span>
+      </div>
+
+      <button
+        class="gs-result"
+        *ngFor="let result of group.results"
+        [class.gs-result-active]="isActive(result)"
+        (click)="navigate(result)">
+
+        <div class="gs-result-body">
+          <span class="gs-result-title">{{ result.title }}</span>
+          <span class="gs-result-desc" *ngIf="result.description">{{ result.description }}</span>
+        </div>
+
+        <span class="gs-result-route">{{ result.navigationTarget.route | slice:1 }}</span>
+
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="gs-footer" *ngIf="groups.length > 0">
+      <span>{{ totalCount }} result{{ totalCount === 1 ? '' : 's' }}</span>
+      <span class="gs-footer-keys">
+        <kbd>↑↓</kbd> navigate · <kbd>↵</kbd> open · <kbd>Esc</kbd> close
+      </span>
+    </div>
+
+  </div>
+
+</div>

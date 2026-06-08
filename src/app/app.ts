@@ -4,13 +4,14 @@ import { CommonModule } from '@angular/common';
 import { Sidebar } from './components/sidebar/sidebar';
 import { FeedbackModal } from './components/feedback-modal/feedback-modal';
 import { LegacyLensGuide } from './components/legacylens-guide/legacylens-guide';
+import { GlobalSearch } from './components/global-search/global-search';
 import { ThemeService } from './services/theme.service';
 import { GuideStateService } from './services/guide-state.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, Sidebar, FeedbackModal, LegacyLensGuide, CommonModule],
+  imports: [RouterOutlet, Sidebar, FeedbackModal, LegacyLensGuide, GlobalSearch, CommonModule],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
