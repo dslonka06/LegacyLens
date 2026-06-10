@@ -1,0 +1,458 @@
+:host {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+// ── Layout ─────────────────────────────────────────────────────────────────────
+
+.fap-layout {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  gap: 0;
+}
+
+.fap-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-muted);
+
+  svg { width: 48px; height: 48px; opacity: 0.4; }
+  h3  { font-size: 16px; font-weight: 600; color: var(--text-secondary); margin: 0; }
+  p   { font-size: 13px; margin: 0; }
+}
+
+.fap-go-btn {
+  margin-top: 8px;
+  padding: 8px 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover { opacity: 0.85; }
+}
+
+// ── Panels ─────────────────────────────────────────────────────────────────────
+
+.fap-panel-left {
+  width: 240px;
+  min-width: 180px;
+  max-width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.fap-panel-center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.fap-panel-right {
+  width: 280px;
+  min-width: 220px;
+  max-width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// ── Panel Header ───────────────────────────────────────────────────────────────
+
+.fap-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  min-height: 42px;
+}
+
+.fap-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  svg { width: 14px; height: 14px; opacity: 0.7; }
+}
+
+.fap-workspace-name {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100px;
+}
+
+// ── Knowledge Status ───────────────────────────────────────────────────────────
+
+.fap-knowledge-status {
+  font-size: 11px;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+
+  &.ks-building { color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  &.ks-ready    { color: var(--success); background: color-mix(in srgb, var(--success) 8%, transparent); }
+  &.ks-failed   { color: #EF4444; background: color-mix(in srgb, #EF4444 8%, transparent); }
+}
+
+.ks-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: ks-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes ks-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+// ── Tree ───────────────────────────────────────────────────────────────────────
+
+.fap-tree-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+}
+
+.fap-tree-empty {
+  padding: 24px 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.fap-tree-folder {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  user-select: none;
+
+  &:hover { background: var(--bg-hover); color: var(--text-content); }
+}
+
+.fap-folder-caret {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+  opacity: 0.5;
+  &.fap-caret-open { transform: rotate(90deg); }
+}
+
+.fap-folder-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: var(--accent);
+  opacity: 0.8;
+}
+
+.fap-tree-file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  user-select: none;
+
+  &:hover { background: var(--bg-hover); color: var(--text-content); }
+  &.fap-tree-file-selected {
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    color: var(--text-content);
+  }
+}
+
+.fap-tree-file-icon { font-size: 11px; flex-shrink: 0; }
+.fap-tree-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fap-tree-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+// ── Source Body ────────────────────────────────────────────────────────────────
+
+.fap-source-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.fap-source-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-muted);
+  svg { width: 40px; height: 40px; opacity: 0.3; }
+  p   { font-size: 13px; margin: 0; }
+}
+
+.fap-monaco {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  ngx-monaco-editor {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  ::ng-deep .editor-container {
+    flex: 1;
+    min-height: 0;
+    height: 100% !important;
+  }
+}
+
+// ── Breadcrumbs ────────────────────────────────────────────────────────────────
+
+.fap-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fap-nav-btn {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0;
+  svg { width: 12px; height: 12px; }
+  &:hover:not(:disabled) { background: var(--bg-hover); color: var(--text-content); }
+  &:disabled { opacity: 0.3; cursor: default; }
+}
+
+.fap-breadcrumb-path {
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
+}
+
+.fap-lang-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  border-radius: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+// ── Right Panel Intelligence ───────────────────────────────────────────────────
+
+.fap-intel-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  p { font-size: 12px; color: var(--text-muted); text-align: center; margin: 0; font-style: italic; }
+}
+
+.fap-intel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+}
+
+.fap-intel-filename {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fap-file-icon { font-size: 16px; }
+
+.fap-intel-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-content);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fap-intel-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fap-intel-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.fap-intel-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.fap-intel-empty-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+// ── Metrics ────────────────────────────────────────────────────────────────────
+
+.fap-metric-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 20px;
+}
+
+.fap-metric-name {
+  width: 90px;
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.fap-segments {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+}
+
+.fap-seg {
+  flex: 1;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--bg-secondary);
+
+  &.seg-empty  { background: var(--bg-secondary); }
+  &.seg-green  { background: var(--success); }
+  &.seg-yellow { background: #EAB308; }
+  &.seg-orange { background: #F97316; }
+  &.seg-red    { background: #EF4444; }
+}
+
+.fap-metric-val {
+  width: 60px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+  text-transform: capitalize;
+}
+
+// ── Dependencies ───────────────────────────────────────────────────────────────
+
+.fap-dep-tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  margin: 2px 4px 2px 0;
+}
+
+// ── Explore links ──────────────────────────────────────────────────────────────
+
+.fap-explore-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fap-explore-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  svg { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.7; }
+  &:hover { background: var(--bg-hover); color: var(--text-content); border-color: var(--accent); }
+}

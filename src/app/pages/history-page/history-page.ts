@@ -30,7 +30,7 @@ export class HistoryPage implements OnInit {
     const session = this.history.getSessionByIndex(index);
     if (session) {
       this.currentAnalysis.setSession(session);
-      this.router.navigate(['/analysis']);
+      this.router.navigate(['/file-analysis']);
     }
   }
 

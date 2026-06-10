@@ -3,71 +3,113 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'analysis',
-    pathMatch: 'full'
+    loadComponent: () =>
+      import('./pages/home-page/home-page').then(m => m.HomePage)
+  },
+
+  // ── File Analysis workspace ────────────────────────────────────────────────
+  {
+    path: 'file-analysis',
+    loadComponent: () =>
+      import('./pages/file-analysis-page/file-analysis-page').then(m => m.FileAnalysisPage)
   },
   {
-    path: 'analysis',
+    path: 'file-analysis/architecture',
     loadComponent: () =>
-      import('./pages/analysis-page/analysis-page').then(m => m.AnalysisPage)
+      import('./pages/file-architecture-page/file-architecture-page').then(m => m.FileArchitecturePage)
   },
+  {
+    path: 'file-analysis/data-flow',
+    loadComponent: () =>
+      import('./pages/file-data-flow-page/file-data-flow-page').then(m => m.FileDataFlowPage)
+  },
+  {
+    path: 'file-analysis/code-recommendations',
+    loadComponent: () =>
+      import('./pages/file-code-recommendations-page/file-code-recommendations-page').then(m => m.FileCodeRecommendationsPage)
+  },
+  {
+    path: 'file-analysis/documentation',
+    loadComponent: () =>
+      import('./pages/file-documentation-page/file-documentation-page').then(m => m.FileDocumentationPage)
+  },
+
+  // ── Folder Analysis workspace ─────────────────────────────────────────────
+  {
+    path: 'folder-analysis',
+    loadComponent: () =>
+      import('./pages/folder-analysis-page/folder-analysis-page').then(m => m.FolderAnalysisPage)
+  },
+  {
+    path: 'folder-analysis/architecture',
+    loadComponent: () =>
+      import('./pages/folder-architecture-page/folder-architecture-page').then(m => m.FolderArchitecturePage)
+  },
+  {
+    path: 'folder-analysis/data-flow',
+    loadComponent: () =>
+      import('./pages/folder-data-flow-page/folder-data-flow-page').then(m => m.FolderDataFlowPage)
+  },
+  {
+    path: 'folder-analysis/code-recommendations',
+    loadComponent: () =>
+      import('./pages/folder-code-recommendations-page/folder-code-recommendations-page').then(m => m.FolderCodeRecommendationsPage)
+  },
+  {
+    path: 'folder-analysis/documentation',
+    loadComponent: () =>
+      import('./pages/folder-documentation-page/folder-documentation-page').then(m => m.FolderDocumentationPage)
+  },
+
+  // ── Repository Analysis workspace ──────────────────────────────────────────
   {
     path: 'repository-analysis',
     loadComponent: () =>
       import('./pages/repository-analysis-page/repository-analysis-page').then(m => m.RepositoryAnalysisPage)
   },
   {
+    path: 'repository-analysis/architecture',
+    loadComponent: () =>
+      import('./pages/repository-architecture-page/repository-architecture-page').then(m => m.RepositoryArchitecturePage)
+  },
+  {
+    path: 'repository-analysis/data-flow',
+    loadComponent: () =>
+      import('./pages/repository-data-flow-page/repository-data-flow-page').then(m => m.RepositoryDataFlowPage)
+  },
+  {
+    path: 'repository-analysis/code-recommendations',
+    loadComponent: () =>
+      import('./pages/repository-code-recommendations-page/repository-code-recommendations-page').then(m => m.RepositoryCodeRecommendationsPage)
+  },
+  {
+    path: 'repository-analysis/documentation',
+    loadComponent: () =>
+      import('./pages/repository-documentation-page/repository-documentation-page').then(m => m.RepositoryDocumentationPage)
+  },
+
+  // ── Global ─────────────────────────────────────────────────────────────────
+  {
     path: 'history',
     loadComponent: () =>
       import('./pages/history-page/history-page').then(m => m.HistoryPage)
-  },
-  {
-    path: 'data-flow',
-    loadComponent: () =>
-      import('./pages/data-flow-page/data-flow-page').then(m => m.DataFlowPage)
-  },
-  {
-    path: 'architecture',
-    loadComponent: () =>
-      import('./pages/architecture-page/architecture-page').then(m => m.ArchitecturePage)
-  },
-  {
-    path: 'risks',
-    loadComponent: () =>
-      import('./pages/risks-page/risks-page').then(m => m.RisksPage)
-  },
-  {
-    path: 'modernization',
-    loadComponent: () =>
-      import('./pages/modernization-page/modernization-page').then(m => m.ModernizationPage)
-  },
-  {
-    path: 'documentation',
-    loadComponent: () =>
-      import('./pages/documentation-page/documentation-page').then(m => m.DocumentationPage)
-  },
-  {
-    path: 'security',
-    loadComponent: () =>
-      import('./pages/security-page/security-page').then(m => m.SecurityPage)
   },
   {
     path: 'settings',
     loadComponent: () =>
       import('./pages/settings-page/settings-page').then(m => m.SettingsPage)
   },
-  {
-    path: 'repository-navigation',
-    loadComponent: () =>
-      import('./pages/repository-navigation-page/repository-navigation-page').then(m => m.RepositoryNavigationPage)
-  },
-  {
-    path: 'nav-playground',
-    loadComponent: () =>
-      import('./pages/nav-playground-page/nav-playground-page').then(m => m.NavPlaygroundPage)
-  },
-  {
-    path: '**',
-    redirectTo: 'analysis'
-  }
+
+  // ── Legacy redirects (preserve bookmarks / deep links) ────────────────────
+  { path: 'analysis',              redirectTo: 'file-analysis',                   pathMatch: 'full' },
+  { path: 'architecture',          redirectTo: 'file-analysis/architecture',       pathMatch: 'full' },
+  { path: 'data-flow',             redirectTo: 'file-analysis/data-flow',          pathMatch: 'full' },
+  { path: 'risks',                 redirectTo: 'file-analysis/code-recommendations', pathMatch: 'full' },
+  { path: 'modernization',         redirectTo: 'file-analysis/code-recommendations', pathMatch: 'full' },
+  { path: 'security',              redirectTo: 'file-analysis/code-recommendations', pathMatch: 'full' },
+  { path: 'documentation',         redirectTo: 'file-analysis/documentation',      pathMatch: 'full' },
+  { path: 'repository-navigation', redirectTo: 'repository-analysis',              pathMatch: 'full' },
+  { path: 'nav-playground',        redirectTo: 'repository-analysis',              pathMatch: 'full' },
+
+  { path: '**', redirectTo: '' }
 ];

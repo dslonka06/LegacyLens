@@ -1,0 +1,174 @@
+:host {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+// ─── Architecture diagram ─────────────────────────────────
+.arch-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.arch-layer-node {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.arch-layer-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(124,92,255,0.1);
+  border: 1px solid rgba(124,92,255,0.25);
+  border-radius: 8px;
+  min-width: 200px;
+}
+
+.arch-layer-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.arch-layer-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #c4b5fd;
+}
+
+.arch-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 2px 24px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+  }
+}
+
+.arch-connector-line {
+  width: 1px;
+  height: 10px;
+  background: var(--border);
+  margin-left: 8px;
+}
+
+// ─── Pattern grid ─────────────────────────────────────────
+.arch-pattern-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+}
+
+.arch-pattern-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  border-left: 3px solid var(--accent);
+  transition: border-color 0.15s;
+
+  &:hover { border-color: var(--accent); }
+}
+
+.arch-pattern-icon {
+  width: 28px;
+  height: 28px;
+  background: rgba(124,92,255,0.12);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  svg { width: 14px; height: 14px; color: var(--accent); }
+}
+
+.arch-pattern-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.arch-pattern-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.arch-pattern-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+// ─── Component list ───────────────────────────────────────
+.arch-component-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.arch-component-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: border-color 0.15s, background 0.15s;
+
+  svg { width: 14px; height: 14px; color: #8b5cf6; flex-shrink: 0; }
+
+  &:hover { background: var(--bg-secondary); border-color: var(--text-muted); }
+}
+
+// ─── Responsibilities ─────────────────────────────────────
+.arch-empty-state {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 2px;
+}
+
+.arch-responsibility-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.arch-responsibility-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-content);
+  transition: border-color 0.15s, background 0.15s;
+
+  svg { width: 14px; height: 14px; color: var(--success); flex-shrink: 0; margin-top: 1px; }
+
+  &:hover { background: var(--bg-secondary); border-color: var(--text-muted); }
+}

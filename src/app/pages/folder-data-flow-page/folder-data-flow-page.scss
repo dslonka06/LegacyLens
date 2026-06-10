@@ -1,0 +1,102 @@
+:host {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.strip-val-warn {
+  color: #EF4444 !important;
+}
+
+.flow-node-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flow-node-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.12s;
+
+  &.flow-node-hub {
+    border-left: 3px solid #EF4444;
+  }
+
+  &:hover { border-color: var(--text-muted); }
+}
+
+.flow-node-name {
+  width: 200px;
+  font-size: 12px;
+  color: var(--text-content);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.flow-node-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-secondary);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.flow-node-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  min-width: 2px;
+  position: relative;
+  transition: width 0.3s ease;
+}
+
+.flow-node-bar-label {
+  position: absolute;
+  right: 4px;
+  top: -8px;
+  font-size: 9px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.flow-node-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.flow-node-stat {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', Consolas, monospace;
+}
+
+.flow-hub-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  background: color-mix(in srgb, #EF4444 12%, transparent);
+  color: #EF4444;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.arch-empty-state {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 2px;
+}

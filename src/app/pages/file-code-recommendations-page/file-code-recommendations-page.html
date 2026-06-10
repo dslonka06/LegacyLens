@@ -1,0 +1,84 @@
+<div class="insight-page">
+
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Code Recommendations</h1>
+        <p class="page-subtitle" *ngIf="session">
+          {{ session.fileName }}
+          <span class="source-badge ai" *ngIf="isAiPowered">AI</span>
+          <span class="source-badge pattern" *ngIf="!isAiPowered">Pattern</span>
+        </p>
+        <p class="page-subtitle" *ngIf="!session">Issues, security, and modernization</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content" *ngIf="session; else noSession">
+
+    <!-- Summary strip -->
+    <div class="doc-block">
+      <div class="rec-summary">
+        <div class="rec-stat">
+          <span class="rec-stat-num">{{ issueCount }}</span>
+          <span class="rec-stat-label">Issues</span>
+        </div>
+        <div class="rec-divider"></div>
+        <div class="rec-stat">
+          <span class="rec-stat-num">{{ modernizationCount }}</span>
+          <span class="rec-stat-label">Modernizations</span>
+        </div>
+        <div class="rec-divider"></div>
+        <div class="rec-stat">
+          <span class="rec-stat-num" [class.rec-stat-red]="highCount > 0">{{ highCount }}</span>
+          <span class="rec-stat-label">High Priority</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div class="doc-block" *ngIf="allRecommendations.length === 0">
+      <div class="arch-empty-state">No recommendations found — this file looks clean.</div>
+    </div>
+
+    <!-- Recommendations list -->
+    <div class="doc-block" *ngIf="allRecommendations.length > 0">
+      <div class="rec-list">
+        <div class="rec-item" *ngFor="let rec of allRecommendations; let i = index"
+             (click)="toggleItem(i)">
+          <div class="rec-item-header">
+            <span class="rec-cat-badge" [ngClass]="categoryClass(rec.category)">{{ categoryLabel(rec.category) }}</span>
+            <span class="rec-sev-badge" [ngClass]="severityClass(rec.severity)">{{ rec.severity }}</span>
+            <span class="rec-title">{{ rec.title }}</span>
+            <svg class="rec-chevron" [class.rec-chevron-open]="isExpanded(i)"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+          <div class="rec-item-body" *ngIf="isExpanded(i)">
+            <p>{{ rec.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template #noSession>
+    <div class="no-session">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <h3>No recommendations available</h3>
+      <p>Run a file analysis to see code recommendations.</p>
+      <a routerLink="/file-analysis" class="go-btn">Go to File Analysis</a>
+    </div>
+  </ng-template>
+</div>

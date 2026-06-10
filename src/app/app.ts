@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs';
 import { Sidebar } from './components/sidebar/sidebar';
 import { FeedbackModal } from './components/feedback-modal/feedback-modal';
 import { LegacyLensGuide } from './components/legacylens-guide/legacylens-guide';
@@ -17,14 +18,24 @@ import { GuideStateService } from './services/guide-state.service';
 })
 export class App implements OnInit {
   feedbackOpen = false;
+  isHome = false;
 
   constructor(
     readonly theme: ThemeService,
     readonly guide: GuideStateService,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
     this.guide.checkFirstLaunch();
+
+    this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe((e: NavigationEnd) => {
+        this.isHome = e.urlAfterRedirects === '/';
+      });
+
+    this.isHome = this.router.url === '/';
   }
 
   openFeedback(): void { this.feedbackOpen = true; }

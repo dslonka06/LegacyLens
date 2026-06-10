@@ -1,0 +1,85 @@
+<div class="insight-page">
+
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Repository Data Flow</h1>
+        <p class="page-subtitle" *ngIf="workspaceName">{{ workspaceName }}</p>
+        <p class="page-subtitle" *ngIf="!workspaceName">Workflows and module dependency chains</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
+
+    <!-- Category summary -->
+    <div class="doc-block" *ngIf="workflowCategoryGroups.length > 0">
+      <div class="doc-block-label">Workflow Categories</div>
+      <div class="wf-category-grid">
+        <div class="wf-cat-card" *ngFor="let cat of workflowCategoryGroups">
+          <span class="wf-cat-count">{{ cat.count }}</span>
+          <span class="wf-cat-label">{{ cat.label }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entry points -->
+    <div class="doc-block" *ngIf="behaviorInsights?.entryPoints?.length">
+      <div class="doc-block-label">Entry Points</div>
+      <div class="arch-component-list">
+        <div class="arch-component-item" *ngFor="let ep of behaviorInsights!.entryPoints.slice(0, 10)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+          <span>{{ ep }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workflows -->
+    <div class="doc-block" *ngIf="workflowSummaries.length > 0">
+      <div class="doc-block-label">Discovered Workflows ({{ workflowSummaries.length }})</div>
+      <div class="wf-list">
+        <div class="wf-card" *ngFor="let wf of workflowSummaries.slice(0, 20); let i = index"
+             (click)="toggleWorkflow(i)">
+          <div class="wf-card-header">
+            <span class="wf-cat-badge">{{ categoryLabel(wf.category) }}</span>
+            <span class="wf-name">{{ wf.name }}</span>
+            <svg class="wf-expand-icon" [class.wf-expanded]="isWorkflowExpanded(i)"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+          <div class="wf-card-body" *ngIf="isWorkflowExpanded(i)">
+            <div class="wf-flow-path">
+              <span *ngFor="let step of wf.flowPath; let last = last" class="wf-step">
+                {{ step }}<span class="wf-arrow" *ngIf="!last"> → </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-block" *ngIf="!hasDataFlow">
+      <div class="arch-empty-state">No workflow data available. Upload a repository with multiple interconnected files to detect workflows.</div>
+    </div>
+
+  </div>
+
+  <ng-template #noWorkspace>
+    <div class="no-session">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      <h3>No repository uploaded</h3>
+      <p>Upload a repository to see data flow.</p>
+      <a routerLink="/repository-analysis" class="go-btn">Go to Repository Analysis</a>
+    </div>
+  </ng-template>
+</div>

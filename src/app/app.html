@@ -1,15 +1,19 @@
-<div class="app-layout">
+<!-- Home page: full-bleed, no shell chrome -->
+<div *ngIf="isHome" class="app-home-outlet">
+  <router-outlet></router-outlet>
+</div>
+
+<!-- All other pages: sidebar + header shell -->
+<div *ngIf="!isHome" class="app-layout">
 
   <app-sidebar></app-sidebar>
 
   <div class="app-main">
 
-    <!-- Global Header -->
     <header class="app-header">
 
       <app-global-search></app-global-search>
 
-      <!-- Guide button — always accessible -->
       <button class="header-btn header-btn-guide" (click)="openGuide()" title="Open LegacyLens Guide">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
@@ -19,7 +23,6 @@
         Guide
       </button>
 
-      <!-- Theme toggle -->
       <button class="header-btn icon-only" (click)="theme.toggle()" [title]="theme.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
         <svg *ngIf="theme.isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="5"/>
@@ -38,7 +41,6 @@
         <span>Theme</span>
       </button>
 
-      <!-- Feedback button -->
       <button class="header-btn" (click)="openFeedback()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -56,8 +58,5 @@
 
 </div>
 
-<!-- Feedback Modal -->
 <app-feedback-modal *ngIf="feedbackOpen" (close)="closeFeedback()"></app-feedback-modal>
-
-<!-- LegacyLens Guide -->
 <app-legacylens-guide *ngIf="guide.isOpen$ | async"></app-legacylens-guide>

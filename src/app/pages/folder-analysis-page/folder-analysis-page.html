@@ -1,0 +1,204 @@
+<div class="fap-layout">
+
+  <!-- ── No Workspace State ─────────────────────────────────────────────────── -->
+  <div class="fap-empty-state" *ngIf="!hasWorkspace">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+    </svg>
+    <h3>No folder uploaded</h3>
+    <p>Upload a folder to explore its structure and intelligence.</p>
+    <button class="fap-go-btn" (click)="startNewAnalysis()">Upload a Folder</button>
+  </div>
+
+  <!-- ── Three-column Layout ────────────────────────────────────────────────── -->
+  <ng-container *ngIf="hasWorkspace">
+
+    <!-- ── Left: Folder Explorer ──────────────────────────────────────────── -->
+    <div class="fap-panel-left">
+      <div class="fap-panel-header">
+        <span class="fap-panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          Folder Explorer
+        </span>
+        <span class="fap-workspace-name">{{ workspaceName }}</span>
+      </div>
+
+      <div class="fap-knowledge-status" *ngIf="knowledgeState !== KnowledgeState.NotStarted"
+           [class]="knowledgeStatusClass">
+        <span class="ks-dot" *ngIf="isKnowledgeBuilding"></span>
+        {{ knowledgeStatusLabel }}
+      </div>
+
+      <div class="fap-tree-scroll">
+        <ng-container *ngIf="hasStructure; else noStructure">
+          <ng-container *ngFor="let node of treeRoots">
+            <ng-container *ngTemplateOutlet="treeNodeTpl; context: { $implicit: node, depth: 0 }"></ng-container>
+          </ng-container>
+        </ng-container>
+        <ng-template #noStructure>
+          <div class="fap-tree-empty">Workspace loaded, building file structure...</div>
+        </ng-template>
+      </div>
+
+    </div>
+
+    <!-- ── Center: Monaco Source Viewer ───────────────────────────────────── -->
+    <div class="fap-panel-center">
+      <div class="fap-panel-header">
+        <span class="fap-panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>
+          </svg>
+          Source Viewer
+        </span>
+        <div class="fap-breadcrumbs" *ngIf="breadcrumbs.length">
+          <button class="fap-nav-btn" (click)="back()" [disabled]="!canGoBack" title="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="fap-nav-btn" (click)="forward()" [disabled]="!canGoForward" title="Forward">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <span class="fap-breadcrumb-path">{{ selectedNode?.name }}</span>
+          <span class="fap-lang-badge" *ngIf="selectedFileLanguage">{{ selectedFileLanguage }}</span>
+        </div>
+      </div>
+
+      <div class="fap-source-body">
+        <div class="fap-source-empty" *ngIf="!selectedNode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>
+          </svg>
+          <p>Select a file from the explorer</p>
+        </div>
+        <div class="fap-monaco" *ngIf="selectedNode">
+          <ngx-monaco-editor
+            [options]="monacoOptions"
+            [(ngModel)]="selectedFileContent">
+          </ngx-monaco-editor>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Right: File Intelligence ───────────────────────────────────────── -->
+    <div class="fap-panel-right">
+      <div class="fap-panel-header">
+        <span class="fap-panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+          </svg>
+          File Intelligence
+        </span>
+      </div>
+
+      <!-- No file selected -->
+      <div class="fap-intel-empty" *ngIf="!selectedNode">
+        <p>Select a file to see intelligence insights.</p>
+      </div>
+
+      <!-- File selected -->
+      <div class="fap-intel-content" *ngIf="selectedNode">
+        <div class="fap-intel-filename">
+          <span class="fap-file-icon">{{ fileIcon(selectedNode.path?.split('.').pop() ?? '') }}</span>
+          <span class="fap-intel-name">{{ selectedNode.name }}</span>
+        </div>
+
+        <!-- Metrics -->
+        <div class="fap-intel-section" *ngIf="fileAnalysis">
+          <div class="fap-intel-section-label">Metrics</div>
+          <div class="fap-metric-row">
+            <span class="fap-metric-name">Complexity</span>
+            <div class="fap-segments">
+              <div *ngFor="let s of SEGMENTS; let i = index"
+                   class="fap-seg" [class]="complexitySegmentClass(i)"></div>
+            </div>
+            <span class="fap-metric-val">{{ fileAnalysis.complexity }}</span>
+          </div>
+          <div class="fap-metric-row">
+            <span class="fap-metric-name">Maintainability</span>
+            <div class="fap-segments">
+              <div *ngFor="let s of SEGMENTS; let i = index"
+                   class="fap-seg" [class]="maintainabilitySegmentClass(i)"></div>
+            </div>
+            <span class="fap-metric-val">{{ fileAnalysis.maintainability }}</span>
+          </div>
+        </div>
+
+        <!-- Purpose -->
+        <div class="fap-intel-section" *ngIf="selectedNode.type">
+          <div class="fap-intel-section-label">Purpose</div>
+          <p class="fap-intel-text">{{ nodePurpose }}</p>
+        </div>
+
+        <!-- Dependencies -->
+        <div class="fap-intel-section" *ngIf="selectedNode">
+          <div class="fap-intel-section-label">Dependencies</div>
+          <div class="fap-intel-text" *ngIf="fileAnalysis?.dependencies?.length">
+            <div class="fap-dep-tag" *ngFor="let d of fileAnalysis!.dependencies">{{ d }}</div>
+          </div>
+          <p class="fap-intel-empty-text" *ngIf="!fileAnalysis?.dependencies?.length">No dependencies detected.</p>
+        </div>
+
+        <!-- Navigate -->
+        <div class="fap-intel-section">
+          <div class="fap-intel-section-label">Explore</div>
+          <div class="fap-explore-links">
+            <button class="fap-explore-btn" (click)="navigateTo('/folder-analysis/architecture')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              Architecture
+            </button>
+            <button class="fap-explore-btn" (click)="navigateTo('/folder-analysis/data-flow')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Data Flow
+            </button>
+            <button class="fap-explore-btn" (click)="navigateTo('/folder-analysis/code-recommendations')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+              Recommendations
+            </button>
+            <button class="fap-explore-btn" (click)="navigateTo('/folder-analysis/documentation')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Documentation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+
+</div>
+
+<!-- ── Tree node template ──────────────────────────────────────────────────── -->
+<ng-template #treeNodeTpl let-node let-depth="depth">
+
+  <!-- Folder -->
+  <div *ngIf="node.type === 'folder'" class="fap-tree-folder"
+       [style.padding-left.px]="depth * 14 + 8"
+       (click)="toggleFolder(node)">
+    <svg class="fap-folder-caret" [class.fap-caret-open]="node.expanded"
+         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
+    <svg class="fap-folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+    </svg>
+    <span class="fap-tree-name">{{ node.name }}</span>
+    <span class="fap-tree-count">{{ node.fileCount }}</span>
+  </div>
+  <ng-container *ngIf="node.type === 'folder' && node.expanded">
+    <ng-container *ngFor="let child of node.children">
+      <ng-container *ngTemplateOutlet="treeNodeTpl; context: { $implicit: child, depth: depth + 1 }"></ng-container>
+    </ng-container>
+  </ng-container>
+
+  <!-- File -->
+  <div *ngIf="node.type === 'file'" class="fap-tree-file"
+       [class.fap-tree-file-selected]="isSelected(node)"
+       [style.padding-left.px]="depth * 14 + 20"
+       (click)="selectFile(node)">
+    <span class="fap-tree-file-icon">{{ fileIcon(node.extension) }}</span>
+    <span class="fap-tree-name">{{ node.name }}</span>
+  </div>
+
+</ng-template>

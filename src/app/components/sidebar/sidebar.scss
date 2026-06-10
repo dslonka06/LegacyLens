@@ -144,6 +144,24 @@
   }
 }
 
+// Brand as link
+.brand-home-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.brand-icon-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 // ─── Nav ────────────────────────────────────────────────
 .sidebar-nav {
   flex: 1;
@@ -158,6 +176,16 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  padding: 4px 9px 2px;
+  user-select: none;
 }
 
 .nav-main {

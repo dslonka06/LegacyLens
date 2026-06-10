@@ -79,3 +79,12 @@
   min-height: 0;
   overflow: hidden;
 }
+
+// Home page gets the full viewport with no chrome
+.app-home-outlet {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}

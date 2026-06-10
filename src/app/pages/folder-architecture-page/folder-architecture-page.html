@@ -1,0 +1,99 @@
+<div class="insight-page">
+
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon violet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Folder Architecture</h1>
+        <p class="page-subtitle" *ngIf="workspaceName">{{ workspaceName }}</p>
+        <p class="page-subtitle" *ngIf="!workspaceName">Structural patterns and dependency topology</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
+
+    <!-- Metrics strip -->
+    <div class="doc-block">
+      <div class="doc-block-label">Graph Overview</div>
+      <div class="metrics-strip">
+        <div class="strip-item">
+          <span class="strip-label">Modules</span>
+          <span class="strip-val accent">{{ dependencyNodes }}</span>
+        </div>
+        <div class="strip-item">
+          <span class="strip-label">Connections</span>
+          <span class="strip-val">{{ dependencyEdges }}</span>
+        </div>
+        <div class="strip-item">
+          <span class="strip-label">Patterns</span>
+          <span class="strip-val">{{ patterns.length }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Architecture Patterns -->
+    <div class="doc-block">
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Architecture Patterns
+      </div>
+      <div class="arch-empty-state" *ngIf="!patterns.length">No architectural patterns detected yet. Upload a folder to begin analysis.</div>
+      <div class="arch-pattern-grid" *ngIf="patterns.length">
+        <div class="arch-pattern-card" *ngFor="let p of patterns">
+          <div class="arch-pattern-info">
+            <span class="arch-pattern-name">{{ p.name }}</span>
+            <span class="arch-pattern-desc">{{ confidencePercent(p) }}% confidence</span>
+          </div>
+          <div class="arch-confidence-bar">
+            <div class="arch-confidence-fill" [style.width.%]="confidencePercent(p)"></div>
+          </div>
+          <div class="arch-indicators" *ngIf="p.indicators?.length">
+            <span class="arch-indicator-tag" *ngFor="let ind of p.indicators.slice(0, 4)">{{ ind }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Dependencies -->
+    <div class="doc-block">
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/>
+          <path d="M6 21V9a9 9 0 0 0 9 9"/>
+        </svg>
+        Most Referenced Modules
+      </div>
+      <div class="arch-empty-state" *ngIf="!topDependencies.length">No dependency data available.</div>
+      <div class="arch-component-list" *ngIf="topDependencies.length">
+        <div class="arch-component-item" *ngFor="let d of topDependencies">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/>
+            <path d="M6 21V9a9 9 0 0 0 9 9"/>
+          </svg>
+          <span>{{ d }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template #noWorkspace>
+    <div class="no-session">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      <h3>No folder uploaded</h3>
+      <p>Upload a folder to see architecture details.</p>
+      <a routerLink="/folder-analysis" class="go-btn">Go to Folder Analysis</a>
+    </div>
+  </ng-template>
+</div>

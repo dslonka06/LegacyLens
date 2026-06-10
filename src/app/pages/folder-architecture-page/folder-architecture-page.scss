@@ -1,0 +1,99 @@
+:host {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.arch-pattern-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.arch-pattern-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  border-left: 3px solid var(--accent);
+  transition: border-color 0.15s;
+  &:hover { border-left-color: #a78bfa; }
+}
+
+.arch-pattern-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.arch-pattern-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.arch-pattern-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.arch-confidence-bar {
+  height: 4px;
+  background: var(--bg-secondary);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.arch-confidence-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.arch-indicators {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.arch-indicator-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.arch-component-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.arch-component-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: border-color 0.15s, background 0.15s;
+  svg { width: 14px; height: 14px; color: #8b5cf6; flex-shrink: 0; }
+  &:hover { background: var(--bg-secondary); border-color: var(--text-muted); }
+}
+
+.arch-empty-state {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 2px;
+}

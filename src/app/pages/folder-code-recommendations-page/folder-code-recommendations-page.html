@@ -1,0 +1,84 @@
+<div class="insight-page">
+
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Code Recommendations</h1>
+        <p class="page-subtitle" *ngIf="workspaceName">{{ workspaceName }}</p>
+        <p class="page-subtitle" *ngIf="!workspaceName">Issues, security, and modernization suggestions</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
+
+    <!-- Summary strip -->
+    <div class="rec-summary-strip">
+      <div class="rec-summary-item sev-high-bg">
+        <span class="rec-count">{{ highCount }}</span>
+        <span class="rec-label">High</span>
+      </div>
+      <div class="rec-summary-item sev-medium-bg">
+        <span class="rec-count">{{ mediumCount }}</span>
+        <span class="rec-label">Medium</span>
+      </div>
+      <div class="rec-summary-item sev-low-bg">
+        <span class="rec-count">{{ lowCount }}</span>
+        <span class="rec-label">Low</span>
+      </div>
+      <div class="rec-filter-group">
+        <button class="rec-filter-btn" [class.active]="activeFilter === 'all'"
+                (click)="setFilter('all')">All</button>
+        <button class="rec-filter-btn" [class.active]="activeFilter === 'architecture'"
+                (click)="setFilter('architecture')">Architecture</button>
+        <button class="rec-filter-btn" [class.active]="activeFilter === 'dependencies'"
+                (click)="setFilter('dependencies')">Dependencies</button>
+        <button class="rec-filter-btn" [class.active]="activeFilter === 'complexity'"
+                (click)="setFilter('complexity')">Complexity</button>
+        <button class="rec-filter-btn" [class.active]="activeFilter === 'modernization'"
+                (click)="setFilter('modernization')">Modernization</button>
+      </div>
+    </div>
+
+    <!-- Recommendation list -->
+    <div class="rec-list" *ngIf="filteredRecommendations.length > 0">
+      <div class="rec-card" *ngFor="let rec of filteredRecommendations"
+           (click)="toggleRec(rec)">
+        <div class="rec-card-header">
+          <span class="rec-sev-badge" [class]="severityClass(rec.severity)">{{ rec.severity }}</span>
+          <span class="rec-cat-badge">{{ categoryLabel(rec.category) }}</span>
+          <span class="rec-title">{{ rec.title }}</span>
+          <svg class="rec-expand-icon" [class.rec-expanded]="rec.expanded"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rec-card-body" *ngIf="rec.expanded">
+          <p>{{ rec.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-empty-state" *ngIf="filteredRecommendations.length === 0">
+      No recommendations in this category.
+    </div>
+
+  </div>
+
+  <ng-template #noWorkspace>
+    <div class="no-session">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      </svg>
+      <h3>No folder uploaded</h3>
+      <p>Upload a folder to see code recommendations.</p>
+      <a routerLink="/folder-analysis" class="go-btn">Go to Folder Analysis</a>
+    </div>
+  </ng-template>
+</div>

@@ -102,7 +102,7 @@
     <!-- 4. Risks & Issues + Modernization -->
     <div class="findings-summary-row">
 
-      <div class="findings-summary-card" (click)="navigateTo('/risks')">
+      <div class="findings-summary-card" (click)="navigateTo('/file-analysis/code-recommendations')">
         <div class="findings-summary-header">
           <div class="findings-icon amber">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -133,12 +133,12 @@
         </div>
 
         <a class="view-all-link" *ngIf="displayRisks.length"
-           (click)="navigateTo('/risks'); $event.stopPropagation()">
+           (click)="navigateTo('/file-analysis/code-recommendations'); $event.stopPropagation()">
           View all {{ displayRisks.length }} issues →
         </a>
       </div>
 
-      <div class="findings-summary-card" (click)="navigateTo('/modernization')">
+      <div class="findings-summary-card" (click)="navigateTo('/file-analysis/code-recommendations')">
         <div class="findings-summary-header">
           <div class="findings-icon green">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -171,7 +171,7 @@
         </div>
 
         <a class="view-all-link" *ngIf="displayModernizations.length"
-           (click)="navigateTo('/modernization'); $event.stopPropagation()">
+           (click)="navigateTo('/file-analysis/code-recommendations'); $event.stopPropagation()">
           View all {{ displayModernizations.length }} opportunities →
         </a>
       </div>
@@ -204,7 +204,7 @@
       <span class="explore-label">Explore Deeper</span>
       <div class="explore-grid">
 
-        <button class="explore-card" (click)="navigateTo('/data-flow')">
+        <button class="explore-card" (click)="navigateTo('/file-analysis/data-flow')">
           <div class="explore-card-header">
             <div class="explore-card-icon cyan">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -217,7 +217,7 @@
           <span class="explore-card-arrow">→</span>
         </button>
 
-        <button class="explore-card" (click)="navigateTo('/architecture')">
+        <button class="explore-card" (click)="navigateTo('/file-analysis/architecture')">
           <div class="explore-card-header">
             <div class="explore-card-icon violet">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -231,7 +231,7 @@
           <span class="explore-card-arrow">→</span>
         </button>
 
-        <button class="explore-card" (click)="navigateTo('/documentation')">
+        <button class="explore-card" (click)="navigateTo('/file-analysis/documentation')">
           <div class="explore-card-header">
             <div class="explore-card-icon amber">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -245,7 +245,7 @@
           <span class="explore-card-arrow">→</span>
         </button>
 
-        <button class="explore-card" (click)="navigateTo('/security')">
+        <button class="explore-card" (click)="navigateTo('/file-analysis/code-recommendations')">
           <div class="explore-card-header">
             <div class="explore-card-icon green">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

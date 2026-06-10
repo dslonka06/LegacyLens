@@ -1,0 +1,85 @@
+<div class="insight-page">
+
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Code Recommendations</h1>
+        <p class="page-subtitle" *ngIf="workspaceName">{{ workspaceName }}</p>
+        <p class="page-subtitle" *ngIf="!workspaceName">Repository-level issues and modernization insights</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
+
+    <!-- Summary strip -->
+    <div class="rec-summary-strip">
+      <div class="rec-summary-item sev-high-bg">
+        <span class="rec-count">{{ highCount }}</span>
+        <span class="rec-label">High</span>
+      </div>
+      <div class="rec-summary-item sev-medium-bg">
+        <span class="rec-count">{{ mediumCount }}</span>
+        <span class="rec-label">Medium</span>
+      </div>
+      <div class="rec-summary-item sev-low-bg">
+        <span class="rec-count">{{ lowCount }}</span>
+        <span class="rec-label">Low/Info</span>
+      </div>
+      <div class="rec-filter-group">
+        <button class="rec-filter-btn" [class.active]="activeFilter === 'all'"    (click)="setFilter('all')">All</button>
+        <button class="rec-filter-btn" [class.active]="activeFilter === 'high'"   (click)="setFilter('high')">High</button>
+        <button class="rec-filter-btn" [class.active]="activeFilter === 'medium'" (click)="setFilter('medium')">Medium</button>
+        <button class="rec-filter-btn" [class.active]="activeFilter === 'low'"    (click)="setFilter('low')">Low</button>
+      </div>
+    </div>
+
+    <!-- Insight list -->
+    <div class="rec-list" *ngIf="filteredInsights.length > 0">
+      <div class="rec-card" *ngFor="let insight of filteredInsights; let i = index"
+           (click)="toggleInsight(i)">
+        <div class="rec-card-header">
+          <span class="rec-sev-badge" [class]="severityClass(insight.severity)">{{ insight.severity }}</span>
+          <span class="rec-cat-badge">{{ insight.category }}</span>
+          <span class="rec-title">{{ insight.title }}</span>
+          <svg class="rec-expand-icon" [class.rec-expanded]="expandedIndex === i"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rec-card-body" *ngIf="expandedIndex === i">
+          <p>{{ insight.description }}</p>
+          <div class="rec-affected-files" *ngIf="insight.affectedFiles?.length">
+            <span class="rec-affected-label">Affected:</span>
+            <span class="rec-file-tag" *ngFor="let f of insight.affectedFiles!.slice(0, 5)">{{ f }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-empty-state" *ngIf="filteredInsights.length === 0 && insights.length === 0">
+      No insights available. Upload a repository to generate code recommendations.
+    </div>
+    <div class="arch-empty-state" *ngIf="filteredInsights.length === 0 && insights.length > 0">
+      No insights in this severity category.
+    </div>
+
+  </div>
+
+  <ng-template #noWorkspace>
+    <div class="no-session">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      </svg>
+      <h3>No repository uploaded</h3>
+      <p>Upload a repository to see code recommendations.</p>
+      <a routerLink="/repository-analysis" class="go-btn">Go to Repository Analysis</a>
+    </div>
+  </ng-template>
+</div>

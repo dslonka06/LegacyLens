@@ -89,13 +89,13 @@ interface PageCatalogue {
 }
 
 const PAGES: PageCatalogue = {
-  analysis:     { label: 'Analysis',              route: '/analysis',              reason: 'Understand what individual files do in plain English.' },
-  repository:   { label: 'Repository Analysis',   route: '/repository-analysis',   reason: 'Explore the full structure, dependencies, and architecture.' },
-  architecture: { label: 'Architecture',          route: '/architecture',          reason: 'See architectural patterns and how layers are organized.' },
-  dataFlow:     { label: 'Data Flow',             route: '/data-flow',             reason: 'Trace how requests and data move through the system.' },
-  risks:        { label: 'Risks & Issues',        route: '/risks',                 reason: 'Find dangerous coupling, high-risk areas, and known issues.' },
-  modernization:{ label: 'Modernization',         route: '/modernization',         reason: 'Identify outdated patterns and prioritize what to improve.' },
-  documentation:{ label: 'Documentation',         route: '/documentation',         reason: 'Generate tailored documentation for any audience.' },
+  analysis:     { label: 'File Analysis',          route: '/file-analysis',                   reason: 'Understand what individual files do in plain English.' },
+  repository:   { label: 'Repository Analysis',   route: '/repository-analysis',             reason: 'Explore the full structure, dependencies, and architecture.' },
+  architecture: { label: 'Architecture',          route: '/file-analysis/architecture',      reason: 'See architectural patterns and how layers are organized.' },
+  dataFlow:     { label: 'Data Flow',             route: '/file-analysis/data-flow',         reason: 'Trace how requests and data move through the system.' },
+  risks:        { label: 'Code Recommendations',  route: '/file-analysis/code-recommendations', reason: 'Find dangerous coupling, high-risk areas, and known issues.' },
+  modernization:{ label: 'Code Recommendations',  route: '/file-analysis/code-recommendations', reason: 'Identify outdated patterns and prioritize what to improve.' },
+  documentation:{ label: 'Documentation',         route: '/file-analysis/documentation',     reason: 'Generate tailored documentation for any audience.' },
 };
 
 // ── Recommendation table ──────────────────────────────────────────────────────
