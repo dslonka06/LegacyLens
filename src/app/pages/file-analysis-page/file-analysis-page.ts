@@ -10,7 +10,6 @@ import { WorkspaceProfile } from '../../models/workspace.model';
 import { WorkspaceContext } from '../../models/workspace-context.model';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
-import { HistoryService } from '../../services/history.service';
 
 @Component({
   selector: 'app-file-analysis-page',
@@ -33,7 +32,6 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
-    private readonly history: HistoryService,
   ) {}
 
   ngOnInit(): void {
@@ -64,7 +62,6 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     this.restoredFileName = session.fileName;
     this.restoredSourceCode = session.sourceCode;
     this.currentAnalysis.setSession(session);
-    this.history.addFileEntry(session);
   }
 
   onWorkspaceReady(profile: WorkspaceProfile | null): void {

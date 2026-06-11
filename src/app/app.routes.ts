@@ -105,11 +105,6 @@ export const routes: Routes = [
 
   // ── Global ─────────────────────────────────────────────────────────────────
   {
-    path: 'history',
-    loadComponent: () =>
-      import('./pages/history-page/history-page').then(m => m.HistoryPage)
-  },
-  {
     path: 'settings',
     loadComponent: () =>
       import('./pages/settings-page/settings-page').then(m => m.SettingsPage)
@@ -123,6 +118,7 @@ export const routes: Routes = [
   { path: 'modernization',         redirectTo: 'file-analysis/code-recommendations', pathMatch: 'full' },
   { path: 'security',              redirectTo: 'file-analysis/code-recommendations', pathMatch: 'full' },
   { path: 'documentation',         redirectTo: 'file-analysis/documentation',      pathMatch: 'full' },
+  { path: 'history',               redirectTo: '',                                  pathMatch: 'full' },
   { path: 'repository-navigation', redirectTo: 'repository-analysis',              pathMatch: 'full' },
   { path: 'nav-playground',        redirectTo: 'repository-analysis',              pathMatch: 'full' },
 

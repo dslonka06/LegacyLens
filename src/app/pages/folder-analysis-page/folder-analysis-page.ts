@@ -10,7 +10,6 @@ import { WorkspaceContext } from '../../models/workspace-context.model';
 import { FolderNode } from '../../models/repository.model';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
-import { HistoryService } from '../../services/history.service';
 
 interface TreeFolder {
   kind: 'folder';
@@ -65,7 +64,6 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
-    private readonly history: HistoryService,
     private readonly zone: NgZone,
     private readonly router: Router,
   ) {}
@@ -101,11 +99,6 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     this.restoredFileName = session.fileName;
     this.restoredSourceCode = session.sourceCode;
     this.currentAnalysis.setSession(session);
-    if (this.workspaceContext) {
-      this.history.addFolderEntry(this.workspaceContext, session);
-    } else {
-      this.history.addFileEntry(session);
-    }
   }
 
   onWorkspaceReady(profile: WorkspaceProfile | null): void {

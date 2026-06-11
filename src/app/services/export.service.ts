@@ -28,8 +28,8 @@ export class ExportService {
 
   private buildZip(files: ModifiedFile[]): Blob {
     const enc = new TextEncoder();
-    const parts: Uint8Array[] = [];
-    const centralDir: Uint8Array[] = [];
+    const parts: Uint8Array<ArrayBuffer>[] = [];
+    const centralDir: Uint8Array<ArrayBuffer>[] = [];
     let offset = 0;
 
     for (const f of files) {
