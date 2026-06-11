@@ -149,6 +149,7 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
             category: 'issues',
             severity: (r.severity?.toLowerCase() ?? 'medium') as CodeRecommendation['severity'],
             description: r.description,
+            solution: 'Review the affected code and address the identified risk. Apply the principle of least privilege and isolate the concern to reduce impact.',
             searchTerm: r.title.split(' ')[0],
           });
         }
@@ -164,6 +165,7 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
             category: 'modernization',
             severity: 'low',
             description: m.description,
+            solution: 'Modernize the implementation using current framework and language patterns. Apply the suggested changes incrementally to reduce risk.',
             searchTerm: m.title.split(' ')[0],
           });
         }

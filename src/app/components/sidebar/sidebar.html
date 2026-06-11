@@ -89,6 +89,8 @@
         <span *ngIf="!collapsed">Home</span>
       </a>
 
+      <div class="nav-home-divider"></div>
+
       <a routerLink="/file-analysis" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}"
          class="nav-item" [title]="collapsed ? 'File Analysis' : ''">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -150,6 +152,8 @@
         <span *ngIf="!collapsed">Home</span>
       </a>
 
+      <div class="nav-home-divider"></div>
+
       <a routerLink="/folder-analysis" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}"
          class="nav-item" [title]="collapsed ? 'Folder Analysis' : ''">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -208,6 +212,8 @@
         </svg>
         <span *ngIf="!collapsed">Home</span>
       </a>
+
+      <div class="nav-home-divider"></div>
 
       <a routerLink="/repository-analysis" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}"
          class="nav-item" [title]="collapsed ? 'Repository Analysis' : ''">
