@@ -1,110 +1,249 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
+import { Subscription } from 'rxjs';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
+import { ThemeService } from '../../services/theme.service';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { AiRisk } from '../../models/ai-analysis-result.model';
 import { ModernizationRecommendation } from '../../models/modernization-recommendation.model';
 import { ModernizationItem } from '../../models/modernization-item.model';
 
-interface Recommendation {
-  category: 'issue' | 'security' | 'modernization';
+type CategoryKey = 'issues' | 'modernization' | 'security';
+
+interface FileRec {
+  id: string;
   title: string;
-  severity: string;
+  fileName: string;
+  category: CategoryKey;
+  severity: 'high' | 'medium' | 'low' | 'info';
   description: string;
-  source: 'ai' | 'pattern';
+  solution?: string;
+  searchTerm?: string;
 }
 
 @Component({
   selector: 'app-file-code-recommendations-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, MonacoEditorModule, FormsModule],
   templateUrl: './file-code-recommendations-page.html',
-  styleUrl: './file-code-recommendations-page.scss'
+  styleUrl: './file-code-recommendations-page.scss',
 })
-export class FileCodeRecommendationsPage implements OnInit {
+export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
 
   session: AnalysisSession | null = null;
-  expandedItems = new Set<number>();
+  hasSession = false;
 
-  constructor(private readonly currentAnalysis: CurrentAnalysisService) {}
+  recommendations: FileRec[] = [];
+  selected: FileRec | null = null;
+
+  collapsed: Record<CategoryKey, boolean> = {
+    issues: true,
+    modernization: true,
+    security: true,
+  };
+
+  editorCode = '';
+  editorOptions: Record<string, any> = {};
+  private editorInstance: any = null;
+  private decorationIds: string[] = [];
+  private themeSub: Subscription | null = null;
+
+  constructor(
+    private readonly currentAnalysis: CurrentAnalysisService,
+    private readonly themeService: ThemeService,
+    private readonly zone: NgZone,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
+    this.editorOptions = this.buildEditorOptions();
     this.session = this.currentAnalysis.getSession();
+    this.hasSession = this.session !== null;
+    if (this.session) this.buildRecommendations(this.session);
   }
 
-  get isAiPowered(): boolean {
-    return (this.session?.aiAnalysis?.risks?.length ?? 0) > 0
-      || (this.session?.aiAnalysis?.modernizations?.length ?? 0) > 0;
+  ngOnDestroy(): void {
+    this.themeSub?.unsubscribe();
+    this.editorInstance?.dispose();
   }
 
-  get allRecommendations(): Recommendation[] {
-    const items: Recommendation[] = [];
+  // ── Recommendation building ────────────────────────────────────────────────
 
-    // Issues / Risks
-    if ((this.session?.aiAnalysis?.risks?.length ?? 0) > 0) {
-      (this.session!.aiAnalysis!.risks as AiRisk[]).forEach(r => items.push({
-        category: 'issue',
+  private buildRecommendations(session: AnalysisSession): void {
+    const recs: FileRec[] = [];
+    const fileName = session.fileName;
+
+    if ((session.aiAnalysis?.risks?.length ?? 0) > 0) {
+      (session.aiAnalysis!.risks as AiRisk[]).forEach((r, i) => recs.push({
+        id: `risk-${i}`,
         title: r.title,
-        severity: r.severity.toLowerCase(),
+        fileName,
+        category: 'issues',
+        severity: r.severity.toLowerCase() as FileRec['severity'],
         description: r.description,
-        source: 'ai',
+        searchTerm: r.title.split(' ')[0],
       }));
     } else {
-      (this.session?.analysis.risks ?? []).forEach(r => items.push({
-        category: 'issue',
+      (session.analysis.risks ?? []).forEach((r, i) => recs.push({
+        id: `risk-${i}`,
         title: r.description,
-        severity: r.severity,
+        fileName,
+        category: 'issues',
+        severity: r.severity as FileRec['severity'],
         description: r.description,
-        source: 'pattern',
       }));
     }
 
-    // Modernization
-    if ((this.session?.aiAnalysis?.modernizations?.length ?? 0) > 0) {
-      (this.session!.aiAnalysis!.modernizations as ModernizationRecommendation[]).forEach(m => items.push({
-        category: 'modernization',
+    if ((session.aiAnalysis?.modernizations?.length ?? 0) > 0) {
+      (session.aiAnalysis!.modernizations as ModernizationRecommendation[]).forEach((m, i) => recs.push({
+        id: `modern-${i}`,
         title: m.title,
+        fileName,
+        category: 'modernization',
         severity: 'info',
         description: m.description,
-        source: 'ai',
+        searchTerm: m.title.split(' ')[0],
       }));
     } else {
-      (this.session?.analysis.modernizationSuggestions ?? []).map((m: ModernizationItem) => items.push({
-        category: 'modernization',
+      (session.analysis.modernizationSuggestions ?? []).forEach((m: ModernizationItem, i) => recs.push({
+        id: `modern-${i}`,
         title: m.description,
+        fileName,
+        category: 'modernization',
         severity: 'info',
         description: m.description,
-        source: 'pattern',
       }));
     }
 
-    return items;
+    this.recommendations = recs;
   }
 
-  get issueCount():        number { return this.allRecommendations.filter(r => r.category === 'issue').length; }
-  get modernizationCount():number { return this.allRecommendations.filter(r => r.category === 'modernization').length; }
-  get highCount():         number { return this.allRecommendations.filter(r => r.severity === 'high').length; }
+  // ── Category grouping ──────────────────────────────────────────────────────
 
-  severityClass(severity: string): string {
-    const map: Record<string, string> = { high: 'sev-high', medium: 'sev-medium', low: 'sev-low', info: 'sev-info' };
-    return map[severity] ?? 'sev-info';
+  get issueRecs():         FileRec[] { return this.recommendations.filter(r => r.category === 'issues'); }
+  get modernizationRecs(): FileRec[] { return this.recommendations.filter(r => r.category === 'modernization'); }
+  get securityRecs():      FileRec[] { return this.recommendations.filter(r => r.category === 'security'); }
+
+  get fileName(): string { return this.session?.fileName ?? 'File'; }
+
+  // ── Category collapse ──────────────────────────────────────────────────────
+
+  toggleCategory(cat: CategoryKey): void {
+    this.collapsed[cat] = !this.collapsed[cat];
   }
 
-  categoryClass(cat: string): string {
-    const map: Record<string, string> = { issue: 'cat-issue', security: 'cat-security', modernization: 'cat-modern' };
-    return map[cat] ?? 'cat-issue';
+  // ── Recommendation selection ───────────────────────────────────────────────
+
+  selectRecommendation(rec: FileRec): void {
+    this.selected = rec;
+    this.loadFileForRecommendation(rec);
   }
 
-  categoryLabel(cat: string): string {
-    const map: Record<string, string> = { issue: 'Issue', security: 'Security', modernization: 'Modernization' };
-    return map[cat] ?? 'Issue';
+  private loadFileForRecommendation(rec: FileRec): void {
+    const content = this.session?.sourceCode ?? `// Source code not available.`;
+    const ext = (rec.fileName.split('.').pop() ?? 'txt').toLowerCase();
+    const language = this.languageFromExt(ext);
+
+    this.editorOptions = { ...this.buildEditorOptions(), language };
+    this.editorCode = content;
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      this.zone.run(() => {
+        this.applyHighlight(rec);
+        this.cdr.detectChanges();
+      });
+    }, 80);
   }
 
-  toggleItem(i: number): void {
-    if (this.expandedItems.has(i)) this.expandedItems.delete(i);
-    else this.expandedItems.add(i);
+  private applyHighlight(rec: FileRec): void {
+    if (!this.editorInstance || !rec.searchTerm) return;
+    const model = this.editorInstance.getModel();
+    if (!model) return;
+    const monaco = (window as any).monaco;
+    if (!monaco) return;
+
+    this.decorationIds = this.editorInstance.deltaDecorations(this.decorationIds, []);
+
+    const term = rec.searchTerm;
+    const matches = model.findMatches(term, true, false, false, null, true);
+    if (!matches || matches.length === 0) return;
+
+    const first = matches[0].range;
+    this.decorationIds = this.editorInstance.deltaDecorations([], [{
+      range: first,
+      options: {
+        className: 'rec-highlight',
+        isWholeLine: false,
+        overviewRuler: { color: '#F97316', position: 1 },
+        minimap: { color: '#F97316', position: 1 },
+      },
+    }]);
+
+    this.editorInstance.revealLineInCenter(first.startLineNumber);
   }
 
-  isExpanded(i: number): boolean { return this.expandedItems.has(i); }
+  // ── Monaco ─────────────────────────────────────────────────────────────────
+
+  onEditorInit(editor: any): void {
+    this.zone.run(() => {
+      this.editorInstance = editor;
+
+      this.themeSub = this.themeService.isDark$.subscribe(isDark => {
+        const m = (window as any).monaco;
+        if (m) m.editor.setTheme(isDark ? 'vs-dark' : 'vs');
+      });
+
+      if (this.selected) {
+        setTimeout(() => this.applyHighlight(this.selected!), 80);
+      }
+    });
+  }
+
+  private buildEditorOptions(): Record<string, any> {
+    return {
+      theme: this.themeService.isDark ? 'vs-dark' : 'vs',
+      language: 'plaintext',
+      readOnly: false,
+      fontSize: 13,
+      fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+      fontLigatures: true,
+      lineNumbers: 'on',
+      minimap: { enabled: true },
+      scrollBeyondLastLine: false,
+      wordWrap: 'off',
+      renderWhitespace: 'none',
+      renderLineHighlight: 'all',
+      roundedSelection: true,
+      smoothScrolling: true,
+      folding: true,
+      bracketPairColorization: { enabled: true },
+      glyphMargin: false,
+      automaticLayout: true,
+      scrollbar: { verticalScrollbarSize: 6, horizontalScrollbarSize: 6 },
+      padding: { top: 14, bottom: 14 },
+      fixedOverflowWidgets: true,
+      cursorBlinking: 'smooth',
+      cursorSmoothCaretAnimation: 'on',
+    };
+  }
+
+  private languageFromExt(ext: string): string {
+    const map: Record<string, string> = {
+      ts: 'typescript', tsx: 'typescript', js: 'javascript', jsx: 'javascript',
+      cs: 'csharp', html: 'html', css: 'css', scss: 'scss',
+      json: 'json', xml: 'xml', sql: 'sql', py: 'python',
+      md: 'markdown', yml: 'yaml', yaml: 'yaml', sh: 'shell',
+    };
+    return map[ext] ?? 'plaintext';
+  }
+
+  // ── Display helpers ────────────────────────────────────────────────────────
+
+  severityClass(s: string): string {
+    return ({ high: 'sev-high', medium: 'sev-medium', low: 'sev-low', info: 'sev-info' } as any)[s] ?? 'sev-info';
+  }
 }

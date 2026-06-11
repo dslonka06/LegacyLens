@@ -1,84 +1,199 @@
-<div class="insight-page">
+<ng-container *ngIf="hasSession; else noSession">
+  <div class="rcr-layout">
 
-  <div class="page-header">
-    <div class="page-title">
-      <div class="page-icon amber">
+    <!-- ── LEFT: Recommendation Explorer ──────────────────────────────────── -->
+    <div class="rcr-left">
+
+      <div class="rcr-left-header">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
         </svg>
+        <span>Recommendations</span>
+        <span class="rcr-total-badge">{{ recommendations.length }}</span>
       </div>
-      <div>
-        <h1>Code Recommendations</h1>
-        <p class="page-subtitle" *ngIf="session">
-          {{ session.fileName }}
-          <span class="source-badge ai" *ngIf="isAiPowered">AI</span>
-          <span class="source-badge pattern" *ngIf="!isAiPowered">Pattern</span>
-        </p>
-        <p class="page-subtitle" *ngIf="!session">Issues, security, and modernization</p>
-      </div>
-    </div>
-  </div>
 
-  <div class="page-content" *ngIf="session; else noSession">
+      <div class="rcr-explorer-scroll">
 
-    <!-- Summary strip -->
-    <div class="doc-block">
-      <div class="rec-summary">
-        <div class="rec-stat">
-          <span class="rec-stat-num">{{ issueCount }}</span>
-          <span class="rec-stat-label">Issues</span>
-        </div>
-        <div class="rec-divider"></div>
-        <div class="rec-stat">
-          <span class="rec-stat-num">{{ modernizationCount }}</span>
-          <span class="rec-stat-label">Modernizations</span>
-        </div>
-        <div class="rec-divider"></div>
-        <div class="rec-stat">
-          <span class="rec-stat-num" [class.rec-stat-red]="highCount > 0">{{ highCount }}</span>
-          <span class="rec-stat-label">High Priority</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Empty state -->
-    <div class="doc-block" *ngIf="allRecommendations.length === 0">
-      <div class="arch-empty-state">No recommendations found — this file looks clean.</div>
-    </div>
-
-    <!-- Recommendations list -->
-    <div class="doc-block" *ngIf="allRecommendations.length > 0">
-      <div class="rec-list">
-        <div class="rec-item" *ngFor="let rec of allRecommendations; let i = index"
-             (click)="toggleItem(i)">
-          <div class="rec-item-header">
-            <span class="rec-cat-badge" [ngClass]="categoryClass(rec.category)">{{ categoryLabel(rec.category) }}</span>
-            <span class="rec-sev-badge" [ngClass]="severityClass(rec.severity)">{{ rec.severity }}</span>
-            <span class="rec-title">{{ rec.title }}</span>
-            <svg class="rec-chevron" [class.rec-chevron-open]="isExpanded(i)"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"/>
+        <!-- Issues -->
+        <div class="rcr-category">
+          <button class="rcr-cat-header" (click)="toggleCategory('issues')"
+                  [class.rcr-cat-open]="!collapsed['issues']">
+            <svg class="rcr-cat-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
             </svg>
-          </div>
-          <div class="rec-item-body" *ngIf="isExpanded(i)">
-            <p>{{ rec.description }}</p>
+            <svg class="rcr-cat-icon issues-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span class="rcr-cat-label">Issues</span>
+            <span class="rcr-cat-count">{{ issueRecs.length }}</span>
+          </button>
+
+          <div class="rcr-cat-body" *ngIf="!collapsed['issues']">
+            <div *ngIf="issueRecs.length === 0" class="rcr-cat-empty">No issues detected</div>
+            <div class="rcr-rec-card"
+                 *ngFor="let rec of issueRecs"
+                 [class.rcr-rec-active]="selected?.id === rec.id"
+                 (click)="selectRecommendation(rec)">
+              <div class="rcr-rec-header">
+                <span class="rcr-sev-dot" [class]="'dot-' + severityClass(rec.severity)"></span>
+                <span class="rcr-rec-title">{{ rec.title }}</span>
+              </div>
+              <div class="rcr-rec-meta">
+                <span class="rcr-rec-file">{{ rec.fileName }}</span>
+                <span class="rcr-sev-badge" [class]="severityClass(rec.severity)">{{ rec.severity }}</span>
+              </div>
+              <p class="rcr-rec-desc">{{ rec.description }}</p>
+            </div>
           </div>
         </div>
+
+        <!-- Modernization -->
+        <div class="rcr-category">
+          <button class="rcr-cat-header" (click)="toggleCategory('modernization')"
+                  [class.rcr-cat-open]="!collapsed['modernization']">
+            <svg class="rcr-cat-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+            <svg class="rcr-cat-icon modern-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span class="rcr-cat-label">Modernization</span>
+            <span class="rcr-cat-count">{{ modernizationRecs.length }}</span>
+          </button>
+
+          <div class="rcr-cat-body" *ngIf="!collapsed['modernization']">
+            <div *ngIf="modernizationRecs.length === 0" class="rcr-cat-empty">No modernization suggestions</div>
+            <div class="rcr-rec-card"
+                 *ngFor="let rec of modernizationRecs"
+                 [class.rcr-rec-active]="selected?.id === rec.id"
+                 (click)="selectRecommendation(rec)">
+              <div class="rcr-rec-header">
+                <span class="rcr-sev-dot" [class]="'dot-' + severityClass(rec.severity)"></span>
+                <span class="rcr-rec-title">{{ rec.title }}</span>
+              </div>
+              <div class="rcr-rec-meta">
+                <span class="rcr-rec-file">{{ rec.fileName }}</span>
+                <span class="rcr-sev-badge" [class]="severityClass(rec.severity)">{{ rec.severity }}</span>
+              </div>
+              <p class="rcr-rec-desc">{{ rec.description }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security -->
+        <div class="rcr-category">
+          <button class="rcr-cat-header" (click)="toggleCategory('security')"
+                  [class.rcr-cat-open]="!collapsed['security']">
+            <svg class="rcr-cat-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+            <svg class="rcr-cat-icon security-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span class="rcr-cat-label">Security</span>
+            <span class="rcr-cat-count">{{ securityRecs.length }}</span>
+          </button>
+
+          <div class="rcr-cat-body" *ngIf="!collapsed['security']">
+            <div *ngIf="securityRecs.length === 0" class="rcr-cat-empty">No security findings</div>
+            <div class="rcr-rec-card"
+                 *ngFor="let rec of securityRecs"
+                 [class.rcr-rec-active]="selected?.id === rec.id"
+                 (click)="selectRecommendation(rec)">
+              <div class="rcr-rec-header">
+                <span class="rcr-sev-dot" [class]="'dot-' + severityClass(rec.severity)"></span>
+                <span class="rcr-rec-title">{{ rec.title }}</span>
+              </div>
+              <div class="rcr-rec-meta">
+                <span class="rcr-rec-file">{{ rec.fileName }}</span>
+                <span class="rcr-sev-badge" [class]="severityClass(rec.severity)">{{ rec.severity }}</span>
+              </div>
+              <p class="rcr-rec-desc">{{ rec.description }}</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
-  </div>
+    <!-- ── RIGHT: Code Workspace ───────────────────────────────────────────── -->
+    <div class="rcr-right">
 
-  <ng-template #noSession>
-    <div class="no-session">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-      </svg>
-      <h3>No recommendations available</h3>
-      <p>Run a file analysis to see code recommendations.</p>
-      <a routerLink="/file-analysis" class="go-btn">Go to File Analysis</a>
+      <!-- Empty state -->
+      <div class="rcr-workspace-empty" *ngIf="!selected">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+        <p>Select a recommendation to open the file</p>
+        <span>Expand a category on the left to get started</span>
+      </div>
+
+      <!-- Workspace -->
+      <ng-container *ngIf="selected">
+
+        <!-- Details header -->
+        <div class="rcr-details">
+          <div class="rcr-details-top">
+            <div class="rcr-details-title-row">
+              <span class="rcr-sev-badge large" [class]="severityClass(selected.severity)">{{ selected.severity }}</span>
+              <h2 class="rcr-details-title">{{ selected.title }}</h2>
+            </div>
+            <div class="rcr-details-file">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <span>{{ selected.fileName }}</span>
+            </div>
+          </div>
+
+          <div class="rcr-details-sections">
+            <div class="rcr-details-section" [class.rcr-details-full]="!selected.solution">
+              <div class="rcr-details-section-label">Issue Description</div>
+              <p>{{ selected.description }}</p>
+            </div>
+            <div class="rcr-details-section" *ngIf="selected.solution">
+              <div class="rcr-details-section-label">Recommended Solution</div>
+              <p>{{ selected.solution }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monaco editor workspace -->
+        <div class="rcr-editor-area">
+          <div class="rcr-editor-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span class="rcr-editor-filename">{{ selected.fileName }}</span>
+            <span class="rcr-editor-editable-badge">Editable</span>
+          </div>
+          <div class="rcr-monaco-container">
+            <ngx-monaco-editor
+              class="rcr-monaco-instance"
+              [options]="editorOptions"
+              [(ngModel)]="editorCode"
+              (onInit)="onEditorInit($event)">
+            </ngx-monaco-editor>
+          </div>
+        </div>
+
+      </ng-container>
     </div>
-  </ng-template>
-</div>
+
+  </div>
+</ng-container>
+
+<ng-template #noSession>
+  <div class="rcr-no-workspace">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <h3>No file analysed</h3>
+    <p>Run a file analysis to see code recommendations.</p>
+    <a routerLink="/file-analysis" class="rcr-go-btn">Go to File Analysis</a>
+  </div>
+</ng-template>
