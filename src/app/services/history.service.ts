@@ -1,44 +1,72 @@
 import { Injectable } from '@angular/core';
+import { AnalysisType, HistoryEntry } from '../models/history-entry.model';
 import { AnalysisSession } from '../models/analysis-session.model';
+import { WorkspaceContext } from '../models/workspace-context.model';
 
-const STORAGE_KEY = 'legacylens-history';
+const STORAGE_KEY = 'legacylens-history-v2';
+const MAX_ENTRIES = 100;
 
 @Injectable({ providedIn: 'root' })
 export class HistoryService {
 
-  addSession(session: AnalysisSession): void {
-    const sessions = this.getSessions();
-    sessions.unshift(session);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+  addFileEntry(session: AnalysisSession): void {
+    this.push({
+      id: this.newId(),
+      analysisType: 'file',
+      name: session.fileName,
+      createdAt: session.createdAt,
+      language: session.analysis.language,
+    });
   }
 
-  getSessions(): AnalysisSession[] {
+  addFolderEntry(context: WorkspaceContext, session: AnalysisSession): void {
+    this.push({
+      id: this.newId(),
+      analysisType: 'folder',
+      name: context.workspaceName,
+      createdAt: session.createdAt,
+      language: session.analysis.language,
+      fileCount: context.profile.totalFiles,
+    });
+  }
+
+  addRepositoryEntry(context: WorkspaceContext, session: AnalysisSession): void {
+    this.push({
+      id: this.newId(),
+      analysisType: 'repository',
+      name: context.workspaceName,
+      createdAt: session.createdAt,
+      language: context.profile.languages[0],
+      fileCount: context.profile.totalFiles,
+    });
+  }
+
+  getEntries(): HistoryEntry[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     try {
-      return JSON.parse(raw) as AnalysisSession[];
+      return JSON.parse(raw) as HistoryEntry[];
     } catch {
       return [];
     }
   }
 
-  getSessionByIndex(index: number): AnalysisSession | null {
-    const sessions = this.getSessions();
-    return sessions[index] ?? null;
-  }
-
-  deleteSession(index: number): void {
-    const sessions = this.getSessions();
-    sessions.splice(index, 1);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+  deleteEntry(id: string): void {
+    const entries = this.getEntries().filter(e => e.id !== id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
   }
 
   clearHistory(): void {
     localStorage.removeItem(STORAGE_KEY);
   }
 
-  getMostRecent(): AnalysisSession | null {
-    const sessions = this.getSessions();
-    return sessions[0] ?? null;
+  private push(entry: HistoryEntry): void {
+    const entries = this.getEntries();
+    entries.unshift(entry);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(0, MAX_ENTRIES)));
+  }
+
+  private newId(): string {
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   }
 }

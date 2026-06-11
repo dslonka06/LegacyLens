@@ -9,10 +9,10 @@
       </div>
       <div>
         <h1>History</h1>
-        <p class="page-subtitle">Previous analysis sessions</p>
+        <p class="page-subtitle">Previous analyses</p>
       </div>
     </div>
-    <button class="clear-btn" *ngIf="sessions.length" (click)="clearHistory()">
+    <button class="clear-btn" *ngIf="entries.length" (click)="clearHistory()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
       </svg>
@@ -22,50 +22,98 @@
 
   <div class="page-content">
 
-    <ng-container *ngIf="sessions.length; else noHistory">
-      <div class="history-grid">
-        <div class="history-card" *ngFor="let s of sessions; let i = index">
-          <div class="history-card-header">
-            <div class="history-file">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-              </svg>
-              <span>{{ s.fileName }}</span>
+    <!-- Filter tabs -->
+    <div class="filter-bar" *ngIf="entries.length">
+      <button class="filter-btn" [class.active]="activeFilter === 'all'" (click)="setFilter('all')">
+        All
+        <span class="filter-count">{{ entries.length }}</span>
+      </button>
+      <button class="filter-btn" [class.active]="activeFilter === 'file'" (click)="setFilter('file')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        File
+        <span class="filter-count">{{ entries | filterByType:'file' }}</span>
+      </button>
+      <button class="filter-btn" [class.active]="activeFilter === 'folder'" (click)="setFilter('folder')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+        Folder
+        <span class="filter-count">{{ entries | filterByType:'folder' }}</span>
+      </button>
+      <button class="filter-btn" [class.active]="activeFilter === 'repository'" (click)="setFilter('repository')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+          <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+          <line x1="12" y1="12" x2="12" y2="15"/>
+        </svg>
+        Repository
+        <span class="filter-count">{{ entries | filterByType:'repository' }}</span>
+      </button>
+    </div>
+
+    <!-- Entry list -->
+    <ng-container *ngIf="filtered.length; else noHistory">
+      <div class="history-list">
+        <div class="history-card" *ngFor="let entry of filtered" (click)="openEntry(entry)">
+
+          <div class="history-card-icon" [class]="'type-' + entry.analysisType">
+            <!-- File -->
+            <svg *ngIf="entry.analysisType === 'file'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <!-- Folder -->
+            <svg *ngIf="entry.analysisType === 'folder'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+            <!-- Repository -->
+            <svg *ngIf="entry.analysisType === 'repository'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+              <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+              <line x1="12" y1="12" x2="12" y2="15"/>
+            </svg>
+          </div>
+
+          <div class="history-card-body">
+            <div class="history-card-name">{{ entry.name }}</div>
+            <div class="history-card-meta">
+              <span class="type-badge" [class]="'badge-' + entry.analysisType">{{ typeLabel(entry.analysisType) }} Analysis</span>
+              <span class="meta-sep" *ngIf="entry.language">·</span>
+              <span class="meta-detail" *ngIf="entry.language">{{ entry.language }}</span>
+              <span class="meta-sep" *ngIf="entry.fileCount">·</span>
+              <span class="meta-detail" *ngIf="entry.fileCount">{{ entry.fileCount }} files</span>
             </div>
-            <div class="history-date">{{ s.createdAt | date:'MMM d, y' }}</div>
           </div>
-          <div class="history-meta">
-            <span class="meta-tag lang">{{ s.analysis.language }}</span>
-            <span class="meta-tag">{{ s.analysis.type }}</span>
-            <span class="meta-tag" [class]="'complexity-tag-' + s.analysis.complexity.toLowerCase()">
-              {{ s.analysis.complexity }}
-            </span>
-          </div>
-          <p class="history-summary">{{ s.analysis.summary | slice:0:120 }}…</p>
-          <div class="history-actions">
-            <button class="btn-open" (click)="restoreSession(i)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-              </svg>
-              Open
-            </button>
-            <button class="btn-delete" (click)="deleteSession(i)">
+
+          <div class="history-card-right">
+            <span class="history-date">{{ entry.createdAt | date:'MMM d, y' }}</span>
+            <button class="btn-delete" (click)="deleteEntry(entry, $event)" title="Remove from history">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
               </svg>
             </button>
           </div>
+
         </div>
       </div>
     </ng-container>
 
+    <!-- Empty state -->
     <ng-template #noHistory>
       <div class="no-session">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
         </svg>
-        <p>No analysis history yet.</p>
-        <a routerLink="/file-analysis" class="go-btn">Start your first analysis</a>
+        <h3>No analyses yet</h3>
+        <p>Analyze a file, folder, or repository to begin building your history.</p>
+        <div class="empty-actions">
+          <a routerLink="/file-analysis" class="go-btn">File Analysis</a>
+          <a routerLink="/folder-analysis" class="go-btn go-btn-secondary">Folder Analysis</a>
+          <a routerLink="/repository-analysis" class="go-btn go-btn-secondary">Repository Analysis</a>
+        </div>
       </div>
     </ng-template>
 

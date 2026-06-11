@@ -22,6 +22,13 @@
 
   <div class="page-content" *ngIf="session; else noSession">
 
+    <!-- Architecture summary narrative -->
+    <div class="doc-block" *ngIf="architectureNarrative">
+      <div class="doc-block-label">Architecture Summary</div>
+      <p class="arch-narrative">{{ architectureNarrative }}</p>
+    </div>
+
+    <!-- Metrics -->
     <div class="doc-block">
       <div class="doc-block-label">Metrics</div>
       <div class="metrics-strip">
@@ -44,6 +51,7 @@
       </div>
     </div>
 
+    <!-- Patterns Detected -->
     <div class="doc-block">
       <div class="doc-block-label">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -61,12 +69,43 @@
           </div>
           <div class="arch-pattern-info">
             <span class="arch-pattern-name">{{ p }}</span>
-            <span class="arch-pattern-desc">Detected in this file</span>
+            <span class="arch-pattern-desc">{{ patternDescription(p) }}</span>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Architectural Layers -->
+    <div class="doc-block" *ngIf="architectureLayers.length">
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        Architectural Layers
+      </div>
+      <div class="arch-diagram">
+        <ng-container *ngFor="let layer of architectureLayers; let last = last">
+          <div class="arch-layer-node">
+            <div class="arch-layer-card">
+              <svg class="arch-layer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              </svg>
+              <span class="arch-layer-name">{{ layer }}</span>
+            </div>
+          </div>
+          <div class="arch-connector" *ngIf="!last">
+            <div class="arch-connector-line"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Responsibilities -->
     <div class="doc-block">
       <div class="doc-block-label">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -85,6 +124,42 @@
       </div>
     </div>
 
+    <!-- Inputs & Outputs -->
+    <div class="doc-block" *ngIf="inputs.length || outputs.length">
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+          <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+        </svg>
+        Inputs &amp; Outputs
+      </div>
+      <div class="arch-io-grid">
+        <div class="arch-io-col" *ngIf="inputs.length">
+          <div class="arch-io-label">Inputs</div>
+          <div class="arch-component-list">
+            <div class="arch-component-item" *ngFor="let item of inputs">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+              <span>{{ item }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="arch-io-col" *ngIf="outputs.length">
+          <div class="arch-io-label">Outputs</div>
+          <div class="arch-component-list">
+            <div class="arch-component-item" *ngFor="let item of outputs">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+              <span>{{ item }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dependencies -->
     <div class="doc-block">
       <div class="doc-block-label">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

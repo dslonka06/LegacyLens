@@ -5,6 +5,37 @@
   overflow: hidden;
 }
 
+// ─── Narrative summary ────────────────────────────────────
+.arch-narrative {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-content);
+  margin: 0;
+}
+
+// ─── Inputs / Outputs two-column grid ─────────────────────
+.arch-io-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.arch-io-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.arch-io-col {
+  display: flex;
+  flex-direction: column;
+}
+
 // ─── Architecture diagram ─────────────────────────────────
 .arch-diagram {
   display: flex;

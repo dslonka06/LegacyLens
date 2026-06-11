@@ -98,7 +98,11 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     this.restoredFileName = session.fileName;
     this.restoredSourceCode = session.sourceCode;
     this.currentAnalysis.setSession(session);
-    this.history.addSession(session);
+    if (this.workspaceContext) {
+      this.history.addRepositoryEntry(this.workspaceContext, session);
+    } else {
+      this.history.addFileEntry(session);
+    }
   }
 
   onWorkspaceReady(profile: WorkspaceProfile | null): void {

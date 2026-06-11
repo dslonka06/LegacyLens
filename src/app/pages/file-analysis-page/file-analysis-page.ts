@@ -64,7 +64,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     this.restoredFileName = session.fileName;
     this.restoredSourceCode = session.sourceCode;
     this.currentAnalysis.setSession(session);
-    this.history.addSession(session);
+    this.history.addFileEntry(session);
   }
 
   onWorkspaceReady(profile: WorkspaceProfile | null): void {
