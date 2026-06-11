@@ -9,6 +9,8 @@ import { WorkspaceContext } from '../../models/workspace-context.model';
 import { FolderNode } from '../../models/repository.model';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
+import { PanelLayoutService } from '../../services/panel-layout.service';
+import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 
 interface TreeFolder {
   kind: 'folder';
@@ -37,7 +39,7 @@ const EXT_ICON: Record<string, string> = {
 @Component({
   selector: 'app-repository-analysis-page',
   standalone: true,
-  imports: [CommonModule, CodeEditor],
+  imports: [CommonModule, CodeEditor, ResizeDividerComponent],
   templateUrl: './repository-analysis-page.html',
   styleUrl: './repository-analysis-page.scss',
 })
@@ -54,6 +56,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   treeRoots: TreeItem[] = [];
   selectedFilePath: string | null = null;
+  panelWidths = [220, 460];
 
   private uploadedFiles: File[] = [];
   private contextSub: Subscription | null = null;
@@ -61,11 +64,13 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
+    private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
     private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
+    this.panelWidths = this.layoutService.load('repository-analysis') ?? [220, 460];
     const existing = this.currentAnalysis.getSession();
     if (existing) {
       this.session = existing;
@@ -87,6 +92,11 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.contextSub?.unsubscribe();
+  }
+
+  onPanelResize(index: number, width: number): void {
+    this.panelWidths = this.panelWidths.map((w, i) => i === index ? width : w);
+    this.layoutService.save('repository-analysis', this.panelWidths);
   }
 
   // ── CodeEditor event handlers ─────────────────────────────────────────────

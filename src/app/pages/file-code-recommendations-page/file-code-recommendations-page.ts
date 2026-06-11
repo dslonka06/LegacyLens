@@ -7,6 +7,8 @@ import { Subscription } from 'rxjs';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { ThemeService } from '../../services/theme.service';
 import { WorkspaceChangesService } from '../../services/workspace-changes.service';
+import { PanelLayoutService } from '../../services/panel-layout.service';
+import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { AiRisk } from '../../models/ai-analysis-result.model';
 import { ModernizationRecommendation } from '../../models/modernization-recommendation.model';
@@ -28,7 +30,7 @@ interface FileRec {
 @Component({
   selector: 'app-file-code-recommendations-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, MonacoEditorModule, FormsModule],
+  imports: [CommonModule, RouterLink, MonacoEditorModule, FormsModule, ResizeDividerComponent],
   templateUrl: './file-code-recommendations-page.html',
   styleUrl: './file-code-recommendations-page.scss',
 })
@@ -58,15 +60,19 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
   private currentFilePath = '';
   saveStatus: 'idle' | 'saved' | 'modified' = 'idle';
 
+  panelWidths = [300];
+
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly themeService: ThemeService,
     private readonly changes: WorkspaceChangesService,
+    private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
+    this.panelWidths = this.layoutService.load('file-rcr') ?? [300];
     this.editorOptions = this.buildEditorOptions();
     this.sessionSub = this.currentAnalysis.session$.subscribe(s => {
       this.session = s;
@@ -151,6 +157,11 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
 
   toggleCategory(cat: CategoryKey): void {
     this.collapsed[cat] = !this.collapsed[cat];
+  }
+
+  onPanelResize(index: number, width: number): void {
+    this.panelWidths = this.panelWidths.map((w, i) => i === index ? width : w);
+    this.layoutService.save('file-rcr', this.panelWidths);
   }
 
   // ── Recommendation selection ───────────────────────────────────────────────

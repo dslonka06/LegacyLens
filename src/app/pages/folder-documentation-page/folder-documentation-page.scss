@@ -57,8 +57,7 @@
 
 // ─── Two-column builder layout ────────────────────────────
 .doc-builder-layout {
-  display: grid;
-  grid-template-columns: 320px 1fr;
+  display: flex;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -66,9 +65,10 @@
 
 // ─── Left: Section selector ──────────────────────────────
 .doc-selector-col {
+  min-width: 200px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--border);
   overflow: hidden;
 }
 
@@ -303,6 +303,8 @@
 
 // ─── Right: Preview ───────────────────────────────────────
 .doc-preview-col {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;

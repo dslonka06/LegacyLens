@@ -17,8 +17,7 @@
 .editor-column {
   display: flex;
   flex-direction: column;
-  width: 42%;
-  min-width: 0;
+  min-width: 280px;
   min-height: 0;
   overflow: hidden;
   flex-shrink: 0;

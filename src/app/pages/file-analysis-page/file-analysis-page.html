@@ -1,6 +1,6 @@
 <div class="analysis-page">
 
-  <div class="editor-column">
+  <div class="editor-column" [style.width.px]="panelWidths[0]">
     <app-code-editor
       [readOnly]="true"
       [hideFolderUpload]="true"
@@ -10,6 +10,8 @@
       (workspaceReady)="onWorkspaceReady($event)">
     </app-code-editor>
   </div>
+
+  <app-resize-divider [minLeft]="280" [minRight]="320" (leftWidthChange)="onPanelResize(0, $event)"></app-resize-divider>
 
   <div class="results-column">
 

@@ -1,7 +1,7 @@
 <div class="tri-layout">
 
   <!-- ── Left: File Tree ───────────────────────────────────────────────────── -->
-  <div class="tri-left">
+  <div class="tri-left" [style.width.px]="panelWidths[0]">
     <div class="tri-panel-header">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
@@ -55,8 +55,10 @@
     </div>
   </div>
 
+  <app-resize-divider [minLeft]="160" [minRight]="320" (leftWidthChange)="onPanelResize(0, $event)"></app-resize-divider>
+
   <!-- ── Center: Code Editor ───────────────────────────────────────────────── -->
-  <div class="tri-center">
+  <div class="tri-center" [style.width.px]="panelWidths[1]">
     <app-code-editor
       [readOnly]="true"
       [restoredFileName]="restoredFileName"
@@ -66,6 +68,8 @@
       (filesUploaded)="onFilesUploaded($event)">
     </app-code-editor>
   </div>
+
+  <app-resize-divider [minLeft]="320" [minRight]="200" (leftWidthChange)="onPanelResize(1, $event)"></app-resize-divider>
 
   <!-- ── Right: Intelligence Panel ───────────────────────────────────────── -->
   <div class="tri-right">

@@ -11,6 +11,8 @@ import { RepositoryInsight, RepositoryInsightsService } from '../../services/rep
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
+import { PanelLayoutService } from '../../services/panel-layout.service';
+import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 import { ThemeService } from '../../services/theme.service';
 import { WorkspaceChangesService } from '../../services/workspace-changes.service';
 
@@ -19,7 +21,7 @@ type CategoryKey = 'issues' | 'modernization' | 'security';
 @Component({
   selector: 'app-repository-code-recommendations-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, MonacoEditorModule, FormsModule],
+  imports: [CommonModule, RouterLink, MonacoEditorModule, FormsModule, ResizeDividerComponent],
   templateUrl: './repository-code-recommendations-page.html',
   styleUrl: './repository-code-recommendations-page.scss',
 })
@@ -52,6 +54,8 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
   private currentFilePath = '';
   saveStatus: 'idle' | 'saved' | 'modified' = 'idle';
 
+  panelWidths = [300];
+
   constructor(
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly workspace: CurrentWorkspaceService,
@@ -59,11 +63,13 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
     private readonly insightsService: RepositoryInsightsService,
     private readonly themeService: ThemeService,
     private readonly changesService: WorkspaceChangesService,
+    private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
+    this.panelWidths = this.layoutService.load('repository-rcr') ?? [300];
     this.editorOptions = this.buildEditorOptions();
 
     this.knowledge = this.knowledgeService.knowledge;
@@ -228,6 +234,11 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
 
   toggleCategory(cat: CategoryKey): void {
     this.collapsed[cat] = !this.collapsed[cat];
+  }
+
+  onPanelResize(index: number, width: number): void {
+    this.panelWidths = this.panelWidths.map((w, i) => i === index ? width : w);
+    this.layoutService.save('repository-rcr', this.panelWidths);
   }
 
   // ── Recommendation selection ───────────────────────────────────────────────

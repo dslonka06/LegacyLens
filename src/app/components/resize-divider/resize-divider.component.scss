@@ -1,0 +1,37 @@
+:host {
+  // Sits between flex children — does not participate in flex growth
+  flex: 0 0 5px;
+  width: 5px;
+  position: relative;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 10;
+  transition: background 0.12s;
+
+  &:hover,
+  &.dragging {
+    background: color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+}
+
+.resize-handle-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    content: '';
+    width: 1px;
+    height: 100%;
+    background: var(--border);
+    transition: background 0.12s, width 0.12s;
+  }
+}
+
+:host:hover .resize-handle-inner::after,
+:host.dragging .resize-handle-inner::after {
+  background: var(--accent);
+  width: 2px;
+}

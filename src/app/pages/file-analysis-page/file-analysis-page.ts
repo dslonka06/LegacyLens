@@ -10,11 +10,13 @@ import { WorkspaceProfile } from '../../models/workspace.model';
 import { WorkspaceContext } from '../../models/workspace-context.model';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
+import { PanelLayoutService } from '../../services/panel-layout.service';
+import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 
 @Component({
   selector: 'app-file-analysis-page',
   standalone: true,
-  imports: [CommonModule, CodeEditor, AnalysisPanel, WorkspaceSummary, RepositoryCallout],
+  imports: [CommonModule, CodeEditor, AnalysisPanel, WorkspaceSummary, RepositoryCallout, ResizeDividerComponent],
   templateUrl: './file-analysis-page.html',
   styleUrl: './file-analysis-page.scss'
 })
@@ -27,14 +29,19 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   restoredFileName: string | null = null;
   restoredSourceCode: string | null = null;
 
+  // Panel widths: [0] = editor column
+  panelWidths = [480];
+
   private contextSub: Subscription | null = null;
 
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
+    private readonly layoutService: PanelLayoutService,
   ) {}
 
   ngOnInit(): void {
+    this.panelWidths = this.layoutService.load('file-analysis') ?? [480];
     const existing = this.currentAnalysis.getSession();
     if (existing) {
       this.session = existing;
@@ -66,6 +73,11 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   onWorkspaceReady(profile: WorkspaceProfile | null): void {
     this.workspaceProfile = profile;
+  }
+
+  onPanelResize(index: number, width: number): void {
+    this.panelWidths = this.panelWidths.map((w, i) => i === index ? width : w);
+    this.layoutService.save('file-analysis', this.panelWidths);
   }
 
   get showWorkspaceSummary(): boolean {

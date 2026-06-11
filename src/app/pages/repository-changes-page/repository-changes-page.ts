@@ -5,11 +5,13 @@ import { Subscription } from 'rxjs';
 import { ModifiedFile } from '../../models/modified-file.model';
 import { WorkspaceChangesService, DiffLine } from '../../services/workspace-changes.service';
 import { ExportService } from '../../services/export.service';
+import { PanelLayoutService } from '../../services/panel-layout.service';
+import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 
 @Component({
   selector: 'app-repository-changes-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ResizeDividerComponent],
   templateUrl: './repository-changes-page.html',
   styleUrl: './repository-changes-page.scss',
 })
@@ -18,16 +20,19 @@ export class RepositoryChangesPage implements OnInit, OnDestroy {
   changes: ModifiedFile[] = [];
   selected: ModifiedFile | null = null;
   diff: DiffLine[] = [];
+  panelWidths = [280];
 
   private sub: Subscription | null = null;
 
   constructor(
     private readonly changesService: WorkspaceChangesService,
     private readonly exportService: ExportService,
+    private readonly layoutService: PanelLayoutService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
+    this.panelWidths = this.layoutService.load('repository-changes') ?? [280];
     this.sub = this.changesService.changes$('repository').subscribe(c => {
       this.changes = c;
       if (this.selected) {
@@ -39,6 +44,11 @@ export class RepositoryChangesPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void { this.sub?.unsubscribe(); }
+
+  onPanelResize(index: number, width: number): void {
+    this.panelWidths = this.panelWidths.map((w, i) => i === index ? width : w);
+    this.layoutService.save('repository-changes', this.panelWidths);
+  }
 
   select(file: ModifiedFile | null): void {
     this.selected = file;

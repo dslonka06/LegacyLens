@@ -10,6 +10,8 @@ import { WorkspaceContext } from '../../models/workspace-context.model';
 import { FolderNode } from '../../models/repository.model';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
+import { PanelLayoutService } from '../../services/panel-layout.service';
+import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 
 interface TreeFolder {
   kind: 'folder';
@@ -38,7 +40,7 @@ const EXT_ICON: Record<string, string> = {
 @Component({
   selector: 'app-folder-analysis-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, CodeEditor],
+  imports: [CommonModule, FormsModule, CodeEditor, ResizeDividerComponent],
   templateUrl: './folder-analysis-page.html',
   styleUrl: './folder-analysis-page.scss',
 })
@@ -56,6 +58,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   treeRoots: TreeItem[] = [];
   selectedFilePath: string | null = null;
   treeSearch = '';
+  panelWidths = [220, 460];
 
   // Held so tree-node clicks can read file content
   private uploadedFiles: File[] = [];
@@ -64,11 +67,13 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
+    private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
     private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
+    this.panelWidths = this.layoutService.load('folder-analysis') ?? [220, 460];
     const existing = this.currentAnalysis.getSession();
     if (existing) {
       this.session = existing;
@@ -207,6 +212,11 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
       const rel = norm((f as any).webkitRelativePath || f.name);
       return rel === target || rel.endsWith('/' + target) || target.endsWith('/' + norm(f.name));
     });
+  }
+
+  onPanelResize(index: number, width: number): void {
+    this.panelWidths = this.panelWidths.map((w, i) => i === index ? width : w);
+    this.layoutService.save('folder-analysis', this.panelWidths);
   }
 
   navigateTo(path: string): void {

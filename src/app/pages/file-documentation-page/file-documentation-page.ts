@@ -11,11 +11,13 @@ import { GuideStateService } from '../../services/guide-state.service';
 import { RepositorySummaryService } from '../../services/repository-summary.service';
 import { DocumentationBuilderService } from '../../services/documentation-builder.service';
 import { PdfExportService } from '../../services/pdf-export.service';
+import { PanelLayoutService } from '../../services/panel-layout.service';
+import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 
 @Component({
   selector: 'app-file-documentation-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ResizeDividerComponent],
   templateUrl: './file-documentation-page.html',
   styleUrl: './file-documentation-page.scss'
 })
@@ -27,6 +29,7 @@ export class FileDocumentationPage implements OnInit, OnDestroy {
   previewText = '';
   isExporting = false;
   isBuilding = false;
+  panelWidths = [320];
 
   private subs: Subscription[] = [];
 
@@ -38,9 +41,11 @@ export class FileDocumentationPage implements OnInit, OnDestroy {
     private readonly summaryService: RepositorySummaryService,
     private readonly builderService: DocumentationBuilderService,
     private readonly pdfExport: PdfExportService,
+    private readonly layoutService: PanelLayoutService,
   ) {}
 
   ngOnInit(): void {
+    this.panelWidths = this.layoutService.load('file-doc') ?? [320];
     this.buildSummary();
     this.subs.push(
       this.currentAnalysis.session$.subscribe(s => { if (s) this.buildSummary(); }),
@@ -78,6 +83,11 @@ export class FileDocumentationPage implements OnInit, OnDestroy {
   get selectedCount(): number { return this.selectedIds.size; }
   get availableCount(): number { return this.sections.filter(s => s.available).length; }
   get workspaceName(): string { return this.summary?.workspaceName ?? 'File'; }
+
+  onPanelResize(index: number, width: number): void {
+    this.panelWidths = this.panelWidths.map((w, i) => i === index ? width : w);
+    this.layoutService.save('file-doc', this.panelWidths);
+  }
 
   toggleSection(id: DocumentationSectionId): void {
     if (this.selectedIds.has(id)) this.selectedIds.delete(id);

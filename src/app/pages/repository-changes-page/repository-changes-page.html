@@ -1,6 +1,6 @@
 <div class="chg-layout" *ngIf="changes.length; else noChanges">
 
-  <div class="chg-left">
+  <div class="chg-left" [style.width.px]="panelWidths[0]">
 
     <div class="chg-left-header">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -47,6 +47,8 @@
     </div>
 
   </div>
+
+  <app-resize-divider [minLeft]="200" [minRight]="320" (leftWidthChange)="onPanelResize(0, $event)"></app-resize-divider>
 
   <div class="chg-right">
 

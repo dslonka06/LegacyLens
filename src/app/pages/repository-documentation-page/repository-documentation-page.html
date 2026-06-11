@@ -14,7 +14,7 @@
 
   <div class="doc-builder-layout" *ngIf="hasContent">
 
-    <div class="doc-selector-col">
+    <div class="doc-selector-col" [style.width.px]="panelWidths[0]">
 
       <div class="doc-selector-header">
         <div class="doc-selector-title-row">
@@ -88,6 +88,8 @@
       </div>
 
     </div>
+
+    <app-resize-divider [minLeft]="200" [minRight]="280" (leftWidthChange)="onPanelResize(0, $event)"></app-resize-divider>
 
     <div class="doc-preview-col">
 
