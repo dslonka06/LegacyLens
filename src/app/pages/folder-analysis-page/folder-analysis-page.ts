@@ -1,5 +1,6 @@
 import { Component, NgZone, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CodeEditor } from '../../components/code-editor/code-editor';
@@ -38,7 +39,7 @@ const EXT_ICON: Record<string, string> = {
 @Component({
   selector: 'app-folder-analysis-page',
   standalone: true,
-  imports: [CommonModule, CodeEditor],
+  imports: [CommonModule, FormsModule, CodeEditor],
   templateUrl: './folder-analysis-page.html',
   styleUrl: './folder-analysis-page.scss',
 })
@@ -55,6 +56,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
   treeRoots: TreeItem[] = [];
   selectedFilePath: string | null = null;
+  treeSearch = '';
 
   // Held so tree-node clicks can read file content
   private uploadedFiles: File[] = [];
@@ -171,6 +173,30 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
   isFileSelected(file: TreeFile): boolean {
     return this.selectedFilePath === file.path;
+  }
+
+  get isSearching(): boolean {
+    return this.treeSearch.trim().length > 0;
+  }
+
+  get filteredFiles(): TreeFile[] {
+    const query = this.treeSearch.trim().toLowerCase();
+    if (!query) return [];
+    return this.allFilesFlat(this.treeRoots).filter(f =>
+      f.name.toLowerCase().includes(query)
+    );
+  }
+
+  private allFilesFlat(items: TreeItem[]): TreeFile[] {
+    const result: TreeFile[] = [];
+    for (const item of items) {
+      if (item.kind === 'file') {
+        result.push(item);
+      } else {
+        result.push(...this.allFilesFlat(item.children));
+      }
+    }
+    return result;
   }
 
   fileIcon(ext: string): string {

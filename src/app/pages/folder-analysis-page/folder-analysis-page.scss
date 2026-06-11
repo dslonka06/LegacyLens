@@ -92,6 +92,55 @@
   svg { width: 13px; height: 13px; opacity: 0.6; }
 }
 
+// ── File tree search ───────────────────────────────────────────────────────
+
+.tri-tree-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+
+  svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    opacity: 0.6;
+  }
+}
+
+.tri-tree-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  color: var(--text-content);
+  font-family: inherit;
+  min-width: 0;
+
+  &::placeholder { color: var(--text-muted); }
+}
+
+.tri-tree-search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 1px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  opacity: 0.6;
+  transition: opacity 0.12s;
+
+  &:hover { opacity: 1; }
+  svg { width: 11px; height: 11px; }
+}
+
 // ── File tree ──────────────────────────────────────────────────────────────
 
 .tri-tree-scroll {

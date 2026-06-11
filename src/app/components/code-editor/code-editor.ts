@@ -72,6 +72,7 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
   @Input() restoredFileName: string | null = null;
   @Input() restoredSourceCode: string | null = null;
   @Input() readOnly = false;
+  @Input() hideFolderUpload = false;
 
   @Output() readonly analyze = new EventEmitter<AnalysisSession>();
   @Output() readonly workspaceReady = new EventEmitter<WorkspaceProfile | null>();

@@ -3,6 +3,7 @@
   <div class="editor-column">
     <app-code-editor
       [readOnly]="true"
+      [hideFolderUpload]="true"
       [restoredFileName]="restoredFileName"
       [restoredSourceCode]="restoredSourceCode"
       (analyze)="onSessionCreated($event)"
