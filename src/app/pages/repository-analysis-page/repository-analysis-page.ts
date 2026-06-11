@@ -1,10 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, NgZone, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { CodeEditor } from '../../components/code-editor/code-editor';
 import { AnalysisPanel } from '../../components/analysis-panel/analysis-panel';
 import { WorkspaceSummary } from '../../components/workspace-summary/workspace-summary';
-import { RepositoryCallout } from '../../components/repository-callout/repository-callout';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { WorkspaceProfile } from '../../models/workspace.model';
 import { WorkspaceContext } from '../../models/workspace-context.model';
@@ -40,7 +39,7 @@ const EXT_ICON: Record<string, string> = {
 @Component({
   selector: 'app-repository-analysis-page',
   standalone: true,
-  imports: [CommonModule, CodeEditor, AnalysisPanel, WorkspaceSummary, RepositoryCallout],
+  imports: [CommonModule, CodeEditor, AnalysisPanel, WorkspaceSummary],
   templateUrl: './repository-analysis-page.html',
   styleUrl: './repository-analysis-page.scss',
 })
@@ -63,6 +62,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly history: HistoryService,
+    private readonly zone: NgZone,
   ) {}
 
   ngOnInit(): void {
@@ -158,8 +158,10 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
     const reader = new FileReader();
     reader.onload = () => {
-      this.restoredFileName = file.name;
-      this.restoredSourceCode = reader.result as string;
+      this.zone.run(() => {
+        this.restoredFileName = file.name;
+        this.restoredSourceCode = reader.result as string;
+      });
     };
     reader.readAsText(raw);
   }
@@ -189,11 +191,5 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   get showWorkspaceSummary(): boolean {
     return this.workspaceProfile !== null;
-  }
-
-  get showRepositoryCallout(): boolean {
-    if (!this.workspaceProfile) return false;
-    const t = this.workspaceProfile.workspaceType;
-    return t === 'Project' || t === 'Repository';
   }
 }

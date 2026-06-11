@@ -42,13 +42,7 @@
     </div>
 
     <div class="tri-right-scroll">
-      <ng-container *ngIf="showWorkspaceSummary">
-        <app-workspace-summary [profile]="workspaceProfile"></app-workspace-summary>
-        <app-repository-callout
-          *ngIf="showRepositoryCallout"
-          [context]="workspaceContext">
-        </app-repository-callout>
-      </ng-container>
+      <app-workspace-summary *ngIf="showWorkspaceSummary" [profile]="workspaceProfile"></app-workspace-summary>
       <app-analysis-panel [session]="session"></app-analysis-panel>
     </div>
   </div>
