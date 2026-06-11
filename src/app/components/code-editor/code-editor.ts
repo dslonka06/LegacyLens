@@ -258,6 +258,16 @@ export class CodeEditor implements OnChanges, OnDestroy {
     });
   }
 
+  loadFile(name: string, content: string): void {
+    this.fileName = name;
+    this.code = content;
+    this.lastAnalyzedLabel = null;
+    const lang = this.languageFromFileName(name) ?? this.languageFromContent(content);
+    this.applyMonacoLanguage(lang);
+    this.editorInstance?.setValue(content);
+    this.cdr.detectChanges();
+  }
+
   clearFile(): void {
     this.code = '';
     this.fileName = 'untitled.txt';

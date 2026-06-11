@@ -1,4 +1,4 @@
-import { Component, NgZone, OnInit, OnDestroy } from '@angular/core';
+import { Component, NgZone, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { CodeEditor } from '../../components/code-editor/code-editor';
@@ -44,6 +44,8 @@ const EXT_ICON: Record<string, string> = {
   styleUrl: './repository-analysis-page.scss',
 })
 export class RepositoryAnalysisPage implements OnInit, OnDestroy {
+
+  @ViewChild(CodeEditor) private editor!: CodeEditor;
 
   session: AnalysisSession | null = null;
   workspaceProfile: WorkspaceProfile | null = null;
@@ -159,8 +161,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     const reader = new FileReader();
     reader.onload = () => {
       this.zone.run(() => {
-        this.restoredFileName = file.name;
-        this.restoredSourceCode = reader.result as string;
+        this.editor.loadFile(file.name, reader.result as string);
       });
     };
     reader.readAsText(raw);
