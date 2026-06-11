@@ -1,26 +1,94 @@
-<div class="analysis-page">
+<div class="tri-layout">
 
-  <div class="editor-column">
+  <!-- ── Left: File Tree ───────────────────────────────────────────────────── -->
+  <div class="tri-left">
+    <div class="tri-panel-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+        <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+        <line x1="12" y1="12" x2="12" y2="15"/>
+      </svg>
+      <span>Repository</span>
+    </div>
+
+    <div class="tri-tree-scroll">
+      <ng-container *ngIf="hasTree; else noTree">
+        <ng-container *ngFor="let item of treeRoots">
+          <ng-container *ngTemplateOutlet="treeItemTpl; context: { $implicit: item, depth: 0 }"></ng-container>
+        </ng-container>
+      </ng-container>
+      <ng-template #noTree>
+        <div class="tri-tree-empty">Upload a repository folder to explore</div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- ── Center: Code Editor ───────────────────────────────────────────────── -->
+  <div class="tri-center">
     <app-code-editor
       [restoredFileName]="restoredFileName"
       [restoredSourceCode]="restoredSourceCode"
       (analyze)="onSessionCreated($event)"
-      (workspaceReady)="onWorkspaceReady($event)">
+      (workspaceReady)="onWorkspaceReady($event)"
+      (filesUploaded)="onFilesUploaded($event)">
     </app-code-editor>
   </div>
 
-  <div class="results-column">
-
-    <div class="workspace-context-strip" *ngIf="showWorkspaceSummary">
-      <app-workspace-summary [profile]="workspaceProfile"></app-workspace-summary>
-      <app-repository-callout
-        *ngIf="showRepositoryCallout"
-        [context]="workspaceContext">
-      </app-repository-callout>
+  <!-- ── Right: Info Panel ─────────────────────────────────────────────────── -->
+  <div class="tri-right">
+    <div class="tri-panel-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+      </svg>
+      <span>Intelligence</span>
     </div>
 
-    <app-analysis-panel [session]="session"></app-analysis-panel>
-
+    <div class="tri-right-scroll">
+      <ng-container *ngIf="showWorkspaceSummary">
+        <app-workspace-summary [profile]="workspaceProfile"></app-workspace-summary>
+        <app-repository-callout
+          *ngIf="showRepositoryCallout"
+          [context]="workspaceContext">
+        </app-repository-callout>
+      </ng-container>
+      <app-analysis-panel [session]="session"></app-analysis-panel>
+    </div>
   </div>
 
 </div>
+
+<!-- ── Tree item template ─────────────────────────────────────────────────── -->
+<ng-template #treeItemTpl let-item let-depth="depth">
+
+  <!-- Folder -->
+  <div *ngIf="item.kind === 'folder'"
+       class="tree-folder"
+       [style.padding-left.px]="depth * 14 + 8"
+       (click)="toggleFolder(item)">
+    <svg class="tree-caret" [class.tree-caret-open]="item.expanded"
+         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
+    <svg class="tree-folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+    </svg>
+    <span class="tree-name">{{ item.name }}</span>
+    <span class="tree-count">{{ item.fileCount }}</span>
+  </div>
+  <ng-container *ngIf="item.kind === 'folder' && item.expanded">
+    <ng-container *ngFor="let child of item.children">
+      <ng-container *ngTemplateOutlet="treeItemTpl; context: { $implicit: child, depth: depth + 1 }"></ng-container>
+    </ng-container>
+  </ng-container>
+
+  <!-- File -->
+  <div *ngIf="item.kind === 'file'"
+       class="tree-file"
+       [class.tree-file-active]="isFileSelected(item)"
+       [style.padding-left.px]="depth * 14 + 22"
+       (click)="selectFile(item)">
+    <span class="tree-file-icon">{{ fileIcon(item.extension) }}</span>
+    <span class="tree-name">{{ item.name }}</span>
+  </div>
+
+</ng-template>

@@ -75,6 +75,7 @@ export class CodeEditor implements OnChanges, OnDestroy {
   @Output() readonly analyze = new EventEmitter<AnalysisSession>();
   @Output() readonly workspaceReady = new EventEmitter<WorkspaceProfile | null>();
   @Output() readonly knowledgeReady = new EventEmitter<RepositoryKnowledge>();
+  @Output() readonly filesUploaded = new EventEmitter<File[]>();
 
   code = '';
   fileName = 'untitled.txt';
@@ -267,6 +268,7 @@ export class CodeEditor implements OnChanges, OnDestroy {
     this.knowledgeService.clear();
     this.currentWorkspace.clear();
     this.workspaceReady.emit(null);
+    this.filesUploaded.emit([]);
     this.editorInstance?.setValue('');
     this.applyMonacoLanguage('plaintext');
     this.cdr.detectChanges();
@@ -308,6 +310,7 @@ export class CodeEditor implements OnChanges, OnDestroy {
     this.workspaceProfile = this.workspaceClassifier.classify(metadata);
     this.currentWorkspace.set(this.workspaceProfile, files);
     this.workspaceReady.emit(this.workspaceProfile);
+    this.filesUploaded.emit(files);
 
     // Stage 3: async knowledge pipeline — starts after workspaceReady so the
     // UI can render the structure panels before file reading begins.

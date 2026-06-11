@@ -6,7 +6,9 @@
   height: 100%;
 }
 
-.analysis-page {
+// ── Three-column layout ────────────────────────────────────────────────────
+
+.tri-layout {
   display: flex;
   flex: 1;
   min-width: 0;
@@ -14,34 +16,167 @@
   height: 100%;
 }
 
-.editor-column {
+// ── Left: file tree ────────────────────────────────────────────────────────
+
+.tri-left {
+  width: 220px;
+  min-width: 160px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  width: 42%;
-  min-width: 0;
-  min-height: 0;
+  border-right: 1px solid var(--border);
   overflow: hidden;
-  flex-shrink: 0;
 }
 
-.results-column {
-  display: flex;
-  flex-direction: column;
+// ── Center: editor ─────────────────────────────────────────────────────────
+
+.tri-center {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
   overflow: hidden;
 
-  .workspace-context-strip {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 10px 14px 0;
-    flex-shrink: 0;
-  }
-
-  app-analysis-panel {
+  app-code-editor {
     flex: 1;
     min-height: 0;
     overflow: hidden;
   }
+}
+
+// ── Right: info ────────────────────────────────────────────────────────────
+
+.tri-right {
+  width: 300px;
+  min-width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tri-right-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  app-analysis-panel {
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+// ── Shared panel header ────────────────────────────────────────────────────
+
+.tri-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  svg { width: 13px; height: 13px; opacity: 0.6; }
+}
+
+// ── File tree ──────────────────────────────────────────────────────────────
+
+.tri-tree-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+}
+
+.tri-tree-empty {
+  padding: 24px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.tree-folder {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  margin: 0 4px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+
+  &:hover { background: var(--bg-hover); color: var(--text-content); }
+}
+
+.tree-caret {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  opacity: 0.45;
+  transition: transform 0.12s;
+  &.tree-caret-open { transform: rotate(90deg); }
+}
+
+.tree-folder-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: var(--accent);
+  opacity: 0.75;
+}
+
+.tree-file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  margin: 0 4px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+
+  &:hover { background: var(--bg-hover); color: var(--text-content); }
+
+  &.tree-file-active {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--text-content);
+  }
+}
+
+.tree-file-icon { font-size: 11px; flex-shrink: 0; }
+
+.tree-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 1px 5px;
+  flex-shrink: 0;
 }
