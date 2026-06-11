@@ -100,7 +100,7 @@
       <!-- File selected -->
       <div class="fap-intel-content" *ngIf="selectedNode">
         <div class="fap-intel-filename">
-          <span class="fap-file-icon">{{ fileIcon(selectedNode.path?.split('.').pop() ?? '') }}</span>
+          <span class="fap-file-icon">{{ fileIcon(selectedNode.path.split('.').pop() ?? '') }}</span>
           <span class="fap-intel-name">{{ selectedNode.name }}</span>
         </div>
 

@@ -54,7 +54,7 @@
             <div class="arch-confidence-fill" [style.width.%]="confidencePercent(p)"></div>
           </div>
           <p class="arch-pattern-summary">{{ architectureDescription(p.name) }}</p>
-          <div class="arch-indicators" *ngIf="p.indicators?.length">
+          <div class="arch-indicators" *ngIf="p.indicators.length">
             <span class="arch-indicator-tag" *ngFor="let ind of p.indicators.slice(0, 5)">{{ ind }}</span>
           </div>
         </div>
