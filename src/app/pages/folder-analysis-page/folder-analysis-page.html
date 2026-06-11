@@ -32,7 +32,7 @@
     </app-code-editor>
   </div>
 
-  <!-- ── Right: Info Panel ─────────────────────────────────────────────────── -->
+  <!-- ── Right: Intelligence Panel ───────────────────────────────────────── -->
   <div class="tri-right">
     <div class="tri-panel-header">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -42,8 +42,102 @@
     </div>
 
     <div class="tri-right-scroll">
-      <app-workspace-summary *ngIf="showWorkspaceSummary" [profile]="workspaceProfile"></app-workspace-summary>
-      <app-analysis-panel [session]="session"></app-analysis-panel>
+
+      <!-- Empty state -->
+      <div *ngIf="!hasWorkspace" class="intel-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+        <p>Upload a folder to see an overview</p>
+      </div>
+
+      <ng-container *ngIf="hasWorkspace">
+
+        <!-- 1. Folder Overview -->
+        <div class="intel-card">
+          <div class="intel-card-title">Folder Overview</div>
+          <div class="intel-row">
+            <span class="intel-label">Name</span>
+            <span class="intel-value">{{ folderName }}</span>
+          </div>
+          <div class="intel-row">
+            <span class="intel-label">Type</span>
+            <span class="intel-value">{{ folderTypeLabel }}</span>
+          </div>
+          <div class="intel-row">
+            <span class="intel-label">Files</span>
+            <span class="intel-value">{{ fileCount }}</span>
+          </div>
+          <div class="intel-row">
+            <span class="intel-label">Subfolders</span>
+            <span class="intel-value">{{ subfolderCount }}</span>
+          </div>
+        </div>
+
+        <!-- 2. Folder Summary -->
+        <div class="intel-card">
+          <div class="intel-card-title">Folder Summary</div>
+          <p class="intel-summary">
+            <strong>{{ folderName }}</strong> is a {{ folderTypeLabel.toLowerCase() }} folder
+            containing {{ fileCount }} files across {{ subfolderCount }} subfolder{{ subfolderCount !== 1 ? 's' : '' }}.
+            <ng-container *ngIf="languagesPresent !== '—'">Languages present: {{ languagesPresent }}. </ng-container>
+            Use the pages below to explore its structure and code quality in detail.
+          </p>
+        </div>
+
+        <!-- 3. Quick Statistics -->
+        <div class="intel-card">
+          <div class="intel-card-title">Quick Statistics</div>
+          <div class="intel-row">
+            <span class="intel-label">Languages Present</span>
+            <span class="intel-value">{{ languagesPresent }}</span>
+          </div>
+          <div class="intel-row">
+            <span class="intel-label">Largest File</span>
+            <span class="intel-value">{{ largestFile }}</span>
+          </div>
+          <div class="intel-row">
+            <span class="intel-label">Avg. File Size</span>
+            <span class="intel-value">{{ averageFileSize }}</span>
+          </div>
+        </div>
+
+        <!-- 4. Explore Deeper -->
+        <div class="intel-card">
+          <div class="intel-card-title">Explore Deeper</div>
+          <div class="intel-nav-list">
+            <button class="intel-nav-btn" (click)="navigateTo('folder-analysis/architecture')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              </svg>
+              Architecture
+            </button>
+            <button class="intel-nav-btn" (click)="navigateTo('folder-analysis/data-flow')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+              Data Flow
+            </button>
+            <button class="intel-nav-btn" (click)="navigateTo('folder-analysis/code-recommendations')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+              </svg>
+              Code Recommendations
+            </button>
+            <button class="intel-nav-btn" (click)="navigateTo('folder-analysis/documentation')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+              Documentation
+            </button>
+          </div>
+        </div>
+
+      </ng-container>
     </div>
   </div>
 

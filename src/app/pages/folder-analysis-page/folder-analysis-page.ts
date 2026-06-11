@@ -1,9 +1,8 @@
 import { Component, NgZone, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CodeEditor } from '../../components/code-editor/code-editor';
-import { AnalysisPanel } from '../../components/analysis-panel/analysis-panel';
-import { WorkspaceSummary } from '../../components/workspace-summary/workspace-summary';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { WorkspaceProfile } from '../../models/workspace.model';
 import { WorkspaceContext } from '../../models/workspace-context.model';
@@ -39,7 +38,7 @@ const EXT_ICON: Record<string, string> = {
 @Component({
   selector: 'app-folder-analysis-page',
   standalone: true,
-  imports: [CommonModule, CodeEditor, AnalysisPanel, WorkspaceSummary],
+  imports: [CommonModule, CodeEditor],
   templateUrl: './folder-analysis-page.html',
   styleUrl: './folder-analysis-page.scss',
 })
@@ -66,6 +65,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly history: HistoryService,
     private readonly zone: NgZone,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -186,13 +186,69 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     });
   }
 
+  navigateTo(path: string): void {
+    this.router.navigate([path]);
+  }
+
   // ── Display helpers ───────────────────────────────────────────────────────
 
   get hasTree(): boolean {
     return this.treeRoots.length > 0;
   }
 
-  get showWorkspaceSummary(): boolean {
+  get hasWorkspace(): boolean {
     return this.workspaceProfile !== null;
+  }
+
+  get folderName(): string {
+    return this.workspaceContext?.workspaceName ?? 'Folder';
+  }
+
+  get folderTypeLabel(): string {
+    const name = this.folderName.toLowerCase();
+    if (name.includes('service')) return 'Services';
+    if (name.includes('controller')) return 'Controllers';
+    if (name.includes('component')) return 'Components';
+    if (name.includes('model')) return 'Models';
+    if (name.includes('util') || name.includes('helper')) return 'Utilities';
+    if (name.includes('test') || name.includes('spec')) return 'Tests';
+    if (name.includes('config')) return 'Configuration';
+    const structure = this.workspaceProfile?.repositoryStructure;
+    if (structure) {
+      const types = structure.projects.map(p => p.type);
+      const unique = [...new Set(types)];
+      if (unique.length === 1) return unique[0];
+    }
+    return 'Mixed';
+  }
+
+  get fileCount(): number {
+    return this.workspaceProfile?.totalFiles ?? 0;
+  }
+
+  get subfolderCount(): number {
+    return this.workspaceProfile?.repositoryStructure?.root.children.length ?? 0;
+  }
+
+  get languagesPresent(): string {
+    const langs = this.workspaceProfile?.languages ?? [];
+    return langs.length > 0 ? langs.join(', ') : '—';
+  }
+
+  get largestFile(): string {
+    const files = this.workspaceProfile?.files ?? [];
+    if (files.length === 0) return '—';
+    const largest = files.reduce((a, b) => (a.size > b.size ? a : b));
+    const kb = (largest.size / 1024).toFixed(1);
+    return `${largest.name} (${kb} KB)`;
+  }
+
+  get averageFileSize(): string {
+    const files = this.workspaceProfile?.files ?? [];
+    if (files.length === 0) return '—';
+    const total = files.reduce((sum, f) => sum + f.size, 0);
+    const avg = total / files.length;
+    if (avg < 1024) return `${avg.toFixed(0)} B`;
+    return `${(avg / 1024).toFixed(1)} KB`;
   }
 }

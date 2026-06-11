@@ -1,9 +1,8 @@
 import { Component, NgZone, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CodeEditor } from '../../components/code-editor/code-editor';
-import { AnalysisPanel } from '../../components/analysis-panel/analysis-panel';
-import { WorkspaceSummary } from '../../components/workspace-summary/workspace-summary';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { WorkspaceProfile } from '../../models/workspace.model';
 import { WorkspaceContext } from '../../models/workspace-context.model';
@@ -39,7 +38,7 @@ const EXT_ICON: Record<string, string> = {
 @Component({
   selector: 'app-repository-analysis-page',
   standalone: true,
-  imports: [CommonModule, CodeEditor, AnalysisPanel, WorkspaceSummary],
+  imports: [CommonModule, CodeEditor],
   templateUrl: './repository-analysis-page.html',
   styleUrl: './repository-analysis-page.scss',
 })
@@ -65,6 +64,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly history: HistoryService,
     private readonly zone: NgZone,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -184,13 +184,66 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     });
   }
 
+  navigateTo(path: string): void {
+    this.router.navigate([path]);
+  }
+
   // ── Display helpers ───────────────────────────────────────────────────────
 
   get hasTree(): boolean {
     return this.treeRoots.length > 0;
   }
 
-  get showWorkspaceSummary(): boolean {
+  get hasWorkspace(): boolean {
     return this.workspaceProfile !== null;
+  }
+
+  get repoName(): string {
+    return this.workspaceContext?.workspaceName ?? 'Repository';
+  }
+
+  get repoTypeLabel(): string {
+    const structure = this.workspaceProfile?.repositoryStructure;
+    if (!structure) return 'Multi-File';
+    const types = structure.projects.map(p => p.type);
+    const unique = [...new Set(types)];
+    if (unique.length === 0) return 'Repository';
+    if (unique.length === 1) return unique[0];
+    return 'Mixed';
+  }
+
+  get primaryLanguage(): string {
+    return this.workspaceProfile?.languages[0] ?? '—';
+  }
+
+  get frameworks(): string {
+    if (!this.workspaceProfile) return '—';
+    const detected = this.workspaceProfile.detectedTechnologies
+      ?.filter(t => t.category === 'Framework' || t.category === 'Runtime')
+      .map(t => t.technology);
+    if (detected && detected.length > 0) return detected.join(', ');
+    return this.workspaceProfile.technologies.slice(0, 3).join(', ') || '—';
+  }
+
+  get projectCount(): number {
+    return this.workspaceProfile?.repositoryStructure?.projects.length ?? 0;
+  }
+
+  get fileCount(): number {
+    return this.workspaceProfile?.totalFiles ?? 0;
+  }
+
+  get languagesDetected(): string {
+    const langs = this.workspaceProfile?.languages ?? [];
+    return langs.length > 0 ? langs.join(', ') : '—';
+  }
+
+  get estimatedSize(): string {
+    const files = this.workspaceProfile?.files ?? [];
+    const bytes = files.reduce((sum, f) => sum + f.size, 0);
+    if (bytes === 0) return '—';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 }
