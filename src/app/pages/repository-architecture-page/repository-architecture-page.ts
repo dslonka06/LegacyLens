@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ArchitecturePattern, RepositoryKnowledge } from '../../models/knowledge.model';
+import { AnalysisSession } from '../../models/analysis-session.model';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
+import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { DependencyExplorerService } from '../../services/dependency-explorer.service';
 
 @Component({
@@ -17,6 +19,7 @@ import { DependencyExplorerService } from '../../services/dependency-explorer.se
 export class RepositoryArchitecturePage implements OnInit, OnDestroy {
 
   knowledge: RepositoryKnowledge | null = null;
+  session: AnalysisSession | null = null;
   hasWorkspace = false;
 
   private subs: Subscription[] = [];
@@ -24,6 +27,7 @@ export class RepositoryArchitecturePage implements OnInit, OnDestroy {
   constructor(
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly workspace: CurrentWorkspaceService,
+    private readonly currentAnalysis: CurrentAnalysisService,
     private readonly depExplorer: DependencyExplorerService,
   ) {}
 
@@ -33,6 +37,7 @@ export class RepositoryArchitecturePage implements OnInit, OnDestroy {
     this.subs.push(
       this.knowledgeService.knowledge$.subscribe(k => { this.knowledge = k; }),
       this.workspace.context$.subscribe(ctx => { this.hasWorkspace = ctx !== null; }),
+      this.currentAnalysis.session$.subscribe(s => { this.session = s; }),
     );
   }
 
@@ -78,6 +83,19 @@ export class RepositoryArchitecturePage implements OnInit, OnDestroy {
 
   confidencePercent(p: ArchitecturePattern): number {
     return Math.round((p.confidence ?? 0) * 100);
+  }
+
+  get isAiPowered(): boolean {
+    const arch = this.session?.aiAnalysis?.architecture;
+    return !!(arch && (arch.patterns.length > 0 || arch.responsibilities.length > 0));
+  }
+
+  get aiResponsibilities(): string[] {
+    return this.session?.aiAnalysis?.architecture?.responsibilities ?? [];
+  }
+
+  get aiDependencies(): string[] {
+    return this.session?.aiAnalysis?.architecture?.dependencies ?? [];
   }
 
   architectureDescription(name: string): string {

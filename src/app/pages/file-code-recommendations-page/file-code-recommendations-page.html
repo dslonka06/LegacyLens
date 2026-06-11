@@ -10,6 +10,7 @@
         </svg>
         <span>Recommendations</span>
         <span class="rcr-total-badge">{{ recommendations.length }}</span>
+        <span class="rcr-ai-badge" *ngIf="isAiPowered">AI</span>
       </div>
 
       <div class="rcr-explorer-scroll">

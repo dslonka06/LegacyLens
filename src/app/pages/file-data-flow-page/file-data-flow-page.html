@@ -13,10 +13,23 @@
         <p class="page-subtitle" *ngIf="!session">Execution path and data movement</p>
       </div>
     </div>
+    <div class="ai-badge" *ngIf="isAiPowered">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/>
+      </svg>
+      AI-Enhanced
+    </div>
   </div>
 
   <div class="page-content" *ngIf="session; else noSession">
 
+    <!-- AI workflow narrative -->
+    <div class="doc-block" *ngIf="isAiPowered">
+      <div class="doc-block-label">AI-Generated Workflow Analysis</div>
+      <p class="flow-narrative">{{ aiWorkflow }}</p>
+    </div>
+
+    <!-- Pattern-based execution flow -->
     <div class="doc-block" *ngIf="flowSteps.length > 0">
       <div class="doc-block-label">Execution Flow</div>
       <div class="flow-steps">
@@ -33,7 +46,7 @@
       <p class="flow-raw">{{ session.analysis.dataFlow }}</p>
     </div>
 
-    <div class="doc-block" *ngIf="!session.analysis.dataFlow">
+    <div class="doc-block" *ngIf="!session.analysis.dataFlow && !isAiPowered">
       <div class="arch-empty-state">No data flow information available for this file.</div>
     </div>
 

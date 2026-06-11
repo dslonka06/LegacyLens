@@ -5,9 +5,11 @@ import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { RepositoryKnowledge, SourceFile } from '../../models/knowledge.model';
+import { AnalysisSession } from '../../models/analysis-session.model';
 import { CodeRecommendation } from '../../models/code-recommendation.model';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
+import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { ThemeService } from '../../services/theme.service';
 
 type CategoryKey = 'issues' | 'modernization' | 'security';
@@ -22,6 +24,7 @@ type CategoryKey = 'issues' | 'modernization' | 'security';
 export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
 
   knowledge: RepositoryKnowledge | null = null;
+  session: AnalysisSession | null = null;
   hasWorkspace = false;
 
   recommendations: CodeRecommendation[] = [];
@@ -45,6 +48,7 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
   constructor(
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly workspace: CurrentWorkspaceService,
+    private readonly currentAnalysis: CurrentAnalysisService,
     private readonly themeService: ThemeService,
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
@@ -66,6 +70,11 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
       }),
       this.workspace.context$.subscribe(ctx => {
         this.hasWorkspace = ctx !== null;
+        this.cdr.detectChanges();
+      }),
+      this.currentAnalysis.session$.subscribe(s => {
+        this.session = s;
+        if (this.knowledge) this.buildRecommendations(this.knowledge);
         this.cdr.detectChanges();
       }),
     );
@@ -190,6 +199,40 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
       }
     }
 
+    // Merge AI-generated risks and modernizations when available
+    const ai = this.session?.aiAnalysis;
+    const primaryFile = this.firstFileName(sourceFiles);
+    if (ai?.risks?.length) {
+      ai.risks.forEach((r, i) => {
+        if (!recs.some(rec => rec.title === r.title)) {
+          recs.push({
+            id: `ai-risk-${i}`,
+            title: r.title,
+            fileName: primaryFile,
+            category: 'issues',
+            severity: (r.severity?.toLowerCase() ?? 'medium') as CodeRecommendation['severity'],
+            description: r.description,
+            searchTerm: r.title.split(' ')[0],
+          });
+        }
+      });
+    }
+    if (ai?.modernizations?.length) {
+      ai.modernizations.forEach((m, i) => {
+        if (!recs.some(rec => rec.title === m.title)) {
+          recs.push({
+            id: `ai-modern-${i}`,
+            title: m.title,
+            fileName: primaryFile,
+            category: 'modernization',
+            severity: 'low',
+            description: m.description,
+            searchTerm: m.title.split(' ')[0],
+          });
+        }
+      });
+    }
+
     this.recommendations = recs;
   }
 
@@ -204,6 +247,11 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
   get securityRecs():      CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'security'); }
 
   get workspaceName(): string { return this.workspace.context?.workspaceName ?? 'Folder'; }
+
+  get isAiPowered(): boolean {
+    return (this.session?.aiAnalysis?.risks?.length ?? 0) > 0 ||
+           (this.session?.aiAnalysis?.modernizations?.length ?? 0) > 0;
+  }
 
   // ── Category collapse ──────────────────────────────────────────────────────
 
@@ -332,6 +380,6 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
   // ── Display helpers ────────────────────────────────────────────────────────
 
   severityClass(s: string): string {
-    return ({ high: 'sev-high', medium: 'sev-medium', low: 'sev-low' } as any)[s] ?? 'sev-low';
+    return ({ high: 'sev-high', medium: 'sev-medium', low: 'sev-low', info: 'sev-info' } as any)[s] ?? 'sev-low';
   }
 }

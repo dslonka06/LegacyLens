@@ -13,9 +13,21 @@
         <p class="page-subtitle" *ngIf="!workspaceName">Module dependency and data movement</p>
       </div>
     </div>
+    <div class="ai-badge" *ngIf="isAiPowered">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/>
+      </svg>
+      AI-Enhanced
+    </div>
   </div>
 
   <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
+
+    <!-- AI workflow narrative -->
+    <div class="doc-block" *ngIf="isAiPowered">
+      <div class="doc-block-label">AI-Generated Workflow Analysis</div>
+      <p class="flow-narrative">{{ aiWorkflow }}</p>
+    </div>
 
     <!-- Flow Summary -->
     <div class="doc-block">

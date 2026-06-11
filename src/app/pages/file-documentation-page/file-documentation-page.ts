@@ -43,6 +43,7 @@ export class FileDocumentationPage implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.buildSummary();
     this.subs.push(
+      this.currentAnalysis.session$.subscribe(s => { if (s) this.buildSummary(); }),
       this.knowledgeService.knowledge$.subscribe(k => { if (k) this.buildSummary(); }),
       this.currentWorkspace.context$.subscribe(() => this.buildSummary()),
     );

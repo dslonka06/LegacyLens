@@ -3,9 +3,11 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { RepositoryKnowledge } from '../../models/knowledge.model';
+import { AnalysisSession } from '../../models/analysis-session.model';
 import { BehaviorInsights, WorkflowSummary } from '../../models/data-flow.model';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
+import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { DataFlowDiscoveryService } from '../../services/data-flow-discovery.service';
 import { WorkflowExplorerService } from '../../services/workflow-explorer.service';
 
@@ -19,6 +21,7 @@ import { WorkflowExplorerService } from '../../services/workflow-explorer.servic
 export class RepositoryDataFlowPage implements OnInit, OnDestroy {
 
   knowledge: RepositoryKnowledge | null = null;
+  session: AnalysisSession | null = null;
   hasWorkspace = false;
   workflowSummaries: WorkflowSummary[] = [];
   behaviorInsights: BehaviorInsights | null = null;
@@ -29,6 +32,7 @@ export class RepositoryDataFlowPage implements OnInit, OnDestroy {
   constructor(
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly workspace: CurrentWorkspaceService,
+    private readonly currentAnalysis: CurrentAnalysisService,
     private readonly discovery: DataFlowDiscoveryService,
     private readonly workflowExplorer: WorkflowExplorerService,
   ) {}
@@ -40,6 +44,7 @@ export class RepositoryDataFlowPage implements OnInit, OnDestroy {
     this.subs.push(
       this.knowledgeService.knowledge$.subscribe(k => { this.knowledge = k; this.buildFlows(k); }),
       this.workspace.context$.subscribe(ctx => { this.hasWorkspace = ctx !== null; }),
+      this.currentAnalysis.session$.subscribe(s => { this.session = s; }),
     );
   }
 
@@ -59,6 +64,12 @@ export class RepositoryDataFlowPage implements OnInit, OnDestroy {
 
   get workspaceName(): string { return this.workspace.context?.workspaceName ?? 'Repository'; }
   get hasDataFlow(): boolean  { return this.workflowSummaries.length > 0 || (this.behaviorInsights?.entryPoints.length ?? 0) > 0; }
+
+  get aiWorkflow(): string | null {
+    return this.session?.aiAnalysis?.documentation?.workflow ?? null;
+  }
+
+  get isAiPowered(): boolean { return this.aiWorkflow !== null; }
 
   get workflowCategoryGroups(): { label: string; count: number }[] {
     const counts = new Map<string, number>();

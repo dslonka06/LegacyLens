@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { AnalysisSession } from '../../models/analysis-session.model';
 
@@ -11,21 +12,42 @@ import { AnalysisSession } from '../../models/analysis-session.model';
   templateUrl: './file-data-flow-page.html',
   styleUrl: './file-data-flow-page.scss'
 })
-export class FileDataFlowPage implements OnInit {
+export class FileDataFlowPage implements OnInit, OnDestroy {
 
   session: AnalysisSession | null = null;
   flowSteps: string[] = [];
+  aiWorkflow: string | null = null;
+
+  private sub: Subscription | null = null;
 
   constructor(private readonly currentAnalysis: CurrentAnalysisService) {}
 
   ngOnInit(): void {
-    this.session = this.currentAnalysis.getSession();
-    if (this.session?.analysis?.dataFlow) {
-      this.flowSteps = this.session.analysis.dataFlow
-        .split(/→|->/)
-        .map(s => s.trim())
-        .filter(Boolean);
-    }
+    this.sub = this.currentAnalysis.session$.subscribe(s => {
+      this.session = s;
+      this.buildFlow(s);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
+
+  private buildFlow(session: AnalysisSession | null): void {
+    if (!session) { this.flowSteps = []; this.aiWorkflow = null; return; }
+
+    // AI workflow narrative takes precedence — surface as the primary insight text
+    this.aiWorkflow = session.aiAnalysis?.documentation?.workflow ?? null;
+
+    // Pattern-based dataFlow string → numbered steps
+    const raw = session.analysis?.dataFlow;
+    this.flowSteps = raw
+      ? raw.split(/→|->/).map(s => s.trim()).filter(Boolean)
+      : [];
+  }
+
+  get isAiPowered(): boolean {
+    return this.aiWorkflow !== null;
   }
 
   getStepClass(index: number, total: number): string {

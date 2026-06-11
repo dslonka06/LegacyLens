@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 
@@ -11,15 +12,18 @@ import { CurrentAnalysisService } from '../../services/current-analysis.service'
   templateUrl: './file-architecture-page.html',
   styleUrl: './file-architecture-page.scss'
 })
-export class FileArchitecturePage implements OnInit {
+export class FileArchitecturePage implements OnInit, OnDestroy {
 
   session: AnalysisSession | null = null;
+  private sub: Subscription | null = null;
 
   constructor(private readonly currentAnalysis: CurrentAnalysisService) {}
 
   ngOnInit(): void {
-    this.session = this.currentAnalysis.getSession();
+    this.sub = this.currentAnalysis.session$.subscribe(s => { this.session = s; });
   }
+
+  ngOnDestroy(): void { this.sub?.unsubscribe(); }
 
   get isAiPowered(): boolean {
     const arch = this.session?.aiAnalysis?.architecture;

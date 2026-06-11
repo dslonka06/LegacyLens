@@ -50,6 +50,7 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
   private editorInstance: any = null;
   private decorationIds: string[] = [];
   private themeSub: Subscription | null = null;
+  private sessionSub: Subscription | null = null;
 
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
@@ -60,13 +61,18 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.editorOptions = this.buildEditorOptions();
-    this.session = this.currentAnalysis.getSession();
-    this.hasSession = this.session !== null;
-    if (this.session) this.buildRecommendations(this.session);
+    this.sessionSub = this.currentAnalysis.session$.subscribe(s => {
+      this.session = s;
+      this.hasSession = s !== null;
+      if (s) this.buildRecommendations(s);
+      else this.recommendations = [];
+      this.cdr.detectChanges();
+    });
   }
 
   ngOnDestroy(): void {
     this.themeSub?.unsubscribe();
+    this.sessionSub?.unsubscribe();
     this.editorInstance?.dispose();
   }
 
@@ -128,6 +134,11 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
   get securityRecs():      FileRec[] { return this.recommendations.filter(r => r.category === 'security'); }
 
   get fileName(): string { return this.session?.fileName ?? 'File'; }
+
+  get isAiPowered(): boolean {
+    return (this.session?.aiAnalysis?.risks?.length ?? 0) > 0 ||
+           (this.session?.aiAnalysis?.modernizations?.length ?? 0) > 0;
+  }
 
   // ── Category collapse ──────────────────────────────────────────────────────
 
