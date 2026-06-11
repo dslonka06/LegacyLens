@@ -33,6 +33,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/file-documentation-page/file-documentation-page').then(m => m.FileDocumentationPage)
   },
+  {
+    path: 'file-analysis/changes',
+    loadComponent: () =>
+      import('./pages/file-changes-page/file-changes-page').then(m => m.FileChangesPage)
+  },
 
   // ── Folder Analysis workspace ─────────────────────────────────────────────
   {
@@ -60,6 +65,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/folder-documentation-page/folder-documentation-page').then(m => m.FolderDocumentationPage)
   },
+  {
+    path: 'folder-analysis/changes',
+    loadComponent: () =>
+      import('./pages/folder-changes-page/folder-changes-page').then(m => m.FolderChangesPage)
+  },
 
   // ── Repository Analysis workspace ──────────────────────────────────────────
   {
@@ -86,6 +96,11 @@ export const routes: Routes = [
     path: 'repository-analysis/documentation',
     loadComponent: () =>
       import('./pages/repository-documentation-page/repository-documentation-page').then(m => m.RepositoryDocumentationPage)
+  },
+  {
+    path: 'repository-analysis/changes',
+    loadComponent: () =>
+      import('./pages/repository-changes-page/repository-changes-page').then(m => m.RepositoryChangesPage)
   },
 
   // ── Global ─────────────────────────────────────────────────────────────────

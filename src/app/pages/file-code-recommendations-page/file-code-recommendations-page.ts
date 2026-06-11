@@ -6,6 +6,7 @@ import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { Subscription } from 'rxjs';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { ThemeService } from '../../services/theme.service';
+import { WorkspaceChangesService } from '../../services/workspace-changes.service';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { AiRisk } from '../../models/ai-analysis-result.model';
 import { ModernizationRecommendation } from '../../models/modernization-recommendation.model';
@@ -52,9 +53,15 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
   private themeSub: Subscription | null = null;
   private sessionSub: Subscription | null = null;
 
+  // Save state
+  private originalContent = '';
+  private currentFilePath = '';
+  saveStatus: 'idle' | 'saved' | 'modified' = 'idle';
+
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly themeService: ThemeService,
+    private readonly changes: WorkspaceChangesService,
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
   ) {}
@@ -153,10 +160,40 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
     this.loadFileForRecommendation(rec);
   }
 
+  saveChanges(): void {
+    if (!this.selected || this.editorCode === this.originalContent) return;
+    this.changes.saveChange(
+      'file',
+      this.currentFilePath,
+      this.originalContent,
+      this.editorCode,
+      {
+        recommendationId: this.selected.id,
+        recommendationTitle: this.selected.title,
+        category: this.selected.category,
+        severity: this.selected.severity,
+      },
+    );
+    this.saveStatus = 'saved';
+    this.cdr.detectChanges();
+  }
+
+  get isModified(): boolean {
+    return this.editorCode !== this.originalContent && this.originalContent !== '';
+  }
+
+  get isFileSaved(): boolean {
+    return this.saveStatus === 'saved' && !this.isModified;
+  }
+
   private loadFileForRecommendation(rec: FileRec): void {
     const content = this.session?.sourceCode ?? `// Source code not available.`;
     const ext = (rec.fileName.split('.').pop() ?? 'txt').toLowerCase();
     const language = this.languageFromExt(ext);
+
+    this.originalContent = content;
+    this.currentFilePath = this.session?.fileName ?? rec.fileName;
+    this.saveStatus = this.changes.isModified('file', this.currentFilePath) ? 'saved' : 'idle';
 
     this.editorOptions = { ...this.buildEditorOptions(), language };
     this.editorCode = content;

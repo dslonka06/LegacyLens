@@ -1,0 +1,88 @@
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { ModifiedFile } from '../../models/modified-file.model';
+import { WorkspaceChangesService, DiffLine } from '../../services/workspace-changes.service';
+import { ExportService } from '../../services/export.service';
+
+@Component({
+  selector: 'app-repository-changes-page',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  templateUrl: './repository-changes-page.html',
+  styleUrl: './repository-changes-page.scss',
+})
+export class RepositoryChangesPage implements OnInit, OnDestroy {
+
+  changes: ModifiedFile[] = [];
+  selected: ModifiedFile | null = null;
+  diff: DiffLine[] = [];
+
+  private sub: Subscription | null = null;
+
+  constructor(
+    private readonly changesService: WorkspaceChangesService,
+    private readonly exportService: ExportService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit(): void {
+    this.sub = this.changesService.changes$('repository').subscribe(c => {
+      this.changes = c;
+      if (this.selected) {
+        const refreshed = c.find(f => f.id === this.selected!.id) ?? null;
+        this.select(refreshed);
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  ngOnDestroy(): void { this.sub?.unsubscribe(); }
+
+  select(file: ModifiedFile | null): void {
+    this.selected = file;
+    this.diff = file ? this.changesService.computeDiff(file.originalContent, file.modifiedContent) : [];
+  }
+
+  approve(file: ModifiedFile): void { this.changesService.setStatus('repository', file.id, 'approved'); }
+  reject(file: ModifiedFile): void  { this.changesService.setStatus('repository', file.id, 'rejected'); }
+
+  restore(file: ModifiedFile): void {
+    this.changesService.restore('repository', file.id);
+    if (this.selected?.id === file.id) this.select(null);
+  }
+
+  approveAll(): void { this.changesService.setAllStatus('repository', 'approved'); }
+  rejectAll(): void  { this.changesService.setAllStatus('repository', 'rejected'); }
+
+  exportChanges(): void {
+    const approved = this.changes.filter(f => f.status === 'approved');
+    if (!approved.length) return;
+    this.exportService.exportAsZip(approved, 'ModifiedRepository.zip');
+  }
+
+  get addCount():     number { return this.diff.filter(l => l.type === 'added').length; }
+  get removeCount():  number { return this.diff.filter(l => l.type === 'removed').length; }
+  get pendingCount(): number { return this.changes.filter(f => f.status === 'pending').length; }
+  get approvedCount():number { return this.changes.filter(f => f.status === 'approved').length; }
+
+  totalAdds(f: ModifiedFile): number {
+    return this.changesService.computeDiff(f.originalContent, f.modifiedContent)
+      .filter(l => l.type === 'added').length;
+  }
+  totalRemoves(f: ModifiedFile): number {
+    return this.changesService.computeDiff(f.originalContent, f.modifiedContent)
+      .filter(l => l.type === 'removed').length;
+  }
+
+  statusClass(f: ModifiedFile): string {
+    return ({ pending: 'status-pending', approved: 'status-approved', rejected: 'status-rejected' })[f.status];
+  }
+  statusLabel(f: ModifiedFile): string {
+    return ({ pending: 'Pending', approved: 'Approved', rejected: 'Rejected' })[f.status];
+  }
+  severityClass(s?: string): string {
+    return ({ high: 'sev-high', medium: 'sev-medium', low: 'sev-low' } as any)[s ?? ''] ?? 'sev-low';
+  }
+}

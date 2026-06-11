@@ -11,6 +11,7 @@ import { RepositoryKnowledgeService } from '../../services/repository-knowledge.
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { ThemeService } from '../../services/theme.service';
+import { WorkspaceChangesService } from '../../services/workspace-changes.service';
 
 type CategoryKey = 'issues' | 'modernization' | 'security';
 
@@ -45,11 +46,17 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
 
   private subs: Subscription[] = [];
 
+  // Save state
+  private originalContent = '';
+  private currentFilePath = '';
+  saveStatus: 'idle' | 'saved' | 'modified' = 'idle';
+
   constructor(
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly workspace: CurrentWorkspaceService,
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly themeService: ThemeService,
+    private readonly changesService: WorkspaceChangesService,
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
   ) {}
@@ -268,12 +275,38 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
     this.loadFileForRecommendation(rec);
   }
 
+  saveChanges(): void {
+    if (!this.selected || this.editorCode === this.originalContent) return;
+    this.changesService.saveChange(
+      'folder',
+      this.currentFilePath,
+      this.originalContent,
+      this.editorCode,
+      {
+        recommendationId: this.selected.id,
+        recommendationTitle: this.selected.title,
+        category: this.selected.category,
+        severity: this.selected.severity,
+      },
+    );
+    this.saveStatus = 'saved';
+    this.cdr.detectChanges();
+  }
+
+  get isModified(): boolean {
+    return this.editorCode !== this.originalContent && this.originalContent !== '';
+  }
+
   private loadFileForRecommendation(rec: CodeRecommendation): void {
     const sourceFiles = this.knowledge?.sourceFiles ?? [];
     const match = this.findSourceFile(rec.fileName, sourceFiles);
     const content = match?.content ?? `// File "${rec.fileName}" is not available in the current workspace.\n// Upload the workspace from the analysis page to enable editing.`;
     const ext = (match?.extension ?? rec.fileName.split('.').pop() ?? 'txt').toLowerCase();
     const language = this.languageFromExt(ext);
+
+    this.originalContent = content;
+    this.currentFilePath = match?.path ?? rec.fileName;
+    this.saveStatus = this.changesService.isModified('folder', this.currentFilePath) ? 'saved' : 'idle';
 
     this.editorOptions = { ...this.buildEditorOptions(), language };
     this.editorCode = content;

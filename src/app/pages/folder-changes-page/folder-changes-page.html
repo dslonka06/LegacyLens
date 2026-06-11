@@ -1,0 +1,195 @@
+<div class="chg-layout" *ngIf="changes.length; else noChanges">
+
+  <!-- ── LEFT: Modified Files Explorer ─────────────────────────────────────── -->
+  <div class="chg-left">
+
+    <div class="chg-left-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+      <span>Modified Files</span>
+      <span class="chg-count-badge">{{ changes.length }}</span>
+    </div>
+
+    <div class="chg-summary-strip">
+      <div class="chg-strip-item">
+        <span class="chg-strip-label">Modified</span>
+        <span class="chg-strip-val">{{ changes.length }}</span>
+      </div>
+      <div class="chg-strip-item">
+        <span class="chg-strip-label">Pending</span>
+        <span class="chg-strip-val warning">{{ pendingCount }}</span>
+      </div>
+      <div class="chg-strip-item">
+        <span class="chg-strip-label">Approved</span>
+        <span class="chg-strip-val success">{{ approvedCount }}</span>
+      </div>
+    </div>
+
+    <div class="chg-file-list">
+      <div class="chg-file-card"
+           *ngFor="let f of changes"
+           [class]="'chg-file-card ' + statusClass(f) + (selected?.id === f.id ? ' active' : '')"
+           (click)="select(f)">
+        <div class="chg-file-info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span class="chg-file-name">{{ f.fileName }}</span>
+        </div>
+        <div class="chg-file-meta">
+          <span class="chg-status-dot" [class]="statusClass(f)">{{ statusLabel(f) }}</span>
+          <span class="chg-adds">+{{ totalAdds(f) }}</span>
+          <span class="chg-removes">-{{ totalRemoves(f) }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT: Change Review Workspace ────────────────────────────────────── -->
+  <div class="chg-right">
+
+    <div class="chg-page-actions">
+      <button class="chg-btn chg-btn-approve" (click)="approveAll()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Approve All
+      </button>
+      <button class="chg-btn chg-btn-reject" (click)="rejectAll()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        Reject All
+      </button>
+      <button class="chg-btn chg-btn-export" (click)="exportChanges()" [disabled]="approvedCount === 0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Export File
+      </button>
+    </div>
+
+    <div class="chg-workspace-empty" *ngIf="!selected">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+      <p>Select a modified file to review changes</p>
+    </div>
+
+    <ng-container *ngIf="selected">
+
+      <div class="chg-meta-row">
+        <div class="chg-file-detail">
+          <div class="chg-detail-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span class="chg-detail-filename">{{ selected.fileName }}</span>
+            <span class="chg-status-badge" [class]="statusClass(selected)">{{ statusLabel(selected) }}</span>
+          </div>
+          <div class="chg-detail-path">{{ selected.filePath }}</div>
+          <div class="chg-detail-date">Last modified {{ selected.modifiedAt | date:'MMM d, y, h:mm a' }}</div>
+        </div>
+
+        <div class="chg-rec-origin" *ngIf="selected.recommendationTitle">
+          <div class="chg-rec-label">Origin Recommendation</div>
+          <div class="chg-rec-title">{{ selected.recommendationTitle }}</div>
+          <div class="chg-rec-meta">
+            <span *ngIf="selected.category" class="chg-rec-cat">{{ selected.category }}</span>
+            <span *ngIf="selected.severity" class="chg-sev-badge" [class]="severityClass(selected.severity)">{{ selected.severity }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chg-diff-stats">
+        <span class="chg-diff-adds">+{{ addCount }} additions</span>
+        <span class="chg-diff-removes">-{{ removeCount }} deletions</span>
+      </div>
+
+      <div class="chg-diff-viewer">
+        <div class="chg-diff-cols">
+          <div class="chg-diff-col-label">Original</div>
+          <div class="chg-diff-col-label">Modified</div>
+        </div>
+        <div class="chg-diff-body">
+          <ng-container *ngFor="let line of diff">
+            <div class="chg-diff-row" [class]="'diff-' + line.type">
+              <div class="chg-diff-gutter"><span class="diff-lineno">{{ line.lineOrig ?? '' }}</span></div>
+              <div class="chg-diff-content chg-diff-orig">
+                <span class="diff-marker" *ngIf="line.type === 'removed'">−</span>
+                <span class="diff-marker" *ngIf="line.type !== 'removed'">&nbsp;</span>
+                <code *ngIf="line.type !== 'added'">{{ line.content }}</code>
+              </div>
+              <div class="chg-diff-gutter"><span class="diff-lineno">{{ line.lineMod ?? '' }}</span></div>
+              <div class="chg-diff-content chg-diff-mod">
+                <span class="diff-marker" *ngIf="line.type === 'added'">+</span>
+                <span class="diff-marker" *ngIf="line.type !== 'added'">&nbsp;</span>
+                <code *ngIf="line.type !== 'removed'">{{ line.content }}</code>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <div class="chg-file-actions">
+        <button class="chg-btn chg-btn-approve" (click)="approve(selected)" [disabled]="selected.status === 'approved'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Approve
+        </button>
+        <button class="chg-btn chg-btn-reject" (click)="reject(selected)" [disabled]="selected.status === 'rejected'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Reject
+        </button>
+        <button class="chg-btn chg-btn-restore" (click)="restore(selected)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 1 0 .49-3.81"/>
+          </svg>
+          Restore Original
+        </button>
+
+        <div class="chg-github-card">
+          <div class="chg-github-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+            </svg>
+            <span>GitHub Integration</span>
+            <span class="chg-coming-soon">Coming Soon</span>
+          </div>
+          <p class="chg-github-desc">Connect a repository to create branches and pull requests directly from LegacyLens.</p>
+          <div class="chg-github-actions">
+            <button class="chg-btn chg-btn-ghost" disabled>Connect GitHub</button>
+            <button class="chg-btn chg-btn-ghost" disabled>Create Branch</button>
+            <button class="chg-btn chg-btn-ghost" disabled>Create Pull Request</button>
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+  </div>
+
+</div>
+
+<ng-template #noChanges>
+  <div class="no-session">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+    <h3>No changes available</h3>
+    <p>Edit and save files from Code Recommendations to begin reviewing changes.</p>
+    <a routerLink="/folder-analysis/code-recommendations" class="go-btn">Go to Code Recommendations</a>
+  </div>
+</ng-template>

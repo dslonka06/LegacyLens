@@ -371,6 +371,41 @@
   flex-shrink: 0;
 }
 
+.rcr-save-status {
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  &.modified { color: var(--warning); }
+  &.saved    { color: var(--success); }
+}
+
+.rcr-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  background: color-mix(in srgb, var(--success) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+  border-radius: 6px;
+  color: var(--success);
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+  svg { width: 13px; height: 13px; }
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--success) 18%, transparent);
+    border-color: color-mix(in srgb, var(--success) 50%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
 .rcr-monaco-container {
   flex: 1;
   min-height: 0;
