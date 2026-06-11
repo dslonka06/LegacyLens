@@ -5,6 +5,8 @@
   overflow: hidden;
 }
 
+// ── Pattern grid ──────────────────────────────────────────────────────────
+
 .arch-pattern-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -74,6 +76,33 @@
   border-radius: 8px;
   font-weight: 500;
 }
+
+// ── Responsibility list (repository structure overview) ───────────────────
+
+.arch-responsibility-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.arch-responsibility-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-content);
+  transition: border-color 0.15s, background 0.15s;
+
+  svg { width: 14px; height: 14px; color: var(--success); flex-shrink: 0; margin-top: 1px; }
+
+  &:hover { background: var(--bg-secondary); border-color: var(--text-muted); }
+}
+
+// ── Component list ─────────────────────────────────────────────────────────
 
 .arch-component-list {
   display: flex;

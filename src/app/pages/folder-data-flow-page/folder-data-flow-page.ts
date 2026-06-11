@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { DependencyEdge, DependencyNode, RepositoryKnowledge } from '../../models/knowledge.model';
+import { RepositoryKnowledge } from '../../models/knowledge.model';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
 
@@ -83,6 +83,19 @@ export class FolderDataFlowPage implements OnInit, OnDestroy {
 
   get hubCount(): number {
     return this.flowNodes.filter(n => n.isHub).length;
+  }
+
+  get topTargets(): string[] {
+    if (!this.knowledge?.dependencyGraph) return [];
+    const nodeMap = new Map(this.knowledge.dependencyGraph.nodes.map(n => [n.id, n.name]));
+    const counts = new Map<string, number>();
+    this.knowledge.dependencyGraph.edges.forEach(e =>
+      counts.set(e.target, (counts.get(e.target) ?? 0) + 1)
+    );
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([id]) => nodeMap.get(id) ?? id);
   }
 
   flowBarWidth(node: FlowNode): number {

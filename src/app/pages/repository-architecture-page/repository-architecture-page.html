@@ -18,8 +18,9 @@
 
   <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
 
+    <!-- Repository Architecture Summary -->
     <div class="doc-block">
-      <div class="doc-block-label">Graph Overview</div>
+      <div class="doc-block-label">Repository Architecture Summary</div>
       <div class="metrics-strip">
         <div class="strip-item">
           <span class="strip-label">Modules</span>
@@ -33,16 +34,16 @@
           <span class="strip-label">Patterns</span>
           <span class="strip-val">{{ patterns.length }}</span>
         </div>
+        <div class="strip-item">
+          <span class="strip-label">Hubs</span>
+          <span class="strip-val" [class.strip-val-warn]="hubs.length > 5">{{ hubs.length }}</span>
+        </div>
       </div>
     </div>
 
+    <!-- Architectural Layers: patterns with descriptions -->
     <div class="doc-block">
-      <div class="doc-block-label">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-        Architecture Patterns
-      </div>
+      <div class="doc-block-label">Architectural Layers</div>
       <div class="arch-empty-state" *ngIf="!patterns.length">No architectural patterns detected. Upload a repository to begin analysis.</div>
       <div class="arch-pattern-grid" *ngIf="patterns.length">
         <div class="arch-pattern-card" *ngFor="let p of patterns">
@@ -61,18 +62,13 @@
       </div>
     </div>
 
+    <!-- Major Components: dependency hubs -->
     <div class="doc-block" *ngIf="hubs.length > 0">
-      <div class="doc-block-label">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-        </svg>
-        Dependency Hubs
-      </div>
+      <div class="doc-block-label">Major Components</div>
       <div class="arch-component-list">
         <div class="arch-component-item" *ngFor="let hub of hubs">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/>
-            <path d="M6 21V9a9 9 0 0 0 9 9"/>
+            <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
           </svg>
           <span>{{ hub.name }}</span>
           <span class="hub-dep-count">{{ hub.degree }} connections</span>
@@ -80,10 +76,23 @@
       </div>
     </div>
 
-    <div class="doc-block">
-      <div class="doc-block-label">Most Referenced Modules</div>
-      <div class="arch-empty-state" *ngIf="!topDependencies.length">No dependency data available.</div>
-      <div class="arch-component-list" *ngIf="topDependencies.length">
+    <!-- Repository Structure Overview: top referenced modules -->
+    <div class="doc-block" *ngIf="topDependencies.length > 0">
+      <div class="doc-block-label">Repository Structure Overview</div>
+      <div class="arch-responsibility-list">
+        <div class="arch-responsibility-item" *ngFor="let d of topDependencies">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span>{{ d }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Architectural Relationships: most referenced modules -->
+    <div class="doc-block" *ngIf="topDependencies.length > 0">
+      <div class="doc-block-label">Architectural Relationships</div>
+      <div class="arch-component-list">
         <div class="arch-component-item" *ngFor="let d of topDependencies">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/>

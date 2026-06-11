@@ -18,9 +18,9 @@
 
   <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
 
-    <!-- Metrics strip -->
+    <!-- Folder Architecture Summary -->
     <div class="doc-block">
-      <div class="doc-block-label">Graph Overview</div>
+      <div class="doc-block-label">Folder Architecture Summary</div>
       <div class="metrics-strip">
         <div class="strip-item">
           <span class="strip-label">Modules</span>
@@ -37,14 +37,9 @@
       </div>
     </div>
 
-    <!-- Architecture Patterns -->
+    <!-- Architectural Components: patterns -->
     <div class="doc-block">
-      <div class="doc-block-label">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-        Architecture Patterns
-      </div>
+      <div class="doc-block-label">Architectural Components</div>
       <div class="arch-empty-state" *ngIf="!patterns.length">No architectural patterns detected yet. Upload a folder to begin analysis.</div>
       <div class="arch-pattern-grid" *ngIf="patterns.length">
         <div class="arch-pattern-card" *ngFor="let p of patterns">
@@ -62,17 +57,23 @@
       </div>
     </div>
 
-    <!-- Top Dependencies -->
-    <div class="doc-block">
-      <div class="doc-block-label">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/>
-          <path d="M6 21V9a9 9 0 0 0 9 9"/>
-        </svg>
-        Most Referenced Modules
+    <!-- Folder Structure Overview: top referenced modules -->
+    <div class="doc-block" *ngIf="topDependencies.length > 0">
+      <div class="doc-block-label">Folder Structure Overview</div>
+      <div class="arch-responsibility-list">
+        <div class="arch-responsibility-item" *ngFor="let d of topDependencies">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span>{{ d }}</span>
+        </div>
       </div>
-      <div class="arch-empty-state" *ngIf="!topDependencies.length">No dependency data available.</div>
-      <div class="arch-component-list" *ngIf="topDependencies.length">
+    </div>
+
+    <!-- Architectural Relationships: dependency list -->
+    <div class="doc-block" *ngIf="topDependencies.length > 0">
+      <div class="doc-block-label">Architectural Relationships</div>
+      <div class="arch-component-list">
         <div class="arch-component-item" *ngFor="let d of topDependencies">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/>

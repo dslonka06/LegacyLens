@@ -17,20 +17,65 @@
 
   <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
 
-    <!-- Category summary -->
-    <div class="doc-block" *ngIf="workflowCategoryGroups.length > 0">
-      <div class="doc-block-label">Workflow Categories</div>
-      <div class="wf-category-grid">
-        <div class="wf-cat-card" *ngFor="let cat of workflowCategoryGroups">
-          <span class="wf-cat-count">{{ cat.count }}</span>
-          <span class="wf-cat-label">{{ cat.label }}</span>
+    <!-- Repository Data Flow Summary -->
+    <div class="doc-block" *ngIf="hasDataFlow">
+      <div class="doc-block-label">Repository Data Flow Summary</div>
+      <div class="metrics-strip">
+        <div class="strip-item">
+          <span class="strip-label">Workflows</span>
+          <span class="strip-val accent">{{ workflowSummaries.length }}</span>
+        </div>
+        <div class="strip-item">
+          <span class="strip-label">Categories</span>
+          <span class="strip-val">{{ workflowCategoryGroups.length }}</span>
+        </div>
+        <div class="strip-item">
+          <span class="strip-label">Entry Points</span>
+          <span class="strip-val">{{ behaviorInsights?.entryPoints?.length ?? 0 }}</span>
         </div>
       </div>
     </div>
 
-    <!-- Entry points -->
+    <!-- Workflow Overview -->
+    <div class="doc-block" *ngIf="workflowCategoryGroups.length > 0">
+      <div class="doc-block-label">Workflow Overview</div>
+      <div class="wf-overview-grid">
+        <div class="wf-overview-card" *ngFor="let cat of workflowCategoryGroups">
+          <span class="wf-overview-count">{{ cat.count }}</span>
+          <span class="wf-overview-name">{{ cat.label }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workflow Details -->
+    <div class="doc-block" *ngIf="workflowSummaries.length > 0">
+      <div class="doc-block-label">Discovered Workflows ({{ workflowSummaries.length }})</div>
+      <div class="flow-steps">
+        <div class="flow-step wf-flow-step"
+             *ngFor="let wf of workflowSummaries.slice(0, 20); let i = index; let last = last"
+             [ngClass]="{ 'step-first': i === 0, 'step-mid': i > 0 && !last, 'step-last': last }"
+             (click)="toggleWorkflow(i)">
+          <div class="step-badge">{{ i + 1 }}</div>
+          <div class="step-label">
+            <span class="wf-cat-badge">{{ categoryLabel(wf.category) }}</span>
+            {{ wf.title }}
+          </div>
+          <svg class="wf-expand-icon" [class.wf-expanded]="isWorkflowExpanded(i)"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+          <div class="wf-flow-path" *ngIf="isWorkflowExpanded(i)">
+            <span *ngFor="let step of wf.flowPath; let last = last" class="wf-step">
+              {{ step }}<span class="wf-arrow" *ngIf="!last"> &#x2192; </span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Interactions: entry points -->
     <div class="doc-block" *ngIf="behaviorInsights?.entryPoints?.length">
-      <div class="doc-block-label">Entry Points</div>
+      <div class="doc-block-label">System Interactions</div>
       <div class="arch-component-list">
         <div class="arch-component-item" *ngFor="let ep of behaviorInsights!.entryPoints.slice(0, 10)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -41,27 +86,16 @@
       </div>
     </div>
 
-    <!-- Workflows -->
-    <div class="doc-block" *ngIf="workflowSummaries.length > 0">
-      <div class="doc-block-label">Discovered Workflows ({{ workflowSummaries.length }})</div>
-      <div class="wf-list">
-        <div class="wf-card" *ngFor="let wf of workflowSummaries.slice(0, 20); let i = index"
-             (click)="toggleWorkflow(i)">
-          <div class="wf-card-header">
-            <span class="wf-cat-badge">{{ categoryLabel(wf.category) }}</span>
-            <span class="wf-name">{{ wf.title }}</span>
-            <svg class="wf-expand-icon" [class.wf-expanded]="isWorkflowExpanded(i)"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </div>
-          <div class="wf-card-body" *ngIf="isWorkflowExpanded(i)">
-            <div class="wf-flow-path">
-              <span *ngFor="let step of wf.flowPath; let last = last" class="wf-step">
-                {{ step }}<span class="wf-arrow" *ngIf="!last"> → </span>
-              </span>
-            </div>
-          </div>
+    <!-- Behavior Insights: bottlenecks and frequently referenced services -->
+    <div class="doc-block" *ngIf="behaviorInsights?.workflowBottlenecks?.length || behaviorInsights?.mostReferencedServices?.length">
+      <div class="doc-block-label">Behavior Insights</div>
+      <div class="arch-component-list">
+        <div class="arch-component-item"
+             *ngFor="let item of (behaviorInsights!.workflowBottlenecks.length ? behaviorInsights!.workflowBottlenecks : behaviorInsights!.mostReferencedServices).slice(0, 10)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+          </svg>
+          <span>{{ item }}</span>
         </div>
       </div>
     </div>
