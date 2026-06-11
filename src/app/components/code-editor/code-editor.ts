@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnChanges, OnDestroy, SimpleChanges, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnChanges, OnDestroy, SimpleChanges, ChangeDetectorRef, NgZone, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
@@ -67,10 +67,11 @@ const LANGUAGE_LABEL: Record<string, string> = {
   templateUrl: './code-editor.html',
   styleUrl: './code-editor.scss'
 })
-export class CodeEditor implements OnChanges, OnDestroy {
+export class CodeEditor implements OnInit, OnChanges, OnDestroy {
 
   @Input() restoredFileName: string | null = null;
   @Input() restoredSourceCode: string | null = null;
+  @Input() readOnly = false;
 
   @Output() readonly analyze = new EventEmitter<AnalysisSession>();
   @Output() readonly workspaceReady = new EventEmitter<WorkspaceProfile | null>();
@@ -91,32 +92,7 @@ export class CodeEditor implements OnChanges, OnDestroy {
   private currentMonacoLanguage = 'plaintext';
   private themeSub: Subscription | null = null;
 
-  editorOptions = {
-    theme: 'vs-dark',
-    language: 'plaintext',
-    fontSize: 13,
-    fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
-    fontLigatures: true,
-    lineNumbers: 'on' as const,
-    minimap: { enabled: false },
-    scrollBeyondLastLine: false,
-    wordWrap: 'off' as const,
-    renderWhitespace: 'none' as const,
-    renderLineHighlight: 'all' as const,
-    roundedSelection: true,
-    smoothScrolling: true,
-    folding: true,
-    bracketPairColorization: { enabled: true },
-    lineDecorationsWidth: 4,
-    lineNumbersMinChars: 3,
-    glyphMargin: false,
-    automaticLayout: true,
-    scrollbar: { verticalScrollbarSize: 6, horizontalScrollbarSize: 6 },
-    padding: { top: 14, bottom: 14 },
-    fixedOverflowWidgets: true,
-    cursorBlinking: 'smooth' as const,
-    cursorSmoothCaretAnimation: 'on' as const,
-  };
+  editorOptions: Record<string, any> = {};
 
   aiError: string | null = null;
 
@@ -130,15 +106,17 @@ export class CodeEditor implements OnChanges, OnDestroy {
     private readonly cdr: ChangeDetectorRef,
     private readonly zone: NgZone,
     private readonly themeService: ThemeService
-  ) {
-    // Set initial Monaco theme to match app theme
-    this.editorOptions = {
-      ...this.editorOptions,
-      theme: this.themeService.isDark ? 'vs-dark' : 'vs',
-    };
+  ) {}
+
+  ngOnInit(): void {
+    this.editorOptions = this.buildEditorOptions();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['readOnly'] && !changes['readOnly'].firstChange) {
+      this.editorOptions = this.buildEditorOptions();
+      this.editorInstance?.updateOptions({ readOnly: this.readOnly });
+    }
     if (changes['restoredFileName'] && this.restoredFileName) {
       this.fileName = this.restoredFileName;
     }
@@ -214,6 +192,36 @@ export class CodeEditor implements OnChanges, OnDestroy {
 
   get additionalFileCount(): number {
     return Math.max(0, this.uploadedFiles.length - 1);
+  }
+
+  private buildEditorOptions(): Record<string, any> {
+    return {
+      theme: this.themeService.isDark ? 'vs-dark' : 'vs',
+      language: 'plaintext',
+      readOnly: this.readOnly,
+      fontSize: 13,
+      fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+      fontLigatures: true,
+      lineNumbers: 'on',
+      minimap: { enabled: false },
+      scrollBeyondLastLine: false,
+      wordWrap: 'off',
+      renderWhitespace: 'none',
+      renderLineHighlight: 'all',
+      roundedSelection: true,
+      smoothScrolling: true,
+      folding: true,
+      bracketPairColorization: { enabled: true },
+      lineDecorationsWidth: 4,
+      lineNumbersMinChars: 3,
+      glyphMargin: false,
+      automaticLayout: true,
+      scrollbar: { verticalScrollbarSize: 6, horizontalScrollbarSize: 6 },
+      padding: { top: 14, bottom: 14 },
+      fixedOverflowWidgets: true,
+      cursorBlinking: 'smooth',
+      cursorSmoothCaretAnimation: 'on',
+    };
   }
 
   onEditorInit(editor: any): void {

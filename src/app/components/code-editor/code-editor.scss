@@ -159,6 +159,20 @@
   flex-shrink: 0;
 }
 
+.read-only-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
 .last-analyzed {
   display: flex;
   align-items: center;

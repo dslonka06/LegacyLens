@@ -72,6 +72,7 @@
     <div class="toolbar-meta-row">
       <div class="lang-badge" [ngClass]="langBadgeClass">{{ detectedLanguage }}</div>
       <span class="toolbar-meta">{{ lineCount }} lines</span>
+      <span class="read-only-badge" *ngIf="readOnly">Read Only</span>
 
       <div class="ai-loading" *ngIf="isAnalyzing">
         <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

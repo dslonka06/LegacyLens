@@ -24,6 +24,7 @@
   <!-- ── Center: Code Editor ───────────────────────────────────────────────── -->
   <div class="tri-center">
     <app-code-editor
+      [readOnly]="true"
       [restoredFileName]="restoredFileName"
       [restoredSourceCode]="restoredSourceCode"
       (analyze)="onSessionCreated($event)"
