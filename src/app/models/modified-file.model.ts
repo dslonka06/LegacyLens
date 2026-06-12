@@ -1,8 +1,15 @@
-export type ModifiedFileStatus = 'pending' | 'approved' | 'rejected';
+export type ModifiedFileStatus = 'pending' | 'approved' | 'rejected' | 'exported';
 
 // Legacy scope type — kept for AnalysisSession.scope backward compat.
 // New code should use workspaceId instead.
 export type WorkspaceScope = 'file' | 'folder' | 'repository';
+
+export interface RecommendationSource {
+  id: string;
+  title: string;
+  category: string;
+  severity: string;
+}
 
 export interface ModifiedFile {
   id: string;
@@ -14,9 +21,6 @@ export interface ModifiedFile {
   status: ModifiedFileStatus;
   // Workspace that owns this change — replaces the old WorkspaceScope field
   workspaceId: string;
-  // Recommendation metadata preserved at save time
-  recommendationId?: string;
-  recommendationTitle?: string;
-  category?: string;
-  severity?: string;
+  // All recommendations that contributed to this file's changes
+  recommendations: RecommendationSource[];
 }

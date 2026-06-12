@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ModifiedFile, ModifiedFileStatus } from '../models/modified-file.model';
+import { ModifiedFile, ModifiedFileStatus, RecommendationSource } from '../models/modified-file.model';
 import { WorkspaceManagerService } from './workspace-manager.service';
 
 // Kept as a thin facade over WorkspaceManagerService so all existing page
@@ -23,9 +23,9 @@ export class WorkspaceChangesService {
     filePath: string,
     originalContent: string,
     modifiedContent: string,
-    meta?: { recommendationId?: string; recommendationTitle?: string; category?: string; severity?: string },
+    rec?: RecommendationSource,
   ): void {
-    this.manager.saveChange(workspaceId, filePath, originalContent, modifiedContent, meta);
+    this.manager.saveChange(workspaceId, filePath, originalContent, modifiedContent, rec);
   }
 
   setStatus(workspaceId: string, changeId: string, status: ModifiedFileStatus): void {

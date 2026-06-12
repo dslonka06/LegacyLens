@@ -1,27 +1,25 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ModifiedFile } from '../models/modified-file.model';
+import { WorkspaceManagerService } from './workspace-manager.service';
 
 @Injectable({ providedIn: 'root' })
 export class ExportService {
 
-  /**
-   * File workspace: export a single approved file directly.
-   * Filename is prefixed with "Modified" for clarity.
-   */
+  private readonly manager = inject(WorkspaceManagerService);
+
   exportSingleFile(file: ModifiedFile): void {
     const blob = new Blob([file.modifiedContent], { type: 'text/plain' });
     this.triggerDownload(blob, `Modified${file.fileName}`);
+    this.manager.setChangeStatus(file.workspaceId, file.id, 'exported');
   }
 
-  /**
-   * Folder / Repository workspaces: export all approved files as a ZIP.
-   * Directory structure is preserved from each file's filePath.
-   * Uses ZIP method=0 (stored, no compression) — no external library needed.
-   */
   exportAsZip(approved: ModifiedFile[], zipName: string): void {
     if (!approved.length) return;
     const blob = this.buildZip(approved);
     this.triggerDownload(blob, zipName);
+    for (const f of approved) {
+      this.manager.setChangeStatus(f.workspaceId, f.id, 'exported');
+    }
   }
 
   // ── ZIP builder ────────────────────────────────────────────────────────────

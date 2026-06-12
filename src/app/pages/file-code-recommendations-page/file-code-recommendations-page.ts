@@ -8,6 +8,7 @@ import { CurrentAnalysisService } from '../../services/current-analysis.service'
 import { ThemeService } from '../../services/theme.service';
 import { WorkspaceChangesService } from '../../services/workspace-changes.service';
 import { WorkspaceManagerService } from '../../services/workspace-manager.service';
+import { UnsavedChangesService } from '../../services/unsaved-changes.service';
 import { PanelLayoutService } from '../../services/panel-layout.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 import { AnalysisSession } from '../../models/analysis-session.model';
@@ -69,6 +70,7 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
     private readonly changes: WorkspaceChangesService,
     private readonly manager: WorkspaceManagerService,
     private readonly layoutService: PanelLayoutService,
+    private readonly unsaved: UnsavedChangesService,
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
   ) {}
@@ -86,6 +88,7 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.unsaved.clear();
     this.themeSub?.unsubscribe();
     this.sessionSub?.unsubscribe();
     this.editorInstance?.dispose();
@@ -180,15 +183,16 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
       this.currentFilePath,
       this.originalContent,
       this.editorCode,
-      {
-        recommendationId: this.selected.id,
-        recommendationTitle: this.selected.title,
-        category: this.selected.category,
-        severity: this.selected.severity,
-      },
+      { id: this.selected.id, title: this.selected.title, category: this.selected.category, severity: this.selected.severity },
     );
     this.saveStatus = 'saved';
+    this.unsaved.clear();
     this.cdr.detectChanges();
+  }
+
+  onEditorChange(): void {
+    const dirty = this.editorCode !== this.originalContent && this.originalContent !== '';
+    this.unsaved.set(dirty);
   }
 
   get isModified(): boolean {

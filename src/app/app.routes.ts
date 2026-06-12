@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { workspaceInitGuard } from './guards/workspace-init.guard';
+import { unsavedChangesGuard } from './guards/unsaved-changes.guard';
 
 export const routes: Routes = [
   {
@@ -30,6 +31,7 @@ export const routes: Routes = [
   {
     path: 'file-analysis/code-recommendations',
     canActivate: [workspaceInitGuard],
+    canDeactivate: [unsavedChangesGuard],
     loadComponent: () =>
       import('./pages/file-code-recommendations-page/file-code-recommendations-page').then(m => m.FileCodeRecommendationsPage)
   },
@@ -42,8 +44,9 @@ export const routes: Routes = [
   {
     path: 'file-analysis/changes',
     canActivate: [workspaceInitGuard],
+    data: { scope: 'file' },
     loadComponent: () =>
-      import('./pages/file-changes-page/file-changes-page').then(m => m.FileChangesPage)
+      import('./components/changes-page/changes-page').then(m => m.ChangesPageComponent)
   },
 
   // ── Folder Analysis workspace ─────────────────────────────────────────────
@@ -68,6 +71,7 @@ export const routes: Routes = [
   {
     path: 'folder-analysis/code-recommendations',
     canActivate: [workspaceInitGuard],
+    canDeactivate: [unsavedChangesGuard],
     loadComponent: () =>
       import('./pages/folder-code-recommendations-page/folder-code-recommendations-page').then(m => m.FolderCodeRecommendationsPage)
   },
@@ -80,8 +84,9 @@ export const routes: Routes = [
   {
     path: 'folder-analysis/changes',
     canActivate: [workspaceInitGuard],
+    data: { scope: 'folder' },
     loadComponent: () =>
-      import('./pages/folder-changes-page/folder-changes-page').then(m => m.FolderChangesPage)
+      import('./components/changes-page/changes-page').then(m => m.ChangesPageComponent)
   },
 
   // ── Repository Analysis workspace ──────────────────────────────────────────
@@ -106,6 +111,7 @@ export const routes: Routes = [
   {
     path: 'repository-analysis/code-recommendations',
     canActivate: [workspaceInitGuard],
+    canDeactivate: [unsavedChangesGuard],
     loadComponent: () =>
       import('./pages/repository-code-recommendations-page/repository-code-recommendations-page').then(m => m.RepositoryCodeRecommendationsPage)
   },
@@ -118,8 +124,9 @@ export const routes: Routes = [
   {
     path: 'repository-analysis/changes',
     canActivate: [workspaceInitGuard],
+    data: { scope: 'repository' },
     loadComponent: () =>
-      import('./pages/repository-changes-page/repository-changes-page').then(m => m.RepositoryChangesPage)
+      import('./components/changes-page/changes-page').then(m => m.ChangesPageComponent)
   },
 
   // ── Global ─────────────────────────────────────────────────────────────────

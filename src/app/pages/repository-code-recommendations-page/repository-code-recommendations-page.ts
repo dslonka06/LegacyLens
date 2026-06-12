@@ -16,6 +16,7 @@ import { ResizeDividerComponent } from '../../components/resize-divider/resize-d
 import { ThemeService } from '../../services/theme.service';
 import { WorkspaceChangesService } from '../../services/workspace-changes.service';
 import { WorkspaceManagerService } from '../../services/workspace-manager.service';
+import { UnsavedChangesService } from '../../services/unsaved-changes.service';
 
 type CategoryKey = 'issues' | 'modernization' | 'security';
 
@@ -66,6 +67,7 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
     private readonly changesService: WorkspaceChangesService,
     private readonly manager: WorkspaceManagerService,
     private readonly layoutService: PanelLayoutService,
+    private readonly unsaved: UnsavedChangesService,
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
   ) {}
@@ -98,6 +100,7 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.unsaved.clear();
     this.subs.forEach(s => s.unsubscribe());
     this.themeSub?.unsubscribe();
     this.editorInstance?.dispose();
@@ -257,15 +260,16 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
       this.currentFilePath,
       this.originalContent,
       this.editorCode,
-      {
-        recommendationId: this.selected.id,
-        recommendationTitle: this.selected.title,
-        category: this.selected.category,
-        severity: this.selected.severity,
-      },
+      { id: this.selected.id, title: this.selected.title, category: this.selected.category, severity: this.selected.severity },
     );
     this.saveStatus = 'saved';
+    this.unsaved.clear();
     this.cdr.detectChanges();
+  }
+
+  onEditorChange(): void {
+    const dirty = this.editorCode !== this.originalContent && this.originalContent !== '';
+    this.unsaved.set(dirty);
   }
 
   get isModified(): boolean {

@@ -188,6 +188,7 @@
               class="rcr-monaco-instance"
               [options]="editorOptions"
               [(ngModel)]="editorCode"
+              (ngModelChange)="onEditorChange()"
               (onInit)="onEditorInit($event)">
             </ngx-monaco-editor>
           </div>

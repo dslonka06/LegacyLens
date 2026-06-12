@@ -5,7 +5,7 @@ import { Workspace, WorkspaceType, WorkspaceStatus, MAX_WORKSPACES } from '../mo
 import { AnalysisSession } from '../models/analysis-session.model';
 import { WorkspaceContext } from '../models/workspace-context.model';
 import { RepositoryKnowledge, KnowledgeState } from '../models/knowledge.model';
-import { ModifiedFile, ModifiedFileStatus } from '../models/modified-file.model';
+import { ModifiedFile, ModifiedFileStatus, RecommendationSource } from '../models/modified-file.model';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceManagerService {
@@ -203,30 +203,41 @@ export class WorkspaceManagerService {
     filePath: string,
     originalContent: string,
     modifiedContent: string,
-    meta?: { recommendationId?: string; recommendationTitle?: string; category?: string; severity?: string },
+    rec?: RecommendationSource,
   ): void {
     if (originalContent === modifiedContent) return;
     const ws = this.getById(id);
     if (!ws) return;
 
     const current = ws.changes;
-    const existing = current.findIndex(f => f.filePath === filePath);
+    const existingIdx = current.findIndex(f => f.filePath === filePath);
     const fileName = filePath.split('/').pop() ?? filePath;
 
+    let recommendations: RecommendationSource[];
+    if (existingIdx >= 0) {
+      // Merge: add rec if it isn't already in the list (deduplicate by id)
+      const prev = current[existingIdx].recommendations;
+      recommendations = rec && !prev.some(r => r.id === rec.id)
+        ? [...prev, rec]
+        : prev;
+    } else {
+      recommendations = rec ? [rec] : [];
+    }
+
     const entry: ModifiedFile = {
-      id: existing >= 0 ? current[existing].id : this.newChangeId(),
+      id: existingIdx >= 0 ? current[existingIdx].id : this.newChangeId(),
       filePath,
       fileName,
       originalContent,
       modifiedContent,
       modifiedAt: new Date().toISOString(),
-      status: 'pending',
+      status: existingIdx >= 0 ? current[existingIdx].status : 'pending',
       workspaceId: id,
-      ...meta,
+      recommendations,
     };
 
     const updated = [...current];
-    if (existing >= 0) updated[existing] = entry; else updated.push(entry);
+    if (existingIdx >= 0) updated[existingIdx] = entry; else updated.push(entry);
 
     this.patch(id, {
       changes: updated,
@@ -239,18 +250,22 @@ export class WorkspaceManagerService {
     const ws = this.getById(id);
     if (!ws) return;
     const changes = ws.changes.map(f => f.id === changeId ? { ...f, status } : f);
-    const hasPending  = changes.some(f => f.status === 'pending');
-    const hasApproved = changes.some(f => f.status === 'approved');
-    const wsStatus: WorkspaceStatus = hasApproved ? 'changes-pending' : hasPending ? 'modified' : 'loaded';
-    this.patch(id, { changes, status: wsStatus });
+    this.patch(id, { changes, status: this.deriveStatusFromChanges(changes) });
   }
 
   setAllChangeStatus(id: string, status: ModifiedFileStatus): void {
     const ws = this.getById(id);
     if (!ws) return;
     const changes = ws.changes.map(f => ({ ...f, status }));
-    const wsStatus: WorkspaceStatus = status === 'approved' ? 'changes-pending' : 'modified';
-    this.patch(id, { changes, status: wsStatus });
+    this.patch(id, { changes, status: this.deriveStatusFromChanges(changes) });
+  }
+
+  private deriveStatusFromChanges(changes: ModifiedFile[]): WorkspaceStatus {
+    // 'approved' means ready to export but not yet exported — highest urgency
+    if (changes.some(f => f.status === 'approved'))  return 'changes-pending';
+    if (changes.some(f => f.status === 'pending'))   return 'modified';
+    if (changes.some(f => f.status === 'exported'))  return 'loaded';
+    return 'loaded';
   }
 
   restoreChange(id: string, changeId: string): void {
