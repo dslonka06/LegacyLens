@@ -7,6 +7,7 @@ import { WorkspaceContext } from '../models/workspace-context.model';
 import { RepositoryKnowledge, KnowledgeState } from '../models/knowledge.model';
 import { SecurityAnalysis } from '../models/security-analysis.model';
 import { SystemUnderstanding } from '../models/system-understanding.model';
+import { RecommendationAnalysis } from '../models/recommendation-analysis.model';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceManagerService {
@@ -83,6 +84,7 @@ export class WorkspaceManagerService {
       knowledgeState: KnowledgeState.NotStarted,
       securityAnalysis: null,
       systemUnderstanding: null,
+      recommendationAnalysis: null,
     };
 
     this._workspaces$.next([...this._workspaces$.value, ws]);
@@ -205,6 +207,16 @@ export class WorkspaceManagerService {
 
   clearSystemUnderstanding(id: string): void {
     this.patch(id, { systemUnderstanding: null });
+  }
+
+  // ── Recommendation Analysis ───────────────────────────────────────────────
+
+  setRecommendationAnalysis(id: string, analysis: RecommendationAnalysis): void {
+    this.patch(id, { recommendationAnalysis: analysis, lastModifiedAt: new Date().toISOString() });
+  }
+
+  clearRecommendationAnalysis(id: string): void {
+    this.patch(id, { recommendationAnalysis: null });
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

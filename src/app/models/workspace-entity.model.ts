@@ -3,6 +3,7 @@ import { WorkspaceContext } from './workspace-context.model';
 import { RepositoryKnowledge, KnowledgeState } from './knowledge.model';
 import { SecurityAnalysis } from './security-analysis.model';
 import { SystemUnderstanding } from './system-understanding.model';
+import { RecommendationAnalysis } from './recommendation-analysis.model';
 
 export type WorkspaceType = 'file' | 'folder' | 'repository';
 
@@ -26,4 +27,5 @@ export interface Workspace {
   knowledgeState:   KnowledgeState;
   securityAnalysis: SecurityAnalysis | null;
   systemUnderstanding: SystemUnderstanding | null;
+  recommendationAnalysis: RecommendationAnalysis | null;
 }

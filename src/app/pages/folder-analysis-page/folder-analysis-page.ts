@@ -15,6 +15,7 @@ import { CurrentWorkspaceService } from '../../services/current-workspace.servic
 import { WorkspaceManagerService } from '../../services/workspace-manager.service';
 import { SecurityAnalysisService } from '../../services/security-analysis.service';
 import { SystemUnderstandingService } from '../../services/system-understanding.service';
+import { RecommendationAnalysisService } from '../../services/recommendation-analysis.service';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { PanelLayoutService } from '../../services/panel-layout.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
@@ -81,6 +82,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     private readonly manager: WorkspaceManagerService,
     private readonly securityService: SecurityAnalysisService,
     private readonly understandingService: SystemUnderstandingService,
+    private readonly recService: RecommendationAnalysisService,
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
@@ -117,6 +119,8 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
         this.manager.setSecurityAnalysis(id, security);
         const understanding = this.understandingService.analyzeKnowledge(knowledge, this.session);
         this.manager.setSystemUnderstanding(id, understanding);
+        const recs = this.recService.analyzeKnowledge(knowledge, this.session);
+        this.manager.setRecommendationAnalysis(id, recs);
       }
     });
   }
