@@ -14,6 +14,7 @@ import { CurrentAnalysisService } from '../../services/current-analysis.service'
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
 import { WorkspaceManagerService } from '../../services/workspace-manager.service';
 import { SecurityAnalysisService } from '../../services/security-analysis.service';
+import { SystemUnderstandingService } from '../../services/system-understanding.service';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { PanelLayoutService } from '../../services/panel-layout.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
@@ -79,6 +80,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly manager: WorkspaceManagerService,
     private readonly securityService: SecurityAnalysisService,
+    private readonly understandingService: SystemUnderstandingService,
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
@@ -107,12 +109,14 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
     this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
 
-    // Generate security analysis once knowledge pipeline completes
+    // Generate security and system understanding once knowledge pipeline completes
     this.securitySub = this.knowledgeService.knowledge$.subscribe(knowledge => {
       const id = this.manager.activeId;
       if (knowledge && id) {
         const security = this.securityService.analyzeKnowledge(knowledge, this.session);
         this.manager.setSecurityAnalysis(id, security);
+        const understanding = this.understandingService.analyzeKnowledge(knowledge, this.session);
+        this.manager.setSystemUnderstanding(id, understanding);
       }
     });
   }

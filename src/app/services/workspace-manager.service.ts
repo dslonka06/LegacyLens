@@ -6,6 +6,7 @@ import { AnalysisSession } from '../models/analysis-session.model';
 import { WorkspaceContext } from '../models/workspace-context.model';
 import { RepositoryKnowledge, KnowledgeState } from '../models/knowledge.model';
 import { SecurityAnalysis } from '../models/security-analysis.model';
+import { SystemUnderstanding } from '../models/system-understanding.model';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceManagerService {
@@ -81,6 +82,7 @@ export class WorkspaceManagerService {
       knowledge: null,
       knowledgeState: KnowledgeState.NotStarted,
       securityAnalysis: null,
+      systemUnderstanding: null,
     };
 
     this._workspaces$.next([...this._workspaces$.value, ws]);
@@ -193,6 +195,16 @@ export class WorkspaceManagerService {
 
   clearSecurityAnalysis(id: string): void {
     this.patch(id, { securityAnalysis: null });
+  }
+
+  // ── System Understanding ──────────────────────────────────────────────────
+
+  setSystemUnderstanding(id: string, understanding: SystemUnderstanding): void {
+    this.patch(id, { systemUnderstanding: understanding, lastModifiedAt: new Date().toISOString() });
+  }
+
+  clearSystemUnderstanding(id: string): void {
+    this.patch(id, { systemUnderstanding: null });
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

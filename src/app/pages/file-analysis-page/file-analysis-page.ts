@@ -12,6 +12,7 @@ import { CurrentAnalysisService } from '../../services/current-analysis.service'
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
 import { WorkspaceManagerService } from '../../services/workspace-manager.service';
 import { SecurityAnalysisService } from '../../services/security-analysis.service';
+import { SystemUnderstandingService } from '../../services/system-understanding.service';
 import { PanelLayoutService } from '../../services/panel-layout.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 
@@ -45,6 +46,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly manager: WorkspaceManagerService,
     private readonly securityService: SecurityAnalysisService,
+    private readonly understandingService: SystemUnderstandingService,
     private readonly layoutService: PanelLayoutService,
   ) {}
 
@@ -85,6 +87,8 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     if (id) {
       const security = this.securityService.analyzeFile(session);
       this.manager.setSecurityAnalysis(id, security);
+      const understanding = this.understandingService.analyzeFile(session);
+      this.manager.setSystemUnderstanding(id, understanding);
     }
   }
 

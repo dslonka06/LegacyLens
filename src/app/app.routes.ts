@@ -45,6 +45,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/file-documentation-page/file-documentation-page').then(m => m.FileDocumentationPage)
   },
+  {
+    path: 'file-analysis/system-understanding',
+    canActivate: [workspaceInitGuard],
+    loadComponent: () =>
+      import('./pages/file-system-understanding-page/file-system-understanding-page').then(m => m.FileSystemUnderstandingPage)
+  },
   // ── Folder Analysis workspace ─────────────────────────────────────────────
   {
     path: 'folder-analysis',
@@ -82,6 +88,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/folder-documentation-page/folder-documentation-page').then(m => m.FolderDocumentationPage)
   },
+  {
+    path: 'folder-analysis/system-understanding',
+    canActivate: [workspaceInitGuard],
+    loadComponent: () =>
+      import('./pages/folder-system-understanding-page/folder-system-understanding-page').then(m => m.FolderSystemUnderstandingPage)
+  },
   // ── Repository Analysis workspace ──────────────────────────────────────────
   {
     path: 'repository-analysis',
@@ -118,6 +130,12 @@ export const routes: Routes = [
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
       import('./pages/repository-documentation-page/repository-documentation-page').then(m => m.RepositoryDocumentationPage)
+  },
+  {
+    path: 'repository-analysis/system-understanding',
+    canActivate: [workspaceInitGuard],
+    loadComponent: () =>
+      import('./pages/repository-system-understanding-page/repository-system-understanding-page').then(m => m.RepositorySystemUnderstandingPage)
   },
   // ── Global ─────────────────────────────────────────────────────────────────
   {
