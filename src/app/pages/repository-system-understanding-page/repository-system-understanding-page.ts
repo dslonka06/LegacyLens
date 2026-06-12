@@ -4,11 +4,13 @@ import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '../../services/workspace-manager.service';
 import { SystemUnderstanding } from '../../models/system-understanding.model';
+import { ExplanationResult } from '../../models/ai-explanation-context.model';
+import { ExplanationCard } from '../../components/explanation-card/explanation-card';
 
 @Component({
   selector: 'app-repository-system-understanding-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ExplanationCard],
   templateUrl: './repository-system-understanding-page.html',
   styleUrl: './repository-system-understanding-page.scss',
 })
@@ -16,6 +18,7 @@ export class RepositorySystemUnderstandingPage implements OnInit, OnDestroy {
 
   understanding: SystemUnderstanding | null = null;
   hasWorkspace = false;
+  aiExplanation: ExplanationResult | null = null;
 
   private sub: Subscription | null = null;
 
@@ -25,11 +28,21 @@ export class RepositorySystemUnderstandingPage implements OnInit, OnDestroy {
     this.sub = this.manager.activeWorkspace$.subscribe(ws => {
       this.hasWorkspace = ws !== null;
       this.understanding = ws?.systemUnderstanding ?? null;
+      this.aiExplanation = ws?.aiExplanation ?? null;
     });
   }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+  }
+
+  dismissExplanation(): void {
+    const id = this.manager.activeId;
+    if (id) this.manager.clearAiExplanation(id);
+  }
+
+  get showExplanationCard(): boolean {
+    return this.hasWorkspace && this.aiExplanation !== null;
   }
 
   depTypeLabel(type: string): string {

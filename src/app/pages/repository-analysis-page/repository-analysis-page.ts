@@ -17,6 +17,7 @@ import { SystemUnderstandingService } from '../../services/system-understanding.
 import { RecommendationAnalysisService } from '../../services/recommendation-analysis.service';
 import { LearningPathAnalysisService } from '../../services/learning-path-analysis.service';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
+import { AiKnowledgeService } from '../../services/ai-knowledge.service';
 import { PanelLayoutService } from '../../services/panel-layout.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 
@@ -83,6 +84,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     private readonly recService: RecommendationAnalysisService,
     private readonly learningPathService: LearningPathAnalysisService,
     private readonly knowledgeService: RepositoryKnowledgeService,
+    private readonly aiKnowledge: AiKnowledgeService,
     private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
     private readonly router: Router,
@@ -124,6 +126,20 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
         if (ws?.systemUnderstanding) {
           const lp = this.learningPathService.analyzeKnowledge(knowledge, this.session, ws.systemUnderstanding, 'repository');
           this.manager.setLearningPathAnalysis(id, lp);
+        }
+
+        // Trigger AI explanation once per knowledge load — skip if already generated
+        const ctx = this.workspaceContext;
+        if (ctx && !this.manager.getById(id)?.aiExplanation) {
+          this.aiKnowledge.explainRepository(ctx, knowledge).subscribe({
+            next: content => this.manager.setAiExplanation(id, {
+              type: 'repository',
+              title: 'Repository Explanation',
+              content,
+              generatedAt: new Date().toISOString(),
+            }),
+            error: () => { /* AI unavailable — explanation stays null, page degrades gracefully */ },
+          });
         }
       }
     });

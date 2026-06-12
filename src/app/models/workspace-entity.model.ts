@@ -5,6 +5,7 @@ import { SecurityAnalysis } from './security-analysis.model';
 import { SystemUnderstanding } from './system-understanding.model';
 import { RecommendationAnalysis } from './recommendation-analysis.model';
 import { LearningPathAnalysis } from './learning-path-analysis.model';
+import { ExplanationResult } from './ai-explanation-context.model';
 
 export type WorkspaceType = 'file' | 'folder' | 'repository';
 
@@ -30,4 +31,5 @@ export interface Workspace {
   systemUnderstanding: SystemUnderstanding | null;
   recommendationAnalysis: RecommendationAnalysis | null;
   learningPathAnalysis: LearningPathAnalysis | null;
+  aiExplanation: ExplanationResult | null;
 }

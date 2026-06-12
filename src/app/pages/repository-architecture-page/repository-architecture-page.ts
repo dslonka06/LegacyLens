@@ -3,31 +3,36 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ArchitecturePattern, RepositoryKnowledge } from '../../models/knowledge.model';
-import { AnalysisSession } from '../../models/analysis-session.model';
+import { ExplanationResult } from '../../models/ai-explanation-context.model';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
-import { CurrentAnalysisService } from '../../services/current-analysis.service';
+import { WorkspaceManagerService } from '../../services/workspace-manager.service';
+import { AiKnowledgeService } from '../../services/ai-knowledge.service';
 import { DependencyExplorerService } from '../../services/dependency-explorer.service';
+import { ExplanationCard } from '../../components/explanation-card/explanation-card';
 
 @Component({
   selector: 'app-repository-architecture-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ExplanationCard],
   templateUrl: './repository-architecture-page.html',
   styleUrl: './repository-architecture-page.scss',
 })
 export class RepositoryArchitecturePage implements OnInit, OnDestroy {
 
   knowledge: RepositoryKnowledge | null = null;
-  session: AnalysisSession | null = null;
   hasWorkspace = false;
+  aiExplanation: ExplanationResult | null = null;
+  aiLoading = false;
+  aiError: string | null = null;
 
   private subs: Subscription[] = [];
 
   constructor(
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly workspace: CurrentWorkspaceService,
-    private readonly currentAnalysis: CurrentAnalysisService,
+    private readonly manager: WorkspaceManagerService,
+    private readonly aiKnowledge: AiKnowledgeService,
     private readonly depExplorer: DependencyExplorerService,
   ) {}
 
@@ -37,11 +42,44 @@ export class RepositoryArchitecturePage implements OnInit, OnDestroy {
     this.subs.push(
       this.knowledgeService.knowledge$.subscribe(k => { this.knowledge = k; }),
       this.workspace.context$.subscribe(ctx => { this.hasWorkspace = ctx !== null; }),
-      this.currentAnalysis.session$.subscribe(s => { this.session = s; }),
+      this.manager.activeWorkspace$.subscribe(ws => {
+        this.aiExplanation = ws?.aiExplanation ?? null;
+      }),
     );
   }
 
   ngOnDestroy(): void { this.subs.forEach(s => s.unsubscribe()); }
+
+  regenerateExplanation(): void {
+    const ctx = this.workspace.context;
+    const knowledge = this.knowledge;
+    const id = this.manager.activeId;
+    if (!ctx || !knowledge || !id) return;
+
+    this.aiLoading = true;
+    this.aiError = null;
+
+    this.aiKnowledge.explainRepository(ctx, knowledge).subscribe({
+      next: content => {
+        this.aiLoading = false;
+        this.manager.setAiExplanation(id, {
+          type: 'repository',
+          title: 'Repository Explanation',
+          content,
+          generatedAt: new Date().toISOString(),
+        });
+      },
+      error: () => {
+        this.aiLoading = false;
+        this.aiError = 'Could not reach AI service. Check that the backend is running.';
+      },
+    });
+  }
+
+  dismissExplanation(): void {
+    const id = this.manager.activeId;
+    if (id) this.manager.clearAiExplanation(id);
+  }
 
   get patterns(): ArchitecturePattern[] {
     return this.knowledge?.architecture?.patterns ?? [];
@@ -85,19 +123,6 @@ export class RepositoryArchitecturePage implements OnInit, OnDestroy {
     return Math.round((p.confidence ?? 0) * 100);
   }
 
-  get isAiPowered(): boolean {
-    const arch = this.session?.aiAnalysis?.architecture;
-    return !!(arch && (arch.patterns.length > 0 || arch.responsibilities.length > 0));
-  }
-
-  get aiResponsibilities(): string[] {
-    return this.session?.aiAnalysis?.architecture?.responsibilities ?? [];
-  }
-
-  get aiDependencies(): string[] {
-    return this.session?.aiAnalysis?.architecture?.dependencies ?? [];
-  }
-
   architectureDescription(name: string): string {
     const descriptions: Record<string, string> = {
       'Clean Architecture':        'Business logic isolated from infrastructure. Dependencies point inward.',
@@ -109,5 +134,9 @@ export class RepositoryArchitecturePage implements OnInit, OnDestroy {
       'Hexagonal Architecture':    'Application core surrounded by ports and adapters.',
     };
     return descriptions[name] ?? 'Architectural pattern detected from folder structure and dependency analysis.';
+  }
+
+  get showExplanationCard(): boolean {
+    return this.hasWorkspace && (this.aiLoading || this.aiError !== null || this.aiExplanation !== null);
   }
 }

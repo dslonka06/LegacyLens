@@ -9,6 +9,7 @@ import { SecurityAnalysis } from '../models/security-analysis.model';
 import { SystemUnderstanding } from '../models/system-understanding.model';
 import { RecommendationAnalysis } from '../models/recommendation-analysis.model';
 import { LearningPathAnalysis } from '../models/learning-path-analysis.model';
+import { ExplanationResult } from '../models/ai-explanation-context.model';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceManagerService {
@@ -87,6 +88,7 @@ export class WorkspaceManagerService {
       systemUnderstanding: null,
       recommendationAnalysis: null,
       learningPathAnalysis: null,
+      aiExplanation: null,
     };
 
     this._workspaces$.next([...this._workspaces$.value, ws]);
@@ -229,6 +231,16 @@ export class WorkspaceManagerService {
 
   clearLearningPathAnalysis(id: string): void {
     this.patch(id, { learningPathAnalysis: null });
+  }
+
+  // ── AI Explanation ────────────────────────────────────────────────────────
+
+  setAiExplanation(id: string, explanation: ExplanationResult): void {
+    this.patch(id, { aiExplanation: explanation, lastModifiedAt: new Date().toISOString() });
+  }
+
+  clearAiExplanation(id: string): void {
+    this.patch(id, { aiExplanation: null });
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
