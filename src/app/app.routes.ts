@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { workspaceInitGuard } from './guards/workspace-init.guard';
-import { unsavedChangesGuard } from './guards/unsaved-changes.guard';
 
 export const routes: Routes = [
   {
@@ -31,9 +30,14 @@ export const routes: Routes = [
   {
     path: 'file-analysis/code-recommendations',
     canActivate: [workspaceInitGuard],
-    canDeactivate: [unsavedChangesGuard],
     loadComponent: () =>
       import('./pages/file-code-recommendations-page/file-code-recommendations-page').then(m => m.FileCodeRecommendationsPage)
+  },
+  {
+    path: 'file-analysis/security',
+    canActivate: [workspaceInitGuard],
+    loadComponent: () =>
+      import('./pages/file-security-page/file-security-page').then(m => m.FileSecurityPage)
   },
   {
     path: 'file-analysis/documentation',
@@ -41,14 +45,6 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/file-documentation-page/file-documentation-page').then(m => m.FileDocumentationPage)
   },
-  {
-    path: 'file-analysis/changes',
-    canActivate: [workspaceInitGuard],
-    data: { scope: 'file' },
-    loadComponent: () =>
-      import('./components/changes-page/changes-page').then(m => m.ChangesPageComponent)
-  },
-
   // ── Folder Analysis workspace ─────────────────────────────────────────────
   {
     path: 'folder-analysis',
@@ -71,9 +67,14 @@ export const routes: Routes = [
   {
     path: 'folder-analysis/code-recommendations',
     canActivate: [workspaceInitGuard],
-    canDeactivate: [unsavedChangesGuard],
     loadComponent: () =>
       import('./pages/folder-code-recommendations-page/folder-code-recommendations-page').then(m => m.FolderCodeRecommendationsPage)
+  },
+  {
+    path: 'folder-analysis/security',
+    canActivate: [workspaceInitGuard],
+    loadComponent: () =>
+      import('./pages/folder-security-page/folder-security-page').then(m => m.FolderSecurityPage)
   },
   {
     path: 'folder-analysis/documentation',
@@ -81,14 +82,6 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/folder-documentation-page/folder-documentation-page').then(m => m.FolderDocumentationPage)
   },
-  {
-    path: 'folder-analysis/changes',
-    canActivate: [workspaceInitGuard],
-    data: { scope: 'folder' },
-    loadComponent: () =>
-      import('./components/changes-page/changes-page').then(m => m.ChangesPageComponent)
-  },
-
   // ── Repository Analysis workspace ──────────────────────────────────────────
   {
     path: 'repository-analysis',
@@ -111,9 +104,14 @@ export const routes: Routes = [
   {
     path: 'repository-analysis/code-recommendations',
     canActivate: [workspaceInitGuard],
-    canDeactivate: [unsavedChangesGuard],
     loadComponent: () =>
       import('./pages/repository-code-recommendations-page/repository-code-recommendations-page').then(m => m.RepositoryCodeRecommendationsPage)
+  },
+  {
+    path: 'repository-analysis/security',
+    canActivate: [workspaceInitGuard],
+    loadComponent: () =>
+      import('./pages/repository-security-page/repository-security-page').then(m => m.RepositorySecurityPage)
   },
   {
     path: 'repository-analysis/documentation',
@@ -121,14 +119,6 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/repository-documentation-page/repository-documentation-page').then(m => m.RepositoryDocumentationPage)
   },
-  {
-    path: 'repository-analysis/changes',
-    canActivate: [workspaceInitGuard],
-    data: { scope: 'repository' },
-    loadComponent: () =>
-      import('./components/changes-page/changes-page').then(m => m.ChangesPageComponent)
-  },
-
   // ── Global ─────────────────────────────────────────────────────────────────
   {
     path: 'settings',
@@ -142,7 +132,7 @@ export const routes: Routes = [
   { path: 'data-flow',             redirectTo: 'file-analysis/data-flow',          pathMatch: 'full' },
   { path: 'risks',                 redirectTo: 'file-analysis/code-recommendations', pathMatch: 'full' },
   { path: 'modernization',         redirectTo: 'file-analysis/code-recommendations', pathMatch: 'full' },
-  { path: 'security',              redirectTo: 'file-analysis/code-recommendations', pathMatch: 'full' },
+  { path: 'security',              redirectTo: 'file-analysis/security', pathMatch: 'full' },
   { path: 'documentation',         redirectTo: 'file-analysis/documentation',      pathMatch: 'full' },
   { path: 'history',               redirectTo: '',                                  pathMatch: 'full' },
   { path: 'repository-navigation', redirectTo: 'repository-analysis',              pathMatch: 'full' },

@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, NgZone, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { FormsModule } from '@angular/forms';
+import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { Subscription } from 'rxjs';
 import { RepositoryKnowledge, SourceFile } from '../../models/knowledge.model';
 import { AnalysisSession } from '../../models/analysis-session.model';
@@ -14,16 +14,13 @@ import { CurrentAnalysisService } from '../../services/current-analysis.service'
 import { PanelLayoutService } from '../../services/panel-layout.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 import { ThemeService } from '../../services/theme.service';
-import { WorkspaceChangesService } from '../../services/workspace-changes.service';
-import { WorkspaceManagerService } from '../../services/workspace-manager.service';
-import { UnsavedChangesService } from '../../services/unsaved-changes.service';
 
 type CategoryKey = 'issues' | 'modernization' | 'security';
 
 @Component({
   selector: 'app-repository-code-recommendations-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, MonacoEditorModule, FormsModule, ResizeDividerComponent],
+  imports: [CommonModule, RouterLink, FormsModule, MonacoEditorModule, ResizeDividerComponent],
   templateUrl: './repository-code-recommendations-page.html',
   styleUrl: './repository-code-recommendations-page.scss',
 })
@@ -42,19 +39,16 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
     security: true,
   };
 
-  // Editor state
   editorCode = '';
-  editorOptions: Record<string, any> = {};
-  private editorInstance: any = null;
+  editorOptions: Record<string, unknown> = {};
+  private editorInstance: unknown = null;
   private decorationIds: string[] = [];
   private themeSub: Subscription | null = null;
 
   private subs: Subscription[] = [];
 
-  // Save state
-  private originalContent = '';
-  private currentFilePath = '';
-  saveStatus: 'idle' | 'saved' | 'modified' = 'idle';
+  // Copy state — each key tracks whether that button is in "Copied!" state
+  copyState: Record<string, boolean> = {};
 
   panelWidths = [300];
 
@@ -64,10 +58,7 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly insightsService: RepositoryInsightsService,
     private readonly themeService: ThemeService,
-    private readonly changesService: WorkspaceChangesService,
-    private readonly manager: WorkspaceManagerService,
     private readonly layoutService: PanelLayoutService,
-    private readonly unsaved: UnsavedChangesService,
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
   ) {}
@@ -100,10 +91,9 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.unsaved.clear();
     this.subs.forEach(s => s.unsubscribe());
     this.themeSub?.unsubscribe();
-    this.editorInstance?.dispose();
+    (this.editorInstance as any)?.dispose();
   }
 
   // ── Recommendation building ────────────────────────────────────────────────
@@ -113,7 +103,6 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
     const insights = this.insightsService.analyze(knowledge);
     const sourceFiles = knowledge.sourceFiles ?? [];
 
-    // Map RepositoryInsights → recommendations, skipping pure stat entries
     for (const insight of insights) {
       if (insight.category === 'stat') continue;
 
@@ -126,14 +115,13 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
         title: insight.title,
         fileName,
         category,
-        severity: (insight.severity === 'info' ? 'low' : insight.severity) as any,
+        severity: insight.severity as CodeRecommendation['severity'],
         description: insight.description,
         solution,
         searchTerm: insight.affectedFiles?.[0],
       });
     }
 
-    // Additional modernization recommendations from dependency graph
     const graph = knowledge.dependencyGraph;
     if (graph) {
       const isolated = graph.nodes.filter(n => {
@@ -154,7 +142,6 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
       }
     }
 
-    // Merge AI-generated risks and modernizations when available
     const ai = this.session?.aiAnalysis;
     const primaryFile = this.firstFileName(sourceFiles);
     if (ai?.risks?.length) {
@@ -214,7 +201,7 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
       case 'orphan':
         return 'Verify each orphaned file is intentionally standalone. Remove confirmed dead code. Move shared utilities into a dedicated utilities module with clear ownership.';
       default:
-        return 'Review the affected file and apply the recommendation described above. Use the editor below to make changes.';
+        return 'Review the affected file and apply the recommendation described above.';
     }
   }
 
@@ -224,9 +211,9 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
 
   // ── Category grouping ──────────────────────────────────────────────────────
 
-  get issueRecs():       CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'issues'); }
+  get issueRecs():         CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'issues'); }
   get modernizationRecs(): CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'modernization'); }
-  get securityRecs():    CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'security'); }
+  get securityRecs():      CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'security'); }
 
   get workspaceName(): string { return this.workspace.context?.workspaceName ?? 'Repository'; }
 
@@ -253,45 +240,70 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
     this.loadFileForRecommendation(rec);
   }
 
-  saveChanges(): void {
-    if (!this.selected || this.editorCode === this.originalContent) return;
-    this.changesService.saveChange(
-      this.manager.activeId ?? '',
-      this.currentFilePath,
-      this.originalContent,
-      this.editorCode,
-      { id: this.selected.id, title: this.selected.title, category: this.selected.category, severity: this.selected.severity },
-    );
-    this.saveStatus = 'saved';
-    this.unsaved.clear();
-    this.cdr.detectChanges();
+  // ── Copy utilities ─────────────────────────────────────────────────────────
+
+  copyToClipboard(key: string, text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      this.copyState[key] = true;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.copyState[key] = false;
+        this.cdr.detectChanges();
+      }, 1500);
+    });
   }
 
-  onEditorChange(): void {
-    const dirty = this.editorCode !== this.originalContent && this.originalContent !== '';
-    this.unsaved.set(dirty);
+  copyCode(): void {
+    this.copyToClipboard('code', this.editorCode);
   }
 
-  get isModified(): boolean {
-    return this.editorCode !== this.originalContent && this.originalContent !== '';
+  copyRecommendation(): void {
+    if (!this.selected) return;
+    const text = `${this.selected.title}\n\n${this.selected.explanation ?? this.selected.description}`;
+    this.copyToClipboard('rec', text);
   }
+
+  copySuggestedFix(): void {
+    if (!this.selected) return;
+    const fix = this.selected.suggestedImprovement ?? this.selected.solution ?? '';
+    this.copyToClipboard('fix', fix);
+  }
+
+  copyFull(): void {
+    if (!this.selected) return;
+    const parts = [
+      `Title: ${this.selected.title}`,
+      `File: ${this.selected.fileName}`,
+      `Severity: ${this.selected.severity}`,
+      `\nDescription:\n${this.selected.explanation ?? this.selected.description}`,
+    ];
+    if (this.selected.suggestedImprovement ?? this.selected.solution) {
+      parts.push(`\nSuggested Fix:\n${this.selected.suggestedImprovement ?? this.selected.solution}`);
+    }
+    if (this.selected.codeSnippet ?? this.editorCode) {
+      parts.push(`\nCode Snippet:\n${this.selected.codeSnippet ?? this.editorCode}`);
+    }
+    if (this.selected.expectedImpact) {
+      parts.push(`\nExpected Impact:\n${this.selected.expectedImpact}`);
+    }
+    this.copyToClipboard('full', parts.join('\n'));
+  }
+
+  // ── Monaco ─────────────────────────────────────────────────────────────────
 
   private loadFileForRecommendation(rec: CodeRecommendation): void {
     const sourceFiles = this.knowledge?.sourceFiles ?? [];
     const match = this.findSourceFile(rec.fileName, sourceFiles);
-    const content = match?.content ?? `// File "${rec.fileName}" is not available in the current workspace.\n// Upload the workspace from the analysis page to enable editing.`;
+    const content = rec.codeSnippet
+      ?? match?.content
+      ?? `// File "${rec.fileName}" is not available in the current workspace.\n// Upload the workspace from the analysis page to view the source code.`;
     const ext = (match?.extension ?? rec.fileName.split('.').pop() ?? 'txt').toLowerCase();
     const language = this.languageFromExt(ext);
-
-    this.originalContent = content;
-    this.currentFilePath = match?.path ?? rec.fileName;
-    this.saveStatus = this.changesService.isModified(this.manager.activeId ?? '', this.currentFilePath) ? 'saved' : 'idle';
 
     this.editorOptions = { ...this.buildEditorOptions(), language };
     this.editorCode = content;
     this.cdr.detectChanges();
 
-    // Highlight after a tick to let Monaco re-render with new content
     setTimeout(() => {
       this.zone.run(() => {
         this.applyHighlight(rec);
@@ -311,22 +323,22 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
   }
 
   private applyHighlight(rec: CodeRecommendation): void {
-    if (!this.editorInstance || !rec.searchTerm) return;
-    const model = this.editorInstance.getModel();
+    const editor = this.editorInstance as any;
+    if (!editor || !rec.searchTerm) return;
+    const model = editor.getModel();
     if (!model) return;
 
     const monaco = (window as any).monaco;
     if (!monaco) return;
 
-    // Clear previous decorations
-    this.decorationIds = this.editorInstance.deltaDecorations(this.decorationIds, []);
+    this.decorationIds = editor.deltaDecorations(this.decorationIds, []);
 
     const term = rec.searchTerm.split('/').pop() ?? rec.searchTerm;
     const matches = model.findMatches(term, true, false, false, null, true);
     if (!matches || matches.length === 0) return;
 
     const first = matches[0].range;
-    this.decorationIds = this.editorInstance.deltaDecorations([], [{
+    this.decorationIds = editor.deltaDecorations([], [{
       range: first,
       options: {
         className: 'rec-highlight',
@@ -336,12 +348,10 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
       },
     }]);
 
-    this.editorInstance.revealLineInCenter(first.startLineNumber);
+    editor.revealLineInCenter(first.startLineNumber);
   }
 
-  // ── Monaco ─────────────────────────────────────────────────────────────────
-
-  onEditorInit(editor: any): void {
+  onEditorInit(editor: unknown): void {
     this.zone.run(() => {
       this.editorInstance = editor;
 
@@ -350,18 +360,17 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
         if (m) m.editor.setTheme(isDark ? 'vs-dark' : 'vs');
       });
 
-      // Re-apply highlight if a recommendation was selected before the editor initialized
       if (this.selected) {
         setTimeout(() => this.applyHighlight(this.selected!), 80);
       }
     });
   }
 
-  private buildEditorOptions(): Record<string, any> {
+  private buildEditorOptions(): Record<string, unknown> {
     return {
       theme: this.themeService.isDark ? 'vs-dark' : 'vs',
       language: 'plaintext',
-      readOnly: false,
+      readOnly: true,
       fontSize: 13,
       fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
       fontLigatures: true,
@@ -398,10 +407,10 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
   // ── Display helpers ────────────────────────────────────────────────────────
 
   severityClass(s: string): string {
-    return ({ high: 'sev-high', medium: 'sev-medium', low: 'sev-low', info: 'sev-info' } as any)[s] ?? 'sev-low';
+    return ({ high: 'sev-high', medium: 'sev-medium', low: 'sev-low', info: 'sev-info' } as Record<string, string>)[s] ?? 'sev-low';
   }
 
   categoryIcon(cat: CategoryKey): string {
-    return ({ issues: '⚠', modernization: '⚡', security: '🔒' } as any)[cat] ?? '•';
+    return ({ issues: '⚠', modernization: '⚡', security: '🔒' } as Record<string, string>)[cat] ?? '•';
   }
 }

@@ -13,6 +13,8 @@ import { FolderNode } from '../../models/repository.model';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
 import { WorkspaceManagerService } from '../../services/workspace-manager.service';
+import { SecurityAnalysisService } from '../../services/security-analysis.service';
+import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { PanelLayoutService } from '../../services/panel-layout.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 
@@ -70,11 +72,14 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   private uploadedFiles: File[] = [];
   private contextSub: Subscription | null = null;
   private limitSub: Subscription | null = null;
+  private securitySub: Subscription | null = null;
 
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly manager: WorkspaceManagerService,
+    private readonly securityService: SecurityAnalysisService,
+    private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
     private readonly router: Router,
@@ -101,11 +106,21 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     });
 
     this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
+
+    // Generate security analysis once knowledge pipeline completes
+    this.securitySub = this.knowledgeService.knowledge$.subscribe(knowledge => {
+      const id = this.manager.activeId;
+      if (knowledge && id) {
+        const security = this.securityService.analyzeKnowledge(knowledge, this.session);
+        this.manager.setSecurityAnalysis(id, security);
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.contextSub?.unsubscribe();
     this.limitSub?.unsubscribe();
+    this.securitySub?.unsubscribe();
   }
 
   // ── CodeEditor event handlers ─────────────────────────────────────────────

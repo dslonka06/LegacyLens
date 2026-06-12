@@ -13,7 +13,7 @@ import { ActiveWorkspaceService } from '../../services/active-workspace.service'
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { WorkspaceProfile } from '../../models/workspace.model';
 import { RepositoryKnowledge } from '../../models/knowledge.model';
-import { WorkspaceScope } from '../../models/modified-file.model';
+import { WorkspaceType } from '../../models/workspace-entity.model';
 import { ThemeService } from '../../services/theme.service';
 
 // Extension → Monaco language ID
@@ -426,7 +426,7 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  private get activeScope(): WorkspaceScope {
+  private get activeScope(): WorkspaceType {
     const ws = this.activeWorkspace.workspace;
     if (ws === 'folder')     return 'folder';
     if (ws === 'repository') return 'repository';

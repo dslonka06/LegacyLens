@@ -1,10 +1,10 @@
 import { AnalysisResult } from './analysis-result.model';
 import { AiAnalysisResult } from './ai-analysis-result.model';
 import { WorkspaceProfile } from './workspace.model';
-import { WorkspaceScope } from './modified-file.model';
+import { WorkspaceType } from './workspace-entity.model';
 
 export interface AnalysisSession {
-  scope: WorkspaceScope;
+  scope: WorkspaceType;
   fileName: string;
   sourceCode: string;
   analysis: AnalysisResult;

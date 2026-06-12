@@ -6,33 +6,20 @@ import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { Subscription } from 'rxjs';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { ThemeService } from '../../services/theme.service';
-import { WorkspaceChangesService } from '../../services/workspace-changes.service';
-import { WorkspaceManagerService } from '../../services/workspace-manager.service';
-import { UnsavedChangesService } from '../../services/unsaved-changes.service';
 import { PanelLayoutService } from '../../services/panel-layout.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { AiRisk } from '../../models/ai-analysis-result.model';
 import { ModernizationRecommendation } from '../../models/modernization-recommendation.model';
 import { ModernizationItem } from '../../models/modernization-item.model';
+import { CodeRecommendation, RecommendationCategory } from '../../models/code-recommendation.model';
 
-type CategoryKey = 'issues' | 'modernization' | 'security';
-
-interface FileRec {
-  id: string;
-  title: string;
-  fileName: string;
-  category: CategoryKey;
-  severity: 'high' | 'medium' | 'low' | 'info';
-  description: string;
-  solution?: string;
-  searchTerm?: string;
-}
+type CategoryKey = RecommendationCategory;
 
 @Component({
   selector: 'app-file-code-recommendations-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, MonacoEditorModule, FormsModule, ResizeDividerComponent],
+  imports: [CommonModule, RouterLink, FormsModule, MonacoEditorModule, ResizeDividerComponent],
   templateUrl: './file-code-recommendations-page.html',
   styleUrl: './file-code-recommendations-page.scss',
 })
@@ -41,8 +28,8 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
   session: AnalysisSession | null = null;
   hasSession = false;
 
-  recommendations: FileRec[] = [];
-  selected: FileRec | null = null;
+  recommendations: CodeRecommendation[] = [];
+  selected: CodeRecommendation | null = null;
 
   collapsed: Record<CategoryKey, boolean> = {
     issues: true,
@@ -51,26 +38,21 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
   };
 
   editorCode = '';
-  editorOptions: Record<string, any> = {};
-  private editorInstance: any = null;
+  editorOptions: Record<string, unknown> = {};
+  private editorInstance: unknown = null;
   private decorationIds: string[] = [];
   private themeSub: Subscription | null = null;
   private sessionSub: Subscription | null = null;
 
-  // Save state
-  private originalContent = '';
-  private currentFilePath = '';
-  saveStatus: 'idle' | 'saved' | 'modified' = 'idle';
+  // Copy state — each key tracks whether that button is in "Copied!" state
+  copyState: Record<string, boolean> = {};
 
   panelWidths = [300];
 
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly themeService: ThemeService,
-    private readonly changes: WorkspaceChangesService,
-    private readonly manager: WorkspaceManagerService,
     private readonly layoutService: PanelLayoutService,
-    private readonly unsaved: UnsavedChangesService,
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
   ) {}
@@ -88,16 +70,15 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.unsaved.clear();
     this.themeSub?.unsubscribe();
     this.sessionSub?.unsubscribe();
-    this.editorInstance?.dispose();
+    (this.editorInstance as any)?.dispose();
   }
 
   // ── Recommendation building ────────────────────────────────────────────────
 
   private buildRecommendations(session: AnalysisSession): void {
-    const recs: FileRec[] = [];
+    const recs: CodeRecommendation[] = [];
     const fileName = session.fileName;
 
     if ((session.aiAnalysis?.risks?.length ?? 0) > 0) {
@@ -106,8 +87,9 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
         title: r.title,
         fileName,
         category: 'issues',
-        severity: r.severity.toLowerCase() as FileRec['severity'],
+        severity: r.severity.toLowerCase() as CodeRecommendation['severity'],
         description: r.description,
+        solution: '',
         searchTerm: r.title.split(' ')[0],
       }));
     } else {
@@ -116,8 +98,9 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
         title: r.description,
         fileName,
         category: 'issues',
-        severity: r.severity as FileRec['severity'],
+        severity: r.severity as CodeRecommendation['severity'],
         description: r.description,
+        solution: '',
       }));
     }
 
@@ -129,6 +112,7 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
         category: 'modernization',
         severity: 'info',
         description: m.description,
+        solution: '',
         searchTerm: m.title.split(' ')[0],
       }));
     } else {
@@ -139,6 +123,7 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
         category: 'modernization',
         severity: 'info',
         description: m.description,
+        solution: '',
       }));
     }
 
@@ -147,9 +132,9 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
 
   // ── Category grouping ──────────────────────────────────────────────────────
 
-  get issueRecs():         FileRec[] { return this.recommendations.filter(r => r.category === 'issues'); }
-  get modernizationRecs(): FileRec[] { return this.recommendations.filter(r => r.category === 'modernization'); }
-  get securityRecs():      FileRec[] { return this.recommendations.filter(r => r.category === 'security'); }
+  get issueRecs():         CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'issues'); }
+  get modernizationRecs(): CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'modernization'); }
+  get securityRecs():      CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'security'); }
 
   get fileName(): string { return this.session?.fileName ?? 'File'; }
 
@@ -171,46 +156,66 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
 
   // ── Recommendation selection ───────────────────────────────────────────────
 
-  selectRecommendation(rec: FileRec): void {
+  selectRecommendation(rec: CodeRecommendation): void {
     this.selected = rec;
     this.loadFileForRecommendation(rec);
   }
 
-  saveChanges(): void {
-    if (!this.selected || this.editorCode === this.originalContent) return;
-    this.changes.saveChange(
-      this.manager.activeId ?? '',
-      this.currentFilePath,
-      this.originalContent,
-      this.editorCode,
-      { id: this.selected.id, title: this.selected.title, category: this.selected.category, severity: this.selected.severity },
-    );
-    this.saveStatus = 'saved';
-    this.unsaved.clear();
-    this.cdr.detectChanges();
+  // ── Copy utilities ─────────────────────────────────────────────────────────
+
+  copyToClipboard(key: string, text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      this.copyState[key] = true;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.copyState[key] = false;
+        this.cdr.detectChanges();
+      }, 1500);
+    });
   }
 
-  onEditorChange(): void {
-    const dirty = this.editorCode !== this.originalContent && this.originalContent !== '';
-    this.unsaved.set(dirty);
+  copyCode(): void {
+    this.copyToClipboard('code', this.editorCode);
   }
 
-  get isModified(): boolean {
-    return this.editorCode !== this.originalContent && this.originalContent !== '';
+  copyRecommendation(): void {
+    if (!this.selected) return;
+    const text = `${this.selected.title}\n\n${this.selected.description}`;
+    this.copyToClipboard('rec', text);
   }
 
-  get isFileSaved(): boolean {
-    return this.saveStatus === 'saved' && !this.isModified;
+  copySuggestedFix(): void {
+    if (!this.selected) return;
+    const fix = this.selected.suggestedImprovement ?? this.selected.solution ?? '';
+    this.copyToClipboard('fix', fix);
   }
 
-  private loadFileForRecommendation(rec: FileRec): void {
-    const content = this.session?.sourceCode ?? `// Source code not available.`;
+  copyFull(): void {
+    if (!this.selected) return;
+    const parts = [
+      `Title: ${this.selected.title}`,
+      `File: ${this.selected.fileName}`,
+      `Severity: ${this.selected.severity}`,
+      `\nDescription:\n${this.selected.explanation ?? this.selected.description}`,
+    ];
+    if (this.selected.suggestedImprovement ?? this.selected.solution) {
+      parts.push(`\nSuggested Fix:\n${this.selected.suggestedImprovement ?? this.selected.solution}`);
+    }
+    if (this.selected.codeSnippet ?? this.editorCode) {
+      parts.push(`\nCode Snippet:\n${this.selected.codeSnippet ?? this.editorCode}`);
+    }
+    if (this.selected.expectedImpact) {
+      parts.push(`\nExpected Impact:\n${this.selected.expectedImpact}`);
+    }
+    this.copyToClipboard('full', parts.join('\n'));
+  }
+
+  // ── Monaco ─────────────────────────────────────────────────────────────────
+
+  private loadFileForRecommendation(rec: CodeRecommendation): void {
+    const content = rec.codeSnippet ?? this.session?.sourceCode ?? `// Source code not available.`;
     const ext = (rec.fileName.split('.').pop() ?? 'txt').toLowerCase();
     const language = this.languageFromExt(ext);
-
-    this.originalContent = content;
-    this.currentFilePath = this.session?.fileName ?? rec.fileName;
-    this.saveStatus = this.changes.isModified(this.manager.activeId ?? '', this.currentFilePath) ? 'saved' : 'idle';
 
     this.editorOptions = { ...this.buildEditorOptions(), language };
     this.editorCode = content;
@@ -224,21 +229,22 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
     }, 80);
   }
 
-  private applyHighlight(rec: FileRec): void {
-    if (!this.editorInstance || !rec.searchTerm) return;
-    const model = this.editorInstance.getModel();
+  private applyHighlight(rec: CodeRecommendation): void {
+    const editor = this.editorInstance as any;
+    if (!editor || !rec.searchTerm) return;
+    const model = editor.getModel();
     if (!model) return;
     const monaco = (window as any).monaco;
     if (!monaco) return;
 
-    this.decorationIds = this.editorInstance.deltaDecorations(this.decorationIds, []);
+    this.decorationIds = editor.deltaDecorations(this.decorationIds, []);
 
     const term = rec.searchTerm;
     const matches = model.findMatches(term, true, false, false, null, true);
     if (!matches || matches.length === 0) return;
 
     const first = matches[0].range;
-    this.decorationIds = this.editorInstance.deltaDecorations([], [{
+    this.decorationIds = editor.deltaDecorations([], [{
       range: first,
       options: {
         className: 'rec-highlight',
@@ -248,12 +254,10 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
       },
     }]);
 
-    this.editorInstance.revealLineInCenter(first.startLineNumber);
+    editor.revealLineInCenter(first.startLineNumber);
   }
 
-  // ── Monaco ─────────────────────────────────────────────────────────────────
-
-  onEditorInit(editor: any): void {
+  onEditorInit(editor: unknown): void {
     this.zone.run(() => {
       this.editorInstance = editor;
 
@@ -268,11 +272,11 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
     });
   }
 
-  private buildEditorOptions(): Record<string, any> {
+  private buildEditorOptions(): Record<string, unknown> {
     return {
       theme: this.themeService.isDark ? 'vs-dark' : 'vs',
       language: 'plaintext',
-      readOnly: false,
+      readOnly: true,
       fontSize: 13,
       fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
       fontLigatures: true,
@@ -309,6 +313,6 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
   // ── Display helpers ────────────────────────────────────────────────────────
 
   severityClass(s: string): string {
-    return ({ high: 'sev-high', medium: 'sev-medium', low: 'sev-low', info: 'sev-info' } as any)[s] ?? 'sev-info';
+    return ({ high: 'sev-high', medium: 'sev-medium', low: 'sev-low', info: 'sev-info' } as Record<string, string>)[s] ?? 'sev-info';
   }
 }

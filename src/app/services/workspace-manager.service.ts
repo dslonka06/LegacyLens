@@ -5,7 +5,7 @@ import { Workspace, WorkspaceType, WorkspaceStatus, MAX_WORKSPACES } from '../mo
 import { AnalysisSession } from '../models/analysis-session.model';
 import { WorkspaceContext } from '../models/workspace-context.model';
 import { RepositoryKnowledge, KnowledgeState } from '../models/knowledge.model';
-import { ModifiedFile, ModifiedFileStatus, RecommendationSource } from '../models/modified-file.model';
+import { SecurityAnalysis } from '../models/security-analysis.model';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceManagerService {
@@ -80,7 +80,7 @@ export class WorkspaceManagerService {
       context: null,
       knowledge: null,
       knowledgeState: KnowledgeState.NotStarted,
-      changes: [],
+      securityAnalysis: null,
     };
 
     this._workspaces$.next([...this._workspaces$.value, ws]);
@@ -185,103 +185,14 @@ export class WorkspaceManagerService {
     this.patch(id, { knowledge: null, knowledgeState: KnowledgeState.NotStarted });
   }
 
-  // ── Changes ───────────────────────────────────────────────────────────────
+  // ── Security Analysis ─────────────────────────────────────────────────────
 
-  changes$(id: string): Observable<ModifiedFile[]> {
-    return this._workspaces$.pipe(
-      map(ws => ws.find(w => w.id === id)?.changes ?? []),
-      distinctUntilChanged(),
-    );
+  setSecurityAnalysis(id: string, security: SecurityAnalysis): void {
+    this.patch(id, { securityAnalysis: security, lastModifiedAt: new Date().toISOString() });
   }
 
-  getChanges(id: string): ModifiedFile[] {
-    return this.getById(id)?.changes ?? [];
-  }
-
-  saveChange(
-    id: string,
-    filePath: string,
-    originalContent: string,
-    modifiedContent: string,
-    rec?: RecommendationSource,
-  ): void {
-    if (originalContent === modifiedContent) return;
-    const ws = this.getById(id);
-    if (!ws) return;
-
-    const current = ws.changes;
-    const existingIdx = current.findIndex(f => f.filePath === filePath);
-    const fileName = filePath.split('/').pop() ?? filePath;
-
-    let recommendations: RecommendationSource[];
-    if (existingIdx >= 0) {
-      // Merge: add rec if it isn't already in the list (deduplicate by id)
-      const prev = current[existingIdx].recommendations;
-      recommendations = rec && !prev.some(r => r.id === rec.id)
-        ? [...prev, rec]
-        : prev;
-    } else {
-      recommendations = rec ? [rec] : [];
-    }
-
-    const entry: ModifiedFile = {
-      id: existingIdx >= 0 ? current[existingIdx].id : this.newChangeId(),
-      filePath,
-      fileName,
-      originalContent,
-      modifiedContent,
-      modifiedAt: new Date().toISOString(),
-      status: existingIdx >= 0 ? current[existingIdx].status : 'pending',
-      workspaceId: id,
-      recommendations,
-    };
-
-    const updated = [...current];
-    if (existingIdx >= 0) updated[existingIdx] = entry; else updated.push(entry);
-
-    this.patch(id, {
-      changes: updated,
-      status: 'modified',
-      lastModifiedAt: new Date().toISOString(),
-    });
-  }
-
-  setChangeStatus(id: string, changeId: string, status: ModifiedFileStatus): void {
-    const ws = this.getById(id);
-    if (!ws) return;
-    const changes = ws.changes.map(f => f.id === changeId ? { ...f, status } : f);
-    this.patch(id, { changes, status: this.deriveStatusFromChanges(changes) });
-  }
-
-  setAllChangeStatus(id: string, status: ModifiedFileStatus): void {
-    const ws = this.getById(id);
-    if (!ws) return;
-    const changes = ws.changes.map(f => ({ ...f, status }));
-    this.patch(id, { changes, status: this.deriveStatusFromChanges(changes) });
-  }
-
-  private deriveStatusFromChanges(changes: ModifiedFile[]): WorkspaceStatus {
-    // 'approved' means ready to export but not yet exported — highest urgency
-    if (changes.some(f => f.status === 'approved'))  return 'changes-pending';
-    if (changes.some(f => f.status === 'pending'))   return 'modified';
-    if (changes.some(f => f.status === 'exported'))  return 'loaded';
-    return 'loaded';
-  }
-
-  restoreChange(id: string, changeId: string): void {
-    const ws = this.getById(id);
-    if (!ws) return;
-    const changes = ws.changes.filter(f => f.id !== changeId);
-    const wsStatus: WorkspaceStatus = changes.length > 0 ? 'modified' : 'loaded';
-    this.patch(id, { changes, status: wsStatus });
-  }
-
-  isFileModified(id: string, filePath: string): boolean {
-    return this.getById(id)?.changes.some(f => f.filePath === filePath) ?? false;
-  }
-
-  getChange(id: string, changeId: string): ModifiedFile | null {
-    return this.getById(id)?.changes.find(f => f.id === changeId) ?? null;
+  clearSecurityAnalysis(id: string): void {
+    this.patch(id, { securityAnalysis: null });
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -297,8 +208,6 @@ export class WorkspaceManagerService {
     const ws = this.getById(id);
     if (!ws) return 'empty';
     const merged = { ...ws, ...delta };
-    if (merged.changes.some(f => f.status === 'approved')) return 'changes-pending';
-    if (merged.changes.length > 0) return 'modified';
     if (merged.knowledge || merged.session || merged.context) return 'loaded';
     return 'empty';
   }
@@ -311,9 +220,5 @@ export class WorkspaceManagerService {
 
   private generateId(): string {
     return `ws-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-  }
-
-  private newChangeId(): string {
-    return `chg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   }
 }

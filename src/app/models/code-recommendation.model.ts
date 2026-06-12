@@ -1,5 +1,6 @@
 export type RecommendationCategory = 'issues' | 'modernization' | 'security';
-export type RecommendationSeverity = 'high' | 'medium' | 'low';
+export type RecommendationSeverity = 'high' | 'medium' | 'low' | 'info';
+export type RecommendationRiskLevel = 'Low' | 'Medium' | 'High';
 
 export interface CodeRecommendation {
   id: string;
@@ -9,6 +10,15 @@ export interface CodeRecommendation {
   severity: RecommendationSeverity;
   description: string;
   solution: string;
-  // Optional keyword to search for and highlight in the file
   searchTerm?: string;
+  // Enriched fields — populated by AI-generated recommendations when available
+  filePath?: string;
+  lineStart?: number;
+  lineEnd?: number;
+  codeSnippet?: string;
+  explanation?: string;
+  suggestedImprovement?: string;
+  expectedImpact?: string;
+  riskLevel?: RecommendationRiskLevel;
+  dependenciesAffected?: string[];
 }

@@ -152,14 +152,33 @@
           </div>
 
           <div class="rcr-details-sections">
-            <div class="rcr-details-section">
-              <div class="rcr-details-section-label">Issue Description</div>
-              <p>{{ selected.description }}</p>
+            <div class="rcr-details-section" [class.rcr-details-full]="!(selected.suggestedImprovement ?? selected.solution)">
+              <div class="rcr-details-section-label">
+                Issue Description
+                <button class="rcr-copy-inline" (click)="copyRecommendation()" [class.copied]="copyState['rec']" title="Copy description">
+                  {{ copyState['rec'] ? '✓' : 'Copy' }}
+                </button>
+              </div>
+              <p>{{ selected.explanation ?? selected.description }}</p>
             </div>
-            <div class="rcr-details-section">
-              <div class="rcr-details-section-label">Recommended Solution</div>
-              <p>{{ selected.solution }}</p>
+            <div class="rcr-details-section" *ngIf="selected.suggestedImprovement ?? selected.solution">
+              <div class="rcr-details-section-label">
+                Recommended Solution
+                <button class="rcr-copy-inline" (click)="copySuggestedFix()" [class.copied]="copyState['fix']" title="Copy fix">
+                  {{ copyState['fix'] ? '✓' : 'Copy' }}
+                </button>
+              </div>
+              <p>{{ selected.suggestedImprovement ?? selected.solution }}</p>
             </div>
+            <div class="rcr-details-section" *ngIf="selected.expectedImpact">
+              <div class="rcr-details-section-label">Expected Impact</div>
+              <p>{{ selected.expectedImpact }}</p>
+            </div>
+          </div>
+          <div class="rcr-details-copy-full">
+            <button class="rcr-copy-btn secondary" (click)="copyFull()" [class.copied]="copyState['full']">
+              {{ copyState['full'] ? '✓ Copied!' : 'Copy Full Recommendation' }}
+            </button>
           </div>
         </div>
 
@@ -171,24 +190,21 @@
               <polyline points="14 2 14 8 20 8"/>
             </svg>
             <span class="rcr-editor-filename">{{ selected.fileName }}</span>
-            <span class="rcr-editor-editable-badge">Editable</span>
-            <span class="rcr-save-status modified" *ngIf="isModified">● Unsaved</span>
-            <span class="rcr-save-status saved" *ngIf="saveStatus === 'saved' && !isModified">✓ Saved</span>
-            <button class="rcr-save-btn" (click)="saveChanges()" [disabled]="!isModified">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                <polyline points="17 21 17 13 7 13 7 21"/>
-                <polyline points="7 3 7 8 15 8"/>
-              </svg>
-              Save Changes
-            </button>
+            <div class="rcr-editor-actions">
+              <button class="rcr-copy-btn" (click)="copyCode()" [class.copied]="copyState['code']">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                {{ copyState['code'] ? '✓ Copied!' : 'Copy Code' }}
+              </button>
+            </div>
           </div>
           <div class="rcr-monaco-container">
             <ngx-monaco-editor
               class="rcr-monaco-instance"
               [options]="editorOptions"
               [(ngModel)]="editorCode"
-              (ngModelChange)="onEditorChange()"
               (onInit)="onEditorInit($event)">
             </ngx-monaco-editor>
           </div>

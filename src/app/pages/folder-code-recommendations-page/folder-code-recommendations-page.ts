@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { FormsModule } from '@angular/forms';
+import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { Subscription } from 'rxjs';
 import { RepositoryKnowledge, SourceFile } from '../../models/knowledge.model';
 import { AnalysisSession } from '../../models/analysis-session.model';
@@ -13,16 +13,13 @@ import { CurrentAnalysisService } from '../../services/current-analysis.service'
 import { PanelLayoutService } from '../../services/panel-layout.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 import { ThemeService } from '../../services/theme.service';
-import { WorkspaceChangesService } from '../../services/workspace-changes.service';
-import { WorkspaceManagerService } from '../../services/workspace-manager.service';
-import { UnsavedChangesService } from '../../services/unsaved-changes.service';
 
 type CategoryKey = 'issues' | 'modernization' | 'security';
 
 @Component({
   selector: 'app-folder-code-recommendations-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, MonacoEditorModule, FormsModule, ResizeDividerComponent],
+  imports: [CommonModule, RouterLink, FormsModule, MonacoEditorModule, ResizeDividerComponent],
   templateUrl: './folder-code-recommendations-page.html',
   styleUrl: './folder-code-recommendations-page.scss',
 })
@@ -41,19 +38,16 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
     security: true,
   };
 
-  // Editor state
   editorCode = '';
-  editorOptions: Record<string, any> = {};
-  private editorInstance: any = null;
+  editorOptions: Record<string, unknown> = {};
+  private editorInstance: unknown = null;
   private decorationIds: string[] = [];
   private themeSub: Subscription | null = null;
 
   private subs: Subscription[] = [];
 
-  // Save state
-  private originalContent = '';
-  private currentFilePath = '';
-  saveStatus: 'idle' | 'saved' | 'modified' = 'idle';
+  // Copy state — each key tracks whether that button is in "Copied!" state
+  copyState: Record<string, boolean> = {};
 
   panelWidths = [300];
 
@@ -62,10 +56,7 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
     private readonly workspace: CurrentWorkspaceService,
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly themeService: ThemeService,
-    private readonly changesService: WorkspaceChangesService,
-    private readonly manager: WorkspaceManagerService,
     private readonly layoutService: PanelLayoutService,
-    private readonly unsaved: UnsavedChangesService,
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
   ) {}
@@ -98,10 +89,9 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.unsaved.clear();
     this.subs.forEach(s => s.unsubscribe());
     this.themeSub?.unsubscribe();
-    this.editorInstance?.dispose();
+    (this.editorInstance as any)?.dispose();
   }
 
   // ── Recommendation building ────────────────────────────────────────────────
@@ -113,7 +103,6 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
     const sourceFiles = knowledge.sourceFiles ?? [];
 
     if (graph) {
-      // Highly-coupled nodes (high inbound)
       const inbound = new Map<string, number>();
       graph.edges.forEach(e => inbound.set(e.target, (inbound.get(e.target) ?? 0) + 1));
       const hubs = graph.nodes.filter(n => (inbound.get(n.id) ?? 0) >= 5);
@@ -133,7 +122,6 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
         }
       }
 
-      // Circular dependencies
       const sources = new Set(graph.edges.map(e => e.source));
       const targets = new Set(graph.edges.map(e => e.target));
       const mutual = [...sources].filter(s =>
@@ -154,7 +142,6 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
         });
       }
 
-      // No architecture pattern on large codebase
       if (graph.nodes.length > 20 && (!architecture?.patterns.length)) {
         recs.push({
           id: 'no-pattern',
@@ -167,7 +154,6 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
         });
       }
 
-      // Isolated/orphaned files
       const connected = new Set([...graph.edges.map(e => e.source), ...graph.edges.map(e => e.target)]);
       const isolated = graph.nodes.filter(n => !connected.has(n.id));
       if (isolated.length > 3) {
@@ -183,7 +169,6 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
         });
       }
 
-      // Broad scope — high outbound dependency count
       const outbound = new Map<string, number>();
       graph.edges.forEach(e => outbound.set(e.source, (outbound.get(e.source) ?? 0) + 1));
       const broadScope = graph.nodes.filter(n => (outbound.get(n.id) ?? 0) >= 10).slice(0, 2);
@@ -201,7 +186,6 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
       }
     }
 
-    // Architecture confidence issues
     if (architecture?.patterns.length) {
       const lowConfidence = architecture.patterns.filter(p => p.confidence < 0.5);
       if (lowConfidence.length > 0) {
@@ -217,7 +201,6 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
       }
     }
 
-    // Merge AI-generated risks and modernizations when available
     const ai = this.session?.aiAnalysis;
     const primaryFile = this.firstFileName(sourceFiles);
     if (ai?.risks?.length) {
@@ -291,39 +274,65 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
     this.loadFileForRecommendation(rec);
   }
 
-  saveChanges(): void {
-    if (!this.selected || this.editorCode === this.originalContent) return;
-    this.changesService.saveChange(
-      this.manager.activeId ?? '',
-      this.currentFilePath,
-      this.originalContent,
-      this.editorCode,
-      { id: this.selected.id, title: this.selected.title, category: this.selected.category, severity: this.selected.severity },
-    );
-    this.saveStatus = 'saved';
-    this.unsaved.clear();
-    this.cdr.detectChanges();
+  // ── Copy utilities ─────────────────────────────────────────────────────────
+
+  copyToClipboard(key: string, text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      this.copyState[key] = true;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.copyState[key] = false;
+        this.cdr.detectChanges();
+      }, 1500);
+    });
   }
 
-  onEditorChange(): void {
-    const dirty = this.editorCode !== this.originalContent && this.originalContent !== '';
-    this.unsaved.set(dirty);
+  copyCode(): void {
+    this.copyToClipboard('code', this.editorCode);
   }
 
-  get isModified(): boolean {
-    return this.editorCode !== this.originalContent && this.originalContent !== '';
+  copyRecommendation(): void {
+    if (!this.selected) return;
+    const text = `${this.selected.title}\n\n${this.selected.explanation ?? this.selected.description}`;
+    this.copyToClipboard('rec', text);
   }
+
+  copySuggestedFix(): void {
+    if (!this.selected) return;
+    const fix = this.selected.suggestedImprovement ?? this.selected.solution ?? '';
+    this.copyToClipboard('fix', fix);
+  }
+
+  copyFull(): void {
+    if (!this.selected) return;
+    const parts = [
+      `Title: ${this.selected.title}`,
+      `File: ${this.selected.fileName}`,
+      `Severity: ${this.selected.severity}`,
+      `\nDescription:\n${this.selected.explanation ?? this.selected.description}`,
+    ];
+    if (this.selected.suggestedImprovement ?? this.selected.solution) {
+      parts.push(`\nSuggested Fix:\n${this.selected.suggestedImprovement ?? this.selected.solution}`);
+    }
+    if (this.selected.codeSnippet ?? this.editorCode) {
+      parts.push(`\nCode Snippet:\n${this.selected.codeSnippet ?? this.editorCode}`);
+    }
+    if (this.selected.expectedImpact) {
+      parts.push(`\nExpected Impact:\n${this.selected.expectedImpact}`);
+    }
+    this.copyToClipboard('full', parts.join('\n'));
+  }
+
+  // ── Monaco ─────────────────────────────────────────────────────────────────
 
   private loadFileForRecommendation(rec: CodeRecommendation): void {
     const sourceFiles = this.knowledge?.sourceFiles ?? [];
     const match = this.findSourceFile(rec.fileName, sourceFiles);
-    const content = match?.content ?? `// File "${rec.fileName}" is not available in the current workspace.\n// Upload the workspace from the analysis page to enable editing.`;
+    const content = rec.codeSnippet
+      ?? match?.content
+      ?? `// File "${rec.fileName}" is not available in the current workspace.\n// Upload the workspace from the analysis page to view the source code.`;
     const ext = (match?.extension ?? rec.fileName.split('.').pop() ?? 'txt').toLowerCase();
     const language = this.languageFromExt(ext);
-
-    this.originalContent = content;
-    this.currentFilePath = match?.path ?? rec.fileName;
-    this.saveStatus = this.changesService.isModified(this.manager.activeId ?? '', this.currentFilePath) ? 'saved' : 'idle';
 
     this.editorOptions = { ...this.buildEditorOptions(), language };
     this.editorCode = content;
@@ -348,20 +357,21 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
   }
 
   private applyHighlight(rec: CodeRecommendation): void {
-    if (!this.editorInstance || !rec.searchTerm) return;
-    const model = this.editorInstance.getModel();
+    const editor = this.editorInstance as any;
+    if (!editor || !rec.searchTerm) return;
+    const model = editor.getModel();
     if (!model) return;
     const monaco = (window as any).monaco;
     if (!monaco) return;
 
-    this.decorationIds = this.editorInstance.deltaDecorations(this.decorationIds, []);
+    this.decorationIds = editor.deltaDecorations(this.decorationIds, []);
 
     const term = rec.searchTerm.split('/').pop() ?? rec.searchTerm;
     const matches = model.findMatches(term, true, false, false, null, true);
     if (!matches || matches.length === 0) return;
 
     const first = matches[0].range;
-    this.decorationIds = this.editorInstance.deltaDecorations([], [{
+    this.decorationIds = editor.deltaDecorations([], [{
       range: first,
       options: {
         className: 'rec-highlight',
@@ -371,12 +381,10 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
       },
     }]);
 
-    this.editorInstance.revealLineInCenter(first.startLineNumber);
+    editor.revealLineInCenter(first.startLineNumber);
   }
 
-  // ── Monaco ─────────────────────────────────────────────────────────────────
-
-  onEditorInit(editor: any): void {
+  onEditorInit(editor: unknown): void {
     this.zone.run(() => {
       this.editorInstance = editor;
 
@@ -391,11 +399,11 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
     });
   }
 
-  private buildEditorOptions(): Record<string, any> {
+  private buildEditorOptions(): Record<string, unknown> {
     return {
       theme: this.themeService.isDark ? 'vs-dark' : 'vs',
       language: 'plaintext',
-      readOnly: false,
+      readOnly: true,
       fontSize: 13,
       fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
       fontLigatures: true,
@@ -432,6 +440,6 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
   // ── Display helpers ────────────────────────────────────────────────────────
 
   severityClass(s: string): string {
-    return ({ high: 'sev-high', medium: 'sev-medium', low: 'sev-low', info: 'sev-info' } as any)[s] ?? 'sev-low';
+    return ({ high: 'sev-high', medium: 'sev-medium', low: 'sev-low', info: 'sev-info' } as Record<string, string>)[s] ?? 'sev-low';
   }
 }

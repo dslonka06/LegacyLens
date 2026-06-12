@@ -96,11 +96,9 @@ export class WorkspacePanel implements OnInit, OnDestroy {
   get statusLabel(): string {
     if (!this.workspace) return '';
     const map: Record<WorkspaceStatus, string> = {
-      'empty':          'Empty',
-      'loaded':         'Loaded',
-      'analyzing':      'Analyzing',
-      'modified':       'Modified',
-      'changes-pending': 'Changes Pending',
+      'empty':     'Empty',
+      'loaded':    'Loaded',
+      'analyzing': 'Analyzing',
     };
     return map[this.workspace.status];
   }
@@ -108,11 +106,9 @@ export class WorkspacePanel implements OnInit, OnDestroy {
   get statusClass(): string {
     if (!this.workspace) return '';
     const map: Record<WorkspaceStatus, string> = {
-      'empty':          'status-empty',
-      'loaded':         'status-loaded',
-      'analyzing':      'status-analyzing',
-      'modified':       'status-modified',
-      'changes-pending': 'status-changes',
+      'empty':     'status-empty',
+      'loaded':    'status-loaded',
+      'analyzing': 'status-analyzing',
     };
     return map[this.workspace.status];
   }
