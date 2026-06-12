@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { WorkspaceContext } from '../models/workspace-context.model';
 import { WorkspaceProfile } from '../models/workspace.model';
@@ -7,11 +7,11 @@ import { WorkspaceManagerService } from './workspace-manager.service';
 @Injectable({ providedIn: 'root' })
 export class CurrentWorkspaceService {
 
+  private readonly manager = inject(WorkspaceManagerService);
+
   readonly context$: Observable<WorkspaceContext | null> = this.manager.activeWorkspace$.pipe(
     map(ws => ws?.context ?? null),
   );
-
-  constructor(private readonly manager: WorkspaceManagerService) {}
 
   get context(): WorkspaceContext | null {
     return this.manager.getActive()?.context ?? null;

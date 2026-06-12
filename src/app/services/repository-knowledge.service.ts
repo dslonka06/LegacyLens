@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { KnowledgeState, RepositoryKnowledge } from '../models/knowledge.model';
 import { WorkspaceProfile } from '../models/workspace.model';
@@ -10,6 +10,11 @@ import { ArchitectureDetectorService } from './architecture-detector.service';
 @Injectable({ providedIn: 'root' })
 export class RepositoryKnowledgeService {
 
+  private readonly manager = inject(WorkspaceManagerService);
+  private readonly fileContent = inject(FileContentService);
+  private readonly dependencyMapper = inject(DependencyMapperService);
+  private readonly architectureDetector = inject(ArchitectureDetectorService);
+
   readonly state$: Observable<KnowledgeState> = this.manager.activeWorkspace$.pipe(
     map(ws => ws?.knowledgeState ?? KnowledgeState.NotStarted),
   );
@@ -17,13 +22,6 @@ export class RepositoryKnowledgeService {
   readonly knowledge$: Observable<RepositoryKnowledge | null> = this.manager.activeWorkspace$.pipe(
     map(ws => ws?.knowledge ?? null),
   );
-
-  constructor(
-    private readonly manager: WorkspaceManagerService,
-    private readonly fileContent: FileContentService,
-    private readonly dependencyMapper: DependencyMapperService,
-    private readonly architectureDetector: ArchitectureDetectorService,
-  ) {}
 
   get state(): KnowledgeState {
     return this.manager.getActive()?.knowledgeState ?? KnowledgeState.NotStarted;
