@@ -3,12 +3,15 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CodeEditor } from '../../components/code-editor/code-editor';
+import { WorkspacePanel } from '../../components/workspace-panel/workspace-panel';
+import { WorkspaceSwitcherModal } from '../../components/workspace-switcher-modal/workspace-switcher-modal';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { WorkspaceProfile } from '../../models/workspace.model';
 import { WorkspaceContext } from '../../models/workspace-context.model';
 import { FolderNode } from '../../models/repository.model';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
+import { WorkspaceManagerService } from '../../services/workspace-manager.service';
 import { PanelLayoutService } from '../../services/panel-layout.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 
@@ -39,7 +42,7 @@ const EXT_ICON: Record<string, string> = {
 @Component({
   selector: 'app-repository-analysis-page',
   standalone: true,
-  imports: [CommonModule, CodeEditor, ResizeDividerComponent],
+  imports: [CommonModule, CodeEditor, WorkspacePanel, WorkspaceSwitcherModal, ResizeDividerComponent],
   templateUrl: './repository-analysis-page.html',
   styleUrl: './repository-analysis-page.scss',
 })
@@ -58,12 +61,17 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   selectedFilePath: string | null = null;
   panelWidths = [220, 460];
 
+  showSwitcher = false;
+  switcherLimitReached = false;
+
   private uploadedFiles: File[] = [];
   private contextSub: Subscription | null = null;
+  private limitSub: Subscription | null = null;
 
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
+    private readonly manager: WorkspaceManagerService,
     private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
     private readonly router: Router,
@@ -88,10 +96,13 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     this.contextSub = this.currentWorkspace.context$.subscribe(ctx => {
       this.workspaceContext = ctx;
     });
+
+    this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
   }
 
   ngOnDestroy(): void {
     this.contextSub?.unsubscribe();
+    this.limitSub?.unsubscribe();
   }
 
   onPanelResize(index: number, width: number): void {
@@ -193,6 +204,16 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   navigateTo(path: string): void {
     this.router.navigate([path]);
+  }
+
+  openSwitcher(): void {
+    this.switcherLimitReached = !this.manager.canCreate();
+    this.showSwitcher = true;
+  }
+
+  closeSwitcher(): void {
+    this.showSwitcher = false;
+    this.switcherLimitReached = false;
   }
 
   // ── Display helpers ───────────────────────────────────────────────────────

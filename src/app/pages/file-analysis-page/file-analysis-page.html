@@ -15,16 +15,16 @@
 
   <div class="results-column">
 
-    <div class="workspace-context-strip" *ngIf="showWorkspaceSummary">
-      <app-workspace-summary [profile]="workspaceProfile"></app-workspace-summary>
-      <app-repository-callout
-        *ngIf="showRepositoryCallout"
-        [context]="workspaceContext">
-      </app-repository-callout>
-    </div>
+    <app-workspace-panel (switchRequested)="openSwitcher()"></app-workspace-panel>
 
     <app-analysis-panel [session]="session"></app-analysis-panel>
 
   </div>
 
 </div>
+
+<app-workspace-switcher-modal
+  *ngIf="showSwitcher"
+  [limitReached]="switcherLimitReached"
+  (close)="closeSwitcher()">
+</app-workspace-switcher-modal>

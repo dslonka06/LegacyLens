@@ -3,20 +3,21 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { CodeEditor } from '../../components/code-editor/code-editor';
 import { AnalysisPanel } from '../../components/analysis-panel/analysis-panel';
-import { WorkspaceSummary } from '../../components/workspace-summary/workspace-summary';
-import { RepositoryCallout } from '../../components/repository-callout/repository-callout';
+import { WorkspacePanel } from '../../components/workspace-panel/workspace-panel';
+import { WorkspaceSwitcherModal } from '../../components/workspace-switcher-modal/workspace-switcher-modal';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { WorkspaceProfile } from '../../models/workspace.model';
 import { WorkspaceContext } from '../../models/workspace-context.model';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
+import { WorkspaceManagerService } from '../../services/workspace-manager.service';
 import { PanelLayoutService } from '../../services/panel-layout.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 
 @Component({
   selector: 'app-file-analysis-page',
   standalone: true,
-  imports: [CommonModule, CodeEditor, AnalysisPanel, WorkspaceSummary, RepositoryCallout, ResizeDividerComponent],
+  imports: [CommonModule, CodeEditor, AnalysisPanel, WorkspacePanel, WorkspaceSwitcherModal, ResizeDividerComponent],
   templateUrl: './file-analysis-page.html',
   styleUrl: './file-analysis-page.scss'
 })
@@ -29,14 +30,19 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   restoredFileName: string | null = null;
   restoredSourceCode: string | null = null;
 
+  showSwitcher = false;
+  switcherLimitReached = false;
+
   // Panel widths: [0] = editor column
   panelWidths = [480];
 
   private contextSub: Subscription | null = null;
+  private limitSub: Subscription | null = null;
 
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
+    private readonly manager: WorkspaceManagerService,
     private readonly layoutService: PanelLayoutService,
   ) {}
 
@@ -58,10 +64,13 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     this.contextSub = this.currentWorkspace.context$.subscribe(ctx => {
       this.workspaceContext = ctx;
     });
+
+    this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
   }
 
   ngOnDestroy(): void {
     this.contextSub?.unsubscribe();
+    this.limitSub?.unsubscribe();
   }
 
   onSessionCreated(session: AnalysisSession): void {
@@ -80,13 +89,13 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     this.layoutService.save('file-analysis', this.panelWidths);
   }
 
-  get showWorkspaceSummary(): boolean {
-    return this.workspaceProfile !== null;
+  openSwitcher(): void {
+    this.switcherLimitReached = !this.manager.canCreate();
+    this.showSwitcher = true;
   }
 
-  get showRepositoryCallout(): boolean {
-    if (!this.workspaceProfile) return false;
-    const t = this.workspaceProfile.workspaceType;
-    return t === 'Project' || t === 'Repository';
+  closeSwitcher(): void {
+    this.showSwitcher = false;
+    this.switcherLimitReached = false;
   }
 }

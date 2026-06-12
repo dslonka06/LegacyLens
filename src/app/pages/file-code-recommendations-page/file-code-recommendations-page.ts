@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { ThemeService } from '../../services/theme.service';
 import { WorkspaceChangesService } from '../../services/workspace-changes.service';
+import { WorkspaceManagerService } from '../../services/workspace-manager.service';
 import { PanelLayoutService } from '../../services/panel-layout.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 import { AnalysisSession } from '../../models/analysis-session.model';
@@ -66,6 +67,7 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly themeService: ThemeService,
     private readonly changes: WorkspaceChangesService,
+    private readonly manager: WorkspaceManagerService,
     private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
@@ -174,7 +176,7 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
   saveChanges(): void {
     if (!this.selected || this.editorCode === this.originalContent) return;
     this.changes.saveChange(
-      'file',
+      this.manager.activeId ?? '',
       this.currentFilePath,
       this.originalContent,
       this.editorCode,
@@ -204,7 +206,7 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
 
     this.originalContent = content;
     this.currentFilePath = this.session?.fileName ?? rec.fileName;
-    this.saveStatus = this.changes.isModified('file', this.currentFilePath) ? 'saved' : 'idle';
+    this.saveStatus = this.changes.isModified(this.manager.activeId ?? '', this.currentFilePath) ? 'saved' : 'idle';
 
     this.editorOptions = { ...this.buildEditorOptions(), language };
     this.editorCode = content;

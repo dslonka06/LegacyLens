@@ -14,6 +14,7 @@ import { PanelLayoutService } from '../../services/panel-layout.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 import { ThemeService } from '../../services/theme.service';
 import { WorkspaceChangesService } from '../../services/workspace-changes.service';
+import { WorkspaceManagerService } from '../../services/workspace-manager.service';
 
 type CategoryKey = 'issues' | 'modernization' | 'security';
 
@@ -61,6 +62,7 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly themeService: ThemeService,
     private readonly changesService: WorkspaceChangesService,
+    private readonly manager: WorkspaceManagerService,
     private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
@@ -289,7 +291,7 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
   saveChanges(): void {
     if (!this.selected || this.editorCode === this.originalContent) return;
     this.changesService.saveChange(
-      'folder',
+      this.manager.activeId ?? '',
       this.currentFilePath,
       this.originalContent,
       this.editorCode,
@@ -317,7 +319,7 @@ export class FolderCodeRecommendationsPage implements OnInit, OnDestroy {
 
     this.originalContent = content;
     this.currentFilePath = match?.path ?? rec.fileName;
-    this.saveStatus = this.changesService.isModified('folder', this.currentFilePath) ? 'saved' : 'idle';
+    this.saveStatus = this.changesService.isModified(this.manager.activeId ?? '', this.currentFilePath) ? 'saved' : 'idle';
 
     this.editorOptions = { ...this.buildEditorOptions(), language };
     this.editorCode = content;

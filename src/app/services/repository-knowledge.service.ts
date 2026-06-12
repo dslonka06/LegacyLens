@@ -1,10 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Observable, switchMap } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { KnowledgeState, RepositoryKnowledge } from '../models/knowledge.model';
 import { WorkspaceProfile } from '../models/workspace.model';
-import { WorkspaceScope } from '../models/modified-file.model';
 import { WorkspaceManagerService } from './workspace-manager.service';
-import { ActiveWorkspaceService } from './active-workspace.service';
 import { FileContentService } from './file-content.service';
 import { DependencyMapperService } from './dependency-mapper.service';
 import { ArchitectureDetectorService } from './architecture-detector.service';
@@ -12,66 +10,54 @@ import { ArchitectureDetectorService } from './architecture-detector.service';
 @Injectable({ providedIn: 'root' })
 export class RepositoryKnowledgeService {
 
-  // Emits the active scope's knowledge, switching automatically on workspace change.
-  readonly state$:     Observable<KnowledgeState>;
-  readonly knowledge$: Observable<RepositoryKnowledge | null>;
+  readonly state$: Observable<KnowledgeState> = this.manager.activeWorkspace$.pipe(
+    map(ws => ws?.knowledgeState ?? KnowledgeState.NotStarted),
+  );
+
+  readonly knowledge$: Observable<RepositoryKnowledge | null> = this.manager.activeWorkspace$.pipe(
+    map(ws => ws?.knowledge ?? null),
+  );
 
   constructor(
     private readonly manager: WorkspaceManagerService,
-    private readonly activeWorkspace: ActiveWorkspaceService,
     private readonly fileContent: FileContentService,
     private readonly dependencyMapper: DependencyMapperService,
     private readonly architectureDetector: ArchitectureDetectorService,
-  ) {
-    this.state$ = this.activeWorkspace.workspace$.pipe(
-      switchMap(ws => this.manager.knowledgeState$(this.toScope(ws))),
-    );
-    this.knowledge$ = this.activeWorkspace.workspace$.pipe(
-      switchMap(ws => this.manager.knowledge$(this.toScope(ws))),
-    );
-  }
+  ) {}
 
   get state(): KnowledgeState {
-    return this.manager.getKnowledgeState(this.activeScope);
+    return this.manager.getActive()?.knowledgeState ?? KnowledgeState.NotStarted;
   }
 
   get knowledge(): RepositoryKnowledge | null {
-    return this.manager.getKnowledge(this.activeScope);
+    return this.manager.getActive()?.knowledge ?? null;
   }
 
   clear(): void {
-    this.manager.clearKnowledge(this.activeScope);
+    const id = this.manager.activeId;
+    if (id) this.manager.clearKnowledge(id);
   }
 
-  async build(
-    rawFiles: File[],
-    profile: WorkspaceProfile
-  ): Promise<RepositoryKnowledge> {
-    const scope = this.activeScope;
+  async build(rawFiles: File[], profile: WorkspaceProfile): Promise<RepositoryKnowledge> {
+    const id = this.manager.activeId;
+    if (!id) throw new Error('No active workspace');
 
-    this.manager.setKnowledgeState(scope, KnowledgeState.ReadingFiles);
+    this.manager.setKnowledgeState(id, KnowledgeState.ReadingFiles);
     const sourceFiles = await this.fileContent.readFiles(rawFiles);
 
-    this.manager.setKnowledgeState(scope, KnowledgeState.BuildingDependencies);
+    this.manager.setKnowledgeState(id, KnowledgeState.BuildingDependencies);
     let dependencyGraph = undefined;
     try {
       dependencyGraph = this.dependencyMapper.buildGraph(sourceFiles);
-    } catch {
-      // Non-fatal: proceed without graph
-    }
+    } catch { /* non-fatal */ }
 
-    this.manager.setKnowledgeState(scope, KnowledgeState.DetectingArchitecture);
+    this.manager.setKnowledgeState(id, KnowledgeState.DetectingArchitecture);
     let architecture = undefined;
     try {
       if (profile.repositoryStructure && dependencyGraph) {
-        architecture = this.architectureDetector.detect(
-          profile.repositoryStructure,
-          dependencyGraph
-        );
+        architecture = this.architectureDetector.detect(profile.repositoryStructure, dependencyGraph);
       }
-    } catch {
-      // Non-fatal: proceed without architecture analysis
-    }
+    } catch { /* non-fatal */ }
 
     const knowledge: RepositoryKnowledge = {
       sourceFiles,
@@ -80,19 +66,9 @@ export class RepositoryKnowledgeService {
       builtAt: new Date().toISOString(),
     };
 
-    this.manager.setKnowledgeState(scope, KnowledgeState.Complete);
-    this.manager.setKnowledge(scope, knowledge);
+    this.manager.setKnowledgeState(id, KnowledgeState.Complete);
+    this.manager.setKnowledge(id, knowledge);
 
     return knowledge;
-  }
-
-  private get activeScope(): WorkspaceScope {
-    return this.toScope(this.activeWorkspace.workspace);
-  }
-
-  private toScope(ws: string | null): WorkspaceScope {
-    if (ws === 'folder')     return 'folder';
-    if (ws === 'repository') return 'repository';
-    return 'file';
   }
 }
