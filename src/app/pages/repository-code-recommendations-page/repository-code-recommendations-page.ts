@@ -6,7 +6,7 @@ import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { Subscription } from 'rxjs';
 import { RepositoryKnowledge, SourceFile } from '../../models/knowledge.model';
 import { AnalysisSession } from '../../models/analysis-session.model';
-import { CodeRecommendation } from '../../models/code-recommendation.model';
+import { CodeRecommendation, RecommendationSeverity } from '../../models/code-recommendation.model';
 import { RepositoryInsight, RepositoryInsightsService } from '../../services/repository-insights.service';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
@@ -32,6 +32,9 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
 
   recommendations: CodeRecommendation[] = [];
   selected: CodeRecommendation | null = null;
+  activeSeverityFilter: RecommendationSeverity | null = null;
+
+  readonly SEVERITY_ORDER: RecommendationSeverity[] = ['high', 'medium', 'low', 'info'];
 
   collapsed: Record<CategoryKey, boolean> = {
     issues: true,
@@ -211,9 +214,19 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
 
   // ── Category grouping ──────────────────────────────────────────────────────
 
-  get issueRecs():         CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'issues'); }
-  get modernizationRecs(): CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'modernization'); }
-  get securityRecs():      CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'security'); }
+  private filteredAndSorted(category: CategoryKey): CodeRecommendation[] {
+    return this.recommendations
+      .filter(r => r.category === category && (!this.activeSeverityFilter || r.severity === this.activeSeverityFilter))
+      .sort((a, b) => this.SEVERITY_ORDER.indexOf(a.severity) - this.SEVERITY_ORDER.indexOf(b.severity));
+  }
+
+  get issueRecs():         CodeRecommendation[] { return this.filteredAndSorted('issues'); }
+  get modernizationRecs(): CodeRecommendation[] { return this.filteredAndSorted('modernization'); }
+  get securityRecs():      CodeRecommendation[] { return this.filteredAndSorted('security'); }
+
+  setSeverityFilter(sev: RecommendationSeverity | null): void {
+    this.activeSeverityFilter = this.activeSeverityFilter === sev ? null : sev;
+  }
 
   get workspaceName(): string { return this.workspace.context?.workspaceName ?? 'Repository'; }
 
@@ -324,31 +337,38 @@ export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
 
   private applyHighlight(rec: CodeRecommendation): void {
     const editor = this.editorInstance as any;
-    if (!editor || !rec.searchTerm) return;
+    const monaco = (window as any).monaco;
+    if (!editor || !monaco) return;
     const model = editor.getModel();
     if (!model) return;
 
-    const monaco = (window as any).monaco;
-    if (!monaco) return;
-
     this.decorationIds = editor.deltaDecorations(this.decorationIds, []);
 
-    const term = rec.searchTerm.split('/').pop() ?? rec.searchTerm;
-    const matches = model.findMatches(term, true, false, false, null, true);
-    if (!matches || matches.length === 0) return;
+    let range: unknown;
 
-    const first = matches[0].range;
+    if (rec.lineStart != null) {
+      const lineEnd = rec.lineEnd ?? rec.lineStart;
+      range = new monaco.Range(rec.lineStart, 1, lineEnd, model.getLineMaxColumn(lineEnd));
+    } else if (rec.searchTerm) {
+      const term = rec.searchTerm.split('/').pop() ?? rec.searchTerm;
+      const matches = model.findMatches(term, true, false, false, null, true);
+      if (!matches || matches.length === 0) return;
+      range = matches[0].range;
+    } else {
+      return;
+    }
+
     this.decorationIds = editor.deltaDecorations([], [{
-      range: first,
+      range,
       options: {
         className: 'rec-highlight',
-        isWholeLine: false,
+        isWholeLine: rec.lineStart != null,
         overviewRuler: { color: '#F97316', position: 1 },
         minimap: { color: '#F97316', position: 1 },
       },
     }]);
 
-    editor.revealLineInCenter(first.startLineNumber);
+    editor.revealLineInCenter((range as any).startLineNumber);
   }
 
   onEditorInit(editor: unknown): void {

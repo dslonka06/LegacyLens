@@ -1,4 +1,4 @@
 export interface RiskItem {
   description: string;
-  severity: 'low' | 'medium' | 'high';
+  severity: 'low' | 'medium' | 'high' | 'critical';
 }

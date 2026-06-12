@@ -13,6 +13,14 @@
         <span class="rcr-ai-badge" *ngIf="isAiPowered">AI</span>
       </div>
 
+      <div class="rcr-filter-bar">
+        <button *ngFor="let sev of SEVERITY_ORDER"
+                [ngClass]="['rcr-filter-pill', 'filter-' + sev, activeSeverityFilter === sev ? 'rcr-filter-active' : '']"
+                (click)="setSeverityFilter(sev)">
+          {{ sev }}
+        </button>
+      </div>
+
       <div class="rcr-explorer-scroll">
 
         <!-- Issues -->

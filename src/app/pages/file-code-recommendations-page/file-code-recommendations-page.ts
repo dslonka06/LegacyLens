@@ -12,7 +12,7 @@ import { AnalysisSession } from '../../models/analysis-session.model';
 import { AiRisk } from '../../models/ai-analysis-result.model';
 import { ModernizationRecommendation } from '../../models/modernization-recommendation.model';
 import { ModernizationItem } from '../../models/modernization-item.model';
-import { CodeRecommendation, RecommendationCategory } from '../../models/code-recommendation.model';
+import { CodeRecommendation, RecommendationCategory, RecommendationSeverity } from '../../models/code-recommendation.model';
 
 type CategoryKey = RecommendationCategory;
 
@@ -30,6 +30,9 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
 
   recommendations: CodeRecommendation[] = [];
   selected: CodeRecommendation | null = null;
+  activeSeverityFilter: RecommendationSeverity | null = null;
+
+  readonly SEVERITY_ORDER: RecommendationSeverity[] = ['high', 'medium', 'low', 'info'];
 
   collapsed: Record<CategoryKey, boolean> = {
     issues: true,
@@ -132,9 +135,19 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
 
   // ── Category grouping ──────────────────────────────────────────────────────
 
-  get issueRecs():         CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'issues'); }
-  get modernizationRecs(): CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'modernization'); }
-  get securityRecs():      CodeRecommendation[] { return this.recommendations.filter(r => r.category === 'security'); }
+  private filteredAndSorted(category: CategoryKey): CodeRecommendation[] {
+    return this.recommendations
+      .filter(r => r.category === category && (!this.activeSeverityFilter || r.severity === this.activeSeverityFilter))
+      .sort((a, b) => this.SEVERITY_ORDER.indexOf(a.severity) - this.SEVERITY_ORDER.indexOf(b.severity));
+  }
+
+  get issueRecs():         CodeRecommendation[] { return this.filteredAndSorted('issues'); }
+  get modernizationRecs(): CodeRecommendation[] { return this.filteredAndSorted('modernization'); }
+  get securityRecs():      CodeRecommendation[] { return this.filteredAndSorted('security'); }
+
+  setSeverityFilter(sev: RecommendationSeverity | null): void {
+    this.activeSeverityFilter = this.activeSeverityFilter === sev ? null : sev;
+  }
 
   get fileName(): string { return this.session?.fileName ?? 'File'; }
 
@@ -231,30 +244,37 @@ export class FileCodeRecommendationsPage implements OnInit, OnDestroy {
 
   private applyHighlight(rec: CodeRecommendation): void {
     const editor = this.editorInstance as any;
-    if (!editor || !rec.searchTerm) return;
+    const monaco = (window as any).monaco;
+    if (!editor || !monaco) return;
     const model = editor.getModel();
     if (!model) return;
-    const monaco = (window as any).monaco;
-    if (!monaco) return;
 
     this.decorationIds = editor.deltaDecorations(this.decorationIds, []);
 
-    const term = rec.searchTerm;
-    const matches = model.findMatches(term, true, false, false, null, true);
-    if (!matches || matches.length === 0) return;
+    let range: unknown;
 
-    const first = matches[0].range;
+    if (rec.lineStart != null) {
+      const lineEnd = rec.lineEnd ?? rec.lineStart;
+      range = new monaco.Range(rec.lineStart, 1, lineEnd, model.getLineMaxColumn(lineEnd));
+    } else if (rec.searchTerm) {
+      const matches = model.findMatches(rec.searchTerm, true, false, false, null, true);
+      if (!matches || matches.length === 0) return;
+      range = matches[0].range;
+    } else {
+      return;
+    }
+
     this.decorationIds = editor.deltaDecorations([], [{
-      range: first,
+      range,
       options: {
         className: 'rec-highlight',
-        isWholeLine: false,
+        isWholeLine: rec.lineStart != null,
         overviewRuler: { color: '#F97316', position: 1 },
         minimap: { color: '#F97316', position: 1 },
       },
     }]);
 
-    editor.revealLineInCenter(first.startLineNumber);
+    editor.revealLineInCenter((range as any).startLineNumber);
   }
 
   onEditorInit(editor: unknown): void {

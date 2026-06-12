@@ -53,6 +53,37 @@
   color: var(--text-muted);
 }
 
+.rcr-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.rcr-filter-pill {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+
+  &:hover { background: var(--bg-hover); color: var(--text-content); }
+
+  &.filter-high   { &.rcr-filter-active { background: color-mix(in srgb, #EF4444 16%, transparent); color: #EF4444; border-color: color-mix(in srgb, #EF4444 35%, transparent); } }
+  &.filter-medium { &.rcr-filter-active { background: color-mix(in srgb, #F97316 16%, transparent); color: #F97316; border-color: color-mix(in srgb, #F97316 35%, transparent); } }
+  &.filter-low    { &.rcr-filter-active { background: color-mix(in srgb, #EAB308 16%, transparent); color: #EAB308; border-color: color-mix(in srgb, #EAB308 35%, transparent); } }
+  &.filter-info   { &.rcr-filter-active { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); } }
+}
+
 .rcr-explorer-scroll {
   flex: 1;
   overflow-y: auto;
