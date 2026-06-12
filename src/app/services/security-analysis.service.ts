@@ -87,6 +87,7 @@ export class SecurityAnalysisService {
         name: session.fileName,
         filePath: session.fileName,
         reason: 'File name suggests security-sensitive functionality.',
+        role: this.deriveComponentRole(session.fileName),
         patterns: this.matchedPatterns(session.fileName),
       });
     }
@@ -127,6 +128,7 @@ export class SecurityAnalysisService {
             name: node.name,
             filePath: node.path,
             reason: 'Name suggests security-sensitive responsibility.',
+            role: this.deriveComponentRole(node.name),
             patterns: this.matchedPatterns(node.name),
           });
         }
@@ -352,12 +354,18 @@ export class SecurityAnalysisService {
     const maturity = this.deriveMaturity(findings);
     const themes = this.deriveThemes(findings);
     const summary = this.deriveSummary(findings, overallRisk);
+    const executiveSummary = this.deriveExecutiveSummary(findings, overallRisk, maturity, deduped);
+    const riskContext = this.deriveRiskContext(findings, overallRisk);
+    const maturityContext = this.deriveMaturityContext(maturity, findings);
     const assessment = this.deriveAssessment(findings, overallRisk, deduped);
 
     return {
+      executiveSummary,
       summary,
       overallRisk,
       securityMaturity: maturity,
+      maturityContext,
+      riskContext,
       findings,
       hotspots,
       relevantComponents: deduped,
@@ -498,6 +506,78 @@ export class SecurityAnalysisService {
     assessment += 'Recommended next steps: (1) Address all critical and high-severity findings. (2) Review security-relevant components for input validation and proper authorization. (3) Engage dedicated security tooling (Snyk, SonarQube, or similar) for comprehensive coverage.';
 
     return assessment;
+  }
+
+  private deriveExecutiveSummary(
+    findings: SecurityFinding[],
+    risk: SecuritySeverity,
+    maturity: 'Low' | 'Medium' | 'High',
+    relevant: SecurityRelevantComponent[],
+  ): string {
+    const count = findings.length;
+    const critical = findings.filter(f => f.severity === 'critical').length;
+    const high = findings.filter(f => f.severity === 'high').length;
+    const cats = [...new Set(findings.map(f => f.category))];
+
+    if (count === 0) {
+      return `No significant security concerns were identified during heuristic analysis. The codebase does not exhibit common vulnerability patterns such as hardcoded credentials, SQL injection vectors, or missing authorization controls. ${relevant.length > 0 ? `${relevant.length} security-sensitive component${relevant.length > 1 ? 's were' : ' was'} identified for awareness — these are not findings, but areas worth reviewing during code changes.` : ''} Security maturity appears ${maturity.toLowerCase()} based on the patterns examined. Manual review and dedicated security tooling are always recommended before production deployment.`;
+    }
+
+    const riskWord = risk === 'critical' ? 'critical' : risk === 'high' ? 'elevated' : risk === 'medium' ? 'moderate' : 'low';
+    let summary = `This codebase presents ${riskWord} security risk. `;
+
+    if (critical > 0) {
+      summary += `${critical} critical finding${critical > 1 ? 's require' : ' requires'} immediate attention before this code should be deployed to production. `;
+    } else if (high > 0) {
+      summary += `${high} high-severity finding${high > 1 ? 's were' : ' was'} identified that should be prioritized in the next development cycle. `;
+    }
+
+    if (cats.length > 0) {
+      const primaryCats = cats.slice(0, 2).map(c => this.categoryLabel(c));
+      summary += `The primary concern area${primaryCats.length > 1 ? 's are' : ' is'} ${primaryCats.join(' and ')}. `;
+    }
+
+    if (relevant.length > 0) {
+      summary += `${relevant.length} security-sensitive component${relevant.length > 1 ? 's were' : ' was'} identified — these handle operations such as authentication, authorization, or secrets management and deserve careful review during any changes. `;
+    }
+
+    summary += `Security maturity is assessed as ${maturity.toLowerCase()}: ${maturity === 'Low' ? 'foundational security practices appear inconsistent or absent in critical areas' : maturity === 'Medium' ? 'basic security practices are present but applied inconsistently' : 'security controls appear generally sound with only minor concerns'}.`;
+
+    return summary;
+  }
+
+  private deriveRiskContext(findings: SecurityFinding[], risk: SecuritySeverity): string {
+    const count = findings.length;
+    if (count === 0) return 'No findings detected. Heuristic analysis found no common vulnerability patterns.';
+    const high = findings.filter(f => f.severity === 'critical' || f.severity === 'high').length;
+    if (risk === 'critical') return `Critical issues present. ${high} high-or-critical finding${high > 1 ? 's require' : ' requires'} immediate remediation.`;
+    if (risk === 'high') return `Elevated risk. ${high} finding${high > 1 ? 's' : ''} should be addressed before the next release.`;
+    if (risk === 'medium') return `Moderate risk. Most concerns relate to configuration and validation patterns.`;
+    return `Low risk. Minor concerns identified, none critical.`;
+  }
+
+  private deriveMaturityContext(maturity: 'Low' | 'Medium' | 'High', findings: SecurityFinding[]): string {
+    const cats = [...new Set(findings.map(f => f.category))];
+    if (maturity === 'High') return 'Basic security practices appear consistently applied. No critical or high-severity patterns detected.';
+    if (maturity === 'Medium') {
+      const concern = cats[0] ? `Primary gap: ${this.categoryLabel(cats[0])}.` : '';
+      return `Security practices are present but applied inconsistently. ${concern}`.trim();
+    }
+    return 'Security practices appear absent or inconsistent in critical areas. Multiple high-severity concerns identified.';
+  }
+
+  private deriveComponentRole(name: string): string {
+    const lower = (name.split('/').pop() ?? name).toLowerCase();
+    if (lower.includes('auth') || lower.includes('oauth')) return 'Handles authentication flows and identity verification';
+    if (lower.includes('jwt') || lower.includes('token')) return 'Manages token generation, validation, or lifecycle';
+    if (lower.includes('secret') || lower.includes('credential')) return 'Stores or retrieves secrets and credentials';
+    if (lower.includes('password') || lower.includes('hash') || lower.includes('salt')) return 'Handles password hashing or verification';
+    if (lower.includes('permission') || lower.includes('role') || lower.includes('claim') || lower.includes('privilege')) return 'Manages permissions, roles, or access control decisions';
+    if (lower.includes('session')) return 'Manages user sessions and session state';
+    if (lower.includes('encrypt') || lower.includes('decrypt')) return 'Performs cryptographic operations';
+    if (lower.includes('security')) return 'Provides general security infrastructure or policy enforcement';
+    if (lower.includes('identity')) return 'Manages user identity and principal resolution';
+    return 'Involved in security-sensitive operations';
   }
 
   private categoryLabel(cat: string): string {

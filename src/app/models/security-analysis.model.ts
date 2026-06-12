@@ -40,13 +40,17 @@ export interface SecurityRelevantComponent {
   name: string;
   filePath: string;
   reason: string;
+  role: string;
   patterns: string[];
 }
 
 export interface SecurityAnalysis {
+  executiveSummary: string;
   summary: string;
   overallRisk: SecuritySeverity;
   securityMaturity: 'Low' | 'Medium' | 'High';
+  maturityContext: string;
+  riskContext: string;
   findings: SecurityFinding[];
   hotspots: SecurityHotspot[];
   relevantComponents: SecurityRelevantComponent[];

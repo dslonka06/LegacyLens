@@ -115,7 +115,17 @@
   svg { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.7; }
 }
 
-// ── Overview ────────────────────────────────────────────────────────────────
+// ── Executive Summary ────────────────────────────────────────────────────────
+
+.sec-executive .sec-card-header { margin-bottom: 10px; }
+
+.sec-executive-text {
+  font-size: 14px;
+  color: var(--text-content);
+  line-height: 1.75;
+  margin: 0;
+  font-weight: 400;
+}
 
 .sec-summary-text {
   font-size: 13px;
@@ -153,6 +163,13 @@
   font-size: 11px;
   color: var(--text-muted);
   font-weight: 500;
+}
+
+.sec-metric-context {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-top: 2px;
 }
 
 .sec-metric-critical { color: #EF4444; }
@@ -201,6 +218,32 @@
   flex-direction: column;
   gap: 4px;
 }
+
+// ── Severity group headers ────────────────────────────────────────────────────
+
+.sec-severity-group-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 10px 2px 4px;
+}
+
+.sec-sev-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sev-group-critical { color: #EF4444; .sec-sev-dot { background: #EF4444; } }
+.sev-group-high     { color: #F97316; .sec-sev-dot { background: #F97316; } }
+.sev-group-medium   { color: #EAB308; .sec-sev-dot { background: #EAB308; } }
+.sev-group-low      { color: var(--success); .sec-sev-dot { background: var(--success); } }
 
 .sec-category-label {
   display: flex;
@@ -312,6 +355,16 @@
   letter-spacing: 0.06em;
   color: var(--accent);
 }
+
+.sec-why-matters {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 15%, transparent);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin: 2px 0;
+}
+
+.sec-label-why { color: var(--accent); }
 
 .sec-finding-section p {
   font-size: 12px;
@@ -459,6 +512,12 @@
   font-weight: 600;
   color: var(--text-content);
   font-family: 'JetBrains Mono', Consolas, monospace;
+}
+
+.sec-relevant-role {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
 }
 
 .sec-relevant-reason {

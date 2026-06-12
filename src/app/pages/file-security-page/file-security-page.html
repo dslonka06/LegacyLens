@@ -11,7 +11,7 @@
 <!-- Security page -->
 <div class="sec-layout" *ngIf="hasWorkspace">
 
-  <!-- Page Header -->
+  <!-- Header -->
   <div class="sec-header">
     <div class="sec-header-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -20,11 +20,11 @@
     </div>
     <div class="sec-header-text">
       <h1 class="sec-title">Security</h1>
-      <p class="sec-subtitle">Security findings and security-sensitive areas of your file</p>
+      <p class="sec-subtitle">Security posture, findings, and sensitive areas of your file</p>
     </div>
   </div>
 
-  <!-- No security data yet -->
+  <!-- No data yet -->
   <div class="sec-empty" *ngIf="!security">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -36,44 +36,47 @@
 
   <div class="sec-content" *ngIf="security">
 
-    <!-- Security Overview -->
-    <div class="sec-card sec-overview">
+    <!-- Executive Summary -->
+    <div class="sec-card sec-executive">
       <div class="sec-card-header">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
-        Security Overview
+        Security Executive Summary
       </div>
-      <p class="sec-summary-text">{{ security.summary }}</p>
+      <p class="sec-executive-text">{{ security.executiveSummary }}</p>
     </div>
 
-    <!-- Metrics Strip -->
+    <!-- Metrics -->
     <div class="sec-metrics">
       <div class="sec-metric" [class]="riskClass(security.overallRisk)">
         <span class="sec-metric-value">{{ security.overallRisk | titlecase }}</span>
         <span class="sec-metric-label">Overall Risk</span>
+        <span class="sec-metric-context">{{ security.riskContext }}</span>
       </div>
       <div class="sec-metric">
         <span class="sec-metric-value sec-metric-critical">{{ criticalFindings.length }}</span>
         <span class="sec-metric-label">Critical Findings</span>
+        <span class="sec-metric-context">{{ criticalFindings.length === 0 ? 'None detected' : 'Require immediate attention' }}</span>
       </div>
       <div class="sec-metric">
         <span class="sec-metric-value sec-metric-high">{{ highFindings.length }}</span>
         <span class="sec-metric-label">High Findings</span>
+        <span class="sec-metric-context">{{ highFindings.length === 0 ? 'None detected' : 'Should be prioritized' }}</span>
       </div>
       <div class="sec-metric" [class]="maturityClass(security.securityMaturity)">
         <span class="sec-metric-value">{{ security.securityMaturity }}</span>
         <span class="sec-metric-label">Security Maturity</span>
+        <span class="sec-metric-context">{{ security.maturityContext }}</span>
       </div>
     </div>
 
     <!-- Two-column layout -->
     <div class="sec-columns">
 
-      <!-- Left: Findings -->
+      <!-- Left: Findings by severity -->
       <div class="sec-col-left">
 
-        <!-- Findings by category -->
         <div class="sec-card" *ngIf="security.findings.length > 0">
           <div class="sec-card-header">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -85,12 +88,11 @@
           </div>
 
           <div class="sec-findings-list">
-            <ng-container *ngFor="let group of findingsByCategory">
-              <div class="sec-category-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path [attr.d]="categoryIcon(group.category)"/>
-                </svg>
-                {{ group.label }}
+            <ng-container *ngFor="let group of findingsBySeverity">
+
+              <div class="sec-severity-group-label" [class]="'sev-group-' + group.severity">
+                <span class="sec-sev-dot"></span>
+                {{ severityLabel(group.severity) }}
                 <span class="sec-cat-count">{{ group.findings.length }}</span>
               </div>
 
@@ -124,12 +126,12 @@
                     <div class="sec-section-label">Issue</div>
                     <p>{{ finding.issueDescription }}</p>
                   </div>
-                  <div class="sec-finding-section">
-                    <div class="sec-section-label">Risk Explanation</div>
+                  <div class="sec-finding-section sec-why-matters">
+                    <div class="sec-section-label sec-label-why">Why It Matters</div>
                     <p>{{ finding.riskExplanation }}</p>
                   </div>
                   <div class="sec-finding-section">
-                    <div class="sec-section-label">Remediation</div>
+                    <div class="sec-section-label">Recommended Remediation</div>
                     <p>{{ finding.remediation }}</p>
                   </div>
                   <div class="sec-finding-section" *ngIf="finding.codeSnippet">
@@ -161,27 +163,8 @@
 
       </div>
 
-      <!-- Right: Hotspots, Relevant Components, Themes, Assessment -->
+      <!-- Right: Components + Themes -->
       <div class="sec-col-right">
-
-        <!-- Recommendation Themes -->
-        <div class="sec-card" *ngIf="security.recommendationThemes.length > 0">
-          <div class="sec-card-header">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-            Improvement Themes
-          </div>
-          <ul class="sec-themes-list">
-            <li class="sec-theme-item" *ngFor="let theme of security.recommendationThemes">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="9 11 12 14 22 4"/>
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-              </svg>
-              {{ theme }}
-            </li>
-          </ul>
-        </div>
 
         <!-- Security-Relevant Components -->
         <div class="sec-card" *ngIf="security.relevantComponents.length > 0">
@@ -199,24 +182,41 @@
           <div class="sec-relevant-list">
             <div class="sec-relevant-item" *ngFor="let comp of security.relevantComponents">
               <div class="sec-relevant-name">{{ comp.name }}</div>
+              <div class="sec-relevant-role">{{ comp.role }}</div>
               <div class="sec-relevant-reason">{{ comp.reason }}</div>
-              <div class="sec-chip-list" *ngIf="comp.patterns.length > 0">
-                <span class="sec-chip sec-chip-subtle" *ngFor="let p of comp.patterns">{{ p }}</span>
-              </div>
             </div>
           </div>
+        </div>
+
+        <!-- Security Recommendation Themes -->
+        <div class="sec-card" *ngIf="security.recommendationThemes.length > 0">
+          <div class="sec-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Security Recommendation Themes
+          </div>
+          <ul class="sec-themes-list">
+            <li class="sec-theme-item" *ngFor="let theme of security.recommendationThemes">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 11 12 14 22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+              {{ theme }}
+            </li>
+          </ul>
         </div>
 
       </div>
     </div>
 
-    <!-- Security Readiness Assessment -->
+    <!-- Security Assessment -->
     <div class="sec-card sec-assessment">
       <div class="sec-card-header">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
         </svg>
-        Security Readiness Assessment
+        Security Assessment
       </div>
       <p class="sec-assessment-text">{{ security.readinessAssessment }}</p>
     </div>
