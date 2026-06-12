@@ -8,6 +8,7 @@ import { RepositoryKnowledge, KnowledgeState } from '../models/knowledge.model';
 import { SecurityAnalysis } from '../models/security-analysis.model';
 import { SystemUnderstanding } from '../models/system-understanding.model';
 import { RecommendationAnalysis } from '../models/recommendation-analysis.model';
+import { LearningPathAnalysis } from '../models/learning-path-analysis.model';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceManagerService {
@@ -85,6 +86,7 @@ export class WorkspaceManagerService {
       securityAnalysis: null,
       systemUnderstanding: null,
       recommendationAnalysis: null,
+      learningPathAnalysis: null,
     };
 
     this._workspaces$.next([...this._workspaces$.value, ws]);
@@ -217,6 +219,16 @@ export class WorkspaceManagerService {
 
   clearRecommendationAnalysis(id: string): void {
     this.patch(id, { recommendationAnalysis: null });
+  }
+
+  // ── Learning Path Analysis ────────────────────────────────────────────────
+
+  setLearningPathAnalysis(id: string, analysis: LearningPathAnalysis): void {
+    this.patch(id, { learningPathAnalysis: analysis, lastModifiedAt: new Date().toISOString() });
+  }
+
+  clearLearningPathAnalysis(id: string): void {
+    this.patch(id, { learningPathAnalysis: null });
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
