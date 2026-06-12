@@ -6,6 +6,7 @@ import {
   ImportantWorkflow,
   ImportantDependency,
   TechDebtHotspot,
+  CoreCapability,
   HealthLevel,
   CriticalityLevel,
 } from '../models/system-understanding.model';
@@ -58,6 +59,8 @@ export class SystemUnderstandingService {
 
     const mostImportantItems = this.extractFileFunctions(session);
 
+    const coreCapabilities = this.buildFileCoreCapabilities(session);
+
     const { criticality, criticalityReason } = this.fileBusinessCriticality(session);
 
     const health = this.fileHealth(session);
@@ -75,6 +78,7 @@ export class SystemUnderstandingService {
       criticalAreas,
       highRiskAreas,
       mostImportantItems,
+      coreCapabilities,
       businessCriticality: criticality,
       businessCriticalityReason: criticalityReason,
       health,
@@ -135,6 +139,9 @@ export class SystemUnderstandingService {
       files, graph, patterns, langs, techs, session, isRepo
     );
 
+    // ── Core capabilities ────────────────────────────────────────────────────
+    const coreCapabilities = this.buildKnowledgeCoreCapabilities(files, patterns, isRepo);
+
     // ── Repository-only sections ─────────────────────────────────────────────
     const technicalDebtHotspots = isRepo ? this.buildDebtHotspots(files, graph) : null;
     const mostImportantWorkflows = isRepo ? this.buildImportantWorkflows(files, graph) : null;
@@ -150,6 +157,7 @@ export class SystemUnderstandingService {
       criticalAreas,
       highRiskAreas,
       mostImportantItems,
+      coreCapabilities,
       businessCriticality: criticality,
       businessCriticalityReason: criticalityReason,
       health,
@@ -877,6 +885,105 @@ export class SystemUnderstandingService {
     }
 
     return deps.slice(0, 6);
+  }
+
+  // ── Core capability builders ──────────────────────────────────────────────
+
+  private buildFileCoreCapabilities(session: AnalysisSession): CoreCapability[] {
+    const a = session.analysis;
+    const caps: CoreCapability[] = [];
+
+    // Derive from responsibilities
+    for (const resp of a.responsibilities.slice(0, 4)) {
+      caps.push({
+        name: resp.length > 50 ? resp.slice(0, 47) + '...' : resp,
+        description: `This file is responsible for ${resp.toLowerCase()}.`,
+        businessValue: `Supports ${a.type.toLowerCase()} operations within the application.`,
+      });
+    }
+
+    // Fallback from type
+    if (caps.length === 0) {
+      caps.push({
+        name: `${a.type} functionality`,
+        description: `Implements ${a.type.toLowerCase()} logic in ${a.language}.`,
+        businessValue: 'Core application capability required for correct system behaviour.',
+      });
+    }
+
+    return caps.slice(0, 4);
+  }
+
+  private buildKnowledgeCoreCapabilities(
+    files: { path: string }[],
+    patterns: { name: string }[],
+    isRepo: boolean,
+  ): CoreCapability[] {
+    const caps: CoreCapability[] = [];
+    const folders = this.extractTopFolders(files);
+
+    const capabilityMap: Record<string, CoreCapability> = {
+      controllers: {
+        name: 'Request Handling',
+        description: 'Receives and routes incoming requests to the appropriate business logic.',
+        businessValue: 'The primary entry point for external interactions with the system.',
+      },
+      api: {
+        name: 'API Layer',
+        description: 'Exposes structured endpoints consumed by clients and other services.',
+        businessValue: 'Enables integration with external systems and client applications.',
+      },
+      services: {
+        name: 'Business Logic',
+        description: 'Implements the core rules, workflows, and operations of the domain.',
+        businessValue: 'Encapsulates the most valuable and complex application behaviour.',
+      },
+      repositories: {
+        name: 'Data Access',
+        description: 'Manages reading and writing of data to the persistence layer.',
+        businessValue: 'Ensures data integrity and provides a consistent interface to storage.',
+      },
+      models: {
+        name: 'Domain Modelling',
+        description: 'Defines the data structures and entities that represent the domain.',
+        businessValue: 'Establishes the shared language and contracts used across the system.',
+      },
+      components: {
+        name: 'User Interface',
+        description: 'Renders interactive views and captures user input.',
+        businessValue: 'Delivers the end-user experience and drives user adoption.',
+      },
+      pages: {
+        name: 'Page Composition',
+        description: 'Assembles full-page views from components and manages routing.',
+        businessValue: 'Defines the navigable surfaces users interact with.',
+      },
+      guards: {
+        name: 'Access Control',
+        description: 'Enforces authentication and authorisation rules at route or request boundaries.',
+        businessValue: 'Protects resources and ensures only authorised actors can perform actions.',
+      },
+      middleware: {
+        name: 'Request Pipeline',
+        description: 'Processes requests and responses as they pass through the system.',
+        businessValue: 'Provides cross-cutting concerns like logging, validation, and transformation.',
+      },
+    };
+
+    for (const folder of folders.slice(0, 6)) {
+      if (capabilityMap[folder]) caps.push(capabilityMap[folder]);
+    }
+
+    // Pattern-based fallback
+    if (caps.length === 0 && patterns[0]?.name) {
+      caps.push({
+        name: `${patterns[0].name} Architecture`,
+        description: `Implements ${patterns[0].name} structural patterns across ${files.length} files.`,
+        businessValue: isRepo ? 'Establishes the foundational structure of the application.' : 'Defines the structural approach for this subsystem.',
+      });
+    }
+
+    return caps.slice(0, 5);
   }
 
   // ── Shared helpers ────────────────────────────────────────────────────────

@@ -32,6 +32,12 @@ export interface TechDebtHotspot {
   impact: string;
 }
 
+export interface CoreCapability {
+  name: string;
+  description: string;
+  businessValue: string;
+}
+
 export interface SystemUnderstanding {
   scope: 'file' | 'folder' | 'repository';
 
@@ -48,6 +54,8 @@ export interface SystemUnderstanding {
 
   // File: functions/classes, Folder: files/modules, Repository: components/services
   mostImportantItems: ImportantItem[];
+
+  coreCapabilities: CoreCapability[];
 
   businessCriticality: CriticalityLevel;
   businessCriticalityReason: string;

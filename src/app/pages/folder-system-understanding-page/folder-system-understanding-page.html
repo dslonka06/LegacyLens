@@ -33,6 +33,17 @@
     </div>
   </div>
 
+  <!-- Executive Summary -->
+  <div class="su-card su-executive">
+    <div class="su-card-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+      </svg>
+      Executive Summary
+    </div>
+    <p class="su-summary-text">{{ understanding.executiveSummary }}</p>
+  </div>
+
   <!-- Two-column main -->
   <div class="su-columns">
 
@@ -68,7 +79,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
           </svg>
-          Major Components &amp; Responsibilities
+          Key Responsibilities
         </div>
         <ul class="su-list">
           <li *ngFor="let r of understanding.keyResponsibilities" class="su-list-item">
@@ -78,6 +89,23 @@
             {{ r }}
           </li>
         </ul>
+      </div>
+
+      <!-- Core Capabilities -->
+      <div class="su-card" *ngIf="understanding.coreCapabilities.length">
+        <div class="su-card-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+          </svg>
+          Core Capabilities
+        </div>
+        <div class="su-capability-list">
+          <div class="su-capability" *ngFor="let cap of understanding.coreCapabilities">
+            <div class="su-capability-name">{{ cap.name }}</div>
+            <div class="su-capability-desc">{{ cap.description }}</div>
+            <div class="su-capability-value">{{ cap.businessValue }}</div>
+          </div>
+        </div>
       </div>
 
       <!-- Most Important Workflows -->
@@ -103,13 +131,13 @@
     <!-- Right column -->
     <div class="su-col-right">
 
-      <!-- Important Files & Modules -->
+      <!-- Key Components -->
       <div class="su-card" *ngIf="understanding.mostImportantItems.length">
         <div class="su-card-header">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
-          Important Files &amp; Modules
+          Key Components
         </div>
         <div class="su-item-list">
           <div class="su-item" *ngFor="let item of understanding.mostImportantItems">
@@ -119,33 +147,19 @@
         </div>
       </div>
 
-      <!-- Areas to Watch (combined critical + high-risk) -->
-      <div class="su-card su-card-risk"
-           *ngIf="understanding.criticalAreas.length || understanding.highRiskAreas.length">
-        <div class="su-card-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          Areas to Watch
-        </div>
-        <ul class="su-list">
-          <li *ngFor="let a of understanding.criticalAreas" class="su-list-item su-list-item-neutral">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-            {{ a }}
-          </li>
-          <li *ngFor="let r of understanding.highRiskAreas" class="su-list-item su-list-item-risk">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-            {{ r }}
-          </li>
-        </ul>
-      </div>
-
     </div>
+  </div>
+
+  <!-- Understanding Narrative -->
+  <div class="su-card su-narrative">
+    <div class="su-card-header su-narrative-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      Understanding Narrative
+      <span class="su-narrative-tag">Senior Engineer's Perspective</span>
+    </div>
+    <p class="su-narrative-text">{{ understanding.understandingNarrative }}</p>
   </div>
 
 </div>
