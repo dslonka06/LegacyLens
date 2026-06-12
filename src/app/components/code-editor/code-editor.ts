@@ -9,9 +9,11 @@ import { FileInventoryService } from '../../services/file-inventory.service';
 import { WorkspaceClassifierService } from '../../services/workspace-classifier.service';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
+import { ActiveWorkspaceService } from '../../services/active-workspace.service';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { WorkspaceProfile } from '../../models/workspace.model';
 import { RepositoryKnowledge } from '../../models/knowledge.model';
+import { WorkspaceScope } from '../../models/modified-file.model';
 import { ThemeService } from '../../services/theme.service';
 
 // Extension → Monaco language ID
@@ -104,6 +106,7 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
     private readonly workspaceClassifier: WorkspaceClassifierService,
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly currentWorkspace: CurrentWorkspaceService,
+    private readonly activeWorkspace: ActiveWorkspaceService,
     private readonly cdr: ChangeDetectorRef,
     private readonly zone: NgZone,
     private readonly themeService: ThemeService
@@ -398,6 +401,7 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
     // This gives the panel something to render immediately while AI is in flight.
     const patternResult = this.analysisService.analyze(this.code);
     const session: AnalysisSession = {
+      scope: this.activeScope,
       fileName: this.fileName,
       sourceCode: this.code,
       analysis: patternResult,
@@ -424,6 +428,13 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
       this.isAnalyzing = false;
       this.cdr.detectChanges();
     }
+  }
+
+  private get activeScope(): WorkspaceScope {
+    const ws = this.activeWorkspace.workspace;
+    if (ws === 'folder')     return 'folder';
+    if (ws === 'repository') return 'repository';
+    return 'file';
   }
 
   // ─── Language detection ───────────────────────────────
