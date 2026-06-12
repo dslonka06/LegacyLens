@@ -362,11 +362,7 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
       this.editorInstance?.setValue(content);
       this.cdr.detectChanges();
 
-      // Auto-analyze single file uploads — repository uploads rely on the
-      // knowledge pipeline and do not need a single-file AI call.
-      if (files.length === 1) {
-        this.analyzeCode();
-      }
+      this.analyzeCode();
     };
     reader.readAsText(primaryFile);
   }
