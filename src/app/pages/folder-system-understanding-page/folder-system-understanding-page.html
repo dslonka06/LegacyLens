@@ -31,20 +31,6 @@
       <h1 class="su-title">System Understanding</h1>
       <p class="su-subtitle">What this subsystem does and why it exists</p>
     </div>
-    <div class="su-criticality-badge" [ngClass]="criticalityClass(understanding.businessCriticality)">
-      {{ understanding.businessCriticality }} Criticality
-    </div>
-  </div>
-
-  <!-- Executive Summary -->
-  <div class="su-card su-executive">
-    <div class="su-card-header">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-      </svg>
-      Executive Summary
-    </div>
-    <p class="su-summary-text">{{ understanding.executiveSummary }}</p>
   </div>
 
   <!-- Two-column main -->
@@ -76,7 +62,7 @@
         <p class="su-body-text">{{ understanding.whyItMatters }}</p>
       </div>
 
-      <!-- Major Components / Responsibilities -->
+      <!-- Major Components & Responsibilities -->
       <div class="su-card" *ngIf="understanding.keyResponsibilities.length">
         <div class="su-card-header">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -94,13 +80,13 @@
         </ul>
       </div>
 
-      <!-- Primary Workflows -->
+      <!-- Most Important Workflows -->
       <div class="su-card" *ngIf="understanding.keyWorkflows.length">
         <div class="su-card-header">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
-          Primary Workflows
+          Most Important Workflows
         </div>
         <ul class="su-list">
           <li *ngFor="let w of understanding.keyWorkflows" class="su-list-item">
@@ -117,7 +103,7 @@
     <!-- Right column -->
     <div class="su-col-right">
 
-      <!-- Important Files / Modules -->
+      <!-- Important Files & Modules -->
       <div class="su-card" *ngIf="understanding.mostImportantItems.length">
         <div class="su-card-header">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -133,13 +119,15 @@
         </div>
       </div>
 
-      <!-- Critical Areas -->
-      <div class="su-card" *ngIf="understanding.criticalAreas.length">
+      <!-- Areas to Watch (combined critical + high-risk) -->
+      <div class="su-card su-card-risk"
+           *ngIf="understanding.criticalAreas.length || understanding.highRiskAreas.length">
         <div class="su-card-header">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
-          Critical Areas
+          Areas to Watch
         </div>
         <ul class="su-list">
           <li *ngFor="let a of understanding.criticalAreas" class="su-list-item su-list-item-neutral">
@@ -148,19 +136,6 @@
             </svg>
             {{ a }}
           </li>
-        </ul>
-      </div>
-
-      <!-- High-Risk Areas -->
-      <div class="su-card su-card-risk" *ngIf="understanding.highRiskAreas.length">
-        <div class="su-card-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          High-Risk Areas
-        </div>
-        <ul class="su-list">
           <li *ngFor="let r of understanding.highRiskAreas" class="su-list-item su-list-item-risk">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"/>
@@ -170,62 +145,6 @@
         </ul>
       </div>
 
-    </div>
-  </div>
-
-  <!-- System Health -->
-  <div class="su-health-strip">
-    <div class="su-health-metric" [ngClass]="healthClass(understanding.health.complexity)">
-      <div class="su-health-label">Complexity</div>
-      <div class="su-health-value">{{ understanding.health.complexity }}</div>
-      <div class="su-health-icon">{{ healthIcon(understanding.health.complexity) }}</div>
-    </div>
-    <div class="su-health-metric" [ngClass]="healthClass(understanding.health.maintainability)">
-      <div class="su-health-label">Maintainability</div>
-      <div class="su-health-value">{{ understanding.health.maintainability }}</div>
-      <div class="su-health-icon">{{ healthIcon(understanding.health.maintainability) }}</div>
-    </div>
-    <div class="su-health-metric" [ngClass]="healthClass(understanding.health.riskLevel)">
-      <div class="su-health-label">Risk Level</div>
-      <div class="su-health-value">{{ understanding.health.riskLevel }}</div>
-      <div class="su-health-icon">{{ healthIcon(understanding.health.riskLevel) }}</div>
-    </div>
-    <div class="su-health-metric" [ngClass]="healthClass(understanding.health.modernizationReadiness)">
-      <div class="su-health-label">Modernization Readiness</div>
-      <div class="su-health-value">{{ understanding.health.modernizationReadiness }}</div>
-      <div class="su-health-icon">{{ healthIcon(understanding.health.modernizationReadiness) }}</div>
-    </div>
-  </div>
-  <div class="su-card su-health-interp">
-    <p class="su-body-text">{{ understanding.health.interpretation }}</p>
-  </div>
-
-  <!-- Understanding Narrative -->
-  <div class="su-card su-narrative">
-    <div class="su-card-header su-narrative-header">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-      Understanding Narrative
-      <span class="su-narrative-tag">Senior Engineer's Perspective</span>
-    </div>
-    <p class="su-narrative-text">{{ understanding.understandingNarrative }}</p>
-  </div>
-
-  <!-- Criticality explanation -->
-  <div class="su-card su-criticality-detail">
-    <div class="su-card-header">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-        <polyline points="22 4 12 14.01 9 11.01"/>
-      </svg>
-      Business Criticality
-    </div>
-    <div class="su-criticality-row">
-      <span class="su-criticality-pill" [ngClass]="criticalityClass(understanding.businessCriticality)">
-        {{ understanding.businessCriticality }}
-      </span>
-      <p class="su-body-text su-no-margin">{{ understanding.businessCriticalityReason }}</p>
     </div>
   </div>
 

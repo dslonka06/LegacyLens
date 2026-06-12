@@ -3,11 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '../../services/workspace-manager.service';
-import {
-  SystemUnderstanding,
-  CriticalityLevel,
-  HealthLevel,
-} from '../../models/system-understanding.model';
+import { SystemUnderstanding } from '../../models/system-understanding.model';
 
 @Component({
   selector: 'app-repository-system-understanding-page',
@@ -34,29 +30,6 @@ export class RepositorySystemUnderstandingPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
-  }
-
-  criticalityClass(level: CriticalityLevel): string {
-    return ({
-      Critical: 'crit-critical',
-      High:     'crit-high',
-      Medium:   'crit-medium',
-      Low:      'crit-low',
-    } as Record<CriticalityLevel, string>)[level] ?? 'crit-low';
-  }
-
-  healthClass(level: HealthLevel): string {
-    return ({
-      High:   'health-high',
-      Medium: 'health-medium',
-      Low:    'health-low',
-    } as Record<HealthLevel, string>)[level] ?? 'health-medium';
-  }
-
-  healthIcon(level: HealthLevel): string {
-    if (level === 'High')   return '↑';
-    if (level === 'Medium') return '→';
-    return '↓';
   }
 
   depTypeLabel(type: string): string {
