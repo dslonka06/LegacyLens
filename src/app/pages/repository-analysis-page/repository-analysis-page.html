@@ -52,82 +52,12 @@
 
       <app-workspace-panel (switchRequested)="openSwitcher()"></app-workspace-panel>
 
-      <!-- Empty state -->
-      <div *ngIf="!hasWorkspace" class="intel-empty">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
-          <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><line x1="12" y1="12" x2="12" y2="15"/>
-        </svg>
-        <p>Upload a repository to see an overview</p>
-      </div>
+      <!-- Analysis panel (Plain English Summary, metrics, risks, modernizations) -->
+      <app-analysis-panel [session]="session" routeBase="/repository-analysis"></app-analysis-panel>
 
       <ng-container *ngIf="hasWorkspace">
 
-        <!-- 1. Repository Overview -->
-        <div class="intel-card">
-          <div class="intel-card-title">Repository Overview</div>
-          <div class="intel-row">
-            <span class="intel-label">Name</span>
-            <span class="intel-value">{{ repoName }}</span>
-          </div>
-          <div class="intel-row">
-            <span class="intel-label">Type</span>
-            <span class="intel-value">{{ repoTypeLabel }}</span>
-          </div>
-          <div class="intel-row">
-            <span class="intel-label">Primary Language</span>
-            <span class="intel-value">{{ primaryLanguage }}</span>
-          </div>
-          <div class="intel-row">
-            <span class="intel-label">Frameworks</span>
-            <span class="intel-value">{{ frameworks }}</span>
-          </div>
-          <div class="intel-row">
-            <span class="intel-label">Projects</span>
-            <span class="intel-value">{{ projectCount }}</span>
-          </div>
-          <div class="intel-row">
-            <span class="intel-label">Files</span>
-            <span class="intel-value">{{ fileCount }}</span>
-          </div>
-        </div>
-
-        <!-- 2. Repository Summary -->
-        <div class="intel-card">
-          <div class="intel-card-title">Repository Summary</div>
-          <p class="intel-summary">
-            <strong>{{ repoName }}</strong> is a
-            {{ repoTypeLabel.toLowerCase() }} repository containing
-            {{ fileCount }} files across {{ projectCount || 1 }} project{{ projectCount !== 1 ? 's' : '' }}.
-            The primary language is {{ primaryLanguage }}<ng-container *ngIf="frameworks !== '—'">, with {{ frameworks }}</ng-container>.
-            Explore the pages below to understand its architecture, dependencies, and code quality.
-          </p>
-        </div>
-
-        <!-- 3. Quick Statistics -->
-        <div class="intel-card">
-          <div class="intel-card-title">Quick Statistics</div>
-          <div class="intel-stat-grid">
-            <div class="intel-stat">
-              <span class="intel-stat-value">{{ fileCount }}</span>
-              <span class="intel-stat-label">Total Files</span>
-            </div>
-            <div class="intel-stat">
-              <span class="intel-stat-value">{{ projectCount || 1 }}</span>
-              <span class="intel-stat-label">Projects</span>
-            </div>
-            <div class="intel-stat">
-              <span class="intel-stat-value">{{ workspaceProfile?.languages?.length ?? 0 }}</span>
-              <span class="intel-stat-label">Languages</span>
-            </div>
-            <div class="intel-stat">
-              <span class="intel-stat-value">{{ estimatedSize }}</span>
-              <span class="intel-stat-label">Est. Size</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. Explore Deeper -->
+        <!-- Explore Deeper -->
         <div class="intel-card">
           <div class="intel-card-title">Explore Deeper</div>
           <div class="intel-nav-list">

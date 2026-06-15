@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AnalysisSession } from '../../models/analysis-session.model';
 import { AnalysisResult } from '../../models/analysis-result.model';
-import { AiAnalysisResult, AiRisk } from '../../models/ai-analysis-result.model';
+import { AiAnalysisResult } from '../../models/ai-analysis-result.model';
 import { RiskItem } from '../../models/risk-item.model';
 import { ModernizationItem } from '../../models/modernization-item.model';
 
@@ -17,6 +17,7 @@ import { ModernizationItem } from '../../models/modernization-item.model';
 export class AnalysisPanel {
 
   @Input() session: AnalysisSession | null = null;
+  @Input() routeBase: string = '/file-analysis';
 
   simplerOpen = false;
 
@@ -48,16 +49,7 @@ export class AnalysisPanel {
     return `${this.ai.provider} · ${this.ai.model}`;
   }
 
-  // Prefer AI risks when available; fall back to pattern-based RiskItems.
   get displayRisks(): { title: string; severity: string; description: string }[] {
-    if (this.ai?.risks?.length) {
-      return this.ai.risks.map(r => ({
-        title: r.title,
-        severity: r.severity.toLowerCase(),
-        description: r.description
-      }));
-    }
-    // Pattern fallback: RiskItem has no title, so use description as both
     return (this.analysis?.risks ?? []).map((r: RiskItem) => ({
       title: r.description,
       severity: r.severity,
@@ -65,26 +57,11 @@ export class AnalysisPanel {
     }));
   }
 
-  get hasAiRisks(): boolean {
-    return (this.ai?.risks?.length ?? 0) > 0;
-  }
-
-  // Prefer AI modernizations; fall back to pattern-based ModernizationItems.
   get displayModernizations(): { title: string; description: string }[] {
-    if (this.ai?.modernizations?.length) {
-      return this.ai.modernizations.map(m => ({
-        title: m.title,
-        description: m.description
-      }));
-    }
     return (this.analysis?.modernizationSuggestions ?? []).map((m: ModernizationItem) => ({
       title: m.description,
       description: m.description
     }));
-  }
-
-  get hasAiModernizations(): boolean {
-    return (this.ai?.modernizations?.length ?? 0) > 0;
   }
 
   // How many segments to fill for complexity

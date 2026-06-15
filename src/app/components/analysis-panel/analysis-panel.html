@@ -102,7 +102,7 @@
     <!-- 4. Risks & Issues + Modernization -->
     <div class="findings-summary-row">
 
-      <div class="findings-summary-card" (click)="navigateTo('/file-analysis/code-recommendations')">
+      <div class="findings-summary-card" (click)="navigateTo(routeBase + '/code-recommendations')">
         <div class="findings-summary-header">
           <div class="findings-icon amber">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -125,20 +125,17 @@
         <div class="findings-preview-list" *ngIf="displayRisks.length">
           <div class="findings-preview-item" *ngFor="let r of displayRisks | slice:0:4">
             <span class="sev-dot" [ngClass]="'dot-' + r.severity"></span>
-            <span class="findings-preview-text">
-              <span class="findings-preview-title" *ngIf="hasAiRisks">{{ r.title }}</span>
-              <span>{{ r.description }}</span>
-            </span>
+            <span class="findings-preview-text">{{ r.description }}</span>
           </div>
         </div>
 
         <a class="view-all-link" *ngIf="displayRisks.length"
-           (click)="navigateTo('/file-analysis/code-recommendations'); $event.stopPropagation()">
+           (click)="navigateTo(routeBase + '/code-recommendations'); $event.stopPropagation()">
           View all {{ displayRisks.length }} issues →
         </a>
       </div>
 
-      <div class="findings-summary-card" (click)="navigateTo('/file-analysis/code-recommendations')">
+      <div class="findings-summary-card" (click)="navigateTo(routeBase + '/code-recommendations')">
         <div class="findings-summary-header">
           <div class="findings-icon green">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -163,15 +160,12 @@
             <svg class="check-dot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
-            <span class="findings-preview-text">
-              <span class="findings-preview-title" *ngIf="hasAiModernizations">{{ m.title }}</span>
-              <span>{{ m.description }}</span>
-            </span>
+            <span class="findings-preview-text">{{ m.description }}</span>
           </div>
         </div>
 
         <a class="view-all-link" *ngIf="displayModernizations.length"
-           (click)="navigateTo('/file-analysis/code-recommendations'); $event.stopPropagation()">
+           (click)="navigateTo(routeBase + '/code-recommendations'); $event.stopPropagation()">
           View all {{ displayModernizations.length }} opportunities →
         </a>
       </div>
@@ -183,7 +177,7 @@
       <span class="explore-label">Explore Deeper</span>
       <div class="explore-grid">
 
-        <button class="explore-card" (click)="navigateTo('/file-analysis/data-flow')">
+        <button class="explore-card" (click)="navigateTo(routeBase + '/data-flow')">
           <div class="explore-card-header">
             <div class="explore-card-icon cyan">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -196,7 +190,7 @@
           <span class="explore-card-arrow">→</span>
         </button>
 
-        <button class="explore-card" (click)="navigateTo('/file-analysis/architecture')">
+        <button class="explore-card" (click)="navigateTo(routeBase + '/architecture')">
           <div class="explore-card-header">
             <div class="explore-card-icon violet">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -210,7 +204,7 @@
           <span class="explore-card-arrow">→</span>
         </button>
 
-        <button class="explore-card" (click)="navigateTo('/file-analysis/documentation')">
+        <button class="explore-card" (click)="navigateTo(routeBase + '/documentation')">
           <div class="explore-card-header">
             <div class="explore-card-icon amber">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -224,7 +218,7 @@
           <span class="explore-card-arrow">→</span>
         </button>
 
-        <button class="explore-card" (click)="navigateTo('/file-analysis/code-recommendations')">
+        <button class="explore-card" (click)="navigateTo(routeBase + '/code-recommendations')">
           <div class="explore-card-header">
             <div class="explore-card-icon green">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

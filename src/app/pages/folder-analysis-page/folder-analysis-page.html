@@ -84,66 +84,12 @@
 
       <app-workspace-panel (switchRequested)="openSwitcher()"></app-workspace-panel>
 
-      <!-- Empty state -->
-      <div *ngIf="!hasWorkspace" class="intel-empty">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-        </svg>
-        <p>Upload a folder to see an overview</p>
-      </div>
+      <!-- Analysis panel (Plain English Summary, metrics, risks, modernizations) -->
+      <app-analysis-panel [session]="session" routeBase="/folder-analysis"></app-analysis-panel>
 
       <ng-container *ngIf="hasWorkspace">
 
-        <!-- 1. Folder Overview -->
-        <div class="intel-card">
-          <div class="intel-card-title">Folder Overview</div>
-          <div class="intel-row">
-            <span class="intel-label">Name</span>
-            <span class="intel-value">{{ folderName }}</span>
-          </div>
-          <div class="intel-row">
-            <span class="intel-label">Type</span>
-            <span class="intel-value">{{ folderTypeLabel }}</span>
-          </div>
-          <div class="intel-row">
-            <span class="intel-label">Files</span>
-            <span class="intel-value">{{ fileCount }}</span>
-          </div>
-          <div class="intel-row">
-            <span class="intel-label">Subfolders</span>
-            <span class="intel-value">{{ subfolderCount }}</span>
-          </div>
-        </div>
-
-        <!-- 2. Folder Summary -->
-        <div class="intel-card">
-          <div class="intel-card-title">Folder Summary</div>
-          <p class="intel-summary">
-            <strong>{{ folderName }}</strong> is a {{ folderTypeLabel.toLowerCase() }} folder
-            containing {{ fileCount }} files across {{ subfolderCount }} subfolder{{ subfolderCount !== 1 ? 's' : '' }}.
-            <ng-container *ngIf="languagesPresent !== '—'">Languages present: {{ languagesPresent }}. </ng-container>
-            Use the pages below to explore its structure and code quality in detail.
-          </p>
-        </div>
-
-        <!-- 3. Quick Statistics -->
-        <div class="intel-card">
-          <div class="intel-card-title">Quick Statistics</div>
-          <div class="intel-row">
-            <span class="intel-label">Languages Present</span>
-            <span class="intel-value">{{ languagesPresent }}</span>
-          </div>
-          <div class="intel-row">
-            <span class="intel-label">Largest File</span>
-            <span class="intel-value">{{ largestFile }}</span>
-          </div>
-          <div class="intel-row">
-            <span class="intel-label">Avg. File Size</span>
-            <span class="intel-value">{{ averageFileSize }}</span>
-          </div>
-        </div>
-
-        <!-- 4. Explore Deeper -->
+        <!-- Explore Deeper -->
         <div class="intel-card">
           <div class="intel-card-title">Explore Deeper</div>
           <div class="intel-nav-list">
