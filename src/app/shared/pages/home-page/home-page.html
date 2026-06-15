@@ -53,81 +53,90 @@
 
     <!-- Workspace cards -->
     <section class="home-workspaces">
-      <p class="home-section-label">Start an analysis</p>
+      <div class="home-section-header">
+        <span class="home-section-label">Start an analysis</span>
+        <div class="home-section-line"></div>
+      </div>
       <div class="home-workspace-grid">
 
         <a routerLink="/file-analysis" class="hwc hwc-file">
-          <div class="hwc-top">
-            <div class="hwc-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-              </svg>
+          <div class="hwc-body">
+            <div class="hwc-top">
+              <div class="hwc-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+              </div>
+              <span class="hwc-scope">Single file</span>
             </div>
-            <span class="hwc-scope">Single file</span>
-          </div>
-          <div class="hwc-title">File Analysis</div>
-          <div class="hwc-desc">Language detection, complexity, architecture patterns, data flow, and AI documentation for a single source file.</div>
-          <div class="hwc-footer">
-            <div class="hwc-tags">
-              <span class="hwc-tag">Instant</span>
-              <span class="hwc-tag">Deep dive</span>
-            </div>
-            <div class="hwc-arrow">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-              </svg>
+            <div class="hwc-title">File Analysis</div>
+            <div class="hwc-desc">Language detection, complexity, architecture patterns, data flow, and AI documentation for a single source file.</div>
+            <div class="hwc-footer">
+              <div class="hwc-tags">
+                <span class="hwc-tag">Instant</span>
+                <span class="hwc-tag">Deep dive</span>
+              </div>
+              <div class="hwc-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
             </div>
           </div>
         </a>
 
         <a routerLink="/folder-analysis" class="hwc hwc-folder">
-          <div class="hwc-top">
-            <div class="hwc-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-              </svg>
+          <div class="hwc-body">
+            <div class="hwc-top">
+              <div class="hwc-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
+              </div>
+              <span class="hwc-scope">Feature scope</span>
             </div>
-            <span class="hwc-scope">Feature scope</span>
-          </div>
-          <div class="hwc-title">Folder Analysis</div>
-          <div class="hwc-desc">Explore file relationships, dependency graphs, workflows, and folder-level architecture across a feature or module.</div>
-          <div class="hwc-footer">
-            <div class="hwc-tags">
-              <span class="hwc-tag">Dependencies</span>
-              <span class="hwc-tag">Workflows</span>
-            </div>
-            <div class="hwc-arrow">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-              </svg>
+            <div class="hwc-title">Folder Analysis</div>
+            <div class="hwc-desc">Explore file relationships, dependency graphs, workflows, and folder-level architecture across a feature or module.</div>
+            <div class="hwc-footer">
+              <div class="hwc-tags">
+                <span class="hwc-tag">Dependencies</span>
+                <span class="hwc-tag">Workflows</span>
+              </div>
+              <div class="hwc-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
             </div>
           </div>
         </a>
 
         <a routerLink="/repository-analysis" class="hwc hwc-repo">
-          <div class="hwc-top">
-            <div class="hwc-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
-                <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
-                <line x1="12" y1="12" x2="12" y2="15"/>
-              </svg>
+          <div class="hwc-body">
+            <div class="hwc-top">
+              <div class="hwc-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+                  <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+                  <line x1="12" y1="12" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <span class="hwc-scope">Full repository</span>
             </div>
-            <span class="hwc-scope">Full repository</span>
-          </div>
-          <div class="hwc-title">Repository Analysis</div>
-          <div class="hwc-desc">Navigate the full file tree, inspect system-wide architecture, discover business workflows, and generate complete documentation.</div>
-          <div class="hwc-footer">
-            <div class="hwc-tags">
-              <span class="hwc-tag">System-wide</span>
-              <span class="hwc-tag">Docs</span>
-            </div>
-            <div class="hwc-arrow">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-              </svg>
+            <div class="hwc-title">Repository Analysis</div>
+            <div class="hwc-desc">Navigate the full file tree, inspect system-wide architecture, discover business workflows, and generate complete documentation.</div>
+            <div class="hwc-footer">
+              <div class="hwc-tags">
+                <span class="hwc-tag">System-wide</span>
+                <span class="hwc-tag">Docs</span>
+              </div>
+              <div class="hwc-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
             </div>
           </div>
         </a>
@@ -137,7 +146,10 @@
 
     <!-- What LegacyLens reveals -->
     <section class="home-capabilities">
-      <p class="home-section-label">What you get</p>
+      <div class="home-section-header">
+        <span class="home-section-label">What you get</span>
+        <div class="home-section-line"></div>
+      </div>
       <div class="home-cap-grid">
 
         <div class="home-cap-item home-cap-arch">
