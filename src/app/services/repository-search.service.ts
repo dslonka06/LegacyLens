@@ -265,8 +265,8 @@ export class RepositorySearchService implements OnDestroy {
 
   // Documentation sections from the doc builder
   private indexDocumentationSections(ctx: WorkspaceContext, knowledge: RepositoryKnowledge | null): void {
-    const summary = this.summaryService.build(ctx, knowledge, null, null);
-    const sections = this.docBuilder.buildSectionList(summary, null);
+    const summary = this.summaryService.build(ctx, knowledge, null);
+    const sections = this.docBuilder.buildSectionList(summary);
 
     for (const section of sections) {
       if (!section.available) continue;

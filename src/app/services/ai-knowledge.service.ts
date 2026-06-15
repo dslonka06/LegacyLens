@@ -86,7 +86,7 @@ export class AiKnowledgeService {
     ctx: WorkspaceContext,
     knowledge: RepositoryKnowledge,
   ): RepositoryExplanationContext {
-    const summary = this.summaryService.build(ctx, knowledge, null, null);
+    const summary = this.summaryService.build(ctx, knowledge, null);
     const insights: RepositoryInsight[] = this.insightsService.analyze(knowledge);
     const flows = this.dataFlowDiscovery.discoverWorkflows(
       knowledge,
