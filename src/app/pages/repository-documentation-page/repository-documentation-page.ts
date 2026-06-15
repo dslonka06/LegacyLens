@@ -3,11 +3,9 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { DocumentationSection, DocumentationSectionId, RepositorySummary } from '../../models/repository-summary.model';
-import { UserGoalId } from '../../models/guide.model';
 import { CurrentAnalysisService } from '../../services/current-analysis.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
-import { GuideStateService } from '../../services/guide-state.service';
 import { RepositorySummaryService } from '../../services/repository-summary.service';
 import { DocumentationBuilderService } from '../../services/documentation-builder.service';
 import { PdfExportService } from '../../services/pdf-export.service';
@@ -37,7 +35,6 @@ export class RepositoryDocumentationPage implements OnInit, OnDestroy {
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly knowledgeService: RepositoryKnowledgeService,
-    private readonly guide: GuideStateService,
     private readonly summaryService: RepositorySummaryService,
     private readonly builderService: DocumentationBuilderService,
     private readonly pdfExport: PdfExportService,
@@ -61,23 +58,17 @@ export class RepositoryDocumentationPage implements OnInit, OnDestroy {
     const session = this.currentAnalysis.getSession();
     const workspaceContext = this.currentWorkspace.context;
     const knowledge = this.knowledgeService.knowledge;
-    const guideRec = this.guide.recommendation;
 
-    this.summary = this.summaryService.build(workspaceContext, knowledge, session, guideRec);
+    this.summary = this.summaryService.build(workspaceContext, knowledge, session, null);
 
-    const goalId = (guideRec?.primaryGoal ?? null) as UserGoalId | null;
-    this.sections = this.builderService.buildSectionList(this.summary, goalId);
-    const defaults = this.builderService.defaultSelections(goalId, this.summary);
+    this.sections = this.builderService.buildSectionList(this.summary, null);
+    const defaults = this.builderService.defaultSelections(null, this.summary);
     this.selectedIds = new Set(defaults);
     this.refreshPreview();
     this.isBuilding = false;
   }
 
   get hasContent(): boolean { return this.summary !== null; }
-  get goalHeadline(): string {
-    const goal = this.guide.recommendation?.headline;
-    return goal ? `Recommended for: ${goal}` : '';
-  }
   get selectedCount(): number { return this.selectedIds.size; }
   get workspaceName(): string { return this.summary?.workspaceName ?? this.currentWorkspace.context?.workspaceName ?? 'Repository'; }
 
@@ -100,8 +91,7 @@ export class RepositoryDocumentationPage implements OnInit, OnDestroy {
   selectNone(): void { this.selectedIds.clear(); this.refreshPreview(); }
 
   selectRecommended(): void {
-    const goalId = (this.guide.recommendation?.primaryGoal ?? null) as UserGoalId | null;
-    const defaults = this.builderService.defaultSelections(goalId, this.summary!);
+    const defaults = this.builderService.defaultSelections(null, this.summary!);
     this.selectedIds = new Set(defaults);
     this.refreshPreview();
   }

@@ -110,6 +110,16 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
           error: () => { /* AI unavailable — overview stays null, page degrades gracefully */ },
         });
       }
+
+      const aiSummary = session.aiAnalysis?.summary;
+      if (aiSummary) {
+        this.manager.setAiExplanation(id, {
+          type: 'repository',
+          title: 'File Intelligence',
+          content: aiSummary,
+          generatedAt: new Date().toISOString(),
+        });
+      }
     }
   }
 

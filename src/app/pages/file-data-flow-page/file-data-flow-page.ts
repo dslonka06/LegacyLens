@@ -36,8 +36,10 @@ export class FileDataFlowPage implements OnInit, OnDestroy {
   private buildFlow(session: AnalysisSession | null): void {
     if (!session) { this.flowSteps = []; this.aiWorkflow = null; return; }
 
-    // AI workflow narrative takes precedence — surface as the primary insight text
-    this.aiWorkflow = session.aiAnalysis?.documentation?.workflow ?? null;
+    // AI workflow narrative preferred; fall back to heuristic dataFlow text
+    this.aiWorkflow = session.aiAnalysis?.documentation?.workflow
+      ?? session.analysis?.dataFlow
+      ?? null;
 
     // Pattern-based dataFlow string → numbered steps
     const raw = session.analysis?.dataFlow;
@@ -47,7 +49,15 @@ export class FileDataFlowPage implements OnInit, OnDestroy {
   }
 
   get isAiPowered(): boolean {
-    return this.aiWorkflow !== null;
+    return this.session?.aiAnalysis?.documentation?.workflow != null;
+  }
+
+  get inputs(): string[] {
+    return this.session?.analysis?.inputs ?? [];
+  }
+
+  get outputs(): string[] {
+    return this.session?.analysis?.outputs ?? [];
   }
 
   getStepClass(index: number, total: number): string {

@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { UserGoalId } from '../models/guide.model';
 import {
   DocumentationSection,
   DocumentationSectionId,
@@ -66,7 +65,7 @@ const ALL_SECTIONS: Omit<DocumentationSection, 'available' | 'recommended'>[] = 
 ];
 
 // Goal → recommended section IDs
-const GOAL_RECOMMENDATIONS: Record<UserGoalId, DocumentationSectionId[]> = {
+const GOAL_RECOMMENDATIONS: Record<string, DocumentationSectionId[]> = {
   'understand-system': [
     'executive-summary', 'repository-overview', 'architecture-overview', 'key-files', 'onboarding-guide',
   ],
@@ -93,7 +92,7 @@ export class DocumentationBuilderService {
   // Build the full section list, marking availability and recommendations.
   buildSectionList(
     summary: RepositorySummary,
-    goalId: UserGoalId | null,
+    goalId: string | null,
   ): DocumentationSection[] {
     const recommended = new Set<DocumentationSectionId>(
       goalId ? (GOAL_RECOMMENDATIONS[goalId] ?? []) : []
@@ -107,7 +106,7 @@ export class DocumentationBuilderService {
   }
 
   // Returns the default pre-selected section IDs for a given goal.
-  defaultSelections(goalId: UserGoalId | null, summary: RepositorySummary): DocumentationSectionId[] {
+  defaultSelections(goalId: string | null, summary: RepositorySummary): DocumentationSectionId[] {
     const all = this.buildSectionList(summary, goalId);
     return all
       .filter(s => s.available && (goalId ? s.recommended : true))

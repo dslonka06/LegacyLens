@@ -3,7 +3,6 @@ import { AnalysisSession } from '../models/analysis-session.model';
 import { RepositoryKnowledge } from '../models/knowledge.model';
 import { WorkspaceProfile } from '../models/workspace.model';
 import { WorkspaceContext } from '../models/workspace-context.model';
-import { GuideRecommendation } from '../models/guide.model';
 import {
   InsightSummaryItem,
   KeyFile,
@@ -33,7 +32,7 @@ export class RepositorySummaryService {
     workspaceContext: WorkspaceContext | null,
     knowledge: RepositoryKnowledge | null,
     session: AnalysisSession | null,
-    guideRecommendation: GuideRecommendation | null,
+    _guideRecommendation: null,
   ): RepositorySummary {
     const profile = workspaceContext?.profile ?? session?.workspaceContext ?? null;
     const structure = profile?.repositoryStructure ?? null;
@@ -119,7 +118,7 @@ export class RepositorySummaryService {
 
     // ── Onboarding ────────────────────────────────────────────────────────
     summary.onboardingNotes = this.buildOnboardingNotes(workspaceContext, knowledge, session);
-    summary.onboardingSteps = this.buildOnboardingSteps(guideRecommendation, profile);
+    summary.onboardingSteps = this.buildOnboardingSteps(profile);
 
     // ── Stage 7: Behavior & Data Flow Intelligence ────────────────────────
     if (knowledge) {
@@ -358,13 +357,7 @@ export class RepositorySummaryService {
     return parts.join(' ');
   }
 
-  private buildOnboardingSteps(
-    guide: GuideRecommendation | null,
-    profile: WorkspaceProfile | null,
-  ): string[] {
-    if (guide?.steps?.length) return guide.steps;
-
-    // Default onboarding steps based on workspace type
+  private buildOnboardingSteps(profile: WorkspaceProfile | null): string[] {
     const type = profile?.workspaceType ?? 'SingleFile';
     if (type === 'Repository' || type === 'Project') {
       return [

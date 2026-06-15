@@ -33,17 +33,6 @@
     </div>
   </div>
 
-  <!-- Executive Summary -->
-  <div class="su-card su-executive">
-    <div class="su-card-header">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-      </svg>
-      Executive Summary
-    </div>
-    <p class="su-summary-text">{{ understanding.executiveSummary }}</p>
-  </div>
-
   <!-- AI Intelligence -->
   <app-explanation-card
     *ngIf="showExplanationCard"
@@ -97,24 +86,6 @@
               <polyline points="9 18 15 12 9 6"/>
             </svg>
             {{ r }}
-          </li>
-        </ul>
-      </div>
-
-      <!-- Most Important Workflows -->
-      <div class="su-card" *ngIf="understanding.keyWorkflows.length">
-        <div class="su-card-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-          </svg>
-          Most Important Workflows
-        </div>
-        <ul class="su-list">
-          <li *ngFor="let w of understanding.keyWorkflows" class="su-list-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-            {{ w }}
           </li>
         </ul>
       </div>

@@ -23,8 +23,8 @@
 
   <div class="page-content" *ngIf="session; else noSession">
 
-    <!-- AI workflow narrative -->
-    <div class="doc-block" *ngIf="isAiPowered">
+    <!-- Data Flow Analysis -->
+    <div class="doc-block" *ngIf="aiWorkflow">
       <div class="doc-block-label">Data Flow Analysis</div>
       <p class="flow-narrative">{{ aiWorkflow }}</p>
     </div>
@@ -41,13 +41,43 @@
       </div>
     </div>
 
-    <div class="doc-block" *ngIf="session.analysis.dataFlow && flowSteps.length === 0">
-      <div class="doc-block-label">Raw Flow</div>
-      <p class="flow-raw">{{ session.analysis.dataFlow }}</p>
+    <div class="doc-block" *ngIf="!aiWorkflow && !flowSteps.length">
+      <div class="arch-empty-state">No data flow information available for this file.</div>
     </div>
 
-    <div class="doc-block" *ngIf="!session.analysis.dataFlow && !isAiPowered">
-      <div class="arch-empty-state">No data flow information available for this file.</div>
+    <!-- Inputs & Outputs -->
+    <div class="doc-block" *ngIf="inputs.length || outputs.length">
+      <div class="doc-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+          <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+        </svg>
+        Inputs &amp; Outputs
+      </div>
+      <div class="arch-io-grid">
+        <div class="arch-io-col" *ngIf="inputs.length">
+          <div class="arch-io-label">Inputs</div>
+          <div class="arch-component-list">
+            <div class="arch-component-item" *ngFor="let item of inputs">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+              <span>{{ item }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="arch-io-col" *ngIf="outputs.length">
+          <div class="arch-io-label">Outputs</div>
+          <div class="arch-component-list">
+            <div class="arch-component-item" *ngFor="let item of outputs">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+              <span>{{ item }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>

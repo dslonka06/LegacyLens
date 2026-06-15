@@ -10,11 +10,7 @@
       </div>
       <div>
         <h1>File Architecture</h1>
-        <p class="page-subtitle" *ngIf="session">
-          {{ session.fileName }}
-          <span class="source-badge ai" *ngIf="isAiPowered">AI</span>
-          <span class="source-badge pattern" *ngIf="!isAiPowered">Pattern</span>
-        </p>
+        <p class="page-subtitle" *ngIf="session">{{ session.fileName }}</p>
         <p class="page-subtitle" *ngIf="!session">Structural patterns and component design</p>
       </div>
     </div>
@@ -26,53 +22,6 @@
     <div class="doc-block" *ngIf="architectureNarrative">
       <div class="doc-block-label">Architecture Summary</div>
       <p class="arch-narrative">{{ architectureNarrative }}</p>
-    </div>
-
-    <!-- Metrics -->
-    <div class="doc-block">
-      <div class="doc-block-label">Metrics</div>
-      <div class="metrics-strip">
-        <div class="strip-item">
-          <span class="strip-label">Language</span>
-          <span class="strip-val accent">{{ session.analysis.language }}</span>
-        </div>
-        <div class="strip-item">
-          <span class="strip-label">Type</span>
-          <span class="strip-val">{{ session.analysis.type }}</span>
-        </div>
-        <div class="strip-item">
-          <span class="strip-label">Complexity</span>
-          <span class="strip-val" [class]="'complexity-' + session.analysis.complexity.toLowerCase()">{{ session.analysis.complexity }}</span>
-        </div>
-        <div class="strip-item">
-          <span class="strip-label">Maintainability</span>
-          <span class="strip-val" [class]="'maint-' + session.analysis.maintainability.toLowerCase()">{{ session.analysis.maintainability }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Patterns Detected -->
-    <div class="doc-block">
-      <div class="doc-block-label">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-        Patterns Detected
-      </div>
-      <div class="arch-empty-state" *ngIf="!patterns.length">No architectural patterns detected.</div>
-      <div class="arch-pattern-grid" *ngIf="patterns.length">
-        <div class="arch-pattern-card" *ngFor="let p of patterns">
-          <div class="arch-pattern-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-            </svg>
-          </div>
-          <div class="arch-pattern-info">
-            <span class="arch-pattern-name">{{ p }}</span>
-            <span class="arch-pattern-desc">{{ patternDescription(p) }}</span>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Architectural Layers -->
@@ -102,25 +51,6 @@
             </svg>
           </div>
         </ng-container>
-      </div>
-    </div>
-
-    <!-- Responsibilities -->
-    <div class="doc-block">
-      <div class="doc-block-label">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-        </svg>
-        Responsibilities
-      </div>
-      <div class="arch-empty-state" *ngIf="!responsibilities.length">No responsibilities identified.</div>
-      <div class="arch-responsibility-list" *ngIf="responsibilities.length">
-        <div class="arch-responsibility-item" *ngFor="let r of responsibilities">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          <span>{{ r }}</span>
-        </div>
       </div>
     </div>
 
