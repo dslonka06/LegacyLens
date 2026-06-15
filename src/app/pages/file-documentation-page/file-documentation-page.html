@@ -33,18 +33,7 @@
           </div>
         </div>
 
-        <!-- Guide goal banner -->
-        <div class="guide-goal-banner" *ngIf="goalHeadline">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          {{ goalHeadline }}
-        </div>
-
         <div class="section-controls">
-          <button class="ctrl-btn" (click)="selectRecommended()" *ngIf="goalHeadline">Recommended</button>
           <button class="ctrl-btn" (click)="selectAll()">All</button>
           <button class="ctrl-btn" (click)="selectNone()">None</button>
           <span class="selection-count">{{ selectedCount }} selected</span>
@@ -55,7 +44,7 @@
         <div
           *ngFor="let section of sections"
           class="doc-section-row"
-          [ngClass]="{'selected': selectedIds.has(section.id), 'unavailable': !section.available, 'recommended': section.recommended}"
+          [ngClass]="{'selected': selectedIds.has(section.id), 'unavailable': !section.available}"
           (click)="section.available && toggleSection(section.id)">
 
           <div class="section-checkbox">
@@ -67,7 +56,6 @@
           <div class="section-info">
             <div class="section-title-row">
               <span class="section-title">{{ section.title }}</span>
-              <span class="recommended-badge" *ngIf="section.recommended && section.available">Recommended</span>
               <span class="unavailable-badge" *ngIf="!section.available">Not available</span>
             </div>
             <span class="section-desc">{{ section.description }}</span>

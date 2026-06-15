@@ -61,10 +61,10 @@ export class FolderDocumentationPage implements OnInit, OnDestroy {
     const workspaceContext = this.currentWorkspace.context;
     const knowledge = this.knowledgeService.knowledge;
 
-    this.summary = this.summaryService.build(workspaceContext, knowledge, session, null);
+    this.summary = this.summaryService.build(workspaceContext, knowledge, session);
 
-    this.sections = this.builderService.buildSectionList(this.summary, null);
-    const defaults = this.builderService.defaultSelections(null, this.summary);
+    this.sections = this.builderService.buildSectionList(this.summary);
+    const defaults = this.builderService.defaultSelections(this.summary);
     this.selectedIds = new Set(defaults);
     this.refreshPreview();
     this.isBuilding = false;
@@ -93,12 +93,6 @@ export class FolderDocumentationPage implements OnInit, OnDestroy {
 
   selectNone(): void {
     this.selectedIds.clear();
-    this.refreshPreview();
-  }
-
-  selectRecommended(): void {
-    const defaults = this.builderService.defaultSelections(null, this.summary!);
-    this.selectedIds = new Set(defaults);
     this.refreshPreview();
   }
 

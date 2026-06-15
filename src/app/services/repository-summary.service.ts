@@ -32,7 +32,6 @@ export class RepositorySummaryService {
     workspaceContext: WorkspaceContext | null,
     knowledge: RepositoryKnowledge | null,
     session: AnalysisSession | null,
-    _guideRecommendation: null,
   ): RepositorySummary {
     const profile = workspaceContext?.profile ?? session?.workspaceContext ?? null;
     const structure = profile?.repositoryStructure ?? null;

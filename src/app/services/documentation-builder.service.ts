@@ -64,52 +64,19 @@ const ALL_SECTIONS: Omit<DocumentationSection, 'available' | 'recommended'>[] = 
   },
 ];
 
-// Goal → recommended section IDs
-const GOAL_RECOMMENDATIONS: Record<string, DocumentationSectionId[]> = {
-  'understand-system': [
-    'executive-summary', 'repository-overview', 'architecture-overview', 'key-files', 'onboarding-guide',
-  ],
-  'modify-code': [
-    'risk-assessment', 'dependency-analysis', 'key-files', 'data-flow',
-  ],
-  'modernize': [
-    'risk-assessment', 'architecture-overview', 'dependency-analysis', 'modernization',
-  ],
-  'documentation': [
-    'executive-summary', 'architecture-overview', 'data-flow', 'key-projects', 'onboarding-guide',
-  ],
-  'onboard': [
-    'executive-summary', 'architecture-overview', 'key-files', 'onboarding-guide',
-  ],
-  'exploring': [
-    'executive-summary', 'repository-overview', 'architecture-overview',
-  ],
-};
-
 @Injectable({ providedIn: 'root' })
 export class DocumentationBuilderService {
 
-  // Build the full section list, marking availability and recommendations.
-  buildSectionList(
-    summary: RepositorySummary,
-    goalId: string | null,
-  ): DocumentationSection[] {
-    const recommended = new Set<DocumentationSectionId>(
-      goalId ? (GOAL_RECOMMENDATIONS[goalId] ?? []) : []
-    );
-
+  buildSectionList(summary: RepositorySummary): DocumentationSection[] {
     return ALL_SECTIONS.map(s => ({
       ...s,
       available: this.isSectionAvailable(s.id, summary),
-      recommended: recommended.has(s.id),
     }));
   }
 
-  // Returns the default pre-selected section IDs for a given goal.
-  defaultSelections(goalId: string | null, summary: RepositorySummary): DocumentationSectionId[] {
-    const all = this.buildSectionList(summary, goalId);
-    return all
-      .filter(s => s.available && (goalId ? s.recommended : true))
+  defaultSelections(summary: RepositorySummary): DocumentationSectionId[] {
+    return this.buildSectionList(summary)
+      .filter(s => s.available)
       .map(s => s.id);
   }
 

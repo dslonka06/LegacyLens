@@ -21,10 +21,7 @@ export interface DocumentationSection {
   id: DocumentationSectionId;
   title: string;
   description: string;   // One-sentence description for the selection UI
-  // Whether this section has content available (false → greyed out in selection)
   available: boolean;
-  // True when recommended based on current Guide goal
-  recommended: boolean;
 }
 
 export interface KeyFile {
