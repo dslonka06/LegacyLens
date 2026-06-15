@@ -101,6 +101,45 @@
   width: 100%;
 }
 
+.home-hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.home-hero-logo {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(124, 92, 255, 0.35);
+}
+
+.home-hero-brand-name {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.home-hero-brand-tag {
+  font-size: 10px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  color: white;
+  padding: 2px 7px;
+  border-radius: 5px;
+  letter-spacing: 0.5px;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
 .home-hero-eyebrow {
   display: inline-flex;
   align-items: center;
