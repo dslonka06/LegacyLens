@@ -92,266 +92,296 @@
     </div>
 
     <!-- ── File workspace ─────────────────────────────────────────────────── -->
-    <div class="nav-section nav-main" *ngIf="activeWorkspace === 'file'">
+    <ng-container *ngIf="activeWorkspace === 'file'">
 
-      <div class="nav-section-label" *ngIf="!collapsed">File Workspace</div>
+      <div class="nav-section nav-main">
+        <a routerLink="/" class="nav-item" [title]="collapsed ? 'Home' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          <span *ngIf="!collapsed">Home</span>
+        </a>
+      </div>
 
-      <a routerLink="/" class="nav-item" [title]="collapsed ? 'Home' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        <span *ngIf="!collapsed">Home</span>
-      </a>
+      <!-- OVERVIEW -->
+      <div class="nav-group">
+        <div class="nav-group-label" *ngIf="!collapsed">Overview</div>
+        <a routerLink="/file-analysis" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}"
+           class="nav-item" [title]="collapsed ? 'Analysis' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          <span *ngIf="!collapsed">Analysis</span>
+        </a>
+        <a routerLink="/file-analysis/system-understanding" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'System Understanding' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+          </svg>
+          <span *ngIf="!collapsed">System Understanding</span>
+        </a>
+      </div>
 
-      <div class="nav-home-divider"></div>
+      <!-- EXPLORE -->
+      <div class="nav-group">
+        <div class="nav-group-label" *ngIf="!collapsed">Explore</div>
+        <a routerLink="/file-analysis/architecture" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Architecture' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+          <span *ngIf="!collapsed">Architecture</span>
+        </a>
+        <a routerLink="/file-analysis/data-flow" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Data Flow Analysis' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          <span *ngIf="!collapsed">Data Flow Analysis</span>
+        </a>
+        <a routerLink="/file-analysis/security" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Security' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span *ngIf="!collapsed">Security</span>
+        </a>
+      </div>
 
-      <a routerLink="/file-analysis" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}"
-         class="nav-item" [title]="collapsed ? 'File Analysis' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-        </svg>
-        <span *ngIf="!collapsed">File Analysis</span>
-      </a>
+      <!-- ACT -->
+      <div class="nav-group">
+        <div class="nav-group-label" *ngIf="!collapsed">Act</div>
+        <a routerLink="/file-analysis/code-recommendations" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Recommendations' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span *ngIf="!collapsed">Recommendations</span>
+        </a>
+        <a routerLink="/file-analysis/learning-path" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Learning Path' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+          </svg>
+          <span *ngIf="!collapsed">Learning Path</span>
+        </a>
+      </div>
 
-      <a routerLink="/file-analysis/system-understanding" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'System Understanding' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
-        </svg>
-        <span *ngIf="!collapsed">System Understanding</span>
-      </a>
+      <!-- EXPORT -->
+      <div class="nav-group">
+        <div class="nav-group-label" *ngIf="!collapsed">Export</div>
+        <a routerLink="/file-analysis/documentation" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Documentation' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          <span *ngIf="!collapsed">Documentation</span>
+        </a>
+      </div>
 
-      <a routerLink="/file-analysis/learning-path" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Learning Path' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
-        </svg>
-        <span *ngIf="!collapsed">Learning Path</span>
-      </a>
-
-      <a routerLink="/file-analysis/architecture" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Architecture' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-        </svg>
-        <span *ngIf="!collapsed">Architecture</span>
-      </a>
-
-      <a routerLink="/file-analysis/data-flow" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Data Flow' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-        <span *ngIf="!collapsed">Data Flow</span>
-      </a>
-
-      <a routerLink="/file-analysis/security" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Security' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-        <span *ngIf="!collapsed">Security</span>
-      </a>
-
-      <a routerLink="/file-analysis/code-recommendations" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Recommendations' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        <span *ngIf="!collapsed">Recommendations</span>
-      </a>
-
-      <a routerLink="/file-analysis/documentation" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Documentation' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-        </svg>
-        <span *ngIf="!collapsed">Documentation</span>
-      </a>
-
-    </div>
+    </ng-container>
 
     <!-- ── Folder workspace ───────────────────────────────────────────────── -->
-    <div class="nav-section nav-main" *ngIf="activeWorkspace === 'folder'">
+    <ng-container *ngIf="activeWorkspace === 'folder'">
 
-      <div class="nav-section-label" *ngIf="!collapsed">Folder Workspace</div>
+      <div class="nav-section nav-main">
+        <a routerLink="/" class="nav-item" [title]="collapsed ? 'Home' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          <span *ngIf="!collapsed">Home</span>
+        </a>
+      </div>
 
-      <a routerLink="/" class="nav-item" [title]="collapsed ? 'Home' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        <span *ngIf="!collapsed">Home</span>
-      </a>
+      <!-- OVERVIEW -->
+      <div class="nav-group">
+        <div class="nav-group-label" *ngIf="!collapsed">Overview</div>
+        <a routerLink="/folder-analysis" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}"
+           class="nav-item" [title]="collapsed ? 'Analysis' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span *ngIf="!collapsed">Analysis</span>
+        </a>
+        <a routerLink="/folder-analysis/system-understanding" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'System Understanding' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+          </svg>
+          <span *ngIf="!collapsed">System Understanding</span>
+        </a>
+      </div>
 
-      <div class="nav-home-divider"></div>
+      <!-- EXPLORE -->
+      <div class="nav-group">
+        <div class="nav-group-label" *ngIf="!collapsed">Explore</div>
+        <a routerLink="/folder-analysis/architecture" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Architecture' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+          <span *ngIf="!collapsed">Architecture</span>
+        </a>
+        <a routerLink="/folder-analysis/data-flow" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Data Flow Analysis' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          <span *ngIf="!collapsed">Data Flow Analysis</span>
+        </a>
+        <a routerLink="/folder-analysis/security" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Security' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span *ngIf="!collapsed">Security</span>
+        </a>
+      </div>
 
-      <a routerLink="/folder-analysis" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}"
-         class="nav-item" [title]="collapsed ? 'Folder Analysis' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-        </svg>
-        <span *ngIf="!collapsed">Folder Analysis</span>
-      </a>
+      <!-- ACT -->
+      <div class="nav-group">
+        <div class="nav-group-label" *ngIf="!collapsed">Act</div>
+        <a routerLink="/folder-analysis/code-recommendations" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Recommendations' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span *ngIf="!collapsed">Recommendations</span>
+        </a>
+        <a routerLink="/folder-analysis/learning-path" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Learning Path' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+          </svg>
+          <span *ngIf="!collapsed">Learning Path</span>
+        </a>
+      </div>
 
-      <a routerLink="/folder-analysis/system-understanding" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'System Understanding' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
-        </svg>
-        <span *ngIf="!collapsed">System Understanding</span>
-      </a>
+      <!-- EXPORT -->
+      <div class="nav-group">
+        <div class="nav-group-label" *ngIf="!collapsed">Export</div>
+        <a routerLink="/folder-analysis/documentation" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Documentation' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          <span *ngIf="!collapsed">Documentation</span>
+        </a>
+      </div>
 
-      <a routerLink="/folder-analysis/learning-path" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Learning Path' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
-        </svg>
-        <span *ngIf="!collapsed">Learning Path</span>
-      </a>
-
-      <a routerLink="/folder-analysis/architecture" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Architecture' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-        </svg>
-        <span *ngIf="!collapsed">Architecture</span>
-      </a>
-
-      <a routerLink="/folder-analysis/data-flow" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Data Flow' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-        <span *ngIf="!collapsed">Data Flow</span>
-      </a>
-
-      <a routerLink="/folder-analysis/security" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Security' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-        <span *ngIf="!collapsed">Security</span>
-      </a>
-
-      <a routerLink="/folder-analysis/code-recommendations" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Recommendations' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        <span *ngIf="!collapsed">Recommendations</span>
-      </a>
-
-      <a routerLink="/folder-analysis/documentation" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Documentation' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-        </svg>
-        <span *ngIf="!collapsed">Documentation</span>
-      </a>
-
-    </div>
+    </ng-container>
 
     <!-- ── Repository workspace ───────────────────────────────────────────── -->
-    <div class="nav-section nav-main" *ngIf="activeWorkspace === 'repository'">
+    <ng-container *ngIf="activeWorkspace === 'repository'">
 
-      <div class="nav-section-label" *ngIf="!collapsed">Repository Workspace</div>
+      <div class="nav-section nav-main">
+        <a routerLink="/" class="nav-item" [title]="collapsed ? 'Home' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          <span *ngIf="!collapsed">Home</span>
+        </a>
+      </div>
 
-      <a routerLink="/" class="nav-item" [title]="collapsed ? 'Home' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        <span *ngIf="!collapsed">Home</span>
-      </a>
+      <!-- OVERVIEW -->
+      <div class="nav-group">
+        <div class="nav-group-label" *ngIf="!collapsed">Overview</div>
+        <a routerLink="/repository-analysis" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}"
+           class="nav-item" [title]="collapsed ? 'Analysis' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+            <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+            <line x1="12" y1="12" x2="12" y2="15"/>
+          </svg>
+          <span *ngIf="!collapsed">Analysis</span>
+        </a>
+        <a routerLink="/repository-analysis/system-understanding" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'System Understanding' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+          </svg>
+          <span *ngIf="!collapsed">System Understanding</span>
+        </a>
+      </div>
 
-      <div class="nav-home-divider"></div>
+      <!-- EXPLORE -->
+      <div class="nav-group">
+        <div class="nav-group-label" *ngIf="!collapsed">Explore</div>
+        <a routerLink="/repository-analysis/architecture" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Architecture' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+          <span *ngIf="!collapsed">Architecture</span>
+        </a>
+        <a routerLink="/repository-analysis/data-flow" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Data Flow Analysis' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          <span *ngIf="!collapsed">Data Flow Analysis</span>
+        </a>
+        <a routerLink="/repository-analysis/security" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Security' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span *ngIf="!collapsed">Security</span>
+        </a>
+      </div>
 
-      <a routerLink="/repository-analysis" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}"
-         class="nav-item" [title]="collapsed ? 'Repository Analysis' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
-          <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
-          <line x1="12" y1="12" x2="12" y2="15"/>
-        </svg>
-        <span *ngIf="!collapsed">Repository Analysis</span>
-      </a>
+      <!-- ACT -->
+      <div class="nav-group">
+        <div class="nav-group-label" *ngIf="!collapsed">Act</div>
+        <a routerLink="/repository-analysis/code-recommendations" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Recommendations' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span *ngIf="!collapsed">Recommendations</span>
+        </a>
+        <a routerLink="/repository-analysis/learning-path" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Learning Path' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+          </svg>
+          <span *ngIf="!collapsed">Learning Path</span>
+        </a>
+      </div>
 
-      <a routerLink="/repository-analysis/system-understanding" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'System Understanding' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
-        </svg>
-        <span *ngIf="!collapsed">System Understanding</span>
-      </a>
+      <!-- EXPORT -->
+      <div class="nav-group">
+        <div class="nav-group-label" *ngIf="!collapsed">Export</div>
+        <a routerLink="/repository-analysis/documentation" routerLinkActive="active"
+           class="nav-item" [title]="collapsed ? 'Documentation' : ''">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          <span *ngIf="!collapsed">Documentation</span>
+        </a>
+      </div>
 
-      <a routerLink="/repository-analysis/learning-path" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Learning Path' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
-        </svg>
-        <span *ngIf="!collapsed">Learning Path</span>
-      </a>
-
-      <a routerLink="/repository-analysis/architecture" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Architecture' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-        </svg>
-        <span *ngIf="!collapsed">Architecture</span>
-      </a>
-
-      <a routerLink="/repository-analysis/data-flow" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Data Flow' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-        <span *ngIf="!collapsed">Data Flow</span>
-      </a>
-
-      <a routerLink="/repository-analysis/security" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Security' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-        <span *ngIf="!collapsed">Security</span>
-      </a>
-
-      <a routerLink="/repository-analysis/code-recommendations" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Recommendations' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        <span *ngIf="!collapsed">Recommendations</span>
-      </a>
-
-      <a routerLink="/repository-analysis/documentation" routerLinkActive="active"
-         class="nav-item" [title]="collapsed ? 'Documentation' : ''">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-        </svg>
-        <span *ngIf="!collapsed">Documentation</span>
-      </a>
-
-    </div>
+    </ng-container>
 
     <!-- ── Bottom: Settings (always visible) ───────────────────────────────── -->
     <div class="nav-bottom">
