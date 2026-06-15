@@ -162,17 +162,5 @@ export const routes: Routes = [
       import('./pages/settings-page/settings-page').then(m => m.SettingsPage)
   },
 
-  // ── Legacy redirects (preserve bookmarks / deep links) ────────────────────
-  { path: 'analysis',              redirectTo: 'file-analysis',                   pathMatch: 'full' },
-  { path: 'architecture',          redirectTo: 'file-analysis/architecture',       pathMatch: 'full' },
-  { path: 'data-flow',             redirectTo: 'file-analysis/data-flow',          pathMatch: 'full' },
-  { path: 'risks',                 redirectTo: 'file-analysis/code-recommendations', pathMatch: 'full' },
-  { path: 'modernization',         redirectTo: 'file-analysis/code-recommendations', pathMatch: 'full' },
-  { path: 'security',              redirectTo: 'file-analysis/security', pathMatch: 'full' },
-  { path: 'documentation',         redirectTo: 'file-analysis/documentation',      pathMatch: 'full' },
-  { path: 'history',               redirectTo: '',                                  pathMatch: 'full' },
-  { path: 'repository-navigation', redirectTo: 'repository-analysis',              pathMatch: 'full' },
-  { path: 'nav-playground',        redirectTo: 'repository-analysis',              pathMatch: 'full' },
-
   { path: '**', redirectTo: '' }
 ];

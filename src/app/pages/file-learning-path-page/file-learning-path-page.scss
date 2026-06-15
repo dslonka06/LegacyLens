@@ -90,36 +90,6 @@
   margin: 0;
 }
 
-// ── Focus card ───────────────────────────────────────────────────────────────
-
-.lp-focus-card {
-  background: color-mix(in srgb, var(--accent) 5%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
-  border-radius: 10px;
-  padding: 14px 16px;
-}
-
-.lp-focus-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--accent);
-  margin-bottom: 8px;
-
-  svg { width: 13px; height: 13px; }
-}
-
-.lp-focus-text {
-  font-size: 13px;
-  color: var(--text-content);
-  line-height: 1.7;
-  margin: 0;
-}
-
 // ── Pending state ────────────────────────────────────────────────────────────
 
 .lp-pending {
@@ -313,5 +283,117 @@
   font-style: italic;
 
   svg { width: 13px; height: 13px; flex-shrink: 0; margin-top: 1px; opacity: 0.6; }
+}
+
+// ── Key Concepts ─────────────────────────────────────────────────────────────
+
+.lp-concepts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.lp-concept-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lp-concept-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-content);
+}
+
+.lp-concept-def {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.lp-concept-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.lp-concept-why {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.lp-concept-where {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.lp-concept-where-label {
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 4px;
+}
+
+// ── Next Steps ───────────────────────────────────────────────────────────────
+
+.lp-nextsteps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.lp-nextstep-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: border-color 0.12s, background 0.12s;
+  position: relative;
+
+  &:hover {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 4%, var(--bg-primary));
+  }
+}
+
+.lp-nextstep-dest {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-content);
+}
+
+.lp-nextstep-guidance {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+  flex: 1;
+}
+
+.lp-nextstep-arrow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    color: var(--accent);
+    opacity: 0.6;
+  }
 }
 
