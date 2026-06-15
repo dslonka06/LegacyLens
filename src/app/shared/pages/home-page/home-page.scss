@@ -109,35 +109,38 @@
 }
 
 .home-hero-logo {
-  width: 48px;
-  height: 48px;
+  width: 96px;
+  height: 96px;
   background: linear-gradient(135deg, var(--accent), #8b5cf6);
-  border-radius: 14px;
+  border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   flex-shrink: 0;
-  box-shadow: 0 4px 20px rgba(124, 92, 255, 0.35);
+  box-shadow: 0 8px 40px rgba(124, 92, 255, 0.4);
+
+  svg { width: 52px; height: 52px; }
 }
 
 .home-hero-brand-name {
-  font-size: 28px;
+  font-size: 56px;
   font-weight: 800;
   color: var(--text-primary);
-  letter-spacing: -0.5px;
+  letter-spacing: -1.5px;
+  line-height: 1;
 }
 
 .home-hero-brand-tag {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   background: linear-gradient(135deg, var(--accent), #8b5cf6);
   color: white;
-  padding: 2px 7px;
-  border-radius: 5px;
+  padding: 3px 9px;
+  border-radius: 6px;
   letter-spacing: 0.5px;
   align-self: flex-start;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .home-hero-eyebrow {
