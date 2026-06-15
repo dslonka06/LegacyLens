@@ -1,40 +1,44 @@
 <!-- No workspace -->
-<div class="rec-no-workspace" *ngIf="!hasWorkspace">
+<div class="no-session" *ngIf="!hasWorkspace">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
     <polyline points="9 22 9 12 15 12 15 22"/>
   </svg>
   <h3>No Repository Analyzed</h3>
   <p>Upload a repository and run analysis to view recommendations.</p>
-  <a routerLink="/repository-analysis" class="rec-go-btn">Go to Repository Analysis</a>
+  <a routerLink="/repository-analysis" class="go-btn">Go to Repository Analysis</a>
 </div>
 
-<div class="rec-layout" *ngIf="hasWorkspace">
+<div class="no-session" *ngIf="hasWorkspace && !recs">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <circle cx="12" cy="12" r="10"/>
+    <path d="M12 8v4l3 3"/>
+  </svg>
+  <h3>Analysis Pending</h3>
+  <p>Recommendations will appear here once repository analysis completes.</p>
+  <a routerLink="/repository-analysis" class="go-btn">Analyze Now</a>
+</div>
+
+<div class="insight-page" *ngIf="hasWorkspace && recs">
 
   <!-- Header -->
-  <div class="rec-header">
-    <div class="rec-header-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-      </svg>
-    </div>
-    <div>
-      <h1 class="rec-title">Recommendations</h1>
-      <p class="rec-subtitle">Prioritized improvement roadmap for your repository</p>
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon emerald">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Recommendations</h1>
+        <p class="page-subtitle">Prioritized improvement roadmap for your repository</p>
+      </div>
     </div>
   </div>
 
-  <!-- Pending analysis -->
-  <div class="rec-empty" *ngIf="!recs">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M12 8v4l3 3"/>
-    </svg>
-    <p>Recommendations will appear here once repository analysis completes.</p>
-    <a routerLink="/repository-analysis" class="rec-go-btn">Analyze Now</a>
-  </div>
+  <div class="page-content">
 
-  <div *ngIf="recs">
+  <div>
 
     <!-- Overview -->
     <div class="rec-card rec-overview">
@@ -179,4 +183,6 @@
     </div>
 
   </div>
-</div>
+
+  </div><!-- /.page-content -->
+</div><!-- /.insight-page -->

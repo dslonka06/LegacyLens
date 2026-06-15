@@ -1,38 +1,43 @@
 <!-- No workspace state -->
-<div class="sec-no-workspace" *ngIf="!hasWorkspace">
+<div class="no-session" *ngIf="!hasWorkspace">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
   </svg>
   <h3>No Folder Analyzed</h3>
   <p>Upload a folder and run analysis to view security findings.</p>
-  <a routerLink="/folder-analysis" class="sec-go-btn">Go to Folder Analysis</a>
+  <a routerLink="/folder-analysis" class="go-btn">Go to Folder Analysis</a>
 </div>
 
-<div class="sec-layout" *ngIf="hasWorkspace">
+<div class="no-session" *ngIf="hasWorkspace && !security">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <path d="M12 8v4M12 16h.01"/>
+  </svg>
+  <h3>Analysis Pending</h3>
+  <p>Security analysis will appear here once the folder analysis completes.</p>
+  <a routerLink="/folder-analysis" class="go-btn">Analyze Now</a>
+</div>
+
+<div class="insight-page" *ngIf="hasWorkspace && security">
 
   <!-- Header -->
-  <div class="sec-header">
-    <div class="sec-header-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </svg>
-    </div>
-    <div class="sec-header-text">
-      <h1 class="sec-title">Security</h1>
-      <p class="sec-subtitle">Security posture, findings, and sensitive areas of your folder</p>
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Security</h1>
+        <p class="page-subtitle">Security posture, findings, and sensitive areas of your folder</p>
+      </div>
     </div>
   </div>
 
-  <div class="sec-empty" *ngIf="!security">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      <path d="M12 8v4M12 16h.01"/>
-    </svg>
-    <p>Security analysis will appear here once the folder analysis completes.</p>
-    <a routerLink="/folder-analysis" class="sec-go-btn">Analyze Now</a>
-  </div>
+  <div class="page-content">
 
-  <div class="sec-content" *ngIf="security">
+  <div class="sec-content">
 
     <!-- 1. Security Overview -->
     <div class="sec-card sec-overview">
@@ -190,4 +195,6 @@
     </div>
 
   </div>
-</div>
+
+  </div><!-- /.page-content -->
+</div><!-- /.insight-page -->

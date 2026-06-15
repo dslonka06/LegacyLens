@@ -1,39 +1,43 @@
 <!-- No workspace -->
-<div class="rec-no-workspace" *ngIf="!hasWorkspace">
+<div class="no-session" *ngIf="!hasWorkspace">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
   </svg>
   <h3>No Folder Analyzed</h3>
   <p>Upload a folder and run analysis to view recommendations.</p>
-  <a routerLink="/folder-analysis" class="rec-go-btn">Go to Folder Analysis</a>
+  <a routerLink="/folder-analysis" class="go-btn">Go to Folder Analysis</a>
 </div>
 
-<div class="rec-layout" *ngIf="hasWorkspace">
+<div class="no-session" *ngIf="hasWorkspace && !recs">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <circle cx="12" cy="12" r="10"/>
+    <path d="M12 8v4l3 3"/>
+  </svg>
+  <h3>Analysis Pending</h3>
+  <p>Recommendations will appear here once folder analysis completes.</p>
+  <a routerLink="/folder-analysis" class="go-btn">Analyze Now</a>
+</div>
+
+<div class="insight-page" *ngIf="hasWorkspace && recs">
 
   <!-- Header -->
-  <div class="rec-header">
-    <div class="rec-header-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-      </svg>
-    </div>
-    <div>
-      <h1 class="rec-title">Recommendations</h1>
-      <p class="rec-subtitle">Prioritized improvement roadmap for your folder</p>
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon emerald">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Recommendations</h1>
+        <p class="page-subtitle">Prioritized improvement roadmap for your folder</p>
+      </div>
     </div>
   </div>
 
-  <!-- Pending analysis -->
-  <div class="rec-empty" *ngIf="!recs">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M12 8v4l3 3"/>
-    </svg>
-    <p>Recommendations will appear here once folder analysis completes.</p>
-    <a routerLink="/folder-analysis" class="rec-go-btn">Analyze Now</a>
-  </div>
+  <div class="page-content">
 
-  <div *ngIf="recs">
+  <div>
 
     <!-- Overview -->
     <div class="rec-card rec-overview">
@@ -178,4 +182,6 @@
     </div>
 
   </div>
-</div>
+
+  </div><!-- /.page-content -->
+</div><!-- /.insight-page -->
