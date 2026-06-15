@@ -52,8 +52,11 @@
 
       <app-workspace-panel (switchRequested)="openSwitcher()"></app-workspace-panel>
 
-      <!-- Analysis panel (Plain English Summary, metrics, risks, modernizations) -->
-      <app-analysis-panel [session]="session" routeBase="/repository-analysis"></app-analysis-panel>
+      <!-- Plain English Summary -->
+      <div class="intel-card" *ngIf="aiSummary">
+        <div class="intel-card-title">Repository Summary</div>
+        <p class="intel-summary-text">{{ aiSummary }}</p>
+      </div>
 
       <ng-container *ngIf="hasWorkspace">
 

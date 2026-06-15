@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CodeEditor } from '../../components/code-editor/code-editor';
-import { AnalysisPanel } from '../../components/analysis-panel/analysis-panel';
 import { WorkspacePanel } from '../../components/workspace-panel/workspace-panel';
 import { WorkspaceSwitcherModal } from '../../components/workspace-switcher-modal/workspace-switcher-modal';
 import { AnalysisSession } from '../../models/analysis-session.model';
@@ -50,7 +49,7 @@ const EXT_ICON: Record<string, string> = {
 @Component({
   selector: 'app-folder-analysis-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, CodeEditor, AnalysisPanel, WorkspacePanel, WorkspaceSwitcherModal, ResizeDividerComponent],
+  imports: [CommonModule, FormsModule, CodeEditor, WorkspacePanel, WorkspaceSwitcherModal, ResizeDividerComponent],
   templateUrl: './folder-analysis-page.html',
   styleUrl: './folder-analysis-page.scss',
 })
@@ -358,5 +357,9 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     const avg = total / files.length;
     if (avg < 1024) return `${avg.toFixed(0)} B`;
     return `${(avg / 1024).toFixed(1)} KB`;
+  }
+
+  get aiSummary(): string | null {
+    return this.manager.getActive()?.aiExplanation?.content ?? null;
   }
 }

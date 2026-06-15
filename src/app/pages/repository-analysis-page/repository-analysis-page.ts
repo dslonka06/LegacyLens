@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CodeEditor } from '../../components/code-editor/code-editor';
-import { AnalysisPanel } from '../../components/analysis-panel/analysis-panel';
 import { WorkspacePanel } from '../../components/workspace-panel/workspace-panel';
 import { WorkspaceSwitcherModal } from '../../components/workspace-switcher-modal/workspace-switcher-modal';
 import { AnalysisSession } from '../../models/analysis-session.model';
@@ -49,7 +48,7 @@ const EXT_ICON: Record<string, string> = {
 @Component({
   selector: 'app-repository-analysis-page',
   standalone: true,
-  imports: [CommonModule, CodeEditor, AnalysisPanel, WorkspacePanel, WorkspaceSwitcherModal, ResizeDividerComponent],
+  imports: [CommonModule, CodeEditor, WorkspacePanel, WorkspaceSwitcherModal, ResizeDividerComponent],
   templateUrl: './repository-analysis-page.html',
   styleUrl: './repository-analysis-page.scss',
 })
@@ -327,5 +326,9 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  get aiSummary(): string | null {
+    return this.manager.getActive()?.aiExplanation?.content ?? null;
   }
 }

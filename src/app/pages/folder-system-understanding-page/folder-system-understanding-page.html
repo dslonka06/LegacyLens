@@ -44,16 +44,6 @@
     <p class="su-summary-text">{{ understanding.executiveSummary }}</p>
   </div>
 
-  <!-- AI Explanation — shown when AI explanation exists for this workspace -->
-  <app-explanation-card
-    *ngIf="showExplanationCard"
-    title="Folder Intelligence"
-    [content]="aiExplanation!.content"
-    [isLoading]="false"
-    [error]="null"
-    (dismiss)="dismissExplanation()">
-  </app-explanation-card>
-
   <!-- Two-column main -->
   <div class="su-columns">
 
@@ -101,23 +91,6 @@
         </ul>
       </div>
 
-      <!-- Core Capabilities -->
-      <div class="su-card" *ngIf="understanding.coreCapabilities.length">
-        <div class="su-card-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-          </svg>
-          Core Capabilities
-        </div>
-        <div class="su-capability-list">
-          <div class="su-capability" *ngFor="let cap of understanding.coreCapabilities">
-            <div class="su-capability-name">{{ cap.name }}</div>
-            <div class="su-capability-desc">{{ cap.description }}</div>
-            <div class="su-capability-value">{{ cap.businessValue }}</div>
-          </div>
-        </div>
-      </div>
-
       <!-- Most Important Workflows -->
       <div class="su-card" *ngIf="understanding.keyWorkflows.length">
         <div class="su-card-header">
@@ -160,16 +133,5 @@
     </div>
   </div>
 
-  <!-- Understanding Narrative -->
-  <div class="su-card su-narrative">
-    <div class="su-card-header su-narrative-header">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-      Understanding Narrative
-      <span class="su-narrative-tag">Senior Engineer's Perspective</span>
-    </div>
-    <p class="su-narrative-text">{{ understanding.understandingNarrative }}</p>
-  </div>
 
 </div>

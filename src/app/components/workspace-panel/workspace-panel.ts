@@ -98,7 +98,7 @@ export class WorkspacePanel implements OnInit, OnDestroy {
     const map: Record<WorkspaceStatus, string> = {
       'empty':     'Empty',
       'loaded':    'Loaded',
-      'analyzing': 'Analyzing',
+      'analyzing': 'Loading',
     };
     return map[this.workspace.status];
   }
