@@ -144,6 +144,13 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
             error: () => { /* AI unavailable — explanation stays null, page degrades gracefully */ },
           });
         }
+
+        if (ctx && !this.manager.getById(id)?.securityOverview) {
+          this.aiKnowledge.generateSecurityOverview(ctx, security).subscribe({
+            next: overview => this.manager.setSecurityOverview(id, overview),
+            error: () => { /* AI unavailable — overview stays null, page degrades gracefully */ },
+          });
+        }
       }
     });
   }

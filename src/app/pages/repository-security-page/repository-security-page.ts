@@ -16,6 +16,8 @@ import { CurrentWorkspaceService } from '../../services/current-workspace.servic
 export class RepositorySecurityPage implements OnInit, OnDestroy {
 
   security: SecurityAnalysis | null = null;
+  securityOverview: string | null = null;
+  overviewLoading = false;
   hasWorkspace = false;
   expandedFindings = new Set<string>();
 
@@ -29,12 +31,17 @@ export class RepositorySecurityPage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.security = this.manager.getActive()?.securityAnalysis ?? null;
+    const active = this.manager.getActive();
+    this.security = active?.securityAnalysis ?? null;
+    this.securityOverview = active?.securityOverview ?? null;
+    this.overviewLoading = this.security !== null && this.securityOverview === null;
     this.hasWorkspace = this.workspace.context !== null;
 
     this.subs.push(
       this.manager.activeWorkspace$.subscribe(ws => {
         this.security = ws?.securityAnalysis ?? null;
+        this.securityOverview = ws?.securityOverview ?? null;
+        this.overviewLoading = this.security !== null && this.securityOverview === null;
       }),
       this.workspace.context$.subscribe(ctx => {
         this.hasWorkspace = ctx !== null;

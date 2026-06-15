@@ -28,6 +28,7 @@ export interface Workspace {
   knowledge:        RepositoryKnowledge | null;
   knowledgeState:   KnowledgeState;
   securityAnalysis: SecurityAnalysis | null;
+  securityOverview: string | null;
   systemUnderstanding: SystemUnderstanding | null;
   recommendationAnalysis: RecommendationAnalysis | null;
   learningPathAnalysis: LearningPathAnalysis | null;

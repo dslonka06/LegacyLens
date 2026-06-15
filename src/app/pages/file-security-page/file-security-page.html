@@ -36,18 +36,29 @@
 
   <div class="sec-content" *ngIf="security">
 
-    <!-- Executive Summary -->
-    <div class="sec-card sec-executive">
+    <!-- 1. Security Overview -->
+    <div class="sec-card sec-overview">
       <div class="sec-card-header">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
-        Security Executive Summary
+        Security Overview
       </div>
-      <p class="sec-executive-text">{{ security.executiveSummary }}</p>
+
+      <div class="sec-overview-loading" *ngIf="overviewLoading">
+        <span class="sec-overview-shimmer"></span>
+        <span class="sec-overview-shimmer sec-overview-shimmer--short"></span>
+        <span class="sec-overview-shimmer"></span>
+      </div>
+
+      <p class="sec-overview-text" *ngIf="securityOverview">{{ securityOverview }}</p>
+
+      <p class="sec-overview-unavailable" *ngIf="!overviewLoading && !securityOverview">
+        AI-generated security overview is not available. Ensure the AI provider is configured and re-analyze.
+      </p>
     </div>
 
-    <!-- Metrics -->
+    <!-- 2. Security Metrics -->
     <div class="sec-metrics">
       <div class="sec-metric" [class]="riskClass(security.overallRisk)">
         <span class="sec-metric-value">{{ security.overallRisk | titlecase }}</span>
@@ -74,7 +85,7 @@
     <!-- Two-column layout -->
     <div class="sec-columns">
 
-      <!-- Left: Findings by severity -->
+      <!-- Left: 3. Security Findings -->
       <div class="sec-col-left">
 
         <div class="sec-card" *ngIf="security.findings.length > 0">
@@ -130,14 +141,6 @@
                     <div class="sec-section-label sec-label-why">Why It Matters</div>
                     <p>{{ finding.riskExplanation }}</p>
                   </div>
-                  <div class="sec-finding-section">
-                    <div class="sec-section-label">Recommended Remediation</div>
-                    <p>{{ finding.remediation }}</p>
-                  </div>
-                  <div class="sec-finding-section" *ngIf="finding.codeSnippet">
-                    <div class="sec-section-label">Relevant Code</div>
-                    <pre class="sec-code-snippet">{{ finding.codeSnippet }}</pre>
-                  </div>
                   <div class="sec-finding-section" *ngIf="finding.affectedComponents.length > 0">
                     <div class="sec-section-label">Affected Components</div>
                     <div class="sec-chip-list">
@@ -163,10 +166,9 @@
 
       </div>
 
-      <!-- Right: Components + Themes -->
+      <!-- Right: 4. Security-Relevant Components -->
       <div class="sec-col-right">
 
-        <!-- Security-Relevant Components -->
         <div class="sec-card" *ngIf="security.relevantComponents.length > 0">
           <div class="sec-card-header">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -188,37 +190,7 @@
           </div>
         </div>
 
-        <!-- Security Recommendation Themes -->
-        <div class="sec-card" *ngIf="security.recommendationThemes.length > 0">
-          <div class="sec-card-header">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-            Security Recommendation Themes
-          </div>
-          <ul class="sec-themes-list">
-            <li class="sec-theme-item" *ngFor="let theme of security.recommendationThemes">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="9 11 12 14 22 4"/>
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-              </svg>
-              {{ theme }}
-            </li>
-          </ul>
-        </div>
-
       </div>
-    </div>
-
-    <!-- Security Assessment -->
-    <div class="sec-card sec-assessment">
-      <div class="sec-card-header">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-        </svg>
-        Security Assessment
-      </div>
-      <p class="sec-assessment-text">{{ security.readinessAssessment }}</p>
     </div>
 
   </div>

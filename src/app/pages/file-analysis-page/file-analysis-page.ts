@@ -16,6 +16,7 @@ import { SystemUnderstandingService } from '../../services/system-understanding.
 import { RecommendationAnalysisService } from '../../services/recommendation-analysis.service';
 import { LearningPathAnalysisService } from '../../services/learning-path-analysis.service';
 import { PanelLayoutService } from '../../services/panel-layout.service';
+import { AiKnowledgeService } from '../../services/ai-knowledge.service';
 import { ResizeDividerComponent } from '../../components/resize-divider/resize-divider.component';
 
 @Component({
@@ -52,6 +53,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     private readonly recService: RecommendationAnalysisService,
     private readonly learningPathService: LearningPathAnalysisService,
     private readonly layoutService: PanelLayoutService,
+    private readonly aiKnowledge: AiKnowledgeService,
   ) {}
 
   ngOnInit(): void {
@@ -99,6 +101,14 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       if (ws?.systemUnderstanding) {
         const lp = this.learningPathService.analyzeFile(session, ws.systemUnderstanding);
         this.manager.setLearningPathAnalysis(id, lp);
+      }
+
+      const ctx = this.currentWorkspace.context;
+      if (ctx) {
+        this.aiKnowledge.generateSecurityOverview(ctx, security).subscribe({
+          next: overview => this.manager.setSecurityOverview(id, overview),
+          error: () => { /* AI unavailable — overview stays null, page degrades gracefully */ },
+        });
       }
     }
   }

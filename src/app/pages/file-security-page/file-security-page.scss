@@ -115,23 +115,53 @@
   svg { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.7; }
 }
 
-// ── Executive Summary ────────────────────────────────────────────────────────
+// ── Security Overview ────────────────────────────────────────────────────────
 
-.sec-executive .sec-card-header { margin-bottom: 10px; }
+.sec-overview .sec-card-header { margin-bottom: 12px; }
 
-.sec-executive-text {
+.sec-overview-text {
   font-size: 14px;
   color: var(--text-content);
-  line-height: 1.75;
+  line-height: 1.8;
   margin: 0;
   font-weight: 400;
+  white-space: pre-line;
 }
 
-.sec-summary-text {
+.sec-overview-unavailable {
   font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.7;
+  color: var(--text-muted);
+  line-height: 1.6;
   margin: 0;
+  font-style: italic;
+}
+
+.sec-overview-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.sec-overview-shimmer {
+  display: block;
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--border) 0%,
+    color-mix(in srgb, var(--border) 60%, transparent) 50%,
+    var(--border) 100%
+  );
+  background-size: 200% 100%;
+  animation: sec-shimmer 1.6s ease-in-out infinite;
+
+  &--short { width: 55%; }
+}
+
+@keyframes sec-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 // ── Metrics Strip ───────────────────────────────────────────────────────────
@@ -373,20 +403,6 @@
   margin: 0;
 }
 
-.sec-code-snippet {
-  font-family: 'JetBrains Mono', Consolas, monospace;
-  font-size: 11px;
-  color: var(--text-secondary);
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px 12px;
-  margin: 0;
-  overflow-x: auto;
-  white-space: pre;
-  line-height: 1.6;
-}
-
 // ── Severity badges ──────────────────────────────────────────────────────────
 
 .sec-sev-badge {
@@ -459,28 +475,6 @@
   }
 }
 
-// ── Themes list ──────────────────────────────────────────────────────────────
-
-.sec-themes-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.sec-theme-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-
-  svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--success); margin-top: 1px; }
-}
-
 // ── Relevant Components ───────────────────────────────────────────────────────
 
 .sec-relevant-note {
@@ -526,15 +520,3 @@
   line-height: 1.5;
 }
 
-// ── Assessment ───────────────────────────────────────────────────────────────
-
-.sec-assessment {
-  border-top: 2px solid color-mix(in srgb, var(--accent) 20%, transparent);
-}
-
-.sec-assessment-text {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.75;
-  margin: 0;
-}

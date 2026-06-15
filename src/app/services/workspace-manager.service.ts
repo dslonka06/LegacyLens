@@ -85,6 +85,7 @@ export class WorkspaceManagerService {
       knowledge: null,
       knowledgeState: KnowledgeState.NotStarted,
       securityAnalysis: null,
+      securityOverview: null,
       systemUnderstanding: null,
       recommendationAnalysis: null,
       learningPathAnalysis: null,
@@ -201,6 +202,16 @@ export class WorkspaceManagerService {
 
   clearSecurityAnalysis(id: string): void {
     this.patch(id, { securityAnalysis: null });
+  }
+
+  // ── Security Overview (AI-generated narrative) ────────────────────────────
+
+  setSecurityOverview(id: string, overview: string): void {
+    this.patch(id, { securityOverview: overview, lastModifiedAt: new Date().toISOString() });
+  }
+
+  clearSecurityOverview(id: string): void {
+    this.patch(id, { securityOverview: null });
   }
 
   // ── System Understanding ──────────────────────────────────────────────────

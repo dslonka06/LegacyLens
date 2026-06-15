@@ -16,6 +16,8 @@ import { WorkflowExplorerService } from './workflow-explorer.service';
 import { RepositoryInsightsService } from './repository-insights.service';
 import { RepositoryExplanationPromptBuilder } from './prompts/repository-explanation-prompt';
 import { WorkflowExplanationPromptBuilder } from './prompts/workflow-explanation-prompt';
+import { SecurityOverviewPromptBuilder } from './prompts/security-overview-prompt';
+import { SecurityAnalysis } from '../models/security-analysis.model';
 
 interface ExplainRequest {
   prompt: string;
@@ -39,6 +41,7 @@ export class AiKnowledgeService {
     private readonly insightsService: RepositoryInsightsService,
     private readonly repoPrompt: RepositoryExplanationPromptBuilder,
     private readonly workflowPrompt: WorkflowExplanationPromptBuilder,
+    private readonly securityOverviewPrompt: SecurityOverviewPromptBuilder,
   ) {}
 
   // ── Public API ────────────────────────────────────────────────────────────
@@ -49,6 +52,20 @@ export class AiKnowledgeService {
   ): Observable<string> {
     const context = this.buildRepositoryContext(ctx, knowledge);
     const prompt = this.repoPrompt.build(context);
+    return this.callApi(prompt);
+  }
+
+  generateSecurityOverview(
+    ctx: WorkspaceContext,
+    security: SecurityAnalysis,
+  ): Observable<string> {
+    const prompt = this.securityOverviewPrompt.build({
+      workspaceName:        ctx.workspaceName,
+      languages:            ctx.profile.languages,
+      technologies:         ctx.profile.technologies,
+      architecturePatterns: [],
+      security,
+    });
     return this.callApi(prompt);
   }
 
