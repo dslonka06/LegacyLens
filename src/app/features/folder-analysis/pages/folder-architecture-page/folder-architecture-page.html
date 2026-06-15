@@ -9,7 +9,7 @@
         </svg>
       </div>
       <div>
-        <h1>Folder Architecture</h1>
+        <h1>Architecture</h1>
         <p class="page-subtitle" *ngIf="workspaceName">{{ workspaceName }}</p>
         <p class="page-subtitle" *ngIf="!workspaceName">Structural patterns and dependency topology</p>
       </div>
@@ -17,79 +17,77 @@
   </div>
 
   <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
+    <div class="arch-cols">
 
-    <!-- Architecture narrative -->
-    <div class="doc-block" *ngIf="architectureNarrative">
-      <div class="doc-block-label">Architecture Summary</div>
-      <p class="arch-narrative">{{ architectureNarrative }}</p>
-    </div>
+      <!-- Left: narrative + patterns -->
+      <div class="arch-col-main">
 
-    <!-- Folder Architecture Summary -->
-    <div class="doc-block">
-      <div class="doc-block-label">Folder Architecture Summary</div>
-      <div class="metrics-strip">
-        <div class="strip-item">
-          <span class="strip-label">Modules</span>
-          <span class="strip-val accent">{{ dependencyNodes }}</span>
+        <!-- Architecture narrative -->
+        <div class="doc-block" *ngIf="architectureNarrative">
+          <div class="doc-block-label">Architecture Summary</div>
+          <p class="arch-narrative">{{ architectureNarrative }}</p>
         </div>
-        <div class="strip-item">
-          <span class="strip-label">Connections</span>
-          <span class="strip-val">{{ dependencyEdges }}</span>
-        </div>
-        <div class="strip-item">
-          <span class="strip-label">Patterns</span>
-          <span class="strip-val">{{ patterns.length }}</span>
-        </div>
-      </div>
-    </div>
 
-    <!-- Architectural Components: patterns -->
-    <div class="doc-block">
-      <div class="doc-block-label">Architectural Components</div>
-      <div class="arch-empty-state" *ngIf="!patterns.length">No architectural patterns detected yet. Upload a folder to begin analysis.</div>
-      <div class="arch-pattern-grid" *ngIf="patterns.length">
-        <div class="arch-pattern-card" *ngFor="let p of patterns">
-          <div class="arch-pattern-info">
-            <span class="arch-pattern-name">{{ p.name }}</span>
-            <span class="arch-pattern-desc">{{ confidencePercent(p) }}% confidence</span>
-          </div>
-          <div class="arch-confidence-bar">
-            <div class="arch-confidence-fill" [style.width.%]="confidencePercent(p)"></div>
-          </div>
-          <div class="arch-indicators" *ngIf="p.indicators.length">
-            <span class="arch-indicator-tag" *ngFor="let ind of p.indicators.slice(0, 4)">{{ ind }}</span>
+        <!-- Architectural Components: patterns -->
+        <div class="doc-block">
+          <div class="doc-block-label">Architectural Components</div>
+          <div class="arch-empty-state" *ngIf="!patterns.length">No architectural patterns detected yet. Upload a folder to begin analysis.</div>
+          <div class="arch-pattern-grid" *ngIf="patterns.length">
+            <div class="arch-pattern-card" *ngFor="let p of patterns">
+              <div class="arch-pattern-info">
+                <span class="arch-pattern-name">{{ p.name }}</span>
+                <span class="arch-pattern-desc">{{ confidencePercent(p) }}% confidence</span>
+              </div>
+              <div class="arch-confidence-bar">
+                <div class="arch-confidence-fill" [style.width.%]="confidencePercent(p)"></div>
+              </div>
+              <div class="arch-indicators" *ngIf="p.indicators.length">
+                <span class="arch-indicator-tag" *ngFor="let ind of p.indicators.slice(0, 4)">{{ ind }}</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Folder Structure Overview: top referenced modules -->
-    <div class="doc-block" *ngIf="topDependencies.length > 0">
-      <div class="doc-block-label">Folder Structure Overview</div>
-      <div class="arch-responsibility-list">
-        <div class="arch-responsibility-item" *ngFor="let d of topDependencies">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          <span>{{ d }}</span>
+      </div><!-- /.arch-col-main -->
+
+      <!-- Right: metrics + structure overview -->
+      <div class="arch-col-side">
+
+        <!-- Folder Architecture Summary -->
+        <div class="doc-block">
+          <div class="doc-block-label">Folder Architecture Summary</div>
+          <div class="metrics-strip">
+            <div class="strip-item">
+              <span class="strip-label">Modules</span>
+              <span class="strip-val accent">{{ dependencyNodes }}</span>
+            </div>
+            <div class="strip-item">
+              <span class="strip-label">Connections</span>
+              <span class="strip-val">{{ dependencyEdges }}</span>
+            </div>
+            <div class="strip-item">
+              <span class="strip-label">Patterns</span>
+              <span class="strip-val">{{ patterns.length }}</span>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Architectural Relationships: dependency list -->
-    <div class="doc-block" *ngIf="topDependencies.length > 0">
-      <div class="doc-block-label">Architectural Relationships</div>
-      <div class="arch-component-list">
-        <div class="arch-component-item" *ngFor="let d of topDependencies">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/>
-            <path d="M6 21V9a9 9 0 0 0 9 9"/>
-          </svg>
-          <span>{{ d }}</span>
+        <!-- Folder Structure Overview: top referenced modules -->
+        <div class="doc-block" *ngIf="topDependencies.length > 0">
+          <div class="doc-block-label">Folder Structure Overview</div>
+          <div class="arch-responsibility-list">
+            <div class="arch-responsibility-item" *ngFor="let d of topDependencies">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>{{ d }}</span>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
 
+      </div><!-- /.arch-col-side -->
+
+    </div><!-- /.arch-cols -->
   </div>
 
   <ng-template #noWorkspace>

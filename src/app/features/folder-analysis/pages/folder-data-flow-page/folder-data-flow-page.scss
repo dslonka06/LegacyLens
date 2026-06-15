@@ -5,6 +5,26 @@
   overflow: hidden;
 }
 
+// ── Two-column layout ─────────────────────────────────────────────────────
+
+.flow-cols {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.flow-col-main,
+.flow-col-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .strip-val-warn {
   color: #EF4444 !important;
 }

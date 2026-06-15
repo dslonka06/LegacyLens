@@ -11,7 +11,7 @@ import {
   RepositorySummary,
   RiskSummaryItem,
 } from '../models/repository-summary.model';
-import { DependencyExplorerService } from './dependency-explorer.service';
+import { DependencyExplorerService, FileRanking } from '@app/knowledge/services/dependency-explorer.service';
 import { RepositoryInsightsService } from './repository-insights.service';
 import { DataFlowDiscoveryService } from './data-flow-discovery.service';
 import { WorkflowExplorerService } from './workflow-explorer.service';
@@ -232,7 +232,7 @@ export class RepositorySummaryService {
     const parts: string[] = [];
     parts.push(`${graph.nodes.length} files mapped with ${graph.edges.length} dependency relationships.`);
     if (top.length) {
-      parts.push(`Most connected: ${top.map(r => r.node.name).join(', ')}.`);
+      parts.push(`Most connected: ${top.map((r: FileRanking) => r.node.name).join(', ')}.`);
     }
     if (hubs.length) {
       parts.push(`${hubs.length} dependency hub${hubs.length > 1 ? 's' : ''} detected.`);

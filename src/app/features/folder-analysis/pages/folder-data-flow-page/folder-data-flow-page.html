@@ -2,13 +2,13 @@
 
   <div class="page-header">
     <div class="page-title">
-      <div class="page-icon blue">
+      <div class="page-icon cyan">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
         </svg>
       </div>
       <div>
-        <h1>Folder Data Flow</h1>
+        <h1>Data Flow Analysis</h1>
         <p class="page-subtitle" *ngIf="workspaceName">{{ workspaceName }}</p>
         <p class="page-subtitle" *ngIf="!workspaceName">Module dependency and data movement</p>
       </div>
@@ -16,66 +16,78 @@
   </div>
 
   <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
+    <div class="flow-cols">
 
-    <!-- Data flow narrative -->
-    <div class="doc-block" *ngIf="dataFlowNarrative">
-      <div class="doc-block-label">Data Flow Analysis</div>
-      <p class="flow-narrative">{{ dataFlowNarrative }}</p>
-    </div>
+      <!-- Left: narrative + module depth -->
+      <div class="flow-col-main">
 
-    <!-- Flow Summary -->
-    <div class="doc-block">
-      <div class="doc-block-label">Flow Summary</div>
-      <div class="metrics-strip">
-        <div class="strip-item">
-          <span class="strip-label">Total Modules</span>
-          <span class="strip-val accent">{{ totalFiles }}</span>
+        <!-- Data flow narrative -->
+        <div class="doc-block" *ngIf="dataFlowNarrative">
+          <div class="doc-block-label">Data Flow Analysis</div>
+          <p class="flow-narrative">{{ dataFlowNarrative }}</p>
         </div>
-        <div class="strip-item">
-          <span class="strip-label">Connections</span>
-          <span class="strip-val">{{ totalConnections }}</span>
-        </div>
-        <div class="strip-item">
-          <span class="strip-label">Hub Modules</span>
-          <span class="strip-val" [class.strip-val-warn]="hubCount > 3">{{ hubCount }}</span>
-        </div>
-      </div>
-    </div>
 
-    <!-- Workflow Overview -->
-    <div class="doc-block" *ngIf="flowNodes.length > 0">
-      <div class="doc-block-label">Workflow Overview</div>
-      <div class="wf-overview-grid">
-        <div class="wf-overview-card" *ngFor="let node of flowNodes.slice(0, 6)">
-          <span class="wf-overview-name">{{ node.name }}</span>
-          <span class="wf-overview-stat">{{ node.dependents }} dependents</span>
-          <span class="flow-hub-badge" *ngIf="node.isHub">hub</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Workflow Details -->
-    <div class="doc-block" *ngIf="flowNodes.length > 0">
-      <div class="doc-block-label">Module Dependency Depth</div>
-      <div class="flow-steps">
-        <div class="flow-step"
-             *ngFor="let node of flowNodes; let i = index; let last = last"
-             [ngClass]="{ 'step-first': node.isHub && i === 0, 'step-mid': node.isHub && i > 0, 'step-last': last && !node.isHub }">
-          <div class="step-badge">{{ i + 1 }}</div>
-          <div class="step-label">{{ node.name }}</div>
-          <div class="step-meta">
-            <span class="step-stat">&#8593; {{ node.dependents }}</span>
-            <span class="step-stat">&#8595; {{ node.dependencies }}</span>
-            <span class="flow-hub-badge" *ngIf="node.isHub">hub</span>
+        <!-- Workflow Details -->
+        <div class="doc-block" *ngIf="flowNodes.length > 0">
+          <div class="doc-block-label">Module Dependency Depth</div>
+          <div class="flow-steps">
+            <div class="flow-step"
+                 *ngFor="let node of flowNodes; let i = index; let last = last"
+                 [ngClass]="{ 'step-first': node.isHub && i === 0, 'step-mid': node.isHub && i > 0, 'step-last': last && !node.isHub }">
+              <div class="step-badge">{{ i + 1 }}</div>
+              <div class="step-label">{{ node.name }}</div>
+              <div class="step-meta">
+                <span class="step-stat">&#8593; {{ node.dependents }}</span>
+                <span class="step-stat">&#8595; {{ node.dependencies }}</span>
+                <span class="flow-hub-badge" *ngIf="node.isHub">hub</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <div class="doc-block" *ngIf="flowNodes.length === 0">
-      <div class="arch-empty-state">No data flow information available. Upload a folder to begin analysis.</div>
-    </div>
+        <div class="doc-block" *ngIf="flowNodes.length === 0">
+          <div class="arch-empty-state">No data flow information available. Upload a folder to begin analysis.</div>
+        </div>
 
+      </div><!-- /.flow-col-main -->
+
+      <!-- Right: summary metrics + top modules -->
+      <div class="flow-col-side">
+
+        <!-- Flow Summary -->
+        <div class="doc-block">
+          <div class="doc-block-label">Flow Summary</div>
+          <div class="metrics-strip">
+            <div class="strip-item">
+              <span class="strip-label">Total Modules</span>
+              <span class="strip-val accent">{{ totalFiles }}</span>
+            </div>
+            <div class="strip-item">
+              <span class="strip-label">Connections</span>
+              <span class="strip-val">{{ totalConnections }}</span>
+            </div>
+            <div class="strip-item">
+              <span class="strip-label">Hub Modules</span>
+              <span class="strip-val" [class.strip-val-warn]="hubCount > 3">{{ hubCount }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Workflow Overview -->
+        <div class="doc-block" *ngIf="flowNodes.length > 0">
+          <div class="doc-block-label">Workflow Overview</div>
+          <div class="wf-overview-grid">
+            <div class="wf-overview-card" *ngFor="let node of flowNodes.slice(0, 6)">
+              <span class="wf-overview-name">{{ node.name }}</span>
+              <span class="wf-overview-stat">{{ node.dependents }} dependents</span>
+              <span class="flow-hub-badge" *ngIf="node.isHub">hub</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /.flow-col-side -->
+
+    </div><!-- /.flow-cols -->
   </div>
 
   <ng-template #noWorkspace>

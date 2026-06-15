@@ -5,6 +5,26 @@
   overflow: hidden;
 }
 
+// ── Two-column layout ─────────────────────────────────────────────────────
+
+.arch-cols {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.arch-col-main,
+.arch-col-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 // ── Pattern grid ──────────────────────────────────────────────────────────
 
 .arch-pattern-grid {

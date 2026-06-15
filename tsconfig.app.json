@@ -4,6 +4,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
+    "baseUrl": ".",
     "types": [],
     "paths": {
       "@app/core/*":      ["src/app/core/*"],
