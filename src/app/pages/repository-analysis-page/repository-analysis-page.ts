@@ -331,4 +331,39 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   get aiSummary(): string | null {
     return this.manager.getActive()?.aiExplanation?.content ?? null;
   }
+
+  get technologyCount(): number {
+    return this.workspaceProfile?.detectedTechnologies?.length
+      ?? this.workspaceProfile?.technologies.length
+      ?? 0;
+  }
+
+  get dependencyCount(): number {
+    return this.manager.getActive()?.knowledge?.dependencyGraph?.edges.length ?? 0;
+  }
+
+  get displayRisks(): { severity: string; description: string }[] {
+    const recs = this.manager.getActive()?.recommendationAnalysis?.recommendations ?? [];
+    return recs
+      .filter(r => r.priority === 'critical' || r.priority === 'high')
+      .slice(0, 8)
+      .map(r => ({ severity: r.riskLevel, description: r.issueDescription }));
+  }
+
+  get displayModernizations(): { description: string }[] {
+    const recs = this.manager.getActive()?.recommendationAnalysis?.recommendations ?? [];
+    return recs
+      .filter(r => r.category === 'modernization')
+      .slice(0, 6)
+      .map(r => ({ description: r.recommendedImprovement }));
+  }
+
+  get subsystems(): { name: string; fileCount: number }[] {
+    const structure = this.workspaceProfile?.repositoryStructure;
+    if (!structure) return [];
+    return structure.root.children
+      .slice(0, 10)
+      .map(folder => ({ name: folder.name, fileCount: folder.totalFileCount }))
+      .filter(s => s.fileCount > 0);
+  }
 }

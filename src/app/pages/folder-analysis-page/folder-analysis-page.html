@@ -84,13 +84,74 @@
 
       <app-workspace-panel (switchRequested)="openSwitcher()"></app-workspace-panel>
 
-      <!-- Plain English Summary -->
-      <div class="intel-card" *ngIf="aiSummary">
-        <div class="intel-card-title">Folder Summary</div>
-        <p class="intel-summary-text">{{ aiSummary }}</p>
-      </div>
-
       <ng-container *ngIf="hasWorkspace">
+
+        <!-- Plain English Summary (AI) -->
+        <div class="intel-card" *ngIf="aiSummary">
+          <div class="intel-card-title">Folder Summary</div>
+          <p class="intel-summary-text">{{ aiSummary }}</p>
+        </div>
+
+        <!-- Metrics -->
+        <div class="intel-card">
+          <div class="intel-card-title">Quick Statistics</div>
+          <div class="intel-metrics-grid">
+            <div class="intel-metric">
+              <span class="intel-metric-label">Files</span>
+              <span class="intel-metric-value">{{ fileCount }}</span>
+            </div>
+            <div class="intel-metric">
+              <span class="intel-metric-label">Subfolders</span>
+              <span class="intel-metric-value">{{ subfolderCount }}</span>
+            </div>
+            <div class="intel-metric">
+              <span class="intel-metric-label">Technologies</span>
+              <span class="intel-metric-value">{{ technologyCount }}</span>
+            </div>
+            <div class="intel-metric">
+              <span class="intel-metric-label">Dependencies</span>
+              <span class="intel-metric-value">{{ dependencyCount }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risks / Issues -->
+        <div class="intel-card" (click)="navigateTo('folder-analysis/code-recommendations')">
+          <div class="intel-card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;display:inline;margin-right:6px">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Risks / Issues ({{ displayRisks.length }})
+          </div>
+          <div *ngIf="!displayRisks.length" class="intel-empty-state">No high-priority risks detected.</div>
+          <div class="intel-findings-list" *ngIf="displayRisks.length">
+            <div class="intel-finding-item" *ngFor="let r of displayRisks | slice:0:4">
+              <span class="sev-dot" [ngClass]="'dot-' + r.severity"></span>
+              <span class="intel-finding-text">{{ r.description }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modernization Opportunities -->
+        <div class="intel-card" (click)="navigateTo('folder-analysis/code-recommendations')">
+          <div class="intel-card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;display:inline;margin-right:6px">
+              <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+              <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+            </svg>
+            Modernization ({{ displayModernizations.length }})
+          </div>
+          <div *ngIf="!displayModernizations.length" class="intel-empty-state">No modernization opportunities detected.</div>
+          <div class="intel-findings-list" *ngIf="displayModernizations.length">
+            <div class="intel-finding-item mod" *ngFor="let m of displayModernizations | slice:0:3">
+              <svg style="width:10px;height:10px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span class="intel-finding-text">{{ m.description }}</span>
+            </div>
+          </div>
+        </div>
 
         <!-- Explore Deeper -->
         <div class="intel-card">

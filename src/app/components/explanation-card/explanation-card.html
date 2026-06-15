@@ -13,12 +13,6 @@
       <span class="ec-title">{{ title }}</span>
     </div>
     <div class="ec-header-actions">
-      <button class="ec-btn-icon" (click)="regenerate.emit()" title="Regenerate" *ngIf="content && !isLoading">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="23 4 23 10 17 10"/>
-          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-        </svg>
-      </button>
       <button class="ec-btn-icon ec-btn-dismiss" (click)="dismiss.emit()" title="Dismiss">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -53,7 +47,6 @@
       <span class="ec-error-title">Explanation unavailable</span>
       <span class="ec-error-desc">{{ error }}</span>
     </div>
-    <button class="ec-retry-btn" (click)="regenerate.emit()">Try again</button>
   </div>
 
   <!-- Content -->

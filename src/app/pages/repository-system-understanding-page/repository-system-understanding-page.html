@@ -44,6 +44,16 @@
     <p class="su-summary-text">{{ understanding.executiveSummary }}</p>
   </div>
 
+  <!-- AI Intelligence -->
+  <app-explanation-card
+    *ngIf="showExplanationCard"
+    title="Repository Intelligence"
+    [content]="aiExplanation!.content"
+    [isLoading]="false"
+    [error]="null"
+    (dismiss)="dismissExplanation()">
+  </app-explanation-card>
+
   <!-- Two-column main -->
   <div class="su-columns">
 

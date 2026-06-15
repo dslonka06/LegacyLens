@@ -14,7 +14,6 @@ export class ExplanationCard {
   @Input() isLoading = false;
   @Input() error: string | null = null;
   @Output() readonly dismiss = new EventEmitter<void>();
-  @Output() readonly regenerate = new EventEmitter<void>();
 
   get paragraphs(): string[] {
     if (!this.content) return [];

@@ -14,26 +14,9 @@
         <p class="page-subtitle" *ngIf="!workspaceName">Structural patterns and dependency topology</p>
       </div>
     </div>
-    <div class="ai-badge" *ngIf="aiExplanation">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/>
-      </svg>
-      AI-Enhanced
-    </div>
   </div>
 
   <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
-
-    <!-- AI Explanation card — shown when AI has generated content, is loading, or errored -->
-    <app-explanation-card
-      *ngIf="showExplanationCard"
-      title="Folder Intelligence"
-      [content]="aiExplanation?.content ?? null"
-      [isLoading]="aiLoading"
-      [error]="aiError"
-      (regenerate)="regenerateExplanation()"
-      (dismiss)="dismissExplanation()">
-    </app-explanation-card>
 
     <!-- Folder Architecture Summary -->
     <div class="doc-block">

@@ -66,26 +66,10 @@ export class RepositoryExplanationPromptBuilder {
     // ── Task ─────────────────────────────────────────────────────────────────
     parts.push(
       ``,
-      `Write an explanation with exactly these four sections. Each section should be 2-4 sentences.`,
-      `Total length: 250-400 words. Be specific — reference actual components and workflows from the data.`,
-      ``,
-      `## Why This System Exists`,
-      `What problem this repository solves. What business capability it provides. Who depends on it.`,
-      `Explain the purpose, not the technology.`,
-      ``,
-      `## How It Is Built`,
-      `What the architectural approach means in practice for this specific codebase.`,
-      `Do not list technologies — explain why the architecture was chosen and what trade-offs it creates.`,
-      `Focus on what a new developer needs to understand about how the pieces fit together.`,
-      ``,
-      `## Where To Start`,
-      `Name the 2-3 most important workflows or components a developer should understand first, and explain`,
-      `why those are the right starting points. Give a concrete learning path, not a generic recommendation.`,
-      ``,
-      `## What To Be Careful Changing`,
-      `Based on the known risks and the dependency structure, what areas carry the highest modification risk.`,
-      `Explain the implication — not just that a risk exists, but what could go wrong and why.`,
-      `Do not repeat the risk titles verbatim. Synthesise them into developer guidance.`,
+      `Write a plain English summary of this codebase in 2-4 sentences.`,
+      `Do not use headers or bullet points — write continuous prose.`,
+      `Cover: what the system does, how it is structured, and the one thing a new developer must understand first.`,
+      `Be specific — reference actual components or workflows from the data. Total length: 50-80 words.`,
     );
 
     return parts.join('\n');
