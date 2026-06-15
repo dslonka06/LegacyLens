@@ -146,7 +146,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
         }
 
         if (ctx && !this.manager.getById(id)?.securityOverview) {
-          this.aiKnowledge.generateSecurityOverview(ctx, security).subscribe({
+          this.aiKnowledge.generateSecurityOverview(ctx, security, 'repository').subscribe({
             next: overview => this.manager.setSecurityOverview(id, overview),
             error: () => { /* AI unavailable — overview stays null, page degrades gracefully */ },
           });

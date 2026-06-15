@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AnalysisSession } from '../models/analysis-session.model';
 import { DocumentationSectionId, RepositorySummary } from '../models/repository-summary.model';
-import { DocumentationBuilderService } from './documentation-builder.service';
+import { DocumentationBuilderService, DocumentationScope } from './documentation-builder.service';
 
 type JsPDF = import('jspdf').jsPDF;
 
@@ -38,32 +38,36 @@ export class PdfExportService {
   async exportDocumentation(
     summary: RepositorySummary,
     selectedIds: DocumentationSectionId[],
+    scope: DocumentationScope = 'repository',
   ): Promise<void> {
     const { jsPDF } = await import('jspdf');
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const ctx = new RenderContext(doc);
 
-    this.renderDocumentationCover(ctx, summary);
+    this.renderDocumentationCover(ctx, summary, scope);
 
-    const rendered = this.builder.renderPreview(summary, selectedIds);
+    const rendered = this.builder.renderPreview(summary, selectedIds, scope);
     const sections = rendered.split('\n\n').filter(Boolean);
 
     for (const block of sections) {
       const lines = block.split('\n');
       const headerLine = lines[0];
-      const ruleLine   = lines[1];
       const bodyLines  = lines.slice(2);
 
-      // Section header (numbered title)
+      if (!/^\d+\.\s/.test(headerLine)) continue;
+
       ctx.sectionHeader(headerLine.replace(/^\d+\.\s*/, ''));
       for (const line of bodyLines) {
         if (!line.trim()) { ctx.spacer(3); continue; }
         if (line.startsWith('•')) {
           ctx.bulletList([line.replace(/^•\s*/, '')]);
         } else if (/^\[(\w+)\]/.test(line)) {
-          // Risk/insight severity line
           const sev = (line.match(/^\[(\w+)\]/) ?? [])[1]?.toLowerCase() ?? 'low';
-          ctx.fieldLabel(line.replace(/^\[\w+\]\s*/, ''));
+          const sevColor: [number, number, number] =
+            sev === 'critical' || sev === 'high' ? [C.high[0],     C.high[1],     C.high[2]] :
+            sev === 'medium'                      ? [C.medium[0],   C.medium[1],   C.medium[2]] :
+                                                   [C.lowGreen[0], C.lowGreen[1], C.lowGreen[2]];
+          ctx.coloredLabel(line.replace(/^\[\w+\]\s*/, ''), sevColor);
         } else if (line.startsWith('  ')) {
           ctx.body(line.trim(), 9);
         } else {
@@ -73,16 +77,21 @@ export class PdfExportService {
       ctx.spacer(4);
     }
 
-    this.renderDocumentationMetadata(ctx, summary);
+    this.renderDocumentationMetadata(ctx, summary, scope);
     this.renderFooters(ctx);
 
     const safeName = summary.workspaceName.replace(/[^a-z0-9]/gi, '-').toLowerCase();
     doc.save(`${safeName}-Documentation.pdf`);
   }
 
-  private renderDocumentationCover(ctx: RenderContext, summary: RepositorySummary): void {
+  private renderDocumentationCover(ctx: RenderContext, summary: RepositorySummary, scope: DocumentationScope): void {
     const doc = ctx.doc;
     const cx  = PAGE_W / 2;
+
+    const scopeLabel = scope === 'file' ? 'FILE ANALYSIS' : scope === 'folder' ? 'FOLDER ANALYSIS' : 'REPOSITORY ANALYSIS';
+    const subtitleLine = scope === 'file'
+      ? `${summary.languages[0] ?? summary.workspaceType} · 1 file`
+      : `${summary.workspaceType} · ${summary.totalFiles} files`;
 
     const HEADER_H = 72;
     doc.setFillColor(...C.brand);
@@ -93,7 +102,7 @@ export class PdfExportService {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(20);
     doc.setTextColor(...C.white);
-    doc.text('LEGACYLENS DOCUMENTATION', cx, 22, { align: 'center' });
+    doc.text(`LEGACYLENS — ${scopeLabel}`, cx, 22, { align: 'center' });
 
     doc.setDrawColor(160, 140, 255);
     doc.setLineWidth(0.4);
@@ -112,7 +121,7 @@ export class PdfExportService {
       day: 'numeric', month: 'long', year: 'numeric',
     });
     doc.text(date, cx, 49, { align: 'center' });
-    doc.text(`${summary.workspaceType} · ${summary.totalFiles} files`, cx, 57, { align: 'center' });
+    doc.text(subtitleLine, cx, 57, { align: 'center' });
 
     ctx.y = HEADER_H + 14;
     doc.setDrawColor(...C.border);
@@ -120,11 +129,12 @@ export class PdfExportService {
     doc.line(MARGIN, ctx.y - 4, PAGE_W - MARGIN, ctx.y - 4);
   }
 
-  private renderDocumentationMetadata(ctx: RenderContext, summary: RepositorySummary): void {
+  private renderDocumentationMetadata(ctx: RenderContext, summary: RepositorySummary, scope: DocumentationScope = 'repository'): void {
+    const nameLabel = scope === 'file' ? 'File' : scope === 'folder' ? 'Folder' : 'Repository';
     ctx.checkPage(40);
     ctx.spacer(10);
     ctx.sectionHeader('Document Metadata');
-    ctx.fieldLabel('Repository');
+    ctx.fieldLabel(nameLabel);
     ctx.body(summary.workspaceName);
     ctx.spacer(4);
     ctx.fieldLabel('Workspace Type');
@@ -535,6 +545,16 @@ class RenderContext {
     this.doc.setFontSize(7.5);
     this.doc.setTextColor(...C.muted);
     this.doc.text(label.toUpperCase(), MARGIN, this.y);
+    this.y += 5;
+  }
+
+  // Field label rendered in a severity color (for risk/insight items)
+  coloredLabel(label: string, color: [number, number, number]): void {
+    this.checkPage(10);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setFontSize(9);
+    this.doc.setTextColor(color[0], color[1], color[2]);
+    this.doc.text(label, MARGIN, this.y);
     this.y += 5;
   }
 

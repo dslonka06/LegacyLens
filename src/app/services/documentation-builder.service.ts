@@ -5,8 +5,16 @@ import {
   RepositorySummary,
 } from '../models/repository-summary.model';
 
-// Section catalogue — ordered as they appear in the builder UI
-const ALL_SECTIONS: Omit<DocumentationSection, 'available' | 'recommended'>[] = [
+export type DocumentationScope = 'file' | 'folder' | 'repository';
+
+interface SectionDef {
+  id: DocumentationSectionId;
+  title: string;
+  description: string;
+}
+
+// Full catalogue with all 11 sections (repository scope)
+const REPO_SECTIONS: SectionDef[] = [
   {
     id: 'executive-summary',
     title: 'Executive Summary',
@@ -64,29 +72,60 @@ const ALL_SECTIONS: Omit<DocumentationSection, 'available' | 'recommended'>[] = 
   },
 ];
 
+// Folder scope — excludes key-projects and repository-insights; renames overview/insights
+const FOLDER_SECTIONS: SectionDef[] = [
+  { id: 'executive-summary',   title: 'Executive Summary',          description: 'High-level overview of what this folder contains and does.' },
+  { id: 'repository-overview', title: 'Folder Overview',            description: 'File counts, subfolder structure, and workspace statistics.' },
+  { id: 'architecture-overview', title: 'Architecture Overview',    description: 'Detected architectural patterns, layers, and structural design.' },
+  { id: 'data-flow',           title: 'Data Flow Analysis',         description: 'How data moves through the modules in this folder.' },
+  { id: 'dependency-analysis', title: 'Dependency Analysis',        description: 'Dependency graph statistics, most-connected files, and coupling metrics.' },
+  { id: 'risk-assessment',     title: 'Risk Assessment',            description: 'Identified risks, high-coupling areas, and change-impact concerns.' },
+  { id: 'modernization',       title: 'Modernization Opportunities', description: 'Outdated patterns, technical debt, and recommended improvements.' },
+  { id: 'key-files',           title: 'Key Files',                  description: 'The most important files to understand this folder.' },
+  { id: 'onboarding-guide',    title: 'Onboarding Guide',           description: 'Step-by-step guide for a new developer working in this folder.' },
+];
+
+// File scope — single file; no repository-level, project, or graph sections
+const FILE_SECTIONS: SectionDef[] = [
+  { id: 'executive-summary',    title: 'Executive Summary',          description: 'What this file is and what it is responsible for.' },
+  { id: 'architecture-overview', title: 'Architecture Overview',     description: 'Detected patterns, responsibilities, and structural role of this file.' },
+  { id: 'data-flow',            title: 'Data Flow',                  description: 'How data enters, moves through, and exits this file.' },
+  { id: 'risk-assessment',      title: 'Risk Assessment',            description: 'Identified risks and code quality concerns in this file.' },
+  { id: 'modernization',        title: 'Modernization Opportunities', description: 'Outdated patterns and recommended improvements for this file.' },
+  { id: 'key-files',            title: 'Key Dependencies',           description: 'Files this code directly depends on.' },
+  { id: 'onboarding-guide',     title: 'Onboarding Guide',           description: 'How to get up to speed with this file quickly.' },
+];
+
+function sectionsForScope(scope: DocumentationScope): SectionDef[] {
+  if (scope === 'file')       return FILE_SECTIONS;
+  if (scope === 'folder')     return FOLDER_SECTIONS;
+  return REPO_SECTIONS;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DocumentationBuilderService {
 
-  buildSectionList(summary: RepositorySummary): DocumentationSection[] {
-    return ALL_SECTIONS.map(s => ({
+  buildSectionList(summary: RepositorySummary, scope: DocumentationScope = 'repository'): DocumentationSection[] {
+    return sectionsForScope(scope).map(s => ({
       ...s,
       available: this.isSectionAvailable(s.id, summary),
     }));
   }
 
-  defaultSelections(summary: RepositorySummary): DocumentationSectionId[] {
-    return this.buildSectionList(summary)
+  defaultSelections(summary: RepositorySummary, scope: DocumentationScope = 'repository'): DocumentationSectionId[] {
+    return this.buildSectionList(summary, scope)
       .filter(s => s.available)
       .map(s => s.id);
   }
 
   // Render selected sections as a structured plain-text document for preview.
-  renderPreview(summary: RepositorySummary, selectedIds: DocumentationSectionId[]): string {
+  renderPreview(summary: RepositorySummary, selectedIds: DocumentationSectionId[], scope: DocumentationScope = 'repository'): string {
+    const catalogue = sectionsForScope(scope);
     const lines: string[] = [];
     let sectionNum = 1;
 
     for (const id of selectedIds) {
-      const section = ALL_SECTIONS.find(s => s.id === id);
+      const section = catalogue.find(s => s.id === id);
       if (!section || !this.isSectionAvailable(id, summary)) continue;
 
       lines.push(`${sectionNum}. ${section.title}`);

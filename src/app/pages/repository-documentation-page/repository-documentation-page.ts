@@ -61,8 +61,8 @@ export class RepositoryDocumentationPage implements OnInit, OnDestroy {
 
     this.summary = this.summaryService.build(workspaceContext, knowledge, session);
 
-    this.sections = this.builderService.buildSectionList(this.summary);
-    const defaults = this.builderService.defaultSelections(this.summary);
+    this.sections = this.builderService.buildSectionList(this.summary, 'repository');
+    const defaults = this.builderService.defaultSelections(this.summary, 'repository');
     this.selectedIds = new Set(defaults);
     this.refreshPreview();
     this.isBuilding = false;
@@ -92,7 +92,7 @@ export class RepositoryDocumentationPage implements OnInit, OnDestroy {
 
   private refreshPreview(): void {
     if (!this.summary) { this.previewText = ''; return; }
-    this.previewText = this.builderService.renderPreview(this.summary, Array.from(this.selectedIds));
+    this.previewText = this.builderService.renderPreview(this.summary, Array.from(this.selectedIds), 'repository');
   }
 
   get previewSections(): Array<{ title: string; content: string }> {
@@ -107,7 +107,7 @@ export class RepositoryDocumentationPage implements OnInit, OnDestroy {
     if (!this.summary || this.isExporting || this.selectedIds.size === 0) return;
     this.isExporting = true;
     try {
-      await this.pdfExport.exportDocumentation(this.summary, Array.from(this.selectedIds));
+      await this.pdfExport.exportDocumentation(this.summary, Array.from(this.selectedIds), 'repository');
     } finally {
       this.isExporting = false;
     }

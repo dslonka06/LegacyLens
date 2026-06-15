@@ -58,6 +58,7 @@ export class AiKnowledgeService {
   generateSecurityOverview(
     ctx: WorkspaceContext,
     security: SecurityAnalysis,
+    scope: 'file' | 'folder' | 'repository' = 'repository',
   ): Observable<string> {
     const prompt = this.securityOverviewPrompt.build({
       workspaceName:        ctx.workspaceName,
@@ -65,6 +66,7 @@ export class AiKnowledgeService {
       technologies:         ctx.profile.technologies,
       architecturePatterns: [],
       security,
+      scope,
     });
     return this.callApi(prompt);
   }

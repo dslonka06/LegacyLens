@@ -91,6 +91,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
     const id = this.manager.activeId;
     if (id) {
+      this.manager.rename(id, session.fileName);
       const security = this.securityService.analyzeFile(session);
       this.manager.setSecurityAnalysis(id, security);
       const understanding = this.understandingService.analyzeFile(session);
@@ -105,7 +106,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
       const ctx = this.currentWorkspace.context;
       if (ctx) {
-        this.aiKnowledge.generateSecurityOverview(ctx, security).subscribe({
+        this.aiKnowledge.generateSecurityOverview(ctx, security, 'file').subscribe({
           next: overview => this.manager.setSecurityOverview(id, overview),
           error: () => { /* AI unavailable — overview stays null, page degrades gracefully */ },
         });
