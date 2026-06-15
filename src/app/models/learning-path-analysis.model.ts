@@ -1,9 +1,11 @@
 export interface LearningStep {
   stepNumber: number;
   title: string;
-  whatYouAreLearning: string;
+  goal: string;
   whyItMatters: string;
-  whatYouWillGain: string;
+  recommendedFiles: string[];
+  recommendedFolders: string[];
+  checkpoints: string[];
   whereToNext: string;
 }
 
@@ -19,6 +21,7 @@ export interface SystemArea {
   responsibility: string;
   whyItMatters: string;
   whenToLearnIt: string;
+  suggestedFiles: string[];
 }
 
 export interface SuggestedReadingItem {

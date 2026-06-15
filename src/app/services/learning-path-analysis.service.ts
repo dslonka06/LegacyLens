@@ -144,55 +144,84 @@ export class LearningPathAnalysisService {
 
   private buildFileRoadmap(session: AnalysisSession, u: SystemUnderstanding): LearningStep[] {
     const steps: LearningStep[] = [];
+    const fileName = session.fileName.split('/').pop() ?? session.fileName;
 
     steps.push({
       stepNumber: 1,
-      title: 'Understand what this file is for',
-      whatYouAreLearning: u.businessPurpose || u.executiveSummary,
+      title: 'Understand the Purpose',
+      goal: u.businessPurpose || u.executiveSummary,
       whyItMatters: 'You cannot understand code without first understanding the problem it is solving. This context will make every line of code easier to read.',
-      whatYouWillGain: 'A clear mental model of why this file exists and what it is responsible for.',
-      whereToNext: 'Once you understand the purpose, move on to Step 2 to learn what the file actually does.',
+      recommendedFiles: [fileName],
+      recommendedFolders: [],
+      checkpoints: [
+        'You can explain what this file is responsible for in one sentence',
+        'You understand what problem it is solving',
+      ],
+      whereToNext: 'Once you can describe the purpose clearly, move on to Step 2.',
     });
 
     if (u.keyResponsibilities.length > 0) {
       steps.push({
         stepNumber: 2,
-        title: 'Learn the key responsibilities',
-        whatYouAreLearning: `This file handles: ${u.keyResponsibilities.slice(0, 3).join('; ')}.`,
+        title: 'Learn the Key Responsibilities',
+        goal: `This file handles: ${u.keyResponsibilities.slice(0, 3).join('; ')}.`,
         whyItMatters: 'Knowing what a piece of code is responsible for tells you where to look when something goes wrong and what to be careful about when making changes.',
-        whatYouWillGain: 'Awareness of what this file does and what it does not do.',
-        whereToNext: 'Move to Step 3 to understand how data moves through this file.',
+        recommendedFiles: [fileName],
+        recommendedFolders: [],
+        checkpoints: [
+          'You know what this file does',
+          'You know what this file does not do',
+          'You can identify the entry points',
+        ],
+        whereToNext: 'Move to Step 3 to trace the main workflow.',
       });
     }
 
     if (u.keyWorkflows.length > 0) {
       steps.push({
         stepNumber: steps.length + 1,
-        title: 'Trace the main workflow',
-        whatYouAreLearning: `Follow the main path through this file: ${u.keyWorkflows[0]}.`,
+        title: 'Trace the Main Workflow',
+        goal: `Follow the main execution path through this file: ${u.keyWorkflows[0]}.`,
         whyItMatters: 'A workflow shows you the sequence of steps the code takes. Following it from start to finish gives you a complete picture of what happens when this code runs.',
-        whatYouWillGain: 'Understanding of how the file behaves when it is actually used.',
-        whereToNext: 'Move to Step 4 to understand how this file relates to the rest of the system.',
+        recommendedFiles: [fileName],
+        recommendedFolders: [],
+        checkpoints: [
+          'You can describe the sequence of steps from entry to exit',
+          'You understand what triggers this code to run',
+          'You know what it produces or returns',
+        ],
+        whereToNext: 'Move to Step 4 to understand how this file connects to the rest of the system.',
       });
     }
 
     if (u.mostImportantItems.length > 0) {
       steps.push({
         stepNumber: steps.length + 1,
-        title: 'Study the most important parts',
-        whatYouAreLearning: `Focus on: ${u.mostImportantItems.slice(0, 2).map(i => i.name).join(' and ')}.`,
-        whyItMatters: u.mostImportantItems[0]?.whyImportant || 'These are the parts of the file that everything else depends on. Understanding them first makes the rest easier.',
-        whatYouWillGain: 'Knowledge of the most critical functions or classes in this file.',
-        whereToNext: 'Once comfortable, move to Step 5 to understand where this file fits in the broader system.',
+        title: 'Study the Most Important Parts',
+        goal: `Focus on: ${u.mostImportantItems.slice(0, 2).map(i => i.name).join(' and ')}.`,
+        whyItMatters: u.mostImportantItems[0]?.whyImportant || 'These are the parts of the file that everything else depends on.',
+        recommendedFiles: u.mostImportantItems.slice(0, 3).filter(i => i.path).map(i => i.path!),
+        recommendedFolders: [],
+        checkpoints: [
+          `You understand the role of ${u.mostImportantItems[0]?.name ?? 'the key component'}`,
+          'You can explain what it does when called',
+        ],
+        whereToNext: 'Move to Step 5 to understand how this file fits in the broader system.',
       });
     }
 
     steps.push({
       stepNumber: steps.length + 1,
-      title: 'Understand the broader context',
-      whatYouAreLearning: 'How this file connects to the rest of the application.',
-      whyItMatters: 'No file works in isolation. Understanding what calls this file — and what it calls — helps you predict the impact of any changes you make.',
-      whatYouWillGain: 'Awareness of the blast radius of changes and what to test when modifying this file.',
+      title: 'Understand the Broader Context',
+      goal: 'Understand what calls this file and what this file calls.',
+      whyItMatters: 'No file works in isolation. Understanding the call graph helps you predict the impact of any changes you make.',
+      recommendedFiles: [],
+      recommendedFolders: [],
+      checkpoints: [
+        'You know which other parts of the system depend on this file',
+        'You know what external services or files this code calls',
+        'You can estimate the blast radius of a change here',
+      ],
       whereToNext: 'You are now ready to explore the broader system. Use the Architecture page to see how everything connects.',
     });
 
@@ -207,6 +236,7 @@ export class LearningPathAnalysisService {
   private buildFileAreas(session: AnalysisSession, u: SystemUnderstanding): SystemArea[] {
     const areas: SystemArea[] = [];
     const ext = session.fileName.split('.').pop()?.toLowerCase() ?? '';
+    const fileName = session.fileName.split('/').pop() ?? session.fileName;
 
     if (['ts', 'js', 'cs', 'py', 'java'].includes(ext)) {
       areas.push({
@@ -214,6 +244,7 @@ export class LearningPathAnalysisService {
         responsibility: u.businessPurpose || 'The logic implemented in this file.',
         whyItMatters: 'This is the code you are here to understand.',
         whenToLearnIt: 'Start here.',
+        suggestedFiles: [fileName],
       });
     }
 
@@ -224,6 +255,7 @@ export class LearningPathAnalysisService {
           responsibility: cap.description,
           whyItMatters: cap.businessValue,
           whenToLearnIt: 'Learn alongside the file itself.',
+          suggestedFiles: [],
         });
       }
     }
@@ -313,97 +345,207 @@ export class LearningPathAnalysisService {
     const steps: LearningStep[] = [];
     const graph = knowledge.dependencyGraph;
 
-    // Step 1 — always: understand the purpose
+    // Pre-compute hub files (high inbound reference count) for reuse across steps
+    const inbound = new Map<string, number>();
+    const nodeById = new Map<string, DependencyNode>();
+    if (graph) {
+      graph.nodes.forEach(n => nodeById.set(n.id, n));
+      graph.edges.forEach(e => inbound.set(e.target, (inbound.get(e.target) ?? 0) + 1));
+    }
+
+    const hubFiles = graph
+      ? graph.nodes
+          .filter(n => (inbound.get(n.id) ?? 0) >= 2)
+          .sort((a, b) => (inbound.get(b.id) ?? 0) - (inbound.get(a.id) ?? 0))
+          .slice(0, 10)
+          .map(n => n.name || n.path || n.id)
+      : [];
+
+    const entryPointFiles = graph
+      ? graph.nodes
+          .filter(n => {
+            const name = (n.name || n.path || '').toLowerCase();
+            return /controller|entry|main|app\.|index\.|router|routes|bootstrap|startup|program/i.test(name);
+          })
+          .slice(0, 5)
+          .map(n => n.name || n.path || n.id)
+      : [];
+
+    const serviceFiles = graph
+      ? graph.nodes
+          .filter(n => /service|provider/i.test(n.name || n.path || ''))
+          .sort((a, b) => (inbound.get(b.id) ?? 0) - (inbound.get(a.id) ?? 0))
+          .slice(0, 5)
+          .map(n => n.name || n.path || n.id)
+      : [];
+
+    const modelFiles = graph
+      ? graph.nodes
+          .filter(n => /model|entity|schema|interface/i.test(n.name || n.path || ''))
+          .slice(0, 5)
+          .map(n => n.name || n.path || n.id)
+      : [];
+
+    // Derive top-level folders for folder recommendations
+    const folderCounts = new Map<string, number>();
+    if (graph) {
+      for (const node of graph.nodes) {
+        const folder = this.topFolder(node.path || node.name);
+        if (folder) folderCounts.set(folder, (folderCounts.get(folder) ?? 0) + 1);
+      }
+    }
+    const topFolders = [...folderCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([f]) => f);
+
+    const coreFolders = topFolders.filter(f => /service|controller|api|core|domain|feature/i.test(f)).slice(0, 3);
+    const dataFolders = topFolders.filter(f => /model|entity|schema|data|store/i.test(f)).slice(0, 2);
+
+    // Step 1 — Business Purpose
     steps.push({
       stepNumber: 1,
-      title: 'Understand what this system is for',
-      whatYouAreLearning: u.businessPurpose || u.executiveSummary,
-      whyItMatters: 'Before you read a single line of code, you need to know what problem this system solves. Every technical decision will make more sense once you understand the purpose.',
-      whatYouWillGain: 'A clear answer to the question "why does this system exist?"',
-      whereToNext: 'Once you can explain the system\'s purpose in one sentence, move to Step 2.',
+      title: 'Business Purpose',
+      goal: u.businessPurpose || u.executiveSummary,
+      whyItMatters: 'Every technical decision in this codebase was made to solve a business problem. Understanding that problem first means every file you open will make immediate sense.',
+      recommendedFiles: entryPointFiles.slice(0, 3).length > 0
+        ? entryPointFiles.slice(0, 3)
+        : hubFiles.slice(0, 2),
+      recommendedFolders: topFolders.slice(0, 2),
+      checkpoints: [
+        'You can explain what this system does in one sentence',
+        'You understand who uses it and why',
+        'You know what the most important outcome the system produces',
+      ],
+      whereToNext: 'Once you can articulate the purpose, move to Step 2 to orient yourself in the codebase.',
     });
 
-    // Step 2 — major areas
-    const areas = this.buildKnowledgeAreas(knowledge, u);
-    if (areas.length > 0) {
-      steps.push({
-        stepNumber: 2,
-        title: 'Learn the major areas of the application',
-        whatYouAreLearning: `The system is divided into ${areas.length} main area${areas.length > 1 ? 's' : ''}: ${areas.slice(0, 3).map(a => a.name).join(', ')}.`,
-        whyItMatters: 'Understanding the major areas gives you a map of the codebase. When something goes wrong, or when you need to add a feature, you will know immediately which area to look at.',
-        whatYouWillGain: 'A mental map of the codebase — where things live and why.',
-        whereToNext: 'After understanding the major areas, move to Step 3 to learn the most important workflow.',
-      });
-    }
-
-    // Step 3 — most important workflow
+    // Step 2 — Core Workflow
     const topWorkflow = u.mostImportantWorkflows?.[0];
-    if (topWorkflow) {
-      steps.push({
-        stepNumber: steps.length + 1,
-        title: `Understand the most important workflow: ${topWorkflow.name}`,
-        whatYouAreLearning: topWorkflow.description,
-        whyItMatters: 'This workflow is the heart of the system. It is the path that matters most for both users and developers. If you understand this workflow completely, you understand the most valuable part of the codebase.',
-        whatYouWillGain: 'End-to-end understanding of the most critical business process this system handles.',
-        whereToNext: 'After tracing this workflow, move to Step 4 to understand how data moves.',
-      });
-    } else if (u.keyWorkflows.length > 0) {
-      steps.push({
-        stepNumber: steps.length + 1,
-        title: 'Understand the main workflows',
-        whatYouAreLearning: `The key workflows in this system: ${u.keyWorkflows.slice(0, 2).join('; ')}.`,
-        whyItMatters: 'Workflows show you how the system behaves from end to end. Following a workflow from trigger to result is the fastest way to truly understand what the system does.',
-        whatYouWillGain: 'Understanding of how the system\'s pieces work together to deliver a result.',
-        whereToNext: 'Move to Step 4 to understand how data flows between components.',
-      });
-    }
-
-    // Step 4 — how data moves
+    const workflowTitle = topWorkflow?.name || (u.keyWorkflows[0] ?? 'Core Workflow');
+    const workflowDesc = topWorkflow?.description || (u.keyWorkflows[0] ?? 'The primary process this system executes from start to finish.');
     steps.push({
-      stepNumber: steps.length + 1,
-      title: 'Understand how data moves through the system',
-      whatYouAreLearning: 'How information enters the system, gets transformed, stored, and returned.',
-      whyItMatters: 'Most bugs happen at the boundaries between components — where data is passed from one part of the system to another. Understanding data flow helps you predict where problems occur.',
-      whatYouWillGain: 'Ability to trace a piece of data from its source to its destination.',
-      whereToNext: 'Move to Step 5 to learn the key concepts and business rules.',
+      stepNumber: 2,
+      title: `Core Workflow: ${workflowTitle}`,
+      goal: workflowDesc,
+      whyItMatters: 'This workflow connects the majority of business logic in the system. Following it end to end gives you more understanding than reading individual files in isolation.',
+      recommendedFiles: [
+        ...entryPointFiles.slice(0, 2),
+        ...serviceFiles.slice(0, 3),
+      ].filter((v, i, a) => a.indexOf(v) === i).slice(0, 5),
+      recommendedFolders: coreFolders.slice(0, 2),
+      checkpoints: [
+        'You can trace the workflow from its trigger to its result',
+        'You know which files are involved at each stage',
+        'You understand what data is passed between steps',
+      ],
+      whereToNext: 'After tracing the workflow, move to Step 3 to understand the architectural structure.',
     });
 
-    // Step 5 — key concepts
-    const concepts = this.extractKnowledgeKeyConcepts(knowledge, u);
-    if (concepts.length > 0) {
-      steps.push({
-        stepNumber: steps.length + 1,
-        title: 'Learn the key business concepts',
-        whatYouAreLearning: `The important concepts in this system: ${concepts.slice(0, 3).map(c => c.name).join(', ')}.`,
-        whyItMatters: 'Every system has its own vocabulary. Learning these concepts allows you to read code and have conversations with the team using the same language.',
-        whatYouWillGain: 'Fluency in the domain language of this system.',
-        whereToNext: 'Move to Step 6 to identify the most important files to read.',
-      });
-    }
+    // Step 3 — Architecture
+    const archFiles = [
+      ...entryPointFiles.slice(0, 2),
+      ...serviceFiles.slice(0, 2),
+      ...hubFiles.slice(0, 2),
+    ].filter((v, i, a) => a.indexOf(v) === i).slice(0, 5);
 
-    // Step 6 — important files
-    const readingOrder = this.buildKnowledgeReadingOrder(knowledge, u);
-    if (readingOrder.length > 0) {
-      steps.push({
-        stepNumber: steps.length + 1,
-        title: 'Read the most important files',
-        whatYouAreLearning: `Start with: ${readingOrder.slice(0, 3).map(r => r.label).join(', ')}.`,
-        whyItMatters: 'Not all files are equally important. These files represent the core of the system. Reading them first gives you 80% of the understanding with a fraction of the effort.',
-        whatYouWillGain: 'Deep familiarity with the files that matter most.',
-        whereToNext: 'Once you have read the key files, you are ready to explore the full codebase on your own.',
-      });
-    }
+    steps.push({
+      stepNumber: 3,
+      title: 'Architecture',
+      goal: 'Learn how the major components are structured and how they interact.',
+      whyItMatters: 'Architecture tells you the rules of the codebase — what depends on what and why. Once you understand the structure, you can navigate any unfamiliar file with confidence.',
+      recommendedFiles: archFiles,
+      recommendedFolders: topFolders.slice(0, 3),
+      checkpoints: [
+        'You understand the layering pattern used in this codebase',
+        'You know how requests or inputs enter the system',
+        'You can identify which layer owns which responsibility',
+        'You understand dependency injection or the primary wiring pattern',
+      ],
+      whereToNext: 'Move to Step 4 to understand how data moves between components.',
+    });
 
-    // Step 7 — dependencies (repo scope only)
-    if (scope === 'repository' && u.mostImportantDependencies && u.mostImportantDependencies.length > 0) {
-      const deps = u.mostImportantDependencies.slice(0, 3);
+    // Step 4 — Data Movement
+    const dataFiles = [
+      ...modelFiles.slice(0, 3),
+      ...serviceFiles.slice(0, 2),
+    ].filter((v, i, a) => a.indexOf(v) === i).slice(0, 5);
+
+    steps.push({
+      stepNumber: 4,
+      title: 'Data Movement',
+      goal: 'Trace how information enters the system, is transformed, and is returned or persisted.',
+      whyItMatters: 'Most bugs occur at the boundaries between components — where data is passed from one part to another. Understanding data flow lets you predict where problems will occur.',
+      recommendedFiles: dataFiles.length > 0 ? dataFiles : hubFiles.slice(0, 4),
+      recommendedFolders: dataFolders,
+      checkpoints: [
+        'You can trace a piece of data from input to output',
+        'You know which components transform data versus which pass it through',
+        'You understand where data is validated and where it is trusted',
+      ],
+      whereToNext: 'Move to Step 5 to study the most important individual files.',
+    });
+
+    // Step 5 — Critical Components
+    const importantItemFiles = u.mostImportantItems
+      .slice(0, 5)
+      .map(i => i.name || i.path || '')
+      .filter(Boolean);
+
+    const criticalFiles = [
+      ...importantItemFiles,
+      ...hubFiles.slice(0, 3),
+    ].filter((v, i, a) => a.indexOf(v) === i).slice(0, 6);
+
+    steps.push({
+      stepNumber: 5,
+      title: 'Critical Components',
+      goal: 'Read the files that are most widely referenced and most important to the system.',
+      whyItMatters: 'Not all files are equally important. These files are referenced by the largest number of other modules. Reading them gives you maximum understanding per hour of effort.',
+      recommendedFiles: criticalFiles,
+      recommendedFolders: coreFolders,
+      checkpoints: [
+        'You can describe what each critical file is responsible for',
+        'You understand why other files depend on these',
+        'You know what to expect when you open any file that imports these components',
+      ],
+      whereToNext: scope === 'repository'
+        ? 'Move to Step 6 to explore the advanced and specialist areas of the system.'
+        : 'You now have a complete foundation to work confidently in this codebase.',
+    });
+
+    // Step 6 — Advanced Areas (repository scope only)
+    if (scope === 'repository') {
+      const advancedFolders = topFolders
+        .filter(f => !/service|controller|model|entity|core|api/i.test(f))
+        .slice(0, 3);
+
+      const advancedFiles = graph
+        ? graph.nodes
+            .filter(n => (inbound.get(n.id) ?? 0) === 0)
+            .filter(n => !/test|spec|config|env|migration/i.test(n.name || n.path || ''))
+            .sort((a, b) => (inbound.get(b.id) ?? 0) - (inbound.get(a.id) ?? 0))
+            .slice(0, 4)
+            .map(n => n.name || n.path || n.id)
+        : [];
+
+      const depNames = u.mostImportantDependencies?.slice(0, 3).map(d => d.name) ?? [];
+
       steps.push({
-        stepNumber: steps.length + 1,
-        title: 'Understand the external dependencies',
-        whatYouAreLearning: `This system relies on: ${deps.map(d => d.name).join(', ')}.`,
-        whyItMatters: deps[0]?.whyImportant || 'External dependencies are things this system cannot function without. Understanding them tells you the full picture of what the system depends on.',
-        whatYouWillGain: 'Awareness of what third-party tools and services this system uses and why.',
-        whereToNext: 'You now have a complete foundation. Explore the Architecture page for structural details.',
+        stepNumber: 6,
+        title: 'Advanced Areas',
+        goal: 'Explore the specialist subsystems, edge case handling, and external integrations.',
+        whyItMatters: depNames.length > 0
+          ? `This system integrates with ${depNames.join(', ')}. Understanding these integrations is necessary for advanced work and debugging production issues.`
+          : 'Advanced areas require deeper context to work in safely. Approaching them after the core foundation means you will understand why they exist.',
+        recommendedFiles: advancedFiles,
+        recommendedFolders: advancedFolders,
+        checkpoints: [
+          'You understand which areas are specialist or high-risk',
+          'You know what external systems this codebase integrates with',
+          'You can identify what to be cautious about when making changes here',
+        ],
+        whereToNext: 'You now have a complete foundation. Use the Architecture and Data Flow pages for structural detail.',
       });
     }
 
@@ -427,24 +569,34 @@ export class LearningPathAnalysisService {
     const areas: SystemArea[] = [];
     const graph = knowledge.dependencyGraph;
 
+    const inbound = new Map<string, number>();
+    if (graph) graph.edges.forEach(e => inbound.set(e.target, (inbound.get(e.target) ?? 0) + 1));
+
     if (!graph || graph.nodes.length === 0) {
-      // Fallback: derive areas from capabilities
       for (const cap of u.coreCapabilities.slice(0, 4)) {
         areas.push({
           name: cap.name,
           responsibility: cap.description,
           whyItMatters: cap.businessValue,
           whenToLearnIt: 'Learn in the order that matches your immediate task.',
+          suggestedFiles: [],
         });
       }
       return areas;
     }
 
-    // Derive areas from folder structure via node paths
     const folderCounts = new Map<string, number>();
+    const folderFiles = new Map<string, string[]>();
     for (const node of graph.nodes) {
       const folder = this.topFolder(node.path || node.name);
-      if (folder) folderCounts.set(folder, (folderCounts.get(folder) ?? 0) + 1);
+      if (!folder) continue;
+      folderCounts.set(folder, (folderCounts.get(folder) ?? 0) + 1);
+      const name = node.name || node.path || node.id;
+      if (name) {
+        const existing = folderFiles.get(folder) ?? [];
+        existing.push({ name, score: inbound.get(node.id) ?? 0 } as any);
+        folderFiles.set(folder, existing);
+      }
     }
 
     const topFolders = [...folderCounts.entries()]
@@ -463,6 +615,13 @@ export class LearningPathAnalysisService {
       const isFoundational = /service|model|entity|api|controller/i.test(folder);
       const isLater = /test|spec|migration|config|util/i.test(folder);
 
+      // Top files by inbound reference count within the folder
+      const filesInFolder = (folderFiles.get(folder) ?? []) as any[];
+      const topFilesInFolder = filesInFolder
+        .sort((a: any, b: any) => b.score - a.score)
+        .slice(0, 4)
+        .map((f: any) => f.name);
+
       areas.push({
         name: areaName,
         responsibility,
@@ -470,6 +629,7 @@ export class LearningPathAnalysisService {
           ? 'This is a core area that most other parts of the system depend on. Understanding it is essential.'
           : 'This area handles a specific concern. Learn it when your work brings you here.',
         whenToLearnIt: isLater ? 'Leave for later.' : isFoundational ? 'Learn early.' : 'Learn when your task requires it.',
+        suggestedFiles: topFilesInFolder,
       });
     }
 
