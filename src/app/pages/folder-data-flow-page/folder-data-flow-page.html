@@ -17,6 +17,12 @@
 
   <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
 
+    <!-- Data flow narrative -->
+    <div class="doc-block" *ngIf="dataFlowNarrative">
+      <div class="doc-block-label">Data Flow Analysis</div>
+      <p class="flow-narrative">{{ dataFlowNarrative }}</p>
+    </div>
+
     <!-- Flow Summary -->
     <div class="doc-block">
       <div class="doc-block-label">Flow Summary</div>

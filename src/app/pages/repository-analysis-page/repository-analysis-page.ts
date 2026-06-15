@@ -69,6 +69,9 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   showSwitcher = false;
   switcherLimitReached = false;
+  summaryExpanded = false;
+  risksExpanded = false;
+  modernizationExpanded = false;
 
   private uploadedFiles: File[] = [];
   private contextSub: Subscription | null = null;

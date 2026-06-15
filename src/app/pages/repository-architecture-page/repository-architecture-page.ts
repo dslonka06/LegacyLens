@@ -6,6 +6,7 @@ import { ArchitecturePattern, RepositoryKnowledge } from '../../models/knowledge
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
 import { DependencyExplorerService } from '../../services/dependency-explorer.service';
+import { WorkspaceManagerService } from '../../services/workspace-manager.service';
 
 @Component({
   selector: 'app-repository-architecture-page',
@@ -25,6 +26,7 @@ export class RepositoryArchitecturePage implements OnInit, OnDestroy {
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly workspace: CurrentWorkspaceService,
     private readonly depExplorer: DependencyExplorerService,
+    private readonly manager: WorkspaceManagerService,
   ) {}
 
   ngOnInit(): void {
@@ -78,6 +80,17 @@ export class RepositoryArchitecturePage implements OnInit, OnDestroy {
 
   confidencePercent(p: ArchitecturePattern): number {
     return Math.round((p.confidence ?? 0) * 100);
+  }
+
+  get architectureNarrative(): string {
+    const ai = this.manager.getActive()?.aiExplanation?.content;
+    if (ai) return ai;
+    const patterns = this.patterns;
+    if (!patterns.length) return '';
+    const names = patterns.slice(0, 3).map(p => p.name).join(', ');
+    const nodes = this.nodeCount;
+    const edges = this.edgeCount;
+    return `This repository follows a ${names} structure with ${nodes} modules and ${edges} dependency connections.`;
   }
 
   architectureDescription(name: string): string {

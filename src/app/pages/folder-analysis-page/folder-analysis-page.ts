@@ -71,6 +71,9 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
   showSwitcher = false;
   switcherLimitReached = false;
+  summaryExpanded = false;
+  risksExpanded = false;
+  modernizationExpanded = false;
 
   // Held so tree-node clicks can read file content
   private uploadedFiles: File[] = [];

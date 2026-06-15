@@ -18,6 +18,12 @@
 
   <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
 
+    <!-- Architecture narrative -->
+    <div class="doc-block" *ngIf="architectureNarrative">
+      <div class="doc-block-label">Architecture Summary</div>
+      <p class="arch-narrative">{{ architectureNarrative }}</p>
+    </div>
+
     <!-- Folder Architecture Summary -->
     <div class="doc-block">
       <div class="doc-block-label">Folder Architecture Summary</div>

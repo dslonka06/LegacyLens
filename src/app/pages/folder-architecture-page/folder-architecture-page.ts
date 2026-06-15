@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { ArchitecturePattern, RepositoryKnowledge } from '../../models/knowledge.model';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
+import { WorkspaceManagerService } from '../../services/workspace-manager.service';
 
 @Component({
   selector: 'app-folder-architecture-page',
@@ -23,6 +24,7 @@ export class FolderArchitecturePage implements OnInit, OnDestroy {
   constructor(
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly workspace: CurrentWorkspaceService,
+    private readonly manager: WorkspaceManagerService,
   ) {}
 
   ngOnInit(): void {
@@ -68,5 +70,16 @@ export class FolderArchitecturePage implements OnInit, OnDestroy {
 
   confidencePercent(p: ArchitecturePattern): number {
     return Math.round((p.confidence ?? 0) * 100);
+  }
+
+  get architectureNarrative(): string {
+    const ai = this.manager.getActive()?.aiExplanation?.content;
+    if (ai) return ai;
+    const patterns = this.patterns;
+    if (!patterns.length) return '';
+    const names = patterns.slice(0, 3).map(p => p.name).join(', ');
+    const nodes = this.dependencyNodes;
+    const edges = this.dependencyEdges;
+    return `This folder follows a ${names} structure with ${nodes} modules and ${edges} dependency connections.`;
   }
 }

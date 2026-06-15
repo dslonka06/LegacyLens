@@ -39,12 +39,4 @@ export class FileArchitecturePage implements OnInit, OnDestroy {
     return this.session?.analysis.architectureLayers ?? [];
   }
 
-  get inputs(): string[] {
-    return this.session?.analysis.inputs ?? [];
-  }
-
-  get outputs(): string[] {
-    return this.session?.analysis.outputs ?? [];
-  }
-
 }

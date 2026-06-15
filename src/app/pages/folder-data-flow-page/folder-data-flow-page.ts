@@ -3,10 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { RepositoryKnowledge } from '../../models/knowledge.model';
-import { AnalysisSession } from '../../models/analysis-session.model';
 import { RepositoryKnowledgeService } from '../../services/repository-knowledge.service';
 import { CurrentWorkspaceService } from '../../services/current-workspace.service';
-import { CurrentAnalysisService } from '../../services/current-analysis.service';
 
 interface FlowNode {
   name: string;
@@ -25,7 +23,6 @@ interface FlowNode {
 export class FolderDataFlowPage implements OnInit, OnDestroy {
 
   knowledge: RepositoryKnowledge | null = null;
-  session: AnalysisSession | null = null;
   hasWorkspace = false;
   flowNodes: FlowNode[] = [];
 
@@ -34,7 +31,6 @@ export class FolderDataFlowPage implements OnInit, OnDestroy {
   constructor(
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly workspace: CurrentWorkspaceService,
-    private readonly currentAnalysis: CurrentAnalysisService,
   ) {}
 
   ngOnInit(): void {
@@ -44,7 +40,6 @@ export class FolderDataFlowPage implements OnInit, OnDestroy {
     this.subs.push(
       this.knowledgeService.knowledge$.subscribe(k => { this.knowledge = k; this.buildFlow(); }),
       this.workspace.context$.subscribe(ctx => { this.hasWorkspace = ctx !== null; }),
-      this.currentAnalysis.session$.subscribe(s => { this.session = s; }),
     );
   }
 
@@ -103,12 +98,15 @@ export class FolderDataFlowPage implements OnInit, OnDestroy {
       .map(([id]) => nodeMap.get(id) ?? id);
   }
 
-  get aiWorkflow(): string | null {
-    return this.session?.aiAnalysis?.documentation?.workflow ?? null;
-  }
-
-  get isAiPowered(): boolean {
-    return this.aiWorkflow !== null;
+  get dataFlowNarrative(): string | null {
+    const nodes = this.flowNodes.length;
+    const hubs = this.hubCount;
+    const connections = this.totalConnections;
+    if (nodes === 0) return null;
+    const hubDesc = hubs > 0
+      ? ` ${hubs} hub module${hubs > 1 ? 's' : ''} act as central integration points.`
+      : '';
+    return `This folder contains ${nodes} modules with ${connections} dependency connections.${hubDesc} The most depended-upon modules drive the core data flow.`;
   }
 
   flowBarWidth(node: FlowNode): number {

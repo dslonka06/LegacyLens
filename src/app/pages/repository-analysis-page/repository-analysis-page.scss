@@ -308,3 +308,125 @@
     svg { opacity: 1; }
   }
 }
+
+.intel-summary-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 8px;
+
+  &.summary-collapsed {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+.intel-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.intel-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  gap: 2px;
+}
+
+.intel-metric-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.intel-metric-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-content);
+  line-height: 1;
+}
+
+.intel-findings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.intel-finding-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+
+  &.mod {
+    svg { color: var(--accent); }
+  }
+}
+
+.intel-finding-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.intel-empty-state {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.sev-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 3px;
+
+  &.dot-critical { background: #ef4444; }
+  &.dot-high     { background: #f97316; }
+  &.dot-medium   { background: #eab308; }
+  &.dot-low      { background: #22c55e; }
+}
+
+.intel-subsystem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.intel-subsystem-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+
+  &:last-child { border-bottom: none; }
+}
+
+.intel-subsystem-name { color: var(--text-content); }
+.intel-subsystem-count { color: var(--text-muted); font-size: 10px; }
+
+.show-more-btn {
+  display: block;
+  margin-top: 8px;
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: 11px;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  &:hover { opacity: 0.8; }
+}
