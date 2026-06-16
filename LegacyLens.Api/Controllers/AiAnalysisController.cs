@@ -36,9 +36,20 @@ public sealed class AiAnalysisController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
+        // Use a dedicated timeout rather than the browser's cancellation token so that
+        // navigating away does not abort the OpenAI request mid-flight.
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+
         try
         {
-            var response = await _analysisService.AnalyzeAsync(request, cancellationToken);
+            _logger.LogInformation(
+                "AI request starting. Type=Analyze FileName={FileName} SourceLength={Length}",
+                request.FileName, request.SourceCode?.Length ?? 0);
+
+            var response = await _analysisService.AnalyzeAsync(request, cts.Token);
+
+            _logger.LogInformation("AI request completed. Type=Analyze FileName={FileName}", request.FileName);
+
             return Ok(response);
         }
         catch (ArgumentException ex)
@@ -53,7 +64,7 @@ public sealed class AiAnalysisController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled error during AI analysis");
+            _logger.LogError(ex, "AI request failed. Type=Analyze FileName={FileName}", request.FileName);
             return StatusCode(StatusCodes.Status503ServiceUnavailable, new ProblemDetails
             {
                 Title = "AI Service Unavailable",
@@ -77,9 +88,20 @@ public sealed class AiAnalysisController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
+        // Use a dedicated timeout rather than the browser's cancellation token so that
+        // navigating away does not abort the OpenAI request mid-flight.
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+
         try
         {
-            var response = await _explainService.ExplainAsync(request, cancellationToken);
+            _logger.LogInformation(
+                "AI request starting. Type=Explain PromptLength={Length}",
+                request.Prompt?.Length ?? 0);
+
+            var response = await _explainService.ExplainAsync(request, cts.Token);
+
+            _logger.LogInformation("AI request completed. Type=Explain");
+
             return Ok(response);
         }
         catch (ArgumentException ex)
@@ -94,7 +116,7 @@ public sealed class AiAnalysisController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled error during AI explanation");
+            _logger.LogError(ex, "AI request failed. Type=Explain");
             return StatusCode(StatusCodes.Status503ServiceUnavailable, new ProblemDetails
             {
                 Title = "AI Service Unavailable",

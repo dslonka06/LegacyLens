@@ -131,21 +131,40 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
           this.manager.setLearningPathAnalysis(id, lp);
         }
 
-        // Trigger AI explanation once per knowledge load — skip if already generated
+        // Trigger AI explanation once per knowledge load — skip if already generated.
+        // Calls are intentionally sequential: security overview waits for explanation to
+        // finish so only one OpenAI request is active at a time.
         const ctx = this.workspaceContext;
         if (ctx && !this.manager.getById(id)?.aiExplanation) {
           this.aiKnowledge.explainRepository(ctx, knowledge).subscribe({
-            next: content => this.manager.setAiExplanation(id, {
-              type: 'repository',
-              title: 'Repository Explanation',
-              content,
-              generatedAt: new Date().toISOString(),
-            }),
-            error: () => { /* AI unavailable — explanation stays null, page degrades gracefully */ },
+            next: content => {
+              this.manager.setAiExplanation(id, {
+                type: 'repository',
+                title: 'Repository Explanation',
+                content,
+                generatedAt: new Date().toISOString(),
+              });
+              // Fire security overview only after explanation completes — one request at a time.
+              if (!this.manager.getById(id)?.securityOverview) {
+                this.aiKnowledge.generateSecurityOverview(ctx, security, 'repository').subscribe({
+                  next: overview => this.manager.setSecurityOverview(id, overview),
+                  error: () => { /* AI unavailable — overview stays null, page degrades gracefully */ },
+                });
+              }
+            },
+            error: () => {
+              /* AI unavailable — explanation stays null, page degrades gracefully */
+              /* Still attempt security overview even if explanation failed */
+              if (!this.manager.getById(id)?.securityOverview) {
+                this.aiKnowledge.generateSecurityOverview(ctx, security, 'repository').subscribe({
+                  next: overview => this.manager.setSecurityOverview(id, overview),
+                  error: () => { /* AI unavailable */ },
+                });
+              }
+            },
           });
-        }
-
-        if (ctx && !this.manager.getById(id)?.securityOverview) {
+        } else if (ctx && !this.manager.getById(id)?.securityOverview) {
+          // Explanation already cached — generate overview on its own.
           this.aiKnowledge.generateSecurityOverview(ctx, security, 'repository').subscribe({
             next: overview => this.manager.setSecurityOverview(id, overview),
             error: () => { /* AI unavailable — overview stays null, page degrades gracefully */ },
