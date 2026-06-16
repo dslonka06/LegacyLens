@@ -62,10 +62,16 @@ export class FileDocumentationPage implements OnInit, OnDestroy {
     const knowledge = this.knowledgeService.knowledge;
 
     this.summary = this.summaryService.build(workspaceContext, knowledge, session);
-
     this.sections = this.builderService.buildSectionList(this.summary, 'file');
-    const defaults = this.builderService.defaultSelections(this.summary, 'file');
-    this.selectedIds = new Set(defaults);
+
+    if (this.selectedIds.size === 0) {
+      const defaults = this.builderService.defaultSelections(this.summary, 'file');
+      this.selectedIds = new Set(defaults);
+    } else {
+      const available = new Set(this.sections.filter(s => s.available).map(s => s.id));
+      this.selectedIds = new Set([...this.selectedIds].filter(id => available.has(id)));
+    }
+
     this.refreshPreview();
     this.isBuilding = false;
   }
