@@ -5,10 +5,13 @@ import { BehaviorInsights, DataFlow, DataFlowConnection, DataFlowNode, WorkflowC
 
 // ── Name-based role detection ─────────────────────────────────────────────────
 
-// Patterns that suggest an entry point (receives external requests)
+// Patterns that suggest an entry point (receives external requests).
+// NOTE: matched against node.name which has no extension (nameFromPath strips it),
+// so patterns must not rely on a trailing dot — use word boundary or suffix match.
 const ENTRY_PATTERNS = [
   /controller/i, /handler/i, /endpoint/i, /api/i, /route/i,
-  /page\./i, /screen\./i, /view\./i, /presenter/i,
+  /-page$/i, /page\.ts$/i, /screen$/i, /view$/i, /presenter/i,
+  /component$/i,
 ];
 
 // Patterns that suggest a service / processor
@@ -34,11 +37,16 @@ const EXTERNAL_PATTERNS = [
 
 function inferNodeType(node: DependencyNode): DataFlowNode['type'] {
   const name = node.name.toLowerCase();
+  // Also test the full path (includes extension) so patterns like /page\.ts$/ work
+  const pathLower = (node.path ?? node.id).replace(/\\/g, '/').toLowerCase();
+  const test = (patterns: RegExp[]) =>
+    patterns.some(p => p.test(name) || p.test(pathLower));
+
   if (DB_PATTERNS.some(p => p.test(node.id) || p.test(name))) return 'database';
-  if (REPO_PATTERNS.some(p => p.test(name))) return 'repository';
-  if (ENTRY_PATTERNS.some(p => p.test(name))) return 'entry';
-  if (EXTERNAL_PATTERNS.some(p => p.test(name))) return 'external';
-  if (SERVICE_PATTERNS.some(p => p.test(name))) return 'processor';
+  if (test(REPO_PATTERNS)) return 'repository';
+  if (test(ENTRY_PATTERNS)) return 'entry';
+  if (test(EXTERNAL_PATTERNS)) return 'external';
+  if (test(SERVICE_PATTERNS)) return 'processor';
   return 'unknown';
 }
 

@@ -139,6 +139,19 @@ export class DependencyMapperService {
 
   // ── Extractors ────────────────────────────────────────────────────────────
 
+  // Known @app/* path alias prefixes — maps alias prefix to real path prefix.
+  // Covers the tsconfig.app.json paths without needing to read that file at runtime.
+  private static readonly PATH_ALIASES: Array<{ prefix: string; real: string }> = [
+    { prefix: '@app/core/',      real: 'src/app/core/' },
+    { prefix: '@app/layout/',    real: 'src/app/layout/' },
+    { prefix: '@app/workspace/', real: 'src/app/workspace/' },
+    { prefix: '@app/knowledge/', real: 'src/app/knowledge/' },
+    { prefix: '@app/analysis/',  real: 'src/app/analysis/' },
+    { prefix: '@app/ai/',        real: 'src/app/ai/' },
+    { prefix: '@app/features/',  real: 'src/app/features/' },
+    { prefix: '@app/shared/',    real: 'src/app/shared/' },
+  ];
+
   private extractTypeScriptDeps(
     sf: SourceFile,
     allFiles: SourceFile[]
@@ -151,16 +164,40 @@ export class DependencyMapperService {
     const results: Array<{ target: string; rel: string }> = [];
 
     for (const raw of imports) {
-      // Skip node_modules / npm packages (no leading . or /)
-      if (!raw.startsWith('.') && !raw.startsWith('/')) continue;
-
-      const resolved = this.resolveRelativePath(sf.path, raw, allFiles);
-      if (resolved) {
-        results.push({ target: resolved, rel: 'import' });
+      if (raw.startsWith('.') || raw.startsWith('/')) {
+        // Relative import — resolve normally
+        const resolved = this.resolveRelativePath(sf.path, raw, allFiles);
+        if (resolved) results.push({ target: resolved, rel: 'import' });
+      } else {
+        // Try to resolve known path aliases (@app/*)
+        const resolved = this.resolveAliasPath(raw, allFiles);
+        if (resolved) results.push({ target: resolved, rel: 'import' });
       }
     }
 
     return results;
+  }
+
+  private resolveAliasPath(importPath: string, allFiles: SourceFile[]): string | null {
+    for (const { prefix, real } of DependencyMapperService.PATH_ALIASES) {
+      if (!importPath.startsWith(prefix)) continue;
+      const rest = importPath.slice(prefix.length);
+      const base = real + rest;
+      const candidates = [
+        base,
+        `${base}.ts`,
+        `${base}.tsx`,
+        `${base}/index.ts`,
+      ];
+      for (const candidate of candidates) {
+        const match = allFiles.find(f =>
+          f.path.replace(/\\/g, '/').endsWith(candidate) ||
+          f.path.replace(/\\/g, '/') === candidate
+        );
+        if (match) return match.path;
+      }
+    }
+    return null;
   }
 
   private extractCSharpDeps(
