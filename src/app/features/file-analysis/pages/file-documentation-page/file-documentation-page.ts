@@ -81,18 +81,19 @@ export class FileDocumentationPage implements OnInit, OnDestroy {
   }
 
   toggleSection(id: DocumentationSectionId): void {
-    if (this.selectedIds.has(id)) this.selectedIds.delete(id);
-    else this.selectedIds.add(id);
+    const next = new Set(this.selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    this.selectedIds = next;
     this.refreshPreview();
   }
 
   selectAll(): void {
-    this.sections.filter(s => s.available).forEach(s => this.selectedIds.add(s.id));
+    this.selectedIds = new Set(this.sections.filter(s => s.available).map(s => s.id));
     this.refreshPreview();
   }
 
   selectNone(): void {
-    this.selectedIds.clear();
+    this.selectedIds = new Set();
     this.refreshPreview();
   }
 
