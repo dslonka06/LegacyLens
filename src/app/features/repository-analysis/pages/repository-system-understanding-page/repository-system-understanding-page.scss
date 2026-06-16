@@ -53,11 +53,30 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 16px 18px;
+  padding: 14px 16px;
 }
 
 .su-card-accent {
   border-left: 3px solid color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+// Merged prose card: two labeled sections inside one card with a divider between them
+.su-card-prose {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  .su-prose-section {
+    padding: 14px 16px;
+
+    & + .su-prose-section {
+      border-top: 1px solid var(--border);
+    }
+
+    &.su-prose-accent {
+      border-left: 3px solid color-mix(in srgb, var(--accent) 60%, transparent);
+    }
+  }
 }
 
 .su-card-risk {
@@ -77,7 +96,7 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 
   svg { width: 13px; height: 13px; flex-shrink: 0; opacity: 0.7; }
 }
@@ -147,17 +166,17 @@
 .su-item-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1px;
 }
 
 .su-item {
-  padding: 8px 10px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: 7px;
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+
+  &:last-child { border-bottom: none; }
 }
 
 .su-item-name {
@@ -165,12 +184,16 @@
   font-weight: 600;
   color: var(--text-content);
   font-family: 'JetBrains Mono', Consolas, monospace;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .su-item-reason {
   font-size: 11px;
   color: var(--text-muted);
   line-height: 1.5;
+  flex: 1;
+  min-width: 0;
 }
 
 .su-health-strip {
@@ -312,58 +335,62 @@
 .su-workflow-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 1px;
 }
 
 .su-workflow-item {
-  padding: 10px 12px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: 7px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+
+  &:last-child { border-bottom: none; }
 }
 
 .su-workflow-name {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-content);
+  flex-shrink: 0;
 }
 
 .su-workflow-desc {
-  font-size: 12px;
-  color: var(--text-secondary);
-  line-height: 1.6;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  flex: 1;
+  min-width: 0;
 }
 
 .su-dep-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1px;
 }
 
 .su-dep-item {
-  padding: 10px 12px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: 7px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+
+  &:last-child { border-bottom: none; }
 }
 
 .su-dep-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .su-dep-name {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-content);
-  flex: 1;
+  font-family: 'JetBrains Mono', Consolas, monospace;
 }
 
 .su-dep-type {
@@ -382,6 +409,8 @@
   font-size: 11px;
   color: var(--text-muted);
   line-height: 1.5;
+  flex: 1;
+  min-width: 0;
 }
 
 .su-debt-list {

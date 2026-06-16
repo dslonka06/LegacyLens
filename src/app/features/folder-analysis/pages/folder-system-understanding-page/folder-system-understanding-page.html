@@ -54,27 +54,27 @@
     <!-- Left column -->
     <div class="su-col-left">
 
-      <!-- Business Purpose -->
-      <div class="su-card">
-        <div class="su-card-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-            <line x1="7" y1="7" x2="7.01" y2="7"/>
-          </svg>
-          Business Purpose
+      <!-- Business Purpose + Why It Matters (merged) -->
+      <div class="su-card su-card-prose">
+        <div class="su-prose-section">
+          <div class="su-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+              <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+            Business Purpose
+          </div>
+          <p class="su-body-text">{{ understanding.businessPurpose }}</p>
         </div>
-        <p class="su-body-text">{{ understanding.businessPurpose }}</p>
-      </div>
-
-      <!-- Why It Matters -->
-      <div class="su-card su-card-accent">
-        <div class="su-card-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-          </svg>
-          Why It Matters
+        <div class="su-prose-section su-prose-accent">
+          <div class="su-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            Why It Matters
+          </div>
+          <p class="su-body-text">{{ understanding.whyItMatters }}</p>
         </div>
-        <p class="su-body-text">{{ understanding.whyItMatters }}</p>
       </div>
 
       <!-- Major Components & Responsibilities -->
