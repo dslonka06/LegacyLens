@@ -9,8 +9,6 @@ export class CurrentWorkspaceService {
 
   private readonly manager = inject(WorkspaceManagerService);
 
-  private _uploadedFiles: File[] = [];
-
   readonly context$: Observable<WorkspaceContext | null> = this.manager.activeWorkspace$.pipe(
     map(ws => ws?.context ?? null),
   );
@@ -24,21 +22,24 @@ export class CurrentWorkspaceService {
   }
 
   get uploadedFiles(): File[] {
-    return this._uploadedFiles;
+    const id = this.manager.activeId;
+    return id ? this.manager.getRawFiles(id) : [];
   }
 
   set(profile: WorkspaceProfile, rawFiles: File[]): void {
     const id = this.manager.activeId;
     if (!id) return;
-    this._uploadedFiles = rawFiles;
+    this.manager.setRawFiles(id, rawFiles);
     const workspaceName = this.deriveName(profile, rawFiles);
     this.manager.setContext(id, { profile, uploadedAt: new Date(), workspaceName });
   }
 
   clear(): void {
     const id = this.manager.activeId;
-    if (id) this.manager.clearContext(id);
-    this._uploadedFiles = [];
+    if (id) {
+      this.manager.clearContext(id);
+      this.manager.clearRawFiles(id);
+    }
   }
 
   private deriveName(profile: WorkspaceProfile, rawFiles: File[]): string {

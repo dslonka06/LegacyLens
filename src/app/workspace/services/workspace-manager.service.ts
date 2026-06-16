@@ -17,6 +17,10 @@ export class WorkspaceManagerService {
   private readonly _workspaces$ = new BehaviorSubject<Workspace[]>([]);
   private readonly _activeId$   = new BehaviorSubject<string | null>(null);
 
+  // Raw File[] objects keyed by workspace ID — not serializable so kept separate
+  // from the Workspace entity. Survives multi-workspace navigation.
+  private readonly _rawFiles = new Map<string, File[]>();
+
   readonly workspaces$ = this._workspaces$.asObservable();
   readonly activeId$   = this._activeId$.asObservable();
 
@@ -135,6 +139,7 @@ export class WorkspaceManagerService {
   // ── Deletion ─────────────────────────────────────────────────────────────
 
   delete(id: string): void {
+    this._rawFiles.delete(id);
     const remaining = this._workspaces$.value.filter(w => w.id !== id);
     this._workspaces$.next(remaining);
 
@@ -252,6 +257,20 @@ export class WorkspaceManagerService {
 
   clearAiExplanation(id: string): void {
     this.patch(id, { aiExplanation: null });
+  }
+
+  // ── Raw file storage ──────────────────────────────────────────────────────
+
+  setRawFiles(id: string, files: File[]): void {
+    this._rawFiles.set(id, files);
+  }
+
+  getRawFiles(id: string): File[] {
+    return this._rawFiles.get(id) ?? [];
+  }
+
+  clearRawFiles(id: string): void {
+    this._rawFiles.delete(id);
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
