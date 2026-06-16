@@ -20,6 +20,7 @@ export class FileLearningPathPage implements OnInit, OnDestroy {
   get hasWorkspace(): boolean { return this.workspace !== null && this.workspace.session !== null; }
 
   expandedSteps = new Set<number>();
+  expandedConcepts = new Set<number>();
 
   private sub: Subscription | null = null;
 
@@ -38,4 +39,12 @@ export class FileLearningPathPage implements OnInit, OnDestroy {
   }
 
   isStepExpanded(n: number): boolean { return this.expandedSteps.has(n); }
+
+  toggleConcept(i: number, event: Event): void {
+    event.stopPropagation();
+    if (this.expandedConcepts.has(i)) this.expandedConcepts.delete(i);
+    else this.expandedConcepts.add(i);
+  }
+
+  isConceptExpanded(i: number): boolean { return this.expandedConcepts.has(i); }
 }
