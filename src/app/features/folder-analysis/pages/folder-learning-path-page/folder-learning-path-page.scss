@@ -111,10 +111,25 @@
   display: grid;
   grid-template-columns: 1fr 320px;
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 
-.lp-col-left,
+.lp-col-left {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .lp-section-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .lp-roadmap {
+    flex: 1;
+  }
+}
+
 .lp-col-right {
   display: flex;
   flex-direction: column;
