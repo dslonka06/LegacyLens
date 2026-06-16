@@ -8,11 +8,17 @@
 }
 
 
+.rec-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .rec-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 16px 18px;
+  padding: 20px 22px;
 }
 
 .rec-card-header {
@@ -40,7 +46,7 @@
 .rec-metrics {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 16px;
 }
 
 .rec-metric {
@@ -99,7 +105,7 @@
 .rec-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .rec-item {
@@ -234,6 +240,7 @@
 
 .rec-item-body {
   border-top: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
   padding: 12px;
   display: flex;
   flex-direction: column;

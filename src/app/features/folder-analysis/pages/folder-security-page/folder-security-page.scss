@@ -8,11 +8,17 @@
 }
 
 
+.sec-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .sec-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 16px 18px;
+  padding: 20px 22px;
 }
 
 .sec-card-header {
@@ -83,7 +89,7 @@
 .sec-metrics {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 16px;
 }
 
 .sec-metric {
@@ -160,7 +166,7 @@
 .sec-findings-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 .sec-severity-group-label {
@@ -172,7 +178,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-muted);
-  padding: 10px 2px 4px;
+  padding: 14px 2px 6px;
 }
 
 .sec-sev-dot {
@@ -260,6 +266,7 @@
 
 .sec-finding-body {
   border-top: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
   padding: 12px;
   display: flex;
   flex-direction: column;
