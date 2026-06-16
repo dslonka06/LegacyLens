@@ -31,7 +31,7 @@ interface ExplainResponse {
 export class AiKnowledgeService {
 
   private readonly apiUrl = 'http://localhost:5000/api/ai/explain';
-  private readonly timeoutMs = 90_000;
+  private readonly timeoutMs = 300_000; // 5 min — matches backend CTS
 
   constructor(
     private readonly http: HttpClient,

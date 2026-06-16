@@ -12,7 +12,7 @@ interface AiAnalysisRequest {
 export class AiAnalysisService {
 
   private readonly apiUrl = 'http://localhost:5000/api/ai/analyze';
-  private readonly timeoutMs = 60_000; // AI calls can be slow
+  private readonly timeoutMs = 300_000; // 5 min — matches backend CTS
 
   constructor(private readonly http: HttpClient) {}
 
