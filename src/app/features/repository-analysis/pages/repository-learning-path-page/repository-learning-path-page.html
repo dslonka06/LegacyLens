@@ -133,7 +133,32 @@
             </div>
           </div>
         </div>
-      </div>
+
+        <!-- ── Next Steps (directly below roadmap) ───────────────────────────── -->
+        <div class="lp-section-card lp-nextsteps-card" *ngIf="lp.nextSteps.length > 0">
+          <div class="lp-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+            Next Steps
+          </div>
+          <div class="lp-nextsteps-grid">
+            <a
+              *ngFor="let step of lp.nextSteps"
+              [routerLink]="step.route"
+              class="lp-nextstep-card">
+              <div class="lp-nextstep-dest">{{ step.destination }}</div>
+              <p class="lp-nextstep-guidance">{{ step.guidance }}</p>
+              <div class="lp-nextstep-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+            </a>
+          </div>
+        </div>
+
+      </div><!-- /.lp-col-left -->
 
       <!-- Right: Key Concepts -->
       <div class="lp-col-right" *ngIf="lp.keyConcepts.length > 0">
@@ -159,35 +184,9 @@
             </div>
           </div>
         </div>
-      </div>
+      </div><!-- /.lp-col-right -->
 
     </div><!-- /.lp-body -->
-
-      <!-- ── Next Steps (left column width) ───────────────────────────────────── -->
-      <div class="lp-nextsteps-outer" *ngIf="lp.nextSteps.length > 0">
-        <div class="lp-section-card lp-nextsteps-card">
-          <div class="lp-card-header">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-            </svg>
-            Next Steps
-          </div>
-          <div class="lp-nextsteps-grid">
-            <a
-              *ngFor="let step of lp.nextSteps"
-              [routerLink]="step.route"
-              class="lp-nextstep-card">
-              <div class="lp-nextstep-dest">{{ step.destination }}</div>
-              <p class="lp-nextstep-guidance">{{ step.guidance }}</p>
-              <div class="lp-nextstep-arrow">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-                </svg>
-              </div>
-            </a>
-          </div>
-        </div>
-      </div>
 
   </ng-container>
 </div>
