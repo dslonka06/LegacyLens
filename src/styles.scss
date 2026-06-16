@@ -102,6 +102,22 @@ ul, ol { list-style: none; }
   height: 100%;
   overflow: hidden;
   background: var(--bg-primary);
+  position: relative;
+
+  // Ambient purple orb — matches homepage atmosphere, stays behind content
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse 70% 35% at 15% 0%, rgba(124, 92, 255, 0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 25% at 85% 10%, rgba(124, 92, 255, 0.03) 0%, transparent 65%);
+  }
+
+  // Ensure header and content sit above the pseudo-element
+  > * { position: relative; z-index: 1; }
 }
 
 .page-header {
@@ -110,10 +126,26 @@ ul, ol { list-style: none; }
   justify-content: space-between;
   padding: 0 24px;
   height: 56px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-primary);
+  background: var(--bg-secondary);
   flex-shrink: 0;
   gap: 16px;
+  position: relative;
+
+  // Gradient bottom border: purple on the left, fading to transparent
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      rgba(124, 92, 255, 0.5) 0%,
+      var(--border) 30%,
+      transparent 100%
+    );
+  }
 }
 
 .page-title {
