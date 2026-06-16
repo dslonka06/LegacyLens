@@ -104,17 +104,17 @@ export class DataFlowDiscoveryService {
 
     const flows: DataFlow[] = [];
 
-    // For each entry node, attempt to trace forward through the graph
+    // For each entry node, trace forward and build a workflow
     const entryNodes = Array.from(typed.values()).filter(n => n.type === 'entry');
 
-    for (const entry of entryNodes.slice(0, 10)) {  // cap to avoid O(n²) on large graphs
+    for (const entry of entryNodes.slice(0, 20)) {
       const chain = this.traceForward(entry.id, typed, graph, new Set(), 6);
       if (chain.length < 2) continue;
 
-      const rule = this.matchRule(chain);
+      const flowNodes = chain.map(id => typed.get(id)!).filter(Boolean);
+      const rule = this.matchRuleFromNodes(flowNodes);
       if (!rule) continue;
 
-      const flowNodes = chain.map(id => typed.get(id)!).filter(Boolean);
       const connections: DataFlowConnection[] = [];
       for (let i = 0; i < chain.length - 1; i++) {
         const edge = graph.edges.find(e => e.source === chain[i] && e.target === chain[i + 1]);
@@ -134,8 +134,115 @@ export class DataFlowDiscoveryService {
       });
     }
 
-    // Deduplicate by similar node sequences
-    return this.deduplicateFlows(flows).slice(0, 8);
+    const deduped = this.deduplicateFlows(flows);
+
+    // If graph tracing found too few flows (common on frontend-only repos where
+    // pages share services), supplement with structure-based feature flows.
+    if (deduped.length < 3 && structure) {
+      const structural = this.discoverStructuralFlows(typed, graph, structure);
+      for (const f of structural) {
+        const key = f.nodes.map(n => n.name).join(',');
+        if (!deduped.some(d => d.nodes.map(n => n.name).join(',') === key)) {
+          deduped.push(f);
+        }
+      }
+    }
+
+    return deduped.slice(0, 8);
+  }
+
+  // Build feature-area workflows from folder structure when graph tracing is sparse.
+  // Groups entry nodes under their top-level feature folder and pairs them with the
+  // most-connected services they reference.
+  private discoverStructuralFlows(
+    typed: Map<string, DataFlowNode>,
+    graph: DependencyGraph,
+    structure: RepositoryStructure,
+  ): DataFlow[] {
+    const flows: DataFlow[] = [];
+
+    // Build outbound adjacency for fast lookup
+    const outboundEdges = new Map<string, string[]>();
+    for (const e of graph.edges) {
+      const list = outboundEdges.get(e.source) ?? [];
+      list.push(e.target);
+      outboundEdges.set(e.source, list);
+    }
+
+    // Count how many times each node is referenced (inbound degree)
+    const inbound = new Map<string, number>();
+    for (const e of graph.edges) {
+      inbound.set(e.target, (inbound.get(e.target) ?? 0) + 1);
+    }
+
+    // Group entry nodes by their top-level feature folder
+    const byFeature = new Map<string, DataFlowNode[]>();
+    for (const node of typed.values()) {
+      if (node.type !== 'entry') continue;
+      // path looks like "src/app/features/repository-analysis/pages/..." or similar
+      const parts = (node.path ?? node.id).replace(/\\/g, '/').split('/');
+      const featuresIdx = parts.indexOf('features');
+      const featureName = featuresIdx >= 0 ? parts[featuresIdx + 1] : parts[2] ?? 'core';
+      if (!featureName) continue;
+      const group = byFeature.get(featureName) ?? [];
+      group.push(node);
+      byFeature.set(featureName, group);
+    }
+
+    for (const [feature, entries] of byFeature) {
+      if (entries.length === 0) continue;
+
+      // Pick the most representative entry (most outbound edges)
+      const primaryEntry = entries.sort((a, b) =>
+        (outboundEdges.get(b.id)?.length ?? 0) - (outboundEdges.get(a.id)?.length ?? 0)
+      )[0];
+
+      // Collect the typed nodes this entry references (direct + one hop)
+      const reachable: DataFlowNode[] = [primaryEntry];
+      const directTargets = outboundEdges.get(primaryEntry.id) ?? [];
+
+      for (const targetId of directTargets.slice(0, 8)) {
+        const target = typed.get(targetId);
+        if (!target || target.type === 'unknown' || reachable.some(n => n.id === target.id)) continue;
+        reachable.push(target);
+
+        // One level deeper — pick the highest-inbound child
+        const children = (outboundEdges.get(target.id) ?? [])
+          .map(id => typed.get(id))
+          .filter((n): n is DataFlowNode => !!n && n.type !== 'unknown' && !reachable.some(r => r.id === n.id))
+          .sort((a, b) => (inbound.get(b.id) ?? 0) - (inbound.get(a.id) ?? 0));
+
+        if (children[0]) reachable.push(children[0]);
+      }
+
+      if (reachable.length < 2) continue;
+
+      const rule = this.matchRuleFromNodes(reachable);
+      if (!rule) continue;
+
+      const featureLabel = feature
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+
+      const connections: DataFlowConnection[] = [];
+      for (let i = 0; i < reachable.length - 1; i++) {
+        connections.push({
+          sourceId: reachable[i].id,
+          targetId: reachable[i + 1].id,
+          relationshipType: 'depends on',
+        });
+      }
+
+      flows.push({
+        name: `${featureLabel} Flow`,
+        description: this.describeFlow(reachable, rule.category),
+        nodes: reachable,
+        connections,
+        confidence: rule.minConfidence,
+      });
+    }
+
+    return flows;
   }
 
   extractBehaviorInsights(knowledge: RepositoryKnowledge): BehaviorInsights {
@@ -199,17 +306,22 @@ export class DataFlowDiscoveryService {
     const outEdges = graph.edges.filter(e => e.source === nodeId);
     if (!outEdges.length) return [nodeId];
 
-    // Follow the most semantically meaningful outgoing edge
-    for (const edge of outEdges.slice(0, 3)) {
+    const from = typed.get(nodeId)?.type;
+
+    // First pass: prefer semantically typed forward transitions
+    for (const edge of outEdges.slice(0, 5)) {
       const next = typed.get(edge.target);
       if (!next || visited.has(edge.target)) continue;
-
-      // Only follow meaningful type transitions
-      const from = typed.get(nodeId)?.type;
-      const to = next.type;
-      if (this.isForwardTransition(from, to)) {
+      if (this.isForwardTransition(from, next.type)) {
         return [nodeId, ...this.traceForward(edge.target, typed, graph, new Set(visited), maxDepth - 1)];
       }
+    }
+
+    // Second pass: fall back to any typed (non-unknown) node to avoid dead-ends
+    for (const edge of outEdges.slice(0, 5)) {
+      const next = typed.get(edge.target);
+      if (!next || visited.has(edge.target) || next.type === 'unknown') continue;
+      return [nodeId, ...this.traceForward(edge.target, typed, graph, new Set(visited), maxDepth - 1)];
     }
 
     return [nodeId];
@@ -225,10 +337,21 @@ export class DataFlowDiscoveryService {
     return transitions[from ?? '']?.has(to) ?? false;
   }
 
-  private matchRule(chain: string[]): WorkflowRule | null {
-    // We don't have role info here — use the chain length as a proxy
-    // The actual rule matching happens at the flow level
-    return WORKFLOW_RULES.find(r => r.roleSequence.length <= chain.length) ?? null;
+  // Match a rule against the actual node types in the chain (not just chain length).
+  private matchRuleFromNodes(nodes: DataFlowNode[]): WorkflowRule | null {
+    const types = nodes.map(n => n.type);
+    // Score each rule by how many of its required roles appear in the chain
+    let best: WorkflowRule | null = null;
+    let bestScore = 0;
+    for (const rule of WORKFLOW_RULES) {
+      const matched = rule.roleSequence.filter(r => types.includes(r)).length;
+      const score = matched / rule.roleSequence.length;
+      if (score >= 0.5 && score > bestScore) {
+        best = rule;
+        bestScore = score;
+      }
+    }
+    return best;
   }
 
   private describeFlow(nodes: DataFlowNode[], category: WorkflowCategory): string {
@@ -249,7 +372,13 @@ export class DataFlowDiscoveryService {
   private deduplicateFlows(flows: DataFlow[]): DataFlow[] {
     const seen = new Set<string>();
     return flows.filter(f => {
-      const key = f.nodes.map(n => n.name).join(',');
+      // Key on entry name + the type sequence of the rest of the chain.
+      // This keeps flows with different entry points even when they share
+      // the same downstream services, but collapses truly identical traces.
+      const entryName = f.nodes[0]?.name ?? '';
+      const typeSignature = f.nodes.map(n => n.type).join('-');
+      const nameSignature = f.nodes.slice(1).map(n => n.name).join(',');
+      const key = `${entryName}|${typeSignature}|${nameSignature}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
