@@ -13,6 +13,7 @@ import { CurrentAnalysisService } from '@app/workspace/services/current-analysis
 import { CurrentWorkspaceService } from '@app/workspace/services/current-workspace.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { SecurityAnalysisService } from '@app/analysis/services/security-analysis.service';
+import { SecurityAnalysis } from '@app/analysis/models/security-analysis.model';
 import { SystemUnderstandingService } from '@app/analysis/services/system-understanding.service';
 import { RecommendationAnalysisService } from '@app/analysis/services/recommendation-analysis.service';
 import { LearningPathAnalysisService } from '@app/analysis/services/learning-path-analysis.service';
@@ -115,56 +116,55 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
     this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
 
-    // Generate security and system understanding once knowledge pipeline completes
+    // Generate security and system understanding once knowledge pipeline completes.
+    // All four analysis calls are guarded — if the workspace already has the result
+    // (navigating back to a completed analysis) we skip recomputation entirely.
     this.securitySub = this.knowledgeService.knowledge$.subscribe(knowledge => {
       const id = this.manager.activeId;
       if (knowledge && id) {
-        const security = this.securityService.analyzeKnowledge(knowledge, this.session);
-        this.manager.setSecurityAnalysis(id, security);
-        const understanding = this.understandingService.analyzeKnowledge(knowledge, this.session);
-        this.manager.setSystemUnderstanding(id, understanding);
-        const recs = this.recService.analyzeKnowledge(knowledge, this.session);
-        this.manager.setRecommendationAnalysis(id, recs);
         const ws = this.manager.getById(id);
-        if (ws?.systemUnderstanding) {
-          const lp = this.learningPathService.analyzeKnowledge(knowledge, this.session, ws.systemUnderstanding, 'repository');
+
+        let security: SecurityAnalysis;
+        const cachedSecurity = ws?.securityAnalysis;
+        if (cachedSecurity) {
+          security = cachedSecurity;
+        } else {
+          security = this.securityService.analyzeKnowledge(knowledge, this.session);
+          this.manager.setSecurityAnalysis(id, security);
+        }
+
+        if (!ws?.systemUnderstanding) {
+          const understanding = this.understandingService.analyzeKnowledge(knowledge, this.session);
+          this.manager.setSystemUnderstanding(id, understanding);
+        }
+
+        if (!ws?.recommendationAnalysis) {
+          const recs = this.recService.analyzeKnowledge(knowledge, this.session);
+          this.manager.setRecommendationAnalysis(id, recs);
+        }
+
+        const wsAfter = this.manager.getById(id);
+        if (!wsAfter?.learningPathAnalysis && wsAfter?.systemUnderstanding) {
+          const lp = this.learningPathService.analyzeKnowledge(knowledge, this.session, wsAfter.systemUnderstanding, 'repository');
           this.manager.setLearningPathAnalysis(id, lp);
         }
 
-        // Trigger AI explanation once per knowledge load — skip if already generated.
-        // Calls are intentionally sequential: security overview waits for explanation to
-        // finish so only one OpenAI request is active at a time.
+        // Fire explanation and security overview concurrently — neither depends on
+        // the other's result. Both are skipped if already cached.
         const ctx = this.workspaceContext;
         if (ctx && !this.manager.getById(id)?.aiExplanation) {
           this.aiKnowledge.explainRepository(ctx, knowledge).subscribe({
-            next: content => {
-              this.manager.setAiExplanation(id, {
-                type: 'repository',
-                title: 'Repository Explanation',
-                content,
-                generatedAt: new Date().toISOString(),
-              });
-              // Fire security overview only after explanation completes — one request at a time.
-              if (!this.manager.getById(id)?.securityOverview) {
-                this.aiKnowledge.generateSecurityOverview(ctx, security, 'repository').subscribe({
-                  next: overview => this.manager.setSecurityOverview(id, overview),
-                  error: () => { /* AI unavailable — overview stays null, page degrades gracefully */ },
-                });
-              }
-            },
-            error: () => {
-              /* AI unavailable — explanation stays null, page degrades gracefully */
-              /* Still attempt security overview even if explanation failed */
-              if (!this.manager.getById(id)?.securityOverview) {
-                this.aiKnowledge.generateSecurityOverview(ctx, security, 'repository').subscribe({
-                  next: overview => this.manager.setSecurityOverview(id, overview),
-                  error: () => { /* AI unavailable */ },
-                });
-              }
-            },
+            next: content => this.manager.setAiExplanation(id, {
+              type: 'repository',
+              title: 'Repository Explanation',
+              content,
+              generatedAt: new Date().toISOString(),
+            }),
+            error: () => { /* AI unavailable — explanation stays null, page degrades gracefully */ },
           });
-        } else if (ctx && !this.manager.getById(id)?.securityOverview) {
-          // Explanation already cached — generate overview on its own.
+        }
+
+        if (ctx && !this.manager.getById(id)?.securityOverview) {
           this.aiKnowledge.generateSecurityOverview(ctx, security, 'repository').subscribe({
             next: overview => this.manager.setSecurityOverview(id, overview),
             error: () => { /* AI unavailable — overview stays null, page degrades gracefully */ },
