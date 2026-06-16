@@ -118,6 +118,10 @@
   margin: 0;
 }
 
+.su-body-text-spaced {
+  margin-bottom: 6px;
+}
+
 .su-no-margin { margin: 0; }
 
 .su-columns {
@@ -461,4 +465,39 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
+}
+
+// ── Full-width dependency bar ─────────────────────────────────────────────────
+
+.su-dep-bar {
+  // inherits .su-card padding and border
+}
+
+.su-dep-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0;
+}
+
+// Override the inline row style for grid cells — each dep gets its own bordered cell
+.su-dep-grid .su-dep-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  border-bottom: none;
+  border-right: 1px solid var(--border);
+
+  &:last-child { border-right: none; }
+}
+
+.su-dep-grid .su-dep-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: unset;
+}
+
+.su-dep-grid .su-dep-reason {
+  flex: unset;
 }

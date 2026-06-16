@@ -64,7 +64,7 @@
             </svg>
             Business Purpose
           </div>
-          <p class="su-body-text">{{ understanding.businessPurpose }}</p>
+          <p class="su-body-text su-body-text-spaced">{{ understanding.businessPurpose }}</p>
         </div>
         <div class="su-prose-section su-prose-accent">
           <div class="su-card-header">
@@ -114,25 +114,25 @@
         </div>
       </div>
 
-      <!-- Most Important Dependencies -->
-      <div class="su-card" *ngIf="understanding.mostImportantDependencies?.length">
-        <div class="su-card-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/>
-          </svg>
-          Most Important Dependencies
-        </div>
-        <div class="su-dep-list">
-          <div class="su-dep-item" *ngFor="let dep of understanding.mostImportantDependencies">
-            <div class="su-dep-header">
-              <span class="su-dep-name">{{ dep.name }}</span>
-              <span class="su-dep-type">{{ depTypeLabel(dep.type) }}</span>
-            </div>
-            <span class="su-dep-reason">{{ dep.whyImportant }}</span>
-          </div>
-        </div>
-      </div>
+    </div>
+  </div>
 
+  <!-- Full-width dependencies bar -->
+  <div class="su-card su-dep-bar" *ngIf="understanding.mostImportantDependencies?.length">
+    <div class="su-card-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/>
+      </svg>
+      Key Dependencies
+    </div>
+    <div class="su-dep-grid">
+      <div class="su-dep-item" *ngFor="let dep of understanding.mostImportantDependencies">
+        <div class="su-dep-header">
+          <span class="su-dep-name">{{ dep.name }}</span>
+          <span class="su-dep-type">{{ depTypeLabel(dep.type) }}</span>
+        </div>
+        <span class="su-dep-reason">{{ dep.whyImportant }}</span>
+      </div>
     </div>
   </div>
 
