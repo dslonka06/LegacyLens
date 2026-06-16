@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, distinctUntilChanged } from 'rxjs';
 import { DocumentationSection, DocumentationSectionId, RepositorySummary } from '@app/analysis/models/repository-summary.model';
 import { CurrentAnalysisService } from '@app/workspace/services/current-analysis.service';
 import { CurrentWorkspaceService } from '@app/workspace/services/current-workspace.service';
@@ -45,9 +45,7 @@ export class RepositoryDocumentationPage implements OnInit, OnDestroy {
     this.panelWidths = this.layoutService.load('repository-doc') ?? [320];
     this.buildSummary();
     this.subs.push(
-      this.currentAnalysis.session$.subscribe(s => { if (s) this.buildSummary(); }),
-      this.knowledgeService.knowledge$.subscribe(k => { if (k) this.buildSummary(); }),
-      this.currentWorkspace.context$.subscribe(() => this.buildSummary()),
+      this.knowledgeService.knowledge$.pipe(distinctUntilChanged()).subscribe(k => { if (k) this.buildSummary(); }),
     );
   }
 
