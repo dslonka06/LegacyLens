@@ -292,9 +292,12 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   }
 
   private findRawFile(file: TreeFile): File | undefined {
+    const pool = this.uploadedFiles.length > 0
+      ? this.uploadedFiles
+      : this.currentWorkspace.uploadedFiles;
     const norm = (p: string) => p.replace(/\\/g, '/').toLowerCase();
     const target = norm(file.path);
-    return this.uploadedFiles.find(f => {
+    return pool.find(f => {
       const rel = norm((f as any).webkitRelativePath || f.name);
       return rel === target || rel.endsWith('/' + target) || target.endsWith('/' + norm(f.name));
     });
