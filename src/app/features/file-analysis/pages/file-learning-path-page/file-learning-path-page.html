@@ -146,29 +146,16 @@
             <span class="lp-count-badge">{{ lp.keyConcepts.length }}</span>
           </div>
           <div class="lp-concepts-list">
-            <div
-              class="lp-concept-card"
-              *ngFor="let concept of lp.keyConcepts; let i = index"
-              [class.expanded]="isConceptExpanded(i)">
-
+            <div class="lp-concept-card" *ngFor="let concept of lp.keyConcepts">
               <div class="lp-concept-name">{{ concept.name }}</div>
-              <p class="lp-concept-def" [class.clamped]="!isConceptExpanded(i)">{{ concept.plainEnglishDefinition }}</p>
-
-              <div class="lp-concept-meta" *ngIf="isConceptExpanded(i)">
+              <p class="lp-concept-def">{{ concept.plainEnglishDefinition }}</p>
+              <div class="lp-concept-meta">
                 <div class="lp-concept-why">{{ concept.whyItMatters }}</div>
                 <div class="lp-concept-where">
                   <span class="lp-concept-where-label">Appears in:</span>
                   {{ concept.whereItAppears }}
                 </div>
               </div>
-
-              <button class="lp-concept-toggle" (click)="toggleConcept(i, $event)">
-                {{ isConceptExpanded(i) ? 'Show less' : 'Show more' }}
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline [attr.points]="isConceptExpanded(i) ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
-                </svg>
-              </button>
-
             </div>
           </div>
         </div>
@@ -176,29 +163,31 @@
 
     </div><!-- /.lp-body -->
 
-    <!-- ── Next Steps (full width) ──────────────────────────────────────────── -->
-    <div class="lp-section-card lp-nextsteps-card" *ngIf="lp.nextSteps.length > 0">
-      <div class="lp-card-header">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-        </svg>
-        Next Steps
-      </div>
-      <div class="lp-nextsteps-grid">
-        <a
-          *ngFor="let step of lp.nextSteps"
-          [routerLink]="step.route"
-          class="lp-nextstep-card">
-          <div class="lp-nextstep-dest">{{ step.destination }}</div>
-          <p class="lp-nextstep-guidance">{{ step.guidance }}</p>
-          <div class="lp-nextstep-arrow">
+      <!-- ── Next Steps (left column width) ───────────────────────────────────── -->
+      <div class="lp-nextsteps-outer" *ngIf="lp.nextSteps.length > 0">
+        <div class="lp-section-card lp-nextsteps-card">
+          <div class="lp-card-header">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
             </svg>
+            Next Steps
           </div>
-        </a>
+          <div class="lp-nextsteps-grid">
+            <a
+              *ngFor="let step of lp.nextSteps"
+              [routerLink]="step.route"
+              class="lp-nextstep-card">
+              <div class="lp-nextstep-dest">{{ step.destination }}</div>
+              <p class="lp-nextstep-guidance">{{ step.guidance }}</p>
+              <div class="lp-nextstep-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+            </a>
+          </div>
+        </div>
       </div>
-    </div>
 
   </ng-container>
 </div>

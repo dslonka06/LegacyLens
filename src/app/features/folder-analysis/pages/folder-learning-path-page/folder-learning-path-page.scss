@@ -111,29 +111,22 @@
   display: grid;
   grid-template-columns: 1fr 320px;
   gap: 20px;
-  align-items: stretch;
+  align-items: start;
 }
 
-.lp-col-left {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-
-  .lp-section-card {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .lp-roadmap {
-    flex: 1;
-  }
-}
-
+.lp-col-left,
 .lp-col-right {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.lp-nextsteps-outer {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+
+  .lp-section-card { grid-column: 1; }
 }
 
 // ── Section cards ────────────────────────────────────────────────────────────
@@ -495,7 +488,7 @@
 
 .lp-nextsteps-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
