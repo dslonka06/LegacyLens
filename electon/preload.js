@@ -1,0 +1,1 @@
+console.log('Electron preload initialized');

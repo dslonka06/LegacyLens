@@ -1,13 +1,17 @@
 {
   "name": "legacy-lens",
+  "main": "electron/main.js",
   "version": "0.0.0",
-  "scripts": {
+  "scripts": 
+  {
     "ng": "ng",
+
     "start": "ng serve",
+
     "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
-  },
+
+    "electron": "electron ."
+  }
   "private": true,
   "packageManager": "npm@11.13.0",
   "dependencies": {
@@ -17,6 +21,8 @@
     "@angular/forms": "^21.2.0",
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
+    "electron": "^42.4.1",
+    "electron-builder": "^26.15.3",
     "jspdf": "^2.5.2",
     "monaco-editor": "0.55.1",
     "ngx-monaco-editor-v2": "21.1.4",
