@@ -17,7 +17,7 @@ import { RecommendationAnalysisService } from '@app/analysis/services/recommenda
 import { LearningPathAnalysisService } from '@app/analysis/services/learning-path-analysis.service';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 import { AiKnowledgeService } from '@app/ai/services/ai-knowledge.service';
-import { ResizeDividerComponent } from '@app/layout/resize-divider/resize-divider.component';
+import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
 
 @Component({
   selector: 'app-file-analysis-page',

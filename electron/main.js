@@ -1,37 +1,40 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
+// IPC handlers
+const { registerRepositoryHandlers } = require('./main/ipc/repository.ipc');
+
 function createWindow() {
-    const win = new BrowserWindow({
-        width: 1600,
-        height: 1000,
-        minWidth: 1200,
-        minHeight: 800,
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
-            contextIsolation: true,
-            nodeIntegration: false
-        }
-    });
+  const win = new BrowserWindow({
+    width: 1600,
+    height: 1000,
+    minWidth: 1200,
+    minHeight: 800,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload', 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
 
-    win.loadURL('http://localhost:4200');
-
-    // Optional
-    // win.webContents.openDevTools();
+  win.loadURL('http://localhost:4200');
 }
 
 app.whenReady().then(() => {
-    createWindow();
+  // Register all IPC handlers before creating the window
+  registerRepositoryHandlers();
 
-    app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
-        }
-    });
+  createWindow();
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
 });
 
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit();
-    }
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 });

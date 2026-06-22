@@ -20,7 +20,7 @@ import { LearningPathAnalysisService } from '@app/analysis/services/learning-pat
 import { RepositoryKnowledgeService } from '@app/knowledge/services/repository-knowledge.service';
 import { AiKnowledgeService } from '../../../../ai/services/ai-knowledge.service';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
-import { ResizeDividerComponent } from '@app/layout/resize-divider/resize-divider.component';
+import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
 
 interface TreeFolder {
   kind: 'folder';

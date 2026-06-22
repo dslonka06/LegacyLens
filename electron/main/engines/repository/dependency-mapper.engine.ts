@@ -1,6 +1,29 @@
-import { Injectable } from '@angular/core';
-import { SourceFile } from '../models/knowledge.model';
-import { DependencyEdge, DependencyGraph, DependencyNode } from '../models/knowledge.model';
+// Types from: @app/knowledge/models/knowledge.model
+export interface SourceFile {
+  path: string;
+  content: string;
+  extension: string;
+  language?: string;
+  size?: number;
+}
+
+export interface DependencyNode {
+  id: string;
+  name: string;
+  type: string;
+  path: string;
+}
+
+export interface DependencyEdge {
+  source: string;
+  target: string;
+  relationshipType: string;
+}
+
+export interface DependencyGraph {
+  nodes: DependencyNode[];
+  edges: DependencyEdge[];
+}
 
 // ── Regex patterns ────────────────────────────────────────────────────────────
 
@@ -44,10 +67,9 @@ function allMatches(regex: RegExp, text: string): string[] {
   return results;
 }
 
-// ── Service ───────────────────────────────────────────────────────────────────
+// ── Engine ────────────────────────────────────────────────────────────────────
 
-@Injectable({ providedIn: 'root' })
-export class DependencyMapperService {
+export class DependencyMapperEngine {
 
   buildGraph(sourceFiles: SourceFile[]): DependencyGraph {
     const nodes = new Map<string, DependencyNode>();
@@ -107,18 +129,18 @@ export class DependencyMapperService {
     };
   }
 
-  // ── Inbound/outbound query helpers (used by UI) ──────────────────────────
+  // ── Inbound/outbound query helpers ────────────────────────────────────────
 
-  dependenciesOf(nodeId: string, graph: DependencyGraph): DependencyNode[] {
+  dependenciesOf(id: string, graph: DependencyGraph): DependencyNode[] {
     const targetIds = new Set(
-      graph.edges.filter(e => e.source === nodeId).map(e => e.target)
+      graph.edges.filter(e => e.source === id).map(e => e.target)
     );
     return graph.nodes.filter(n => targetIds.has(n.id));
   }
 
-  dependentsOf(nodeId: string, graph: DependencyGraph): DependencyNode[] {
+  dependentsOf(id: string, graph: DependencyGraph): DependencyNode[] {
     const sourceIds = new Set(
-      graph.edges.filter(e => e.target === nodeId).map(e => e.source)
+      graph.edges.filter(e => e.target === id).map(e => e.source)
     );
     return graph.nodes.filter(n => sourceIds.has(n.id));
   }
@@ -179,7 +201,7 @@ export class DependencyMapperService {
   }
 
   private resolveAliasPath(importPath: string, allFiles: SourceFile[]): string | null {
-    for (const { prefix, real } of DependencyMapperService.PATH_ALIASES) {
+    for (const { prefix, real } of DependencyMapperEngine.PATH_ALIASES) {
       if (!importPath.startsWith(prefix)) continue;
       const rest = importPath.slice(prefix.length);
       const base = real + rest;

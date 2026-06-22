@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs';
-import { Sidebar } from '@app/layout/sidebar/sidebar';
+import { Sidebar } from '@app/shell/sidebar/sidebar';
 import { ThemeService } from '@app/core/services/theme.service';
 
 @Component({

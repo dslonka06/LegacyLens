@@ -8,7 +8,7 @@
     "types": [],
     "paths": {
       "@app/core/*":      ["src/app/core/*"],
-      "@app/layout/*":    ["src/app/layout/*"],
+      "@app/shell/*":     ["src/app/shell/*"],
       "@app/workspace/*": ["src/app/workspace/*"],
       "@app/knowledge/*": ["src/app/knowledge/*"],
       "@app/analysis/*":  ["src/app/analysis/*"],

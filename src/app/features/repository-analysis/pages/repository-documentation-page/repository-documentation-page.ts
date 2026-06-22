@@ -10,7 +10,7 @@ import { RepositorySummaryService } from '@app/analysis/services/repository-summ
 import { DocumentationBuilderService } from '@app/analysis/services/documentation-builder.service';
 import { PdfExportService } from '@app/analysis/services/pdf-export.service';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
-import { ResizeDividerComponent } from '@app/layout/resize-divider/resize-divider.component';
+import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
 
 @Component({
   selector: 'app-repository-documentation-page',
