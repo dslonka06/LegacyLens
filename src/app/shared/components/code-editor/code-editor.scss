@@ -276,21 +276,85 @@
   }
 }
 
-// ─── Monaco container — no additional border ─────────────
-.monaco-container {
+// ─── Code surface ────────────────────────────────────────
+.code-surface {
   flex: 1;
   min-height: 0;
   overflow: hidden;
   position: relative;
+  display: flex;
 }
 
-.monaco-editor-instance {
+// Shiki-rendered view
+.shiki-viewer {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+
+  // Shiki wraps output in <pre><code> — normalize to fill the panel
+  ::ng-deep pre.shiki {
+    margin: 0;
+    padding: 14px 16px;
+    background: var(--editor-bg) !important;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    tab-size: 2;
+    white-space: pre;
+    min-height: 100%;
+    border-radius: 0;
+  }
+
+  ::ng-deep pre.shiki code {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    counter-reset: line;
+    display: block;
+  }
+
+  // Line numbers via CSS counter
+  ::ng-deep pre.shiki code .line {
+    display: block;
+    position: relative;
+    padding-left: 3.5em;
+
+    &::before {
+      content: counter(line);
+      counter-increment: line;
+      position: absolute;
+      left: 0;
+      width: 3em;
+      text-align: right;
+      color: var(--text-muted);
+      opacity: 0.4;
+      font-size: 11px;
+      user-select: none;
+      pointer-events: none;
+    }
+  }
+}
+
+// Textarea — shown only in empty / paste state
+.code-textarea {
+  flex: 1;
   width: 100%;
   height: 100%;
-}
+  resize: none;
+  border: none;
+  outline: none;
+  padding: 14px 16px;
+  background: var(--editor-bg);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  tab-size: 2;
+  white-space: pre;
+  overflow: auto;
 
-::ng-deep .monaco-editor,
-::ng-deep .monaco-editor-background,
-::ng-deep .monaco-editor .margin {
-  background-color: var(--editor-bg) !important;
+  &::placeholder {
+    color: var(--text-muted);
+    opacity: 0.5;
+  }
 }

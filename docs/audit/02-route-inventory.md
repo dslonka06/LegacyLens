@@ -1,4 +1,4 @@
-# Route Inventory — LegacyLens
+# Route Inventory — SystemLens
 
 **Branch:** navigation-redesign
 **Date:** 2026-06-15

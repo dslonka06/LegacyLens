@@ -352,9 +352,9 @@ export class AnalysisEngine {
 
     return {
       language: 'Unknown', type: 'Unknown', complexity: 'Unknown', maintainability: 'Unknown',
-      summary: 'LegacyLens could not identify the code type. Try pasting C#, TypeScript, or SQL code with recognizable patterns.',
+      summary: 'SystemLens could not identify the code type. Try pasting C#, TypeScript, or SQL code with recognizable patterns.',
       businessPurpose: 'Unable to determine business purpose from the provided code.',
-      simplifiedExplanation: 'The code pattern was not recognized. LegacyLens currently supports C#, TypeScript/Angular, and SQL.',
+      simplifiedExplanation: 'The code pattern was not recognized. SystemLens currently supports C#, TypeScript/Angular, and SQL.',
       howItWorks: 'Unable to determine.',
       whyItExists: 'Unable to determine.',
       whatToLearnFirst: [],
@@ -364,7 +364,7 @@ export class AnalysisEngine {
       inputs: [],
       outputs: [],
       dependencies: [],
-      developerNotes: 'LegacyLens could not classify this code. Try providing a cleaner code sample with identifiable patterns.',
+      developerNotes: 'SystemLens could not classify this code. Try providing a cleaner code sample with identifiable patterns.',
       architecture: 'Unable to determine architecture.',
       architectureLayers: [],
       patterns: [],

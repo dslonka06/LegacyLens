@@ -82,7 +82,7 @@ export class AiKnowledgeService {
   }
 
   // ── Context builders ──────────────────────────────────────────────────────
-  // These aggregate LegacyLens knowledge — no raw source code is passed to AI.
+  // These aggregate SystemLens knowledge — no raw source code is passed to AI.
 
   private buildRepositoryContext(
     ctx: WorkspaceContext,

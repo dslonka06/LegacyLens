@@ -2,7 +2,7 @@ import { WorkflowSummary } from './data-flow.model';
 import { RepositoryInsight } from '@app/analysis/services/repository-insights.service';
 
 // Context passed to AI for a repository-level explanation.
-// Populated entirely from LegacyLens knowledge — no raw source code.
+// Populated entirely from SystemLens knowledge — no raw source code.
 export interface RepositoryExplanationContext {
   workspaceName: string;
   workspaceType: string;

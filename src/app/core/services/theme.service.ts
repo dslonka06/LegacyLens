@@ -3,7 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  private readonly STORAGE_KEY = 'legacylens-theme';
+  private readonly STORAGE_KEY = 'systemlens-theme';
   private readonly _isDark = new BehaviorSubject<boolean>(this.loadPreference());
 
   readonly isDark$ = this._isDark.asObservable();

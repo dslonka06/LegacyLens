@@ -1,16 +1,16 @@
-# LegacyLens
+# SystemLens
 
-LegacyLens is a codebase analysis and developer onboarding platform designed to help engineers understand unfamiliar software systems faster.
+SystemLens is a codebase analysis and developer onboarding platform designed to help engineers understand unfamiliar software systems faster.
 
-The project analyzes files, folders, and repositories and transforms them into structured knowledge that helps developers understand architecture, workflows, dependencies, and business logic. LegacyLens was created to reduce the learning curve associated with large or legacy codebases and provide a clearer path for onboarding, maintenance, and modernization efforts.
+The project analyzes files, folders, and repositories and transforms them into structured knowledge that helps developers understand architecture, workflows, dependencies, and business logic. SystemLens was created to reduce the learning curve associated with large or legacy codebases and provide a clearer path for onboarding, maintenance, and modernization efforts.
 
 ---
 
-## Why LegacyLens?
+## Why SystemLens?
 
 Developers often inherit systems with thousands of files, limited documentation, and years of accumulated technical decisions. Understanding how these systems work can take days or weeks.
 
-LegacyLens helps bridge that gap by providing:
+SystemLens helps bridge that gap by providing:
 
 * Repository analysis and technology discovery
 * AI-generated system explanations and summaries
@@ -58,7 +58,7 @@ The goal is simple: help developers spend less time figuring out a codebase and 
 
 ## Future Vision
 
-LegacyLens is being developed into a desktop-first platform capable of running with local AI models and supporting significantly larger repositories.
+SystemLens is being developed into a desktop-first platform capable of running with local AI models and supporting significantly larger repositories.
 
 Future development areas include:
 
@@ -70,7 +70,7 @@ Future development areas include:
 * Deeper workflow and repository understanding
 * Improved verification and accuracy through multiple AI models
 
-By leveraging multiple AI models together, LegacyLens aims to increase the accuracy, consistency, and validation of generated insights while providing richer repository intelligence.
+By leveraging multiple AI models together, SystemLens aims to increase the accuracy, consistency, and validation of generated insights while providing richer repository intelligence.
 
 ---
 

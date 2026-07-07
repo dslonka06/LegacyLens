@@ -1,7 +1,7 @@
 # 07 — Recommended Folder Structure
 
 **Status:** Proposal only. No files have been moved.
-**Scope:** `src/app/` restructure for LegacyLens Angular 21
+**Scope:** `src/app/` restructure for SystemLens Angular 21
 
 ---
 

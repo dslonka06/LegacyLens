@@ -26,7 +26,7 @@ interface ElectronAnalysisAPI {
 interface ElectronFilesystemAPI {
   readFile(path: string): Promise<string>;
   exportPdf(path: string, content: unknown): Promise<void>;
-  openDialog(options: unknown): Promise<string | null>;
+  openDialog(options: unknown): Promise<string[] | null>;
 }
 
 interface ElectronSettingsAPI {

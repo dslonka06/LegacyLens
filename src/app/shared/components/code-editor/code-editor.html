@@ -127,14 +127,30 @@
 
   </div>
 
-  <!-- Monaco Editor -->
-  <div class="monaco-container">
-    <ngx-monaco-editor
-      class="monaco-editor-instance"
-      [options]="editorOptions"
+  <!-- Code surface -->
+  <div class="code-surface">
+
+    <!-- Shiki highlighted view: shown when code is loaded -->
+    <div
+      *ngIf="highlightedHtml"
+      class="shiki-viewer"
+      [innerHTML]="highlightedHtml">
+    </div>
+
+    <!-- Editable textarea: shown when no highlighted output yet (paste / empty state) -->
+    <textarea
+      *ngIf="!highlightedHtml"
+      class="code-textarea"
       [(ngModel)]="code"
-      (onInit)="onEditorInit($event)">
-    </ngx-monaco-editor>
+      spellcheck="false"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="off"
+      wrap="off"
+      placeholder="Paste or upload source code…"
+      (blur)="onTextareaBlur()">
+    </textarea>
+
   </div>
 
 </div>

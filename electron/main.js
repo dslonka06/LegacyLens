@@ -3,6 +3,10 @@ const path = require('path');
 
 // IPC handlers
 const { registerRepositoryHandlers } = require('./main/ipc/repository.ipc');
+const { registerFilesystemHandlers } = require('./main/ipc/filesystem.ipc');
+const { registerWorkspaceHandlers } = require('./main/ipc/workspace.ipc');
+const { registerAnalysisHandlers } = require('./main/ipc/analysis.ipc');
+const { registerSettingsHandlers } = require('./main/ipc/settings.ipc');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -10,6 +14,7 @@ function createWindow() {
     height: 1000,
     minWidth: 1200,
     minHeight: 800,
+    icon: path.join(__dirname, 'assets', 'icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload', 'preload.js'),
       contextIsolation: true,
@@ -17,12 +22,19 @@ function createWindow() {
     },
   });
 
-  win.loadURL('http://localhost:4200');
+  if (app.isPackaged) {
+    win.loadFile(path.join(__dirname, '..', 'dist', 'browser', 'index.html'));
+  } else {
+    win.loadURL('http://localhost:4200');
+  }
 }
 
 app.whenReady().then(() => {
-  // Register all IPC handlers before creating the window
   registerRepositoryHandlers();
+  registerFilesystemHandlers();
+  registerWorkspaceHandlers();
+  registerAnalysisHandlers();
+  registerSettingsHandlers();
 
   createWindow();
 

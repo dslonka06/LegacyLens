@@ -1,6 +1,6 @@
 # NPM Dependency Audit
 
-**Project:** LegacyLens  
+**Project:** SystemLens  
 **Date:** 2026-06-15  
 **Total Dependencies Audited:** 18 (11 runtime + 5 devDependencies + 2 mixed-role)
 
