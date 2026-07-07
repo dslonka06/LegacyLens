@@ -1,16 +1,23 @@
 const { ipcMain } = require('electron');
+const { AnalysisService } = require('../services/analysis/analysis.service');
 
-/**
- * Analysis IPC handlers — Phase 2+
- * Registered in electron/main.js when this module is required.
- */
+const analysisService = new AnalysisService();
+
 function registerAnalysisHandlers() {
-  ipcMain.handle('analysis:run', async (_event, workspaceId, options) => {
-    throw new Error('analysis:run not implemented — Phase 2');
+  ipcMain.handle('analysis:save', (_event, data) => {
+    return analysisService.save(data);
   });
 
-  ipcMain.handle('analysis:getResult', async (_event, workspaceId) => {
-    throw new Error('analysis:getResult not implemented — Phase 2');
+  ipcMain.handle('analysis:getLatest', (_event, repositoryId) => {
+    return analysisService.getLatest(repositoryId);
+  });
+
+  ipcMain.handle('analysis:getHistory', (_event, repositoryId) => {
+    return analysisService.getHistory(repositoryId);
+  });
+
+  ipcMain.handle('analysis:delete', (_event, id) => {
+    return analysisService.delete(id);
   });
 }
 

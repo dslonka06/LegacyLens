@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { firstValueFrom } from 'rxjs';
 import { SyntaxHighlightService } from '@app/core/services/syntax-highlight.service';
+import { ElectronService } from '@app/core/services/electron.service';
 import { AnalysisService } from '@app/analysis/services/analysis.service';
 import { AiAnalysisService } from '@app/ai/services/ai-analysis.service';
 import { FileInventoryService } from '@app/knowledge/services/file-inventory.service';
@@ -105,7 +106,8 @@ export class CodeEditor implements OnChanges, OnDestroy {
     private readonly cdr: ChangeDetectorRef,
     private readonly zone: NgZone,
     private readonly highlighter: SyntaxHighlightService,
-    private readonly sanitizer: DomSanitizer
+    private readonly sanitizer: DomSanitizer,
+    readonly electronService: ElectronService
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -230,6 +232,25 @@ export class CodeEditor implements OnChanges, OnDestroy {
     const files = Array.from(input.files).filter(f => !this.isIgnoredPath(f));
     this.processFiles(files);
     input.value = '';
+  }
+
+  async onElectronFolderPick(): Promise<void> {
+    const result = await this.electronService.pickAndReadFolder('Select Project Folder');
+    if (!result) return;
+
+    const files = result.files.map(entry => {
+      // content is null for non-source/oversized files — empty blob preserves workspace
+      // structure (file count, extension distribution) without loading unnecessary bytes
+      const blob = new Blob([entry.content ?? ''], { type: 'text/plain' });
+      const file = new File([blob], entry.name, { type: 'text/plain' });
+      Object.defineProperty(file, 'webkitRelativePath', {
+        value: entry.relativePath,
+        writable: false,
+      });
+      return file;
+    });
+
+    this.zone.run(() => this.processFiles(files));
   }
 
   private processFiles(files: File[]): void {

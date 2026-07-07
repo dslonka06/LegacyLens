@@ -1,11 +1,11 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
-// IPC handlers
+const { openDatabase } = require('./main/database/database');
 const { registerRepositoryHandlers } = require('./main/ipc/repository.ipc');
 const { registerFilesystemHandlers } = require('./main/ipc/filesystem.ipc');
-const { registerWorkspaceHandlers } = require('./main/ipc/workspace.ipc');
 const { registerAnalysisHandlers } = require('./main/ipc/analysis.ipc');
+const { registerFileMetadataHandlers } = require('./main/ipc/files.ipc');
 const { registerSettingsHandlers } = require('./main/ipc/settings.ipc');
 
 function createWindow() {
@@ -30,10 +30,12 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  openDatabase();
+
   registerRepositoryHandlers();
   registerFilesystemHandlers();
-  registerWorkspaceHandlers();
   registerAnalysisHandlers();
+  registerFileMetadataHandlers();
   registerSettingsHandlers();
 
   createWindow();

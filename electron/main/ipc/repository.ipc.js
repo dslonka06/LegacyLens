@@ -3,23 +3,24 @@ const { RepositoryLibraryService } = require('../services/repository/repository-
 
 const repositoryService = new RepositoryLibraryService();
 
-/**
- * Repository Library IPC handlers.
- * Phase 1 proof-of-concept: validates that the full IPC pipe works
- * (contextBridge → ipcRenderer.invoke → ipcMain.handle → service → response).
- *
- * Phase 2: RepositoryLibraryService will persist to SQLite instead of in-memory.
- */
 function registerRepositoryHandlers() {
-  ipcMain.handle('repositories:getAll', async () => {
+  ipcMain.handle('repositories:getAll', () => {
     return repositoryService.getAll();
   });
 
-  ipcMain.handle('repositories:add', async (_event, request) => {
+  ipcMain.handle('repositories:add', (_event, request) => {
     return repositoryService.add(request);
   });
 
-  ipcMain.handle('repositories:remove', async (_event, id) => {
+  ipcMain.handle('repositories:update', (_event, id, updates) => {
+    return repositoryService.update(id, updates);
+  });
+
+  ipcMain.handle('repositories:touch', (_event, id) => {
+    return repositoryService.touch(id);
+  });
+
+  ipcMain.handle('repositories:remove', (_event, id) => {
     return repositoryService.remove(id);
   });
 }

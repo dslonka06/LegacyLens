@@ -1,26 +1,22 @@
 const { randomUUID } = require('crypto');
+const { getDatabase } = require('../../database/database');
 
-/**
- * In-memory repository library.
- * Phase 1: stores known repositories in memory (lost on app restart).
- * Phase 2: this class will persist to SQLite — the public API stays the same.
- */
 class RepositoryLibraryService {
-  /** @type {Array<{id: string, name: string, path: string, addedAt: string, lastOpenedAt: string|null}>} */
-  #repositories = [];
 
   /**
-   * Returns all known repositories.
-   * @returns {Array<{id: string, name: string, path: string, addedAt: string, lastOpenedAt: string|null}>}
+   * Returns all repositories ordered by most recently opened.
+   * @returns {Array<{id, name, path, language, framework, gitUrl, gitBranch, addedAt, lastOpened}>}
    */
   getAll() {
-    return [...this.#repositories];
+    return getDatabase()
+      .prepare('SELECT * FROM repositories ORDER BY last_opened DESC, added_at DESC')
+      .all()
+      .map(toRepository);
   }
 
   /**
-   * Adds a repository to the library.
-   * @param {{name: string, path: string}} request
-   * @returns {{id: string, name: string, path: string, addedAt: string, lastOpenedAt: string|null}}
+   * Adds a repository. If the path already exists, returns the existing record.
+   * @param {{name: string, path: string, language?: string, framework?: string, gitUrl?: string, gitBranch?: string}} request
    */
   add(request) {
     if (!request?.name || typeof request.name !== 'string') {
@@ -30,34 +26,91 @@ class RepositoryLibraryService {
       throw new Error('Repository path is required');
     }
 
-    const existing = this.#repositories.find(r => r.path === request.path);
-    if (existing) {
-      return existing;
-    }
+    const db = getDatabase();
+    const existing = db.prepare('SELECT * FROM repositories WHERE path = ?').get(request.path.trim());
+    if (existing) return toRepository(existing);
 
     const repo = {
       id: randomUUID(),
       name: request.name.trim(),
       path: request.path.trim(),
-      addedAt: new Date().toISOString(),
-      lastOpenedAt: null,
+      language: request.language ?? null,
+      framework: request.framework ?? null,
+      git_url: request.gitUrl ?? null,
+      git_branch: request.gitBranch ?? null,
+      added_at: new Date().toISOString(),
+      last_opened: null,
     };
 
-    this.#repositories.push(repo);
-    return repo;
+    db.prepare(`
+      INSERT INTO repositories (id, name, path, language, framework, git_url, git_branch, added_at, last_opened)
+      VALUES (@id, @name, @path, @language, @framework, @git_url, @git_branch, @added_at, @last_opened)
+    `).run(repo);
+
+    return toRepository(repo);
   }
 
   /**
-   * Removes a repository by ID.
+   * Updates the last_opened timestamp for a repository.
    * @param {string} id
-   * @returns {boolean} true if removed, false if not found
+   */
+  touch(id) {
+    getDatabase()
+      .prepare('UPDATE repositories SET last_opened = ? WHERE id = ?')
+      .run(new Date().toISOString(), id);
+  }
+
+  /**
+   * Updates metadata fields on an existing repository.
+   * @param {string} id
+   * @param {{name?: string, language?: string, framework?: string, gitUrl?: string, gitBranch?: string}} updates
+   */
+  update(id, updates) {
+    const db = getDatabase();
+    const current = db.prepare('SELECT * FROM repositories WHERE id = ?').get(id);
+    if (!current) throw new Error(`Repository ${id} not found`);
+
+    db.prepare(`
+      UPDATE repositories
+      SET name = ?, language = ?, framework = ?, git_url = ?, git_branch = ?
+      WHERE id = ?
+    `).run(
+      updates.name ?? current.name,
+      updates.language ?? current.language,
+      updates.framework ?? current.framework,
+      updates.gitUrl ?? current.git_url,
+      updates.gitBranch ?? current.git_branch,
+      id,
+    );
+
+    return toRepository(db.prepare('SELECT * FROM repositories WHERE id = ?').get(id));
+  }
+
+  /**
+   * Removes a repository and all its associated analyses and file metadata.
+   * @param {string} id
+   * @returns {boolean}
    */
   remove(id) {
-    const index = this.#repositories.findIndex(r => r.id === id);
-    if (index === -1) return false;
-    this.#repositories.splice(index, 1);
-    return true;
+    const result = getDatabase()
+      .prepare('DELETE FROM repositories WHERE id = ?')
+      .run(id);
+    return result.changes > 0;
   }
+}
+
+function toRepository(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    path: row.path,
+    language: row.language ?? null,
+    framework: row.framework ?? null,
+    gitUrl: row.git_url ?? null,
+    gitBranch: row.git_branch ?? null,
+    addedAt: row.added_at,
+    lastOpened: row.last_opened ?? null,
+  };
 }
 
 module.exports = { RepositoryLibraryService };

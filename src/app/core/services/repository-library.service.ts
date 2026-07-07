@@ -1,24 +1,9 @@
 import { Injectable } from '@angular/core';
+import type { ElectronRepository, AddRepositoryRequest, UpdateRepositoryRequest } from '../../../electron';
 
-export interface Repository {
-  id: string;
-  name: string;
-  path: string;
-  addedAt: string;
-  lastOpenedAt: string | null;
-}
+// Re-export for components that imported from this file
+export type { ElectronRepository as Repository, AddRepositoryRequest, UpdateRepositoryRequest };
 
-export interface AddRepositoryRequest {
-  name: string;
-  path: string;
-}
-
-/**
- * Angular facade over the Electron RepositoryLibraryService.
- * When running inside Electron, delegates to window.electronAPI.repositories.
- * When running in the browser (ng serve without Electron), falls back to an
- * in-memory stub so development remains uninterrupted.
- */
 @Injectable({ providedIn: 'root' })
 export class RepositoryLibraryService {
 
@@ -26,36 +11,42 @@ export class RepositoryLibraryService {
     return (window as any).electronAPI?.repositories ?? null;
   }
 
-  async getAll(): Promise<Repository[]> {
-    if (this.api) {
-      return this.api.getAll();
-    }
+  get isElectron(): boolean {
+    return !!(window as any).electronAPI;
+  }
+
+  async getAll(): Promise<ElectronRepository[]> {
+    if (this.api) return this.api.getAll();
     return [];
   }
 
-  async add(request: AddRepositoryRequest): Promise<Repository> {
-    if (this.api) {
-      return this.api.add(request);
-    }
-    // Browser stub: return a mock so UI development works without Electron
+  async add(request: AddRepositoryRequest): Promise<ElectronRepository> {
+    if (this.api) return this.api.add(request);
+    // Browser stub for ng serve development
     return {
       id: crypto.randomUUID(),
       name: request.name,
       path: request.path,
+      language: request.language ?? null,
+      framework: request.framework ?? null,
+      gitUrl: request.gitUrl ?? null,
+      gitBranch: request.gitBranch ?? null,
       addedAt: new Date().toISOString(),
-      lastOpenedAt: null,
+      lastOpened: null,
     };
   }
 
-  async remove(id: string): Promise<boolean> {
-    if (this.api) {
-      return this.api.remove(id);
-    }
-    return false;
+  async update(id: string, updates: UpdateRepositoryRequest): Promise<ElectronRepository | null> {
+    if (this.api) return this.api.update(id, updates);
+    return null;
   }
 
-  /** Returns true when running inside Electron (IPC is available). */
-  get isElectron(): boolean {
-    return !!(window as any).electronAPI;
+  async touch(id: string): Promise<void> {
+    if (this.api) return this.api.touch(id);
+  }
+
+  async remove(id: string): Promise<boolean> {
+    if (this.api) return this.api.remove(id);
+    return false;
   }
 }
