@@ -11,6 +11,9 @@ LegacyLens.Api/obj/
 /out-tsc
 /bazel-out
 
+# Electron build output — binaries are not committed
+/release
+
 # Node
 /node_modules
 npm-debug.log
