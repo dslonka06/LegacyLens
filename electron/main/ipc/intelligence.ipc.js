@@ -16,8 +16,10 @@ const { RecommendationAnalysisEngine } = require('../engines/analysis/recommenda
 const { SecurityAnalysisEngine } = require('../engines/analysis/security-analysis.engine');
 const { RepositoryInsightsEngine } = require('../engines/analysis/repository-insights.engine');
 const { RepositorySummaryEngine } = require('../engines/analysis/repository-summary.engine');
+const { CapabilityPipelineEngine } = require('../engines/core/capability-pipeline.engine');
 
 const analysisEngine = new AnalysisEngine();
+const capabilityPipeline = new CapabilityPipelineEngine();
 const architectureDetector = new ArchitectureDetectorEngine();
 const dependencyExplorer = new DependencyExplorerEngine();
 const dependencyMapper = new DependencyMapperEngine();
@@ -126,6 +128,20 @@ function registerIntelligenceHandlers() {
   // intelligence:buildSummary — build a workspace summary from context, knowledge, and session
   ipcMain.handle('intelligence:buildSummary', wrapHandler(async (_event, workspaceContext, knowledge, session) => {
     return repositorySummary.build(workspaceContext, knowledge, session);
+  }));
+
+  // intelligence:runPipeline — D2/D3: run capability pipeline for a validated target
+  ipcMain.handle('intelligence:runPipeline', wrapHandler(async (_event, targetType, files) => {
+    if (!targetType || !['file', 'folder', 'repository'].includes(targetType)) {
+      throw new Error('targetType must be one of: file, folder, repository');
+    }
+    if (!Array.isArray(files)) throw new Error('files must be an array');
+    return capabilityPipeline.run(targetType, files);
+  }));
+
+  // intelligence:capabilitiesFor — return which capabilities will run for a target type
+  ipcMain.handle('intelligence:capabilitiesFor', wrapHandler(async (_event, targetType) => {
+    return capabilityPipeline.capabilitiesFor(targetType);
   }));
 }
 

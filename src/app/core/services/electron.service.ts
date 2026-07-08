@@ -263,4 +263,16 @@ export class ElectronService {
     if (!this.api) return { detected: 'unknown' };
     return this.api.validation.detectTarget(path);
   }
+
+  // ── Capability Pipeline (D2/D3) ───────────────────────────────────────────
+
+  async runPipeline(targetType: 'file' | 'folder' | 'repository', files: unknown[]): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.runPipeline(targetType, files);
+  }
+
+  async capabilitiesFor(targetType: 'file' | 'folder' | 'repository'): Promise<string[]> {
+    if (!this.api) return [];
+    return this.api.intelligence.capabilitiesFor(targetType);
+  }
 }

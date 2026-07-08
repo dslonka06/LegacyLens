@@ -136,6 +136,27 @@ interface ElectronAiAPI {
   setProviderUrl(url: string | null): Promise<void>;
 }
 
+export type AnalysisTargetType = 'file' | 'folder' | 'repository';
+
+export interface PipelineResult {
+  targetType: AnalysisTargetType;
+  plannedCapabilities: string[];
+  executedCapabilities: string[];
+  capabilityErrors: Record<string, string>;
+  parsedFiles: unknown[];
+  languages: string[];
+  detectedTechnologies: unknown[];
+  frameworks: string[];
+  symbolIndex: Record<string, unknown>;
+  folderStructure: unknown | null;
+  dependencyGraph: unknown | null;
+  dependencyHubs: unknown[];
+  dependencyRanks: unknown[];
+  projects: unknown[];
+  gitAnalysis: { available: boolean; reason: string } | null;
+  architectureHints: string[] | null;
+}
+
 interface ElectronIntelligenceAPI {
   analyzeCode(code: string): Promise<unknown>;
   detectArchitecture(structure: unknown, graph: unknown): Promise<unknown>;
@@ -153,6 +174,8 @@ interface ElectronIntelligenceAPI {
   security(session: unknown, knowledge: unknown): Promise<unknown>;
   insights(knowledge: unknown): Promise<unknown[]>;
   buildSummary(workspaceContext: unknown, knowledge: unknown, session: unknown): Promise<unknown>;
+  runPipeline(targetType: AnalysisTargetType, files: unknown[]): Promise<PipelineResult>;
+  capabilitiesFor(targetType: AnalysisTargetType): Promise<string[]>;
 }
 
 interface ElectronValidationAPI {

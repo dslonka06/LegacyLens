@@ -87,6 +87,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     security:             (session, knowledge)                => invoke('intelligence:security', session, knowledge),
     insights:             (knowledge)                         => invoke('intelligence:insights', knowledge),
     buildSummary:         (workspaceContext, knowledge, session) => invoke('intelligence:buildSummary', workspaceContext, knowledge, session),
+    runPipeline:          (targetType, files)                   => invoke('intelligence:runPipeline', targetType, files),
+    capabilitiesFor:      (targetType)                          => invoke('intelligence:capabilitiesFor', targetType),
   },
 
   // ── Validation ────────────────────────────────────────────────────────────
