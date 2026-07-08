@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, from, throwError } from 'rxjs';
-import { catchError, map, timeout } from 'rxjs/operators';
+import { catchError, map, switchMap, timeout } from 'rxjs/operators';
 import {
   RepositoryExplanationContext,
   WorkflowExplanationContext,
@@ -52,9 +52,9 @@ export class AiKnowledgeService {
     ctx: WorkspaceContext,
     knowledge: RepositoryKnowledge,
   ): Observable<string> {
-    const context = this.buildRepositoryContext(ctx, knowledge);
-    const prompt = this.repoPrompt.build(context);
-    return this.callApi(prompt);
+    return from(this.buildRepositoryContext(ctx, knowledge)).pipe(
+      switchMap(context => this.callApi(this.repoPrompt.build(context))),
+    );
   }
 
   generateSecurityOverview(
@@ -86,17 +86,17 @@ export class AiKnowledgeService {
   // ── Context builders ──────────────────────────────────────────────────────
   // These aggregate SystemLens knowledge — no raw source code is passed to AI.
 
-  private buildRepositoryContext(
+  private async buildRepositoryContext(
     ctx: WorkspaceContext,
     knowledge: RepositoryKnowledge,
-  ): RepositoryExplanationContext {
+  ): Promise<RepositoryExplanationContext> {
     const summary = this.summaryService.build(ctx, knowledge, null);
-    const insights: RepositoryInsight[] = this.insightsService.analyze(knowledge);
-    const flows = this.dataFlowDiscovery.discoverWorkflows(
+    const insights: RepositoryInsight[] = await this.insightsService.analyze(knowledge);
+    const flows = await this.dataFlowDiscovery.discoverWorkflows(
       knowledge,
       ctx.profile.repositoryStructure ?? undefined,
     );
-    const workflows = this.workflowExplorer.buildSummaries(flows);
+    const workflows = await this.workflowExplorer.buildSummaries(flows);
 
     return {
       workspaceName:        ctx.workspaceName,

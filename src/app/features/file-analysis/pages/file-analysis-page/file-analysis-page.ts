@@ -83,7 +83,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     this.limitSub?.unsubscribe();
   }
 
-  onSessionCreated(session: AnalysisSession): void {
+  async onSessionCreated(session: AnalysisSession): Promise<void> {
     this.session = session;
     this.restoredFileName = session.fileName;
     this.restoredSourceCode = session.sourceCode;
@@ -92,15 +92,15 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     const id = this.manager.activeId;
     if (id) {
       this.manager.rename(id, session.fileName);
-      const security = this.securityService.analyzeFile(session);
+      const security = await this.securityService.analyzeFile(session);
       this.manager.setSecurityAnalysis(id, security);
-      const understanding = this.understandingService.analyzeFile(session);
+      const understanding = await this.understandingService.analyzeFile(session);
       this.manager.setSystemUnderstanding(id, understanding);
-      const recs = this.recService.analyzeFile(session);
+      const recs = await this.recService.analyzeFile(session);
       this.manager.setRecommendationAnalysis(id, recs);
       const ws = this.manager.getById(id);
       if (ws?.systemUnderstanding) {
-        const lp = this.learningPathService.analyzeFile(session, ws.systemUnderstanding);
+        const lp = await this.learningPathService.analyzeFile(session, ws.systemUnderstanding);
         this.manager.setLearningPathAnalysis(id, lp);
       }
 

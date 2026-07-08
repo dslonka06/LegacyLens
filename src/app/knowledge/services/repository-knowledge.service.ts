@@ -50,14 +50,14 @@ export class RepositoryKnowledgeService {
     this.manager.setKnowledgeState(id, KnowledgeState.BuildingDependencies);
     let dependencyGraph = undefined;
     try {
-      dependencyGraph = this.dependencyMapper.buildGraph(sourceFiles);
+      dependencyGraph = await this.dependencyMapper.buildGraph(sourceFiles);
     } catch { /* non-fatal */ }
 
     this.manager.setKnowledgeState(id, KnowledgeState.DetectingArchitecture);
     let architecture = undefined;
     try {
       if (profile.repositoryStructure && dependencyGraph) {
-        architecture = this.architectureDetector.detect(profile.repositoryStructure, dependencyGraph);
+        architecture = await this.architectureDetector.detect(profile.repositoryStructure, dependencyGraph);
       }
     } catch { /* non-fatal */ }
 

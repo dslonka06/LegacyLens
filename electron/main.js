@@ -8,6 +8,7 @@ const { registerAnalysisHandlers } = require('./main/ipc/analysis.ipc');
 const { registerFileMetadataHandlers } = require('./main/ipc/files.ipc');
 const { registerSettingsHandlers } = require('./main/ipc/settings.ipc');
 const { registerAiHandlers } = require('./main/ipc/ai.ipc');
+const { registerIntelligenceHandlers } = require('./main/ipc/intelligence.ipc');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -39,6 +40,7 @@ app.whenReady().then(() => {
   registerFileMetadataHandlers();
   registerSettingsHandlers();
   registerAiHandlers();
+  registerIntelligenceHandlers();
 
   createWindow();
 

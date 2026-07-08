@@ -53,7 +53,7 @@ export class RepositorySearchService implements OnDestroy {
         this.currentWorkspace.context$.pipe(distinctUntilChanged()),
         this.knowledgeService.knowledge$.pipe(distinctUntilChanged()),
       ]).subscribe(([ctx, knowledge]) => {
-        this.buildIndex(ctx, knowledge);
+        void this.buildIndex(ctx, knowledge);
       })
     );
   }
@@ -95,7 +95,7 @@ export class RepositorySearchService implements OnDestroy {
 
   // ── Index build ───────────────────────────────────────────────────────────
 
-  private buildIndex(ctx: WorkspaceContext | null, knowledge: RepositoryKnowledge | null): void {
+  private async buildIndex(ctx: WorkspaceContext | null, knowledge: RepositoryKnowledge | null): Promise<void> {
     this.index = [];
     this._indexReady$.next(false);
 
@@ -107,12 +107,12 @@ export class RepositorySearchService implements OnDestroy {
 
     if (knowledge) {
       this.indexDependencyNodes(knowledge);
-      this.indexInsights(knowledge);
-      this.indexWorkflows(knowledge, ctx);
+      await this.indexInsights(knowledge);
+      await this.indexWorkflows(knowledge, ctx);
     }
 
     if (ctx) {
-      this.indexDocumentationSections(ctx, knowledge);
+      await this.indexDocumentationSections(ctx, knowledge);
     }
 
     this._indexReady$.next(true);
@@ -218,8 +218,8 @@ export class RepositorySearchService implements OnDestroy {
   }
 
   // Dependency graph–derived insights
-  private indexInsights(knowledge: RepositoryKnowledge): void {
-    const insights: RepositoryInsight[] = this.insightsService.analyze(knowledge);
+  private async indexInsights(knowledge: RepositoryKnowledge): Promise<void> {
+    const insights: RepositoryInsight[] = await this.insightsService.analyze(knowledge);
     for (const insight of insights) {
       this.index.push({
         id:          `insight:${insight.title}`,
@@ -238,12 +238,12 @@ export class RepositorySearchService implements OnDestroy {
   }
 
   // Workflows discovered from data flow
-  private indexWorkflows(knowledge: RepositoryKnowledge, ctx: WorkspaceContext | null): void {
+  private async indexWorkflows(knowledge: RepositoryKnowledge, ctx: WorkspaceContext | null): Promise<void> {
     const structure = ctx?.profile.repositoryStructure;
     const flows = structure
-      ? this.dataFlowDiscovery.discoverWorkflows(knowledge, structure)
-      : this.dataFlowDiscovery.discoverWorkflows(knowledge);
-    const summaries: WorkflowSummary[] = this.workflowExplorer.buildSummaries(flows);
+      ? await this.dataFlowDiscovery.discoverWorkflows(knowledge, structure)
+      : await this.dataFlowDiscovery.discoverWorkflows(knowledge);
+    const summaries: WorkflowSummary[] = await this.workflowExplorer.buildSummaries(flows);
 
     for (const wf of summaries) {
       this.index.push({
@@ -264,8 +264,8 @@ export class RepositorySearchService implements OnDestroy {
   }
 
   // Documentation sections from the doc builder
-  private indexDocumentationSections(ctx: WorkspaceContext, knowledge: RepositoryKnowledge | null): void {
-    const summary = this.summaryService.build(ctx, knowledge, null);
+  private async indexDocumentationSections(ctx: WorkspaceContext, knowledge: RepositoryKnowledge | null): Promise<void> {
+    const summary = await this.summaryService.build(ctx, knowledge, null);
     const sections = this.docBuilder.buildSectionList(summary);
 
     for (const section of sections) {

@@ -68,4 +68,24 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getProviderUrl:  ()                    => invoke('ai:getProviderUrl'),
     setProviderUrl:  (url)                 => invoke('ai:setProviderUrl', url),
   },
+
+  // ── Intelligence Engine ───────────────────────────────────────────────────
+  intelligence: {
+    analyzeCode:          (code)                              => invoke('intelligence:analyzeCode', code),
+    detectArchitecture:   (structure, graph)                  => invoke('intelligence:detectArchitecture', structure, graph),
+    buildDependencyGraph: (sourceFiles)                       => invoke('intelligence:buildDependencyGraph', sourceFiles),
+    exploreDependencies:  (graph)                             => invoke('intelligence:exploreDependencies', graph),
+    detectTechnologies:   (files)                             => invoke('intelligence:detectTechnologies', files),
+    discoverProjects:     (files)                             => invoke('intelligence:discoverProjects', files),
+    scanRepository:       (files)                             => invoke('intelligence:scanRepository', files),
+    classifyWorkspace:    (files)                             => invoke('intelligence:classifyWorkspace', files),
+    systemUnderstanding:  (session, knowledge)                => invoke('intelligence:systemUnderstanding', session, knowledge),
+    exploreWorkflows:     (flows)                             => invoke('intelligence:exploreWorkflows', flows),
+    learningPath:         (session, knowledge, understanding, scope) => invoke('intelligence:learningPath', session, knowledge, understanding, scope),
+    discoverDataFlows:    (knowledge, structure)              => invoke('intelligence:discoverDataFlows', knowledge, structure),
+    recommendations:      (session, knowledge)                => invoke('intelligence:recommendations', session, knowledge),
+    security:             (session, knowledge)                => invoke('intelligence:security', session, knowledge),
+    insights:             (knowledge)                         => invoke('intelligence:insights', knowledge),
+    buildSummary:         (workspaceContext, knowledge, session) => invoke('intelligence:buildSummary', workspaceContext, knowledge, session),
+  },
 });

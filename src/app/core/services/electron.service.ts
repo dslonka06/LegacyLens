@@ -174,4 +174,86 @@ export class ElectronService {
     if (!this.api) return;
     return this.api.ai.setProviderUrl(url);
   }
+
+  // ── Intelligence Engine ───────────────────────────────────────────────────
+
+  async intelligenceAnalyzeCode(code: string): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.analyzeCode(code);
+  }
+
+  async intelligenceDetectArchitecture(structure: unknown, graph: unknown): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.detectArchitecture(structure, graph);
+  }
+
+  async intelligenceBuildDependencyGraph(sourceFiles: unknown[]): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.buildDependencyGraph(sourceFiles);
+  }
+
+  async intelligenceExploreDependencies(graph: unknown): Promise<{ hubs: unknown[]; orphans: unknown[]; ranked: unknown[] } | null> {
+    if (!this.api) return null;
+    return this.api.intelligence.exploreDependencies(graph);
+  }
+
+  async intelligenceDetectTechnologies(files: unknown[]): Promise<unknown[]> {
+    if (!this.api) return [];
+    return this.api.intelligence.detectTechnologies(files);
+  }
+
+  async intelligenceDiscoverProjects(files: unknown[]): Promise<unknown[]> {
+    if (!this.api) return [];
+    return this.api.intelligence.discoverProjects(files);
+  }
+
+  async intelligenceScanRepository(files: unknown[]): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.scanRepository(files);
+  }
+
+  async intelligenceClassifyWorkspace(files: unknown[]): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.classifyWorkspace(files);
+  }
+
+  async intelligenceSystemUnderstanding(session: unknown, knowledge: unknown): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.systemUnderstanding(session, knowledge);
+  }
+
+  async intelligenceExploreWorkflows(flows: unknown[]): Promise<unknown[]> {
+    if (!this.api) return [];
+    return this.api.intelligence.exploreWorkflows(flows);
+  }
+
+  async intelligenceLearningPath(session: unknown, knowledge: unknown, understanding: unknown, scope: string): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.learningPath(session, knowledge, understanding, scope);
+  }
+
+  async intelligenceDiscoverDataFlows(knowledge: unknown, structure: unknown): Promise<unknown[]> {
+    if (!this.api) return [];
+    return this.api.intelligence.discoverDataFlows(knowledge, structure);
+  }
+
+  async intelligenceRecommendations(session: unknown, knowledge: unknown): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.recommendations(session, knowledge);
+  }
+
+  async intelligenceSecurity(session: unknown, knowledge: unknown): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.security(session, knowledge);
+  }
+
+  async intelligenceInsights(knowledge: unknown): Promise<unknown[]> {
+    if (!this.api) return [];
+    return this.api.intelligence.insights(knowledge);
+  }
+
+  async intelligenceBuildSummary(workspaceContext: unknown, knowledge: unknown, session: unknown): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.buildSummary(workspaceContext, knowledge, session);
+  }
 }

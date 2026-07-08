@@ -253,14 +253,14 @@ export class CodeEditor implements OnChanges, OnDestroy {
     this.zone.run(() => this.processFiles(files));
   }
 
-  private processFiles(files: File[]): void {
+  private async processFiles(files: File[]): Promise<void> {
     if (files.length === 0) return;
 
     this.isLoadingFile = true;
     this.uploadedFiles = files;
 
     const metadata = this.fileInventory.buildMetadata(files);
-    this.workspaceProfile = this.workspaceClassifier.classify(metadata);
+    this.workspaceProfile = await this.workspaceClassifier.classify(metadata);
     this.currentWorkspace.set(this.workspaceProfile, files);
     this.workspaceReady.emit(this.workspaceProfile);
     this.filesUploaded.emit(files);
@@ -314,7 +314,7 @@ export class CodeEditor implements OnChanges, OnDestroy {
     this.aiError = null;
     this.cdr.detectChanges();
 
-    const patternResult = this.analysisService.analyze(this.code);
+    const patternResult = await this.analysisService.analyze(this.code);
     const session: AnalysisSession = {
       scope: this.activeScope,
       fileName: this.fileName,

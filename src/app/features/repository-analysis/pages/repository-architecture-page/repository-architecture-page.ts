@@ -19,6 +19,7 @@ export class RepositoryArchitecturePage implements OnInit, OnDestroy {
 
   knowledge: RepositoryKnowledge | null = null;
   hasWorkspace = false;
+  hubList: Array<{ name: string; degree: number }> = [];
 
   private subs: Subscription[] = [];
 
@@ -32,10 +33,18 @@ export class RepositoryArchitecturePage implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.knowledge = this.knowledgeService.knowledge;
     this.hasWorkspace = this.workspace.context !== null;
+    void this.refreshHubs(this.knowledge);
     this.subs.push(
-      this.knowledgeService.knowledge$.subscribe(k => { this.knowledge = k; }),
+      this.knowledgeService.knowledge$.subscribe(k => { this.knowledge = k; void this.refreshHubs(k); }),
       this.workspace.context$.subscribe(ctx => { this.hasWorkspace = ctx !== null; }),
     );
+  }
+
+  private async refreshHubs(knowledge: RepositoryKnowledge | null): Promise<void> {
+    const graph = knowledge?.dependencyGraph;
+    if (!graph) { this.hubList = []; return; }
+    const hubs = await this.depExplorer.dependencyHubs(graph);
+    this.hubList = hubs.slice(0, 8).map(h => ({ name: h.node.name, degree: h.degree }));
   }
 
   ngOnDestroy(): void { this.subs.forEach(s => s.unsubscribe()); }
@@ -57,13 +66,7 @@ export class RepositoryArchitecturePage implements OnInit, OnDestroy {
   }
 
   get hubs(): Array<{ name: string; degree: number }> {
-    const graph = this.knowledge?.dependencyGraph;
-    if (!graph) return [];
-    const hubs = this.depExplorer.dependencyHubs(graph);
-    return hubs.slice(0, 8).map(h => ({
-      name: h.node.name,
-      degree: h.degree,
-    }));
+    return this.hubList;
   }
 
   get topDependencies(): string[] {

@@ -45,15 +45,15 @@ export class RepositoryDataFlowPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void { this.subs.forEach(s => s.unsubscribe()); }
 
-  private buildFlows(knowledge: RepositoryKnowledge | null): void {
+  private async buildFlows(knowledge: RepositoryKnowledge | null): Promise<void> {
     if (!knowledge?.dependencyGraph || knowledge.dependencyGraph.nodes.length < 3) {
       this.workflowSummaries = [];
       this.behaviorInsights = null;
       return;
     }
     const ctx = this.workspace.context;
-    const flows = this.discovery.discoverWorkflows(knowledge, ctx?.profile.repositoryStructure ?? undefined);
-    this.workflowSummaries = this.workflowExplorer.buildSummaries(flows);
+    const flows = await this.discovery.discoverWorkflows(knowledge, ctx?.profile.repositoryStructure ?? undefined);
+    this.workflowSummaries = await this.workflowExplorer.buildSummaries(flows);
     this.behaviorInsights  = this.discovery.extractBehaviorInsights(knowledge);
   }
 

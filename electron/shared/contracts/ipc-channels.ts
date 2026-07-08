@@ -41,6 +41,24 @@ export const IpcChannels = {
   AI_ANALYZE:          'ai:analyze',
   AI_GET_PROVIDER_URL: 'ai:getProviderUrl',
   AI_SET_PROVIDER_URL: 'ai:setProviderUrl',
+
+  // ── Intelligence Engine (Phase 4) ─────────────────────────────────────────
+  INTELLIGENCE_ANALYZE_CODE:          'intelligence:analyzeCode',
+  INTELLIGENCE_DETECT_ARCHITECTURE:   'intelligence:detectArchitecture',
+  INTELLIGENCE_BUILD_DEPENDENCY_GRAPH:'intelligence:buildDependencyGraph',
+  INTELLIGENCE_EXPLORE_DEPENDENCIES:  'intelligence:exploreDependencies',
+  INTELLIGENCE_DETECT_TECHNOLOGIES:   'intelligence:detectTechnologies',
+  INTELLIGENCE_DISCOVER_PROJECTS:     'intelligence:discoverProjects',
+  INTELLIGENCE_SCAN_REPOSITORY:       'intelligence:scanRepository',
+  INTELLIGENCE_CLASSIFY_WORKSPACE:    'intelligence:classifyWorkspace',
+  INTELLIGENCE_SYSTEM_UNDERSTANDING:  'intelligence:systemUnderstanding',
+  INTELLIGENCE_EXPLORE_WORKFLOWS:     'intelligence:exploreWorkflows',
+  INTELLIGENCE_LEARNING_PATH:         'intelligence:learningPath',
+  INTELLIGENCE_DISCOVER_DATA_FLOWS:   'intelligence:discoverDataFlows',
+  INTELLIGENCE_RECOMMENDATIONS:       'intelligence:recommendations',
+  INTELLIGENCE_SECURITY:              'intelligence:security',
+  INTELLIGENCE_INSIGHTS:              'intelligence:insights',
+  INTELLIGENCE_BUILD_SUMMARY:         'intelligence:buildSummary',
 } as const;
 
 export type IpcChannel = typeof IpcChannels[keyof typeof IpcChannels];

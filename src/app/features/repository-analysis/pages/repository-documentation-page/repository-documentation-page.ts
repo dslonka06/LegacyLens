@@ -43,21 +43,21 @@ export class RepositoryDocumentationPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.panelWidths = this.layoutService.load('repository-doc') ?? [320];
-    this.buildSummary();
+    void this.buildSummary();
     this.subs.push(
-      this.knowledgeService.knowledge$.pipe(distinctUntilChanged()).subscribe(k => { if (k) this.buildSummary(); }),
+      this.knowledgeService.knowledge$.pipe(distinctUntilChanged()).subscribe(k => { if (k) void this.buildSummary(); }),
     );
   }
 
   ngOnDestroy(): void { this.subs.forEach(s => s.unsubscribe()); }
 
-  private buildSummary(): void {
+  private async buildSummary(): Promise<void> {
     this.isBuilding = true;
     const session = this.currentAnalysis.getSession();
     const workspaceContext = this.currentWorkspace.context;
     const knowledge = this.knowledgeService.knowledge;
 
-    this.summary = this.summaryService.build(workspaceContext, knowledge, session);
+    this.summary = await this.summaryService.build(workspaceContext, knowledge, session);
     this.sections = this.builderService.buildSectionList(this.summary, 'repository');
 
     if (this.selectedIds.size === 0) {

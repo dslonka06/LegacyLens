@@ -136,6 +136,25 @@ interface ElectronAiAPI {
   setProviderUrl(url: string | null): Promise<void>;
 }
 
+interface ElectronIntelligenceAPI {
+  analyzeCode(code: string): Promise<unknown>;
+  detectArchitecture(structure: unknown, graph: unknown): Promise<unknown>;
+  buildDependencyGraph(sourceFiles: unknown[]): Promise<unknown>;
+  exploreDependencies(graph: unknown): Promise<{ hubs: unknown[]; orphans: unknown[]; ranked: unknown[] }>;
+  detectTechnologies(files: unknown[]): Promise<unknown[]>;
+  discoverProjects(files: unknown[]): Promise<unknown[]>;
+  scanRepository(files: unknown[]): Promise<unknown>;
+  classifyWorkspace(files: unknown[]): Promise<unknown>;
+  systemUnderstanding(session: unknown, knowledge: unknown): Promise<unknown>;
+  exploreWorkflows(flows: unknown[]): Promise<unknown[]>;
+  learningPath(session: unknown, knowledge: unknown, understanding: unknown, scope: string): Promise<unknown>;
+  discoverDataFlows(knowledge: unknown, structure: unknown): Promise<unknown[]>;
+  recommendations(session: unknown, knowledge: unknown): Promise<unknown>;
+  security(session: unknown, knowledge: unknown): Promise<unknown>;
+  insights(knowledge: unknown): Promise<unknown[]>;
+  buildSummary(workspaceContext: unknown, knowledge: unknown, session: unknown): Promise<unknown>;
+}
+
 interface ElectronAPI {
   repositories: ElectronRepositoriesAPI;
   analysis: ElectronAnalysisAPI;
@@ -143,6 +162,7 @@ interface ElectronAPI {
   filesystem: ElectronFilesystemAPI;
   settings: ElectronSettingsAPI;
   ai: ElectronAiAPI;
+  intelligence: ElectronIntelligenceAPI;
 }
 
 declare global {

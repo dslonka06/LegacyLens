@@ -122,7 +122,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     // Generate security and system understanding once knowledge pipeline completes.
     // All four analysis calls are guarded — if the workspace already has the result
     // (navigating back to a completed analysis) we skip recomputation entirely.
-    this.securitySub = this.knowledgeService.knowledge$.subscribe(knowledge => {
+    this.securitySub = this.knowledgeService.knowledge$.subscribe(async knowledge => {
       const id = this.manager.activeId;
       if (knowledge && id) {
         const ws = this.manager.getById(id);
@@ -132,23 +132,23 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
         if (cachedSecurity) {
           security = cachedSecurity;
         } else {
-          security = this.securityService.analyzeKnowledge(knowledge, this.session);
+          security = await this.securityService.analyzeKnowledge(knowledge, this.session);
           this.manager.setSecurityAnalysis(id, security);
         }
 
         if (!ws?.systemUnderstanding) {
-          const understanding = this.understandingService.analyzeKnowledge(knowledge, this.session);
+          const understanding = await this.understandingService.analyzeKnowledge(knowledge, this.session);
           this.manager.setSystemUnderstanding(id, understanding);
         }
 
         if (!ws?.recommendationAnalysis) {
-          const recs = this.recService.analyzeKnowledge(knowledge, this.session);
+          const recs = await this.recService.analyzeKnowledge(knowledge, this.session);
           this.manager.setRecommendationAnalysis(id, recs);
         }
 
         const wsAfter = this.manager.getById(id);
         if (!wsAfter?.learningPathAnalysis && wsAfter?.systemUnderstanding) {
-          const lp = this.learningPathService.analyzeKnowledge(knowledge, this.session, wsAfter.systemUnderstanding, 'folder');
+          const lp = await this.learningPathService.analyzeKnowledge(knowledge, this.session, wsAfter.systemUnderstanding, 'folder');
           this.manager.setLearningPathAnalysis(id, lp);
         }
 
