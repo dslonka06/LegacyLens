@@ -23,37 +23,54 @@
           <span class="settings-desc">Application color scheme</span>
         </div>
         <div class="settings-control">
-          <div class="select-pill active">Dark</div>
-          <div class="select-pill disabled">Light</div>
-          <div class="select-pill disabled">System</div>
+          <button class="select-pill" [class.active]="theme.isDark" (click)="theme.toggle()">Dark</button>
+          <button class="select-pill" [class.active]="!theme.isDark" (click)="theme.toggle()">Light</button>
         </div>
       </div>
     </div>
 
-    <div class="settings-group">
-      <div class="settings-group-label">Analysis Preferences</div>
+    <div class="settings-group" *ngIf="electron.isElectron">
+      <div class="settings-group-label">AI Provider</div>
       <div class="settings-row">
         <div class="settings-info">
-          <span class="settings-name">Default Language Hint</span>
-          <span class="settings-desc">Shown in the editor before analysis runs</span>
+          <span class="settings-name">Provider</span>
+          <span class="settings-desc">AI service used for analysis (e.g. openai, anthropic)</span>
         </div>
         <div class="settings-control">
-          <div class="select-pill active">Auto-detect</div>
-          <div class="select-pill disabled">C#</div>
-          <div class="select-pill disabled">TypeScript</div>
-          <div class="select-pill disabled">SQL</div>
+          <input class="settings-input" type="text" [(ngModel)]="aiProvider" placeholder="e.g. anthropic" />
         </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-info">
+          <span class="settings-name">Model</span>
+          <span class="settings-desc">Model identifier for AI requests</span>
+        </div>
+        <div class="settings-control">
+          <input class="settings-input" type="text" [(ngModel)]="aiModel" placeholder="e.g. claude-sonnet-4-6" />
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-info">
+          <span class="settings-name">Provider URL</span>
+          <span class="settings-desc">Base URL for the AI backend (e.g. http://localhost:5000)</span>
+        </div>
+        <div class="settings-control">
+          <input class="settings-input" type="text" [(ngModel)]="aiProviderUrl" placeholder="http://localhost:5000" />
+        </div>
+      </div>
+      <div class="settings-row settings-row--action">
+        <button class="btn-save" (click)="saveAiSettings()">
+          {{ saved ? 'Saved' : 'Save' }}
+        </button>
       </div>
     </div>
 
     <div class="settings-group">
       <div class="settings-group-label">Application Information</div>
       <div class="settings-about">
-        <div class="about-row"><span>Version</span><span>0.1.0</span></div>
-        <div class="about-row"><span>Phase</span><span>3 — Professional MVP</span></div>
-        <div class="about-row"><span>Engine</span><span>Pattern Analysis v1</span></div>
+        <div class="about-row"><span>Version</span><span>1.0.0</span></div>
+        <div class="about-row"><span>Storage</span><span>{{ electron.isElectron ? 'SQLite' : 'Browser localStorage' }}</span></div>
         <div class="about-row"><span>Framework</span><span>Angular 21 · Standalone Components</span></div>
-        <div class="about-row"><span>Storage</span><span>Browser localStorage</span></div>
       </div>
     </div>
 

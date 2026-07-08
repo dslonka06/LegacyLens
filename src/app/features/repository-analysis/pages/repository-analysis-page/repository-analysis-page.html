@@ -11,6 +11,11 @@
       <span>Repository</span>
     </div>
 
+    <div class="scan-progress" *ngIf="isScanning">
+      <div class="scan-progress-bar"></div>
+      <span class="scan-progress-label">Scanning… {{ scanFileCount }} files</span>
+    </div>
+
     <div class="tri-tree-scroll">
       <ng-container *ngIf="hasTree; else noTree">
         <ng-container *ngFor="let item of treeRoots">
@@ -18,7 +23,9 @@
         </ng-container>
       </ng-container>
       <ng-template #noTree>
-        <div class="tri-tree-empty">Upload a repository folder to explore</div>
+        <div class="tri-tree-empty">
+          <ng-container *ngIf="!isScanning">Upload a repository folder to explore</ng-container>
+        </div>
       </ng-template>
     </div>
   </div>
@@ -173,6 +180,22 @@
               </svg>
               Documentation
             </button>
+          </div>
+        </div>
+
+        <!-- Analysis History -->
+        <div class="intel-card" *ngIf="analysisHistory.length > 0">
+          <div class="intel-card-title" style="cursor:pointer" (click)="historyExpanded = !historyExpanded">
+            History ({{ analysisHistory.length }})
+            <span style="float:right;opacity:0.5;font-size:10px">{{ historyExpanded ? '▲' : '▼' }}</span>
+          </div>
+          <div *ngIf="historyExpanded" class="intel-history-list">
+            <div class="intel-history-item"
+                 *ngFor="let a of analysisHistory"
+                 (click)="restoreAnalysis(a)">
+              <span class="intel-history-scope">{{ a.scope }}</span>
+              <span class="intel-history-date">{{ formatHistoryDate(a.createdAt) }}</span>
+            </div>
           </div>
         </div>
 

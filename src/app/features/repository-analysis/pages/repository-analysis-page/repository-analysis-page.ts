@@ -25,6 +25,12 @@ import { RepositoryKnowledgeService } from '@app/knowledge/services/repository-k
 import { AiKnowledgeService } from '../../../../ai/services/ai-knowledge.service';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
+import type { ExplanationResult } from '@app/analysis/models/ai-explanation-context.model';
+import type { SystemUnderstanding } from '@app/analysis/models/system-understanding.model';
+import type { RecommendationAnalysis } from '@app/analysis/models/recommendation-analysis.model';
+import type { LearningPathAnalysis } from '@app/analysis/models/learning-path-analysis.model';
+import type { ElectronAnalysis, ElectronDirectoryEntry } from '../../../../electron';
+import { hashContent } from '@app/core/utils/hash';
 
 interface TreeFolder {
   kind: 'folder';
@@ -77,6 +83,13 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   summaryExpanded = false;
   risksExpanded = false;
   modernizationExpanded = false;
+  historyExpanded = false;
+
+  analysisHistory: ElectronAnalysis[] = [];
+
+  scanFileCount = 0;
+  isScanning = false;
+  private scanProgressUnsub: (() => void) | null = null;
 
   private uploadedFiles: File[] = [];
   private contextSub: Subscription | null = null;
@@ -110,6 +123,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       const id = this.manager.activeId;
       if (id) this.manager.setRepositoryId(id, pending.repositoryId);
       this.loadFromPath(pending.path);
+      this.loadAnalysisHistory(pending.repositoryId);
     }
 
     const existing = this.currentAnalysis.getSession();
@@ -191,7 +205,19 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   }
 
   private async loadFromPath(folderPath: string): Promise<void> {
+    this.isScanning = true;
+    this.scanFileCount = 0;
+
+    this.scanProgressUnsub = this.electronService.onScanProgress(event => {
+      this.zone.run(() => { this.scanFileCount = event.count; });
+    });
+
     const entries = await this.electronService.readDirectory(folderPath);
+
+    this.scanProgressUnsub?.();
+    this.scanProgressUnsub = null;
+    this.isScanning = false;
+
     if (!entries) return;
 
     const files = entries.map(entry => {
@@ -210,13 +236,55 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       this.buildTree(profile);
     });
 
-    this.knowledgeService.build(files, profile);
+    // Attempt incremental restore: if we have a saved analysis and no files have
+    // changed since it was recorded, restore AI results from DB instead of re-running
+    // the full pipeline.
+    const id = this.manager.activeId;
+    const ws = id ? this.manager.getById(id) : null;
+    if (ws?.repositoryId) {
+      const restored = await this.tryRestoreFromCache(ws.repositoryId, id!, entries);
+      if (restored) return;
+    }
+
+    this.knowledgeService.build(files, profile, entries);
+  }
+
+  private async tryRestoreFromCache(
+    repositoryId: string,
+    workspaceId: string,
+    entries: ElectronDirectoryEntry[],
+  ): Promise<boolean> {
+    try {
+      const saved = await this.electronService.getLatestAnalysis(repositoryId);
+      if (!saved?.aiResult) return false;
+
+      // Build a lightweight hash list from the current scan to check for changes.
+      const currentHashes = entries
+        .filter(e => e.content !== null)
+        .map(e => ({ relativePath: e.relativePath, hash: hashContent(e.content!) }));
+
+      const changedPaths = await this.electronService.getChangedFiles(repositoryId, currentHashes);
+      if (changedPaths.length > 0) return false;
+
+      // No changes — restore saved AI results into the workspace.
+      const ai = saved.aiResult as any;
+      if (ai.explanation) this.manager.setAiExplanation(workspaceId, ai.explanation as ExplanationResult);
+      if (ai.securityOverview) this.manager.setSecurityOverview(workspaceId, ai.securityOverview as string);
+      if (ai.systemUnderstanding) this.manager.setSystemUnderstanding(workspaceId, ai.systemUnderstanding as SystemUnderstanding);
+      if (ai.recommendationAnalysis) this.manager.setRecommendationAnalysis(workspaceId, ai.recommendationAnalysis as RecommendationAnalysis);
+      if (ai.learningPathAnalysis) this.manager.setLearningPathAnalysis(workspaceId, ai.learningPathAnalysis as LearningPathAnalysis);
+
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   ngOnDestroy(): void {
     this.contextSub?.unsubscribe();
     this.limitSub?.unsubscribe();
     this.securitySub?.unsubscribe();
+    this.scanProgressUnsub?.();
   }
 
   onPanelResize(index: number, width: number): void {
@@ -429,5 +497,33 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       .slice(0, 10)
       .map(folder => ({ name: folder.name, fileCount: folder.totalFileCount }))
       .filter(s => s.fileCount > 0);
+  }
+
+  // ── Analysis History ──────────────────────────────────────────────────────
+
+  private async loadAnalysisHistory(repositoryId: string): Promise<void> {
+    if (!this.electronService.isElectron) return;
+    this.analysisHistory = await this.electronService.getAnalysisHistory(repositoryId);
+  }
+
+  restoreAnalysis(analysis: ElectronAnalysis): void {
+    const id = this.manager.activeId;
+    if (!id || !analysis.aiResult) return;
+    const ai = analysis.aiResult as any;
+    if (ai.explanation) this.manager.setAiExplanation(id, ai.explanation as ExplanationResult);
+    if (ai.securityOverview) this.manager.setSecurityOverview(id, ai.securityOverview as string);
+    if (ai.systemUnderstanding) this.manager.setSystemUnderstanding(id, ai.systemUnderstanding as SystemUnderstanding);
+    if (ai.recommendationAnalysis) this.manager.setRecommendationAnalysis(id, ai.recommendationAnalysis as RecommendationAnalysis);
+    if (ai.learningPathAnalysis) this.manager.setLearningPathAnalysis(id, ai.learningPathAnalysis as LearningPathAnalysis);
+  }
+
+  formatHistoryDate(iso: string): string {
+    const date = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffDays === 0) return `Today ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    if (diffDays === 1) return `Yesterday ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    return date.toLocaleDateString();
   }
 }

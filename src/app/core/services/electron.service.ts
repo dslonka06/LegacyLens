@@ -9,6 +9,7 @@ import type {
   ElectronFileMetadata,
   SyncFileEntry,
   ElectronDirectoryEntry,
+  ScanProgressEvent,
 } from '../../../electron';
 
 export interface OpenDialogOptions {
@@ -117,6 +118,16 @@ export class ElectronService {
     return this.api.filesystem.readDirectory(dirPath);
   }
 
+  async cancelScan(scanId: string): Promise<void> {
+    if (!this.api) return;
+    return this.api.filesystem.cancelScan(scanId);
+  }
+
+  onScanProgress(callback: (event: ScanProgressEvent) => void): (() => void) | null {
+    if (!this.api) return null;
+    return this.api.filesystem.onScanProgress(callback);
+  }
+
   async pickAndReadFolder(title = 'Select Folder'): Promise<{ folderPath: string; files: ElectronDirectoryEntry[] } | null> {
     const folderPath = await this.pickFolder(title);
     if (!folderPath) return null;
@@ -140,5 +151,27 @@ export class ElectronService {
   async getAllSettings(): Promise<Record<string, unknown>> {
     if (!this.api) return {};
     return this.api.settings.getAll();
+  }
+
+  // ── AI ────────────────────────────────────────────────────────────────────
+
+  async aiExplain(prompt: string): Promise<string | null> {
+    if (!this.api) return null;
+    return this.api.ai.explain(prompt);
+  }
+
+  async aiAnalyze(fileName: string, sourceCode: string): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.ai.analyze(fileName, sourceCode);
+  }
+
+  async getAiProviderUrl(): Promise<string | null> {
+    if (!this.api) return null;
+    return this.api.ai.getProviderUrl();
+  }
+
+  async setAiProviderUrl(url: string | null): Promise<void> {
+    if (!this.api) return;
+    return this.api.ai.setProviderUrl(url);
   }
 }

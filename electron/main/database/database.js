@@ -52,6 +52,7 @@ function runMigrations(db) {
 
   const migrations = [
     migrate_v1,
+    migrate_v2,
   ];
 
   for (let i = currentVersion; i < migrations.length; i++) {
@@ -115,6 +116,16 @@ function migrate_v1(db) {
       key    TEXT PRIMARY KEY,
       value  TEXT NOT NULL   -- JSON-encoded value
     );
+  `);
+}
+
+function migrate_v2(db) {
+  // Add version tracking and status to analyses; add AI provider/model metadata fields.
+  db.exec(`
+    ALTER TABLE analyses ADD COLUMN version     TEXT;
+    ALTER TABLE analyses ADD COLUMN status      TEXT DEFAULT 'complete';
+    ALTER TABLE analyses ADD COLUMN ai_provider TEXT;
+    ALTER TABLE analyses ADD COLUMN ai_model    TEXT;
   `);
 }
 

@@ -39,6 +39,10 @@ export interface ElectronAnalysis {
   createdAt: string;
   aiResult: unknown | null;
   patternResult: unknown | null;
+  version: string | null;
+  status: 'complete' | 'partial' | string;
+  aiProvider: string | null;
+  aiModel: string | null;
 }
 
 export interface SaveAnalysisRequest {
@@ -47,6 +51,10 @@ export interface SaveAnalysisRequest {
   fileName?: string;
   aiResult?: unknown;
   patternResult?: unknown;
+  version?: string;
+  status?: string;
+  aiProvider?: string;
+  aiModel?: string;
 }
 
 export interface ElectronFileMetadata {
@@ -73,6 +81,7 @@ export interface ElectronDirectoryEntry {
   /** Full UTF-8 source for readable source files; null for binaries/oversized/non-source files. */
   content: string | null;
   size: number;
+  modifiedAt: string;
 }
 
 interface ElectronRepositoriesAPI {
@@ -97,11 +106,20 @@ interface ElectronFilesAPI {
   clearRepository(repositoryId: string): Promise<void>;
 }
 
+export interface ScanProgressEvent {
+  scanId: string;
+  count: number;
+  path: string;
+}
+
 interface ElectronFilesystemAPI {
   openDialog(options: unknown): Promise<string[] | null>;
   readDirectory(dirPath: string): Promise<ElectronDirectoryEntry[]>;
+  cancelScan(scanId: string): Promise<void>;
   readFile(path: string): Promise<string>;
   exportPdf(path: string, content: unknown): Promise<void>;
+  /** Registers a scan progress listener. Returns an unsubscribe function. */
+  onScanProgress(callback: (event: ScanProgressEvent) => void): () => void;
 }
 
 interface ElectronSettingsAPI {
@@ -111,12 +129,20 @@ interface ElectronSettingsAPI {
   delete(key: string): Promise<void>;
 }
 
+interface ElectronAiAPI {
+  explain(prompt: string): Promise<string>;
+  analyze(fileName: string, sourceCode: string): Promise<unknown>;
+  getProviderUrl(): Promise<string | null>;
+  setProviderUrl(url: string | null): Promise<void>;
+}
+
 interface ElectronAPI {
   repositories: ElectronRepositoriesAPI;
   analysis: ElectronAnalysisAPI;
   files: ElectronFilesAPI;
   filesystem: ElectronFilesystemAPI;
   settings: ElectronSettingsAPI;
+  ai: ElectronAiAPI;
 }
 
 declare global {

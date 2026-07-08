@@ -4,29 +4,43 @@
  * to prevent typos and keep channel names in sync.
  */
 export const IpcChannels = {
-  // Repository Library
+  // ── Repository Library ────────────────────────────────────────────────────
   REPOSITORIES_GET_ALL: 'repositories:getAll',
-  REPOSITORIES_ADD: 'repositories:add',
-  REPOSITORIES_REMOVE: 'repositories:remove',
+  REPOSITORIES_ADD:     'repositories:add',
+  REPOSITORIES_UPDATE:  'repositories:update',
+  REPOSITORIES_TOUCH:   'repositories:touch',
+  REPOSITORIES_REMOVE:  'repositories:remove',
 
-  // Workspace (Phase 2+)
-  WORKSPACE_CREATE: 'workspace:create',
-  WORKSPACE_ACTIVATE: 'workspace:activate',
-  WORKSPACE_DELETE: 'workspace:delete',
-  WORKSPACE_GET_ALL: 'workspace:getAll',
+  // ── Analysis (SQLite) ─────────────────────────────────────────────────────
+  ANALYSIS_SAVE:        'analysis:save',
+  ANALYSIS_GET_LATEST:  'analysis:getLatest',
+  ANALYSIS_GET_HISTORY: 'analysis:getHistory',
+  ANALYSIS_DELETE:      'analysis:delete',
 
-  // Analysis (Phase 2+)
-  ANALYSIS_RUN: 'analysis:run',
-  ANALYSIS_GET_RESULT: 'analysis:getResult',
+  // ── File Metadata ─────────────────────────────────────────────────────────
+  FILES_SYNC:             'files:sync',
+  FILES_GET_ALL:          'files:getAll',
+  FILES_GET_CHANGED:      'files:getChanged',
+  FILES_CLEAR_REPOSITORY: 'files:clearRepository',
 
-  // File System (Phase 2+)
-  FILESYSTEM_READ_FILE: 'filesystem:readFile',
-  FILESYSTEM_EXPORT_PDF: 'filesystem:exportPdf',
-  FILESYSTEM_OPEN_DIALOG: 'filesystem:openDialog',
+  // ── File System ───────────────────────────────────────────────────────────
+  FILESYSTEM_OPEN_DIALOG:    'filesystem:openDialog',
+  FILESYSTEM_READ_DIRECTORY: 'filesystem:readDirectory',
+  FILESYSTEM_CANCEL_SCAN:    'filesystem:cancelScan',
+  FILESYSTEM_READ_FILE:      'filesystem:readFile',
+  FILESYSTEM_EXPORT_PDF:     'filesystem:exportPdf',
 
-  // Settings (Phase 2+)
-  SETTINGS_GET: 'settings:get',
-  SETTINGS_SET: 'settings:set',
+  // ── Settings ──────────────────────────────────────────────────────────────
+  SETTINGS_GET:    'settings:get',
+  SETTINGS_SET:    'settings:set',
+  SETTINGS_GET_ALL: 'settings:getAll',
+  SETTINGS_DELETE: 'settings:delete',
+
+  // ── AI (Phase 3) ──────────────────────────────────────────────────────────
+  AI_EXPLAIN:          'ai:explain',
+  AI_ANALYZE:          'ai:analyze',
+  AI_GET_PROVIDER_URL: 'ai:getProviderUrl',
+  AI_SET_PROVIDER_URL: 'ai:setProviderUrl',
 } as const;
 
 export type IpcChannel = typeof IpcChannels[keyof typeof IpcChannels];

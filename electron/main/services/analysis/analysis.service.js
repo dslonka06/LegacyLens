@@ -20,11 +20,15 @@ class AnalysisService {
       created_at: new Date().toISOString(),
       ai_result: data.aiResult ? JSON.stringify(data.aiResult) : null,
       pattern_result: data.patternResult ? JSON.stringify(data.patternResult) : null,
+      version: data.version ?? null,
+      status: data.status ?? 'complete',
+      ai_provider: data.aiProvider ?? null,
+      ai_model: data.aiModel ?? null,
     };
 
     getDatabase().prepare(`
-      INSERT INTO analyses (id, repository_id, scope, file_name, created_at, ai_result, pattern_result)
-      VALUES (@id, @repository_id, @scope, @file_name, @created_at, @ai_result, @pattern_result)
+      INSERT INTO analyses (id, repository_id, scope, file_name, created_at, ai_result, pattern_result, version, status, ai_provider, ai_model)
+      VALUES (@id, @repository_id, @scope, @file_name, @created_at, @ai_result, @pattern_result, @version, @status, @ai_provider, @ai_model)
     `).run(record);
 
     return toAnalysis(record);
@@ -74,6 +78,10 @@ function toAnalysis(row) {
     createdAt: row.created_at,
     aiResult: row.ai_result ? JSON.parse(row.ai_result) : null,
     patternResult: row.pattern_result ? JSON.parse(row.pattern_result) : null,
+    version: row.version ?? null,
+    status: row.status ?? 'complete',
+    aiProvider: row.ai_provider ?? null,
+    aiModel: row.ai_model ?? null,
   };
 }
 

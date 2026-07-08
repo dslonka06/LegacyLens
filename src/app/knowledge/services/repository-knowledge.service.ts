@@ -7,6 +7,8 @@ import { FileContentService } from './file-content.service';
 import { DependencyMapperService } from './dependency-mapper.service';
 import { ArchitectureDetectorService } from './architecture-detector.service';
 import { ElectronService } from '@app/core/services/electron.service';
+import type { ElectronDirectoryEntry } from '../../../../electron';
+import { hashContent } from '@app/core/utils/hash';
 
 @Injectable({ providedIn: 'root' })
 export class RepositoryKnowledgeService {
@@ -38,7 +40,7 @@ export class RepositoryKnowledgeService {
     if (id) this.manager.clearKnowledge(id);
   }
 
-  async build(rawFiles: File[], profile: WorkspaceProfile): Promise<RepositoryKnowledge> {
+  async build(rawFiles: File[], profile: WorkspaceProfile, entries?: ElectronDirectoryEntry[]): Promise<RepositoryKnowledge> {
     const id = this.manager.activeId;
     if (!id) throw new Error('No active workspace');
 
@@ -69,12 +71,12 @@ export class RepositoryKnowledgeService {
     this.manager.setKnowledgeState(id, KnowledgeState.Complete);
     this.manager.setKnowledge(id, knowledge);
 
-    this.persistAnalysis(id, knowledge, profile);
+    this.persistAnalysis(id, knowledge, profile, entries);
 
     return knowledge;
   }
 
-  private persistAnalysis(workspaceId: string, knowledge: RepositoryKnowledge, profile: WorkspaceProfile): void {
+  private persistAnalysis(workspaceId: string, knowledge: RepositoryKnowledge, profile: WorkspaceProfile, entries?: ElectronDirectoryEntry[]): void {
     if (!this.electron.isElectron) return;
 
     const ws = this.manager.getById(workspaceId);
@@ -95,25 +97,21 @@ export class RepositoryKnowledgeService {
       patternResult,
     }).catch(() => { /* non-fatal — analysis still available in-memory */ });
 
-    const syncEntries = knowledge.sourceFiles.map(f => ({
-      relativePath: f.path,
-      extension: f.extension,
-      size: f.content.length,
-      hash: hashContent(f.content),
-    }));
+    const entryMap = new Map(entries?.map(e => [e.relativePath, e]) ?? []);
+
+    const syncEntries = knowledge.sourceFiles.map(f => {
+      const entry = entryMap.get(f.path);
+      return {
+        relativePath: f.path,
+        extension: f.extension,
+        size: entry?.size ?? f.content.length,
+        hash: hashContent(f.content),
+        modifiedAt: entry?.modifiedAt ?? null,
+      };
+    });
 
     this.electron.syncFileMetadata(repositoryId, syncEntries)
       .catch(() => { /* non-fatal */ });
   }
 }
 
-// Fast non-cryptographic hash (FNV-1a 32-bit) — sufficient for change detection.
-// Returns a hex string so it's safely storable as TEXT in SQLite.
-function hashContent(content: string): string {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < content.length; i++) {
-    hash ^= content.charCodeAt(i);
-    hash = (hash * 0x01000193) >>> 0;
-  }
-  return hash.toString(16).padStart(8, '0');
-}

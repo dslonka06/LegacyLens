@@ -26,6 +26,31 @@
   overflow: hidden;
 }
 
+.scan-progress {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+}
+
+.scan-progress-bar {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(124,92,255,0.15) 50%, transparent 100%);
+  animation: scan-sweep 1.2s ease-in-out infinite;
+}
+
+.scan-progress-label {
+  position: relative;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+@keyframes scan-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 // ── Center: editor ─────────────────────────────────────────────────────────
 
 .tri-center {
@@ -429,4 +454,34 @@
   text-underline-offset: 2px;
 
   &:hover { opacity: 0.8; }
+}
+
+.intel-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.intel-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 11px;
+
+  &:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+}
+
+.intel-history-scope {
+  color: var(--accent);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.intel-history-date {
+  color: var(--text-muted);
 }

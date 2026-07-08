@@ -44,6 +44,17 @@ export class HomePage implements OnInit {
   private async loadRepositories(): Promise<void> {
     this.repositories = await this.repoLibrary.getAll();
     this.cdr.detectChanges();
+    this.maybeAutoRestore();
+  }
+
+  private maybeAutoRestore(): void {
+    const last = this.repositories[0]; // sorted by last_opened DESC
+    if (!last?.lastOpened) return;
+    const diffMs = Date.now() - new Date(last.lastOpened).getTime();
+    // Auto-restore if the last session was within 24 hours
+    if (diffMs < 86400000) {
+      this.openRepository(last);
+    }
   }
 
   async addRepository(): Promise<void> {

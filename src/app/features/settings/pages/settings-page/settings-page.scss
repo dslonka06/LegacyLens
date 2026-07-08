@@ -58,9 +58,39 @@
   font-weight: 600;
   border: 1px solid var(--border);
   color: var(--text-muted);
-  cursor: default;
+  cursor: pointer;
+  background: transparent;
   &.active   { background: rgba(124,92,255,0.12); border-color: rgba(124,92,255,0.3); color: #a5b4fc; }
-  &.disabled { opacity: 0.35; }
+  &.disabled { opacity: 0.35; cursor: default; }
+}
+
+.settings-input {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--text-primary);
+  width: 220px;
+  outline: none;
+  &:focus { border-color: rgba(124,92,255,0.5); }
+}
+
+.settings-row--action {
+  justify-content: flex-end;
+  padding: 8px 16px;
+}
+
+.btn-save {
+  padding: 5px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(124,92,255,0.4);
+  background: rgba(124,92,255,0.12);
+  color: #a5b4fc;
+  cursor: pointer;
+  &:hover { background: rgba(124,92,255,0.2); }
 }
 
 // ─── About table ──────────────────────────────────────────

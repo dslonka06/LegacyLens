@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, from, throwError } from 'rxjs';
 import { catchError, map, timeout } from 'rxjs/operators';
 import {
   RepositoryExplanationContext,
@@ -18,6 +18,7 @@ import { RepositoryExplanationPromptBuilder } from '../prompts/repository-explan
 import { WorkflowExplanationPromptBuilder } from '../prompts/workflow-explanation-prompt';
 import { SecurityOverviewPromptBuilder } from '../prompts/security-overview-prompt';
 import { SecurityAnalysis } from '@app/analysis/models/security-analysis.model';
+import { ElectronService } from '@app/core/services/electron.service';
 
 interface ExplainRequest {
   prompt: string;
@@ -35,6 +36,7 @@ export class AiKnowledgeService {
 
   constructor(
     private readonly http: HttpClient,
+    private readonly electron: ElectronService,
     private readonly summaryService: RepositorySummaryService,
     private readonly dataFlowDiscovery: DataFlowDiscoveryService,
     private readonly workflowExplorer: WorkflowExplorerService,
@@ -139,9 +141,19 @@ export class AiKnowledgeService {
     };
   }
 
-  // ── HTTP ──────────────────────────────────────────────────────────────────
+  // ── Transport ─────────────────────────────────────────────────────────────
+  // In Electron: route through IPC so the main process owns the provider URL
+  // and can swap between remote and local AI without Angular changes.
+  // In browser: fall back to direct HTTP as before.
 
   private callApi(prompt: string): Observable<string> {
+    if (this.electron.isElectron) {
+      return from(this.electron.aiExplain(prompt)).pipe(
+        map(result => result ?? ''),
+        catchError(err => throwError(() => err)),
+      );
+    }
+
     const body: ExplainRequest = { prompt };
     return this.http.post<ExplainResponse>(this.apiUrl, body).pipe(
       timeout(this.timeoutMs),
