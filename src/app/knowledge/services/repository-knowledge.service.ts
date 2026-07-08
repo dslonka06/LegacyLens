@@ -94,5 +94,26 @@ export class RepositoryKnowledgeService {
       scope: ws!.type,
       patternResult,
     }).catch(() => { /* non-fatal — analysis still available in-memory */ });
+
+    const syncEntries = knowledge.sourceFiles.map(f => ({
+      relativePath: f.path,
+      extension: f.extension,
+      size: f.content.length,
+      hash: hashContent(f.content),
+    }));
+
+    this.electron.syncFileMetadata(repositoryId, syncEntries)
+      .catch(() => { /* non-fatal */ });
   }
+}
+
+// Fast non-cryptographic hash (FNV-1a 32-bit) — sufficient for change detection.
+// Returns a hex string so it's safely storable as TEXT in SQLite.
+function hashContent(content: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < content.length; i++) {
+    hash ^= content.charCodeAt(i);
+    hash = (hash * 0x01000193) >>> 0;
+  }
+  return hash.toString(16).padStart(8, '0');
 }
