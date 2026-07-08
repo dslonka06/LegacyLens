@@ -6,12 +6,20 @@ import { ThemeService } from '@app/core/services/theme.service';
 import { ElectronService } from '@app/core/services/electron.service';
 import { RepositoryLibraryService } from '@app/core/services/repository-library.service';
 import { PendingRepositoryService } from '@app/core/services/pending-repository.service';
+import { TargetValidationService, ValidationResult, AnalysisTarget } from '@app/core/services/target-validation.service';
+import { ValidationDialog } from '@app/shared/components/validation-dialog/validation-dialog';
 import type { ElectronRepository } from '../../../../electron';
+
+const ANALYSIS_ROUTES: Record<AnalysisTarget, string> = {
+  file: '/file-analysis',
+  folder: '/folder-analysis',
+  repository: '/repository-analysis',
+};
 
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ValidationDialog],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss'
 })
@@ -21,13 +29,18 @@ export class HomePage implements OnInit {
   aiProviderLabel = 'Claude Sonnet';
 
   repositories: ElectronRepository[] = [];
-  isLoadingRepo: string | null = null; // id of repo currently being opened
+  isLoadingRepo: string | null = null;
+
+  validationResult: ValidationResult | null = null;
+  private pendingAddPath: string | null = null;
+  private pendingAddRepoId: string | null = null;
 
   constructor(
     readonly theme: ThemeService,
     readonly electronService: ElectronService,
     private readonly repoLibrary: RepositoryLibraryService,
     private readonly pendingRepo: PendingRepositoryService,
+    private readonly targetValidation: TargetValidationService,
     private readonly router: Router,
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
@@ -51,7 +64,6 @@ export class HomePage implements OnInit {
     const last = this.repositories[0]; // sorted by last_opened DESC
     if (!last?.lastOpened) return;
     const diffMs = Date.now() - new Date(last.lastOpened).getTime();
-    // Auto-restore if the last session was within 24 hours
     if (diffMs < 86400000) {
       this.openRepository(last);
     }
@@ -61,13 +73,56 @@ export class HomePage implements OnInit {
     const folderPath = await this.electronService.pickFolder('Select Repository Folder');
     if (!folderPath) return;
 
+    const validation = await this.targetValidation.validate(folderPath, 'repository');
+
+    if (!validation.valid && validation.mismatch) {
+      const folderName = folderPath.split(/[\\/]/).pop() ?? 'Repository';
+      const repo = await this.repoLibrary.add({ name: folderName, path: folderPath });
+      this.repositories = await this.repoLibrary.getAll();
+      this.cdr.detectChanges();
+
+      this.pendingAddPath = folderPath;
+      this.pendingAddRepoId = repo.id;
+      this.validationResult = validation;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (!validation.valid) {
+      return;
+    }
+
+    this.completeAddRepository(folderPath);
+  }
+
+  private async completeAddRepository(folderPath: string): Promise<void> {
     const folderName = folderPath.split(/[\\/]/).pop() ?? 'Repository';
     const repo = await this.repoLibrary.add({ name: folderName, path: folderPath });
-
     this.repositories = await this.repoLibrary.getAll();
     this.cdr.detectChanges();
-
     this.openRepositoryByPath(repo.id, folderPath);
+  }
+
+  onValidationProceed(target: AnalysisTarget): void {
+    const path = this.pendingAddPath;
+    const repoId = this.pendingAddRepoId;
+    this.validationResult = null;
+    this.pendingAddPath = null;
+    this.pendingAddRepoId = null;
+
+    if (!path || !repoId) return;
+
+    if (target === 'repository') {
+      this.openRepositoryByPath(repoId, path);
+    } else {
+      this.zone.run(() => this.router.navigate([ANALYSIS_ROUTES[target]]));
+    }
+  }
+
+  onValidationCancel(): void {
+    this.validationResult = null;
+    this.pendingAddPath = null;
+    this.pendingAddRepoId = null;
   }
 
   async openRepository(repo: ElectronRepository): Promise<void> {

@@ -59,6 +59,9 @@ export const IpcChannels = {
   INTELLIGENCE_SECURITY:              'intelligence:security',
   INTELLIGENCE_INSIGHTS:              'intelligence:insights',
   INTELLIGENCE_BUILD_SUMMARY:         'intelligence:buildSummary',
+
+  // ── Validation (Phase 4 D1) ───────────────────────────────────────────────
+  VALIDATION_DETECT_TARGET: 'validation:detectTarget',
 } as const;
 
 export type IpcChannel = typeof IpcChannels[keyof typeof IpcChannels];

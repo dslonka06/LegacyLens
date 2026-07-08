@@ -5,6 +5,8 @@ import { Subscription } from 'rxjs';
 import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
 import { WorkspacePanel } from '@app/workspace/components/workspace-panel/workspace-panel';
 import { WorkspaceSwitcherModal } from '@app/workspace/components/workspace-switcher-modal/workspace-switcher-modal';
+import { ValidationDialog } from '@app/shared/components/validation-dialog/validation-dialog';
+import { TargetValidationService, ValidationResult, AnalysisTarget } from '@app/core/services/target-validation.service';
 import { AnalysisSession } from '@app/analysis/models/analysis-session.model';
 import { WorkspaceProfile } from '@app/workspace/models/workspace.model';
 import { WorkspaceContext } from '@app/workspace/models/workspace-context.model';
@@ -59,7 +61,7 @@ const EXT_ICON: Record<string, string> = {
 @Component({
   selector: 'app-repository-analysis-page',
   standalone: true,
-  imports: [CommonModule, CodeEditor, WorkspacePanel, WorkspaceSwitcherModal, ResizeDividerComponent],
+  imports: [CommonModule, CodeEditor, WorkspacePanel, WorkspaceSwitcherModal, ResizeDividerComponent, ValidationDialog],
   templateUrl: './repository-analysis-page.html',
   styleUrl: './repository-analysis-page.scss',
 })
@@ -89,6 +91,8 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   scanFileCount = 0;
   isScanning = false;
+  validationResult: ValidationResult | null = null;
+  private pendingValidationPath: string | null = null;
   private scanProgressUnsub: (() => void) | null = null;
 
   private uploadedFiles: File[] = [];
@@ -111,6 +115,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     private readonly electronService: ElectronService,
     private readonly fileInventory: FileInventoryService,
     private readonly workspaceClassifier: WorkspaceClassifierService,
+    private readonly targetValidation: TargetValidationService,
     private readonly zone: NgZone,
     private readonly router: Router,
   ) {}
@@ -205,6 +210,16 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   }
 
   private async loadFromPath(folderPath: string): Promise<void> {
+    const validation = await this.targetValidation.validate(folderPath, 'repository');
+    if (!validation.valid && validation.mismatch) {
+      this.pendingValidationPath = folderPath;
+      this.validationResult = validation;
+      return;
+    }
+    if (!validation.valid) {
+      return;
+    }
+
     this.isScanning = true;
     this.scanFileCount = 0;
 
@@ -399,6 +414,26 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   closeSwitcher(): void {
     this.showSwitcher = false;
     this.switcherLimitReached = false;
+  }
+
+  onValidationProceed(target: AnalysisTarget): void {
+    const path = this.pendingValidationPath;
+    this.validationResult = null;
+    this.pendingValidationPath = null;
+    if (!path) return;
+
+    if (target === 'repository') {
+      this.loadFromPath(path);
+    } else if (target === 'folder') {
+      this.router.navigate(['/folder-analysis']);
+    } else {
+      this.router.navigate(['/file-analysis']);
+    }
+  }
+
+  onValidationCancel(): void {
+    this.validationResult = null;
+    this.pendingValidationPath = null;
   }
 
   // ── Display helpers ───────────────────────────────────────────────────────

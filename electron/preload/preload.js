@@ -88,4 +88,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     insights:             (knowledge)                         => invoke('intelligence:insights', knowledge),
     buildSummary:         (workspaceContext, knowledge, session) => invoke('intelligence:buildSummary', workspaceContext, knowledge, session),
   },
+
+  // ── Validation ────────────────────────────────────────────────────────────
+  validation: {
+    detectTarget: (targetPath) => invoke('validation:detectTarget', targetPath),
+  },
 });

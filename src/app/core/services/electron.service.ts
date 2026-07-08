@@ -256,4 +256,11 @@ export class ElectronService {
     if (!this.api) return null;
     return this.api.intelligence.buildSummary(workspaceContext, knowledge, session);
   }
+
+  // ── Validation ────────────────────────────────────────────────────────────
+
+  async detectTarget(path: string): Promise<{ detected: string }> {
+    if (!this.api) return { detected: 'unknown' };
+    return this.api.validation.detectTarget(path);
+  }
 }

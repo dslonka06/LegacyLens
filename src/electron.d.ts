@@ -155,6 +155,10 @@ interface ElectronIntelligenceAPI {
   buildSummary(workspaceContext: unknown, knowledge: unknown, session: unknown): Promise<unknown>;
 }
 
+interface ElectronValidationAPI {
+  detectTarget(targetPath: string): Promise<{ path: string; detected: 'file' | 'folder' | 'repository' | 'unknown' | 'invalid' }>;
+}
+
 interface ElectronAPI {
   repositories: ElectronRepositoriesAPI;
   analysis: ElectronAnalysisAPI;
@@ -163,6 +167,7 @@ interface ElectronAPI {
   settings: ElectronSettingsAPI;
   ai: ElectronAiAPI;
   intelligence: ElectronIntelligenceAPI;
+  validation: ElectronValidationAPI;
 }
 
 declare global {

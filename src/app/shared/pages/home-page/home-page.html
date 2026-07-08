@@ -1,3 +1,10 @@
+<app-validation-dialog
+  *ngIf="validationResult"
+  [result]="validationResult"
+  (proceed)="onValidationProceed($event)"
+  (cancel)="onValidationCancel()">
+</app-validation-dialog>
+
 <div class="home-page">
 
   <!-- ── Header ───────────────────────────────────────────────────────────── -->
