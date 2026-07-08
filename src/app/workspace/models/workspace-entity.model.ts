@@ -23,6 +23,7 @@ export interface Workspace {
   status: WorkspaceStatus;
   createdAt: string;
   lastModifiedAt: string;
+  repositoryId: string | null;  // SQLite repository ID — null for unsaved/file workspaces
   session:        AnalysisSession | null;
   context:        WorkspaceContext | null;
   knowledge:        RepositoryKnowledge | null;

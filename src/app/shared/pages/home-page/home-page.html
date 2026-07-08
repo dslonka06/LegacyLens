@@ -51,6 +51,74 @@
       </p>
     </section>
 
+    <!-- Repository Library — Electron only -->
+    <section class="home-library" *ngIf="electronService.isElectron">
+      <div class="home-section-header">
+        <span class="home-section-label">Your Repositories</span>
+        <div class="home-section-line"></div>
+        <button class="home-header-btn lib-add-btn" (click)="addRepository()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Repository
+        </button>
+      </div>
+
+      <!-- Empty state -->
+      <div class="lib-empty" *ngIf="repositories.length === 0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+          <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+          <line x1="12" y1="12" x2="12" y2="15"/>
+        </svg>
+        <span>No repositories yet. Add one to get started.</span>
+      </div>
+
+      <!-- Repository cards -->
+      <div class="lib-grid" *ngIf="repositories.length > 0">
+        <div
+          class="lib-card"
+          *ngFor="let repo of repositories"
+          (click)="openRepository(repo)"
+          [class.lib-card-loading]="isLoadingRepo === repo.id">
+
+          <div class="lib-card-main">
+            <div class="lib-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+                <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+                <line x1="12" y1="12" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <div class="lib-card-info">
+              <div class="lib-card-name">{{ repo.name }}</div>
+              <div class="lib-card-path" [title]="repo.path">{{ repo.path }}</div>
+            </div>
+          </div>
+
+          <div class="lib-card-meta">
+            <div class="lib-card-tags">
+              <span class="lib-tag lib-tag-lang" *ngIf="repo.language">{{ repo.language }}</span>
+              <span class="lib-tag lib-tag-framework" *ngIf="repo.framework">{{ repo.framework }}</span>
+            </div>
+            <div class="lib-card-actions">
+              <span class="lib-card-date">{{ formatLastOpened(repo.lastOpened) }}</span>
+              <button
+                class="lib-card-remove"
+                (click)="removeRepository($event, repo.id)"
+                title="Remove from library">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="lib-card-loading-bar" *ngIf="isLoadingRepo === repo.id"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- Workspace cards -->
     <section class="home-workspaces">
       <div class="home-section-header">

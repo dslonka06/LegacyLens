@@ -84,6 +84,7 @@ export class WorkspaceManagerService {
       status: 'empty',
       createdAt: now,
       lastModifiedAt: now,
+      repositoryId: null,
       session: null,
       context: null,
       knowledge: null,
@@ -153,6 +154,12 @@ export class WorkspaceManagerService {
         this.router.navigate(['/']);
       }
     }
+  }
+
+  // ── Repository link ───────────────────────────────────────────────────────
+
+  setRepositoryId(id: string, repositoryId: string): void {
+    this.patch(id, { repositoryId });
   }
 
   // ── Session ───────────────────────────────────────────────────────────────

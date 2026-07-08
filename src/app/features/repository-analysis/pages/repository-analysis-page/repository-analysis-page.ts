@@ -12,6 +12,10 @@ import { FolderNode } from '@app/knowledge/models/repository.model';
 import { CurrentAnalysisService } from '@app/workspace/services/current-analysis.service';
 import { CurrentWorkspaceService } from '@app/workspace/services/current-workspace.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { PendingRepositoryService } from '@app/core/services/pending-repository.service';
+import { ElectronService } from '@app/core/services/electron.service';
+import { FileInventoryService } from '@app/knowledge/services/file-inventory.service';
+import { WorkspaceClassifierService } from '@app/workspace/services/workspace-classifier.service';
 import { SecurityAnalysisService } from '@app/analysis/services/security-analysis.service';
 import { SecurityAnalysis } from '@app/analysis/models/security-analysis.model';
 import { SystemUnderstandingService } from '@app/analysis/services/system-understanding.service';
@@ -90,12 +94,24 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly aiKnowledge: AiKnowledgeService,
     private readonly layoutService: PanelLayoutService,
+    private readonly pendingRepo: PendingRepositoryService,
+    private readonly electronService: ElectronService,
+    private readonly fileInventory: FileInventoryService,
+    private readonly workspaceClassifier: WorkspaceClassifierService,
     private readonly zone: NgZone,
     private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
     this.panelWidths = this.layoutService.load('repository-analysis') ?? [220, 460];
+
+    const pending = this.pendingRepo.consume();
+    if (pending) {
+      const id = this.manager.activeId;
+      if (id) this.manager.setRepositoryId(id, pending.repositoryId);
+      this.loadFromPath(pending.path);
+    }
+
     const existing = this.currentAnalysis.getSession();
     if (existing) {
       this.session = existing;
@@ -172,6 +188,29 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
         }
       }
     });
+  }
+
+  private async loadFromPath(folderPath: string): Promise<void> {
+    const entries = await this.electronService.readDirectory(folderPath);
+    if (!entries) return;
+
+    const files = entries.map(entry => {
+      const blob = new Blob([entry.content ?? ''], { type: 'text/plain' });
+      const file = new File([blob], entry.name, { type: 'text/plain' });
+      Object.defineProperty(file, 'webkitRelativePath', { value: entry.relativePath, writable: false });
+      return file;
+    });
+
+    const metadata = this.fileInventory.buildMetadata(files);
+    const profile = this.workspaceClassifier.classify(metadata);
+
+    this.zone.run(() => {
+      this.currentWorkspace.set(profile, files);
+      this.workspaceProfile = profile;
+      this.buildTree(profile);
+    });
+
+    this.knowledgeService.build(files, profile);
   }
 
   ngOnDestroy(): void {
