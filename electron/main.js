@@ -10,6 +10,7 @@ const { registerSettingsHandlers } = require('./main/ipc/settings.ipc');
 const { registerAiHandlers } = require('./main/ipc/ai.ipc');
 const { registerIntelligenceHandlers } = require('./main/ipc/intelligence.ipc');
 const { registerValidationHandlers } = require('./main/ipc/validation.ipc');
+const { registerWorkspaceHandlers } = require('./main/ipc/workspace.ipc');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -43,6 +44,7 @@ app.whenReady().then(() => {
   registerAiHandlers();
   registerIntelligenceHandlers();
   registerValidationHandlers();
+  registerWorkspaceHandlers();
 
   createWindow();
 

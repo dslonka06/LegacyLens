@@ -3,6 +3,8 @@ import { BehaviorSubject, Observable, Subject, map, distinctUntilChanged, switch
 import { Router } from '@angular/router';
 import { Workspace, WorkspaceType, WorkspaceStatus, MAX_WORKSPACES } from '../models/workspace-entity.model';
 import type { KnowledgeModel, KnowledgeAIResults, AIStage } from '@app/knowledge/models/knowledge-model.contract';
+import { ElectronService } from '@app/core/services/electron.service';
+import type { PersistedWorkspace } from '../../../electron';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceManagerService {
@@ -13,6 +15,17 @@ export class WorkspaceManagerService {
   // Raw File[] objects keyed by workspace ID — not serializable so kept separate
   // from the Workspace entity. Survives multi-workspace navigation.
   private readonly _rawFiles = new Map<string, File[]>();
+
+  // Debounce timers keyed by workspace ID — prevents a SQLite write on every AI stage merge.
+  private readonly _saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+  // Active AI stages per workspace — shown in the workspace panel during analysis.
+  private readonly _activeStages$ = new BehaviorSubject<Map<string, Set<AIStage>>>(new Map());
+  readonly activeStages$ = this._activeStages$.asObservable();
+
+  // Generation counter per workspace — incremented on re-analyze/cancel so stale AI
+  // results arriving after a new pipeline started are discarded.
+  private readonly _generations = new Map<string, number>();
 
   readonly workspaces$ = this._workspaces$.asObservable();
   readonly activeId$   = this._activeId$.asObservable();
@@ -30,7 +43,12 @@ export class WorkspaceManagerService {
     distinctUntilChanged(),
   );
 
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly electronService: ElectronService,
+  ) {
+    this.restoreFromStorage();
+  }
 
   // ── Queries ───────────────────────────────────────────────────────────────
 
@@ -83,6 +101,7 @@ export class WorkspaceManagerService {
 
     this._workspaces$.next([...this._workspaces$.value, ws]);
     this._activeId$.next(id);
+    this.scheduleSave(ws);
     return ws;
   }
 
@@ -122,8 +141,13 @@ export class WorkspaceManagerService {
 
   delete(id: string): void {
     this._rawFiles.delete(id);
+
+    const timer = this._saveTimers.get(id);
+    if (timer) { clearTimeout(timer); this._saveTimers.delete(id); }
+
     const remaining = this._workspaces$.value.filter(w => w.id !== id);
     this._workspaces$.next(remaining);
+    this.electronService.deleteWorkspace(id);
 
     if (this._activeId$.value === id) {
       if (remaining.length > 0) {
@@ -170,8 +194,11 @@ export class WorkspaceManagerService {
    * Merge AI results into the existing KnowledgeModel.
    * Partial merge — only updates the fields present in `aiResults`.
    * Called by AIAnalysisService as each AI stage completes.
+   *
+   * @param generation  If provided, the result is dropped if the workspace has moved on.
    */
-  mergeAIResults(id: string, aiResults: Partial<KnowledgeAIResults>): void {
+  mergeAIResults(id: string, aiResults: Partial<KnowledgeAIResults>, generation?: number): void {
+    if (generation !== undefined && this.getGeneration(id) !== generation) return;
     const ws = this.getById(id);
     if (!ws?.knowledgeModel) return;
 
@@ -185,7 +212,8 @@ export class WorkspaceManagerService {
   }
 
   /** Mark an AI stage as failed without losing other AI results. */
-  markAIStageFailed(id: string, stage: AIStage): void {
+  markAIStageFailed(id: string, stage: AIStage, generation?: number): void {
+    if (generation !== undefined && this.getGeneration(id) !== generation) return;
     const ws = this.getById(id);
     if (!ws?.knowledgeModel) return;
 
@@ -208,12 +236,115 @@ export class WorkspaceManagerService {
     });
   }
 
+  // ── AI stage progress ─────────────────────────────────────────────────────
+
+  setStageRunning(workspaceId: string, stage: AIStage): void {
+    const current = new Map(this._activeStages$.value);
+    const stages = new Set(current.get(workspaceId) ?? []);
+    stages.add(stage);
+    current.set(workspaceId, stages);
+    this._activeStages$.next(current);
+  }
+
+  clearStageRunning(workspaceId: string, stage: AIStage): void {
+    const current = new Map(this._activeStages$.value);
+    const stages = new Set(current.get(workspaceId) ?? []);
+    stages.delete(stage);
+    if (stages.size === 0) {
+      current.delete(workspaceId);
+    } else {
+      current.set(workspaceId, stages);
+    }
+    this._activeStages$.next(current);
+  }
+
+  clearAllStages(workspaceId: string): void {
+    const current = new Map(this._activeStages$.value);
+    current.delete(workspaceId);
+    this._activeStages$.next(current);
+  }
+
+  getActiveStages(workspaceId: string): Set<AIStage> {
+    return new Set(this._activeStages$.value.get(workspaceId) ?? []);
+  }
+
+  // ── Generation (cancellation) ─────────────────────────────────────────────
+
+  /** Returns the current generation for a workspace. 0 if never started. */
+  getGeneration(id: string): number {
+    return this._generations.get(id) ?? 0;
+  }
+
+  /** Increments and returns the new generation. Called by WorkspaceKnowledgeService on (re-)analyze. */
+  nextGeneration(id: string): number {
+    const next = (this._generations.get(id) ?? 0) + 1;
+    this._generations.set(id, next);
+    return next;
+  }
+
   // ── Raw file storage ──────────────────────────────────────────────────────
   // Kept separate from the Workspace entity — File objects are not serializable.
 
   setRawFiles(id: string, files: File[]): void { this._rawFiles.set(id, files); }
   getRawFiles(id: string): File[]              { return this._rawFiles.get(id) ?? []; }
   clearRawFiles(id: string): void              { this._rawFiles.delete(id); }
+
+  // ── Persistence ───────────────────────────────────────────────────────────
+
+  private async restoreFromStorage(): Promise<void> {
+    if (!this.electronService.isElectron) return;
+    try {
+      const persisted = await this.electronService.getPersistedWorkspaces();
+      if (persisted.length === 0) return;
+
+      const restored: Workspace[] = persisted.map(p => ({
+        id:             p.id,
+        name:           p.name,
+        type:           p.type,
+        // A restored workspace with a model is ready; one without is treated as empty
+        // since the raw files are gone and re-upload is required.
+        status:         (p.knowledgeModel ? 'ready' : 'empty') as WorkspaceStatus,
+        createdAt:      p.createdAt,
+        lastModifiedAt: p.lastModifiedAt,
+        repositoryId:   p.repositoryId,
+        knowledgeModel: p.knowledgeModel,
+      }));
+
+      this._workspaces$.next(restored);
+      // Activate the most recently modified workspace
+      const first = restored[0];
+      if (first) this._activeId$.next(first.id);
+    } catch {
+      // Storage unavailable — start fresh, no user-visible error needed
+    }
+  }
+
+  private scheduleSave(ws: Workspace): void {
+    if (!this.electronService.isElectron) return;
+
+    const existing = this._saveTimers.get(ws.id);
+    if (existing) clearTimeout(existing);
+
+    const timer = setTimeout(() => {
+      this._saveTimers.delete(ws.id);
+      const current = this.getById(ws.id);
+      if (current) {
+        const payload: PersistedWorkspace = {
+          id:             current.id,
+          name:           current.name,
+          type:           current.type,
+          status:         current.status,
+          createdAt:      current.createdAt,
+          lastModifiedAt: current.lastModifiedAt,
+          repositoryId:   current.repositoryId,
+          knowledgeModel: current.knowledgeModel,
+        };
+        this.electronService.saveWorkspace(payload);
+      }
+    }, 300);
+
+    this._saveTimers.set(ws.id, timer);
+  }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -222,6 +353,9 @@ export class WorkspaceManagerService {
       w.id === id ? { ...w, ...delta } : w
     );
     this._workspaces$.next(updated);
+
+    const patched = updated.find(w => w.id === id);
+    if (patched) this.scheduleSave(patched);
   }
 
   private routeForType(type: WorkspaceType): string {

@@ -11,8 +11,10 @@ import { WorkspaceContext } from '@app/workspace/models/workspace-context.model'
 import { CurrentAnalysisService } from '@app/workspace/services/current-analysis.service';
 import { CurrentWorkspaceService } from '@app/workspace/services/current-workspace.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { WorkspaceKnowledgeService } from '@app/knowledge/services/workspace-knowledge.service';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
+import type { ElectronDirectoryEntry } from '../../../../../electron';
 
 @Component({
   selector: 'app-file-analysis-page',
@@ -43,6 +45,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly manager: WorkspaceManagerService,
+    private readonly workspaceKnowledge: WorkspaceKnowledgeService,
     private readonly layoutService: PanelLayoutService,
   ) {}
 
@@ -88,6 +91,48 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   onWorkspaceReady(profile: WorkspaceProfile | null): void {
     this.workspaceProfile = profile;
+  }
+
+  onFilesUploaded(files: File[]): void {
+    this.triggerKnowledgePipeline(files);
+  }
+
+  private triggerKnowledgePipeline(files: File[]): void {
+    const id = this.manager.activeId;
+    if (!id || files.length === 0) return;
+
+    this.filesToEntries(files).then(entries => {
+      this.workspaceKnowledge.process('file', entries, {
+        workspaceId:   id,
+        workspaceName: files[0]?.name ?? 'file',
+        persist:       false,
+      }).subscribe({
+        error: () => { /* pipeline errors handled by manager.setError */ },
+      });
+    });
+  }
+
+  private filesToEntries(files: File[]): Promise<ElectronDirectoryEntry[]> {
+    return Promise.all(
+      files.map(f => new Promise<ElectronDirectoryEntry>(resolve => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({
+          name:         f.name,
+          relativePath: (f as any).webkitRelativePath || f.name,
+          content:      reader.result as string,
+          size:         f.size,
+          modifiedAt:   new Date(f.lastModified).toISOString(),
+        });
+        reader.onerror = () => resolve({
+          name:         f.name,
+          relativePath: (f as any).webkitRelativePath || f.name,
+          content:      null,
+          size:         f.size,
+          modifiedAt:   new Date(f.lastModified).toISOString(),
+        });
+        reader.readAsText(f);
+      }))
+    );
   }
 
   onPanelResize(index: number, width: number): void {

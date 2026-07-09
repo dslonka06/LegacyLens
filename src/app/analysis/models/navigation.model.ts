@@ -5,7 +5,8 @@
 
 import { DependencyNode } from '@app/knowledge/models/knowledge.model';
 import { ChangeImpactAnalysis, WorkflowSummary } from './data-flow.model';
-import { RepositoryInsight } from '@app/analysis/services/repository-insights.service';
+
+interface RepositoryInsight { title: string; description: string; severity: string; category: string; affectedFiles?: string[]; }
 
 // How the user arrived at a node — used in history display to show
 // the pattern of exploration (free-form vs. workflow-guided vs. search-driven).

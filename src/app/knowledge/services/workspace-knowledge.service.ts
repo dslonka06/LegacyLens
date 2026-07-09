@@ -15,6 +15,13 @@ export interface ProcessWorkspaceOptions {
   incremental?:   boolean;
 }
 
+// Last-known inputs per workspace — needed to re-run the pipeline without re-uploading files.
+interface WorkspaceInputCache {
+  targetType: AnalysisTargetType;
+  files:      ElectronDirectoryEntry[];
+  options:    ProcessWorkspaceOptions;
+}
+
 /**
  * WorkspaceKnowledgeService — the ONLY service allowed to construct or mutate a KnowledgeModel.
  *
@@ -22,12 +29,14 @@ export interface ProcessWorkspaceOptions {
  *   - Structural phase: calls D7 intelligence:processWorkspace, emits structural model immediately
  *   - Delegates AI phase to AIAnalysisService (which merges results back via WorkspaceManagerService)
  *   - Updates workspace status via WorkspaceManagerService at each phase transition
- *
- * Hub pages call process() and subscribe. They do not touch WorkspaceManagerService directly
- * for knowledge state — this service owns that.
+ *   - Supports re-analyze: replays the last inputs for a workspace on demand
+ *   - Supports cancel: increments the generation so in-flight AI results are discarded
  */
 @Injectable({ providedIn: 'root' })
 export class WorkspaceKnowledgeService {
+
+  // Cached inputs per workspace — kept so re-analyze can replay without re-uploading.
+  private readonly _inputCache = new Map<string, WorkspaceInputCache>();
 
   constructor(
     private readonly electron:    ElectronService,
@@ -50,8 +59,62 @@ export class WorkspaceKnowledgeService {
     files:       ElectronDirectoryEntry[],
     options:     ProcessWorkspaceOptions,
   ): Observable<KnowledgeModel> {
-    const subject = new Subject<KnowledgeModel>();
+    this._inputCache.set(options.workspaceId, { targetType, files, options });
+    return this.runPipeline(targetType, files, options);
+  }
 
+  /**
+   * Re-run the full pipeline for a workspace using its cached inputs.
+   * Clears the existing KnowledgeModel and AI results first.
+   * No-op if the workspace has no cached inputs (user never uploaded files in this session).
+   */
+  reanalyze(workspaceId: string): Observable<KnowledgeModel> | null {
+    const cached = this._inputCache.get(workspaceId);
+    if (!cached) return null;
+
+    // Cancel any in-flight AI results from the previous run
+    this.manager.nextGeneration(workspaceId);
+    this.manager.clearAllStages(workspaceId);
+    this.manager.clearKnowledgeModel(workspaceId);
+
+    return this.runPipeline(cached.targetType, cached.files, cached.options);
+  }
+
+  /**
+   * Cancel any running AI pipeline for a workspace.
+   * Structural phase (Electron IPC) cannot be interrupted, but its result will be discarded.
+   * In-flight AI stage results are dropped via generation check.
+   */
+  cancelAnalysis(workspaceId: string): void {
+    this.manager.nextGeneration(workspaceId);
+    this.manager.clearAllStages(workspaceId);
+    if (this.manager.getById(workspaceId)?.status === 'processing') {
+      this.manager.setError(workspaceId);
+    }
+  }
+
+  /**
+   * Retrieve the most recently persisted KnowledgeModel for a repository.
+   * Used by hub pages during cache restore before calling process().
+   */
+  async getLatest(repositoryId: string): Promise<KnowledgeModel | null> {
+    if (!this.electron.isElectron) return null;
+    return this.electron.getKnowledgeModel(repositoryId) as Promise<KnowledgeModel | null>;
+  }
+
+  canReanalyze(workspaceId: string): boolean {
+    return this._inputCache.has(workspaceId);
+  }
+
+  // ── Private pipeline ──────────────────────────────────────────────────────
+
+  private runPipeline(
+    targetType:  AnalysisTargetType,
+    files:       ElectronDirectoryEntry[],
+    options:     ProcessWorkspaceOptions,
+  ): Observable<KnowledgeModel> {
+    const subject = new Subject<KnowledgeModel>();
+    const generation = this.manager.nextGeneration(options.workspaceId);
     this.manager.setProcessing(options.workspaceId);
 
     const request: ProcessWorkspaceRequest = {
@@ -71,27 +134,15 @@ export class WorkspaceKnowledgeService {
       },
     };
 
-    // Run structural pipeline async, emit result immediately when done
-    this.runStructuralPhase(request, options, subject);
-
+    this.runStructuralPhase(request, options, subject, generation);
     return subject.asObservable();
   }
 
-  /**
-   * Retrieve the most recently persisted KnowledgeModel for a repository.
-   * Used by hub pages during cache restore before calling process().
-   */
-  async getLatest(repositoryId: string): Promise<KnowledgeModel | null> {
-    if (!this.electron.isElectron) return null;
-    return this.electron.getKnowledgeModel(repositoryId) as Promise<KnowledgeModel | null>;
-  }
-
-  // ── Private pipeline ──────────────────────────────────────────────────────
-
   private async runStructuralPhase(
-    request: ProcessWorkspaceRequest,
-    options: ProcessWorkspaceOptions,
-    subject: Subject<KnowledgeModel>,
+    request:    ProcessWorkspaceRequest,
+    options:    ProcessWorkspaceOptions,
+    subject:    Subject<KnowledgeModel>,
+    generation: number,
   ): Promise<void> {
     try {
       if (!this.electron.isElectron) {
@@ -101,6 +152,12 @@ export class WorkspaceKnowledgeService {
 
       const model = await this.electron.processWorkspace(request);
       if (!model) throw new Error('processWorkspace returned null');
+
+      // Discard if a re-analyze was triggered while the structural phase was running
+      if (this.manager.getGeneration(options.workspaceId) !== generation) {
+        subject.complete();
+        return;
+      }
 
       // Persist repository link if returned
       if (model.metadata.buildId && options.repositoryId) {
@@ -114,7 +171,7 @@ export class WorkspaceKnowledgeService {
       // Kick off AI pipeline in the background — results merge into the workspace
       // via WorkspaceManagerService.mergeAIResults() as each stage completes.
       // Hub pages observe manager.activeWorkspace$ and re-render reactively.
-      this.aiAnalysis.runAll(options.workspaceId, model).catch(() => {
+      this.aiAnalysis.runAll(options.workspaceId, model, generation).catch(() => {
         // Individual stage failures are handled inside runAll — this catch is
         // only for unexpected errors in the orchestration itself.
       });

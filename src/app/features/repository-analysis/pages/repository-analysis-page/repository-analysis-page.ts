@@ -16,8 +16,8 @@ import { CurrentWorkspaceService } from '@app/workspace/services/current-workspa
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { PendingRepositoryService } from '@app/core/services/pending-repository.service';
 import { ElectronService } from '@app/core/services/electron.service';
-import { FileInventoryService } from '@app/knowledge/services/file-inventory.service';
 import { WorkspaceClassifierService } from '@app/workspace/services/workspace-classifier.service';
+import { FileMetadata } from '@app/workspace/models/workspace.model';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
 import type { ElectronAnalysis, ElectronDirectoryEntry } from '../../../../../electron';
@@ -97,7 +97,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     private readonly layoutService: PanelLayoutService,
     private readonly pendingRepo: PendingRepositoryService,
     private readonly electronService: ElectronService,
-    private readonly fileInventory: FileInventoryService,
     private readonly workspaceClassifier: WorkspaceClassifierService,
     private readonly targetValidation: TargetValidationService,
     private readonly zone: NgZone,
@@ -170,7 +169,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       return file;
     });
 
-    const metadata = this.fileInventory.buildMetadata(files);
+    const metadata = this.buildFileMetadata(files);
     const profile = await this.workspaceClassifier.classify(metadata);
 
     this.zone.run(() => {
@@ -487,5 +486,23 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     if (diffDays === 0) return `Today ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     if (diffDays === 1) return `Yesterday ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     return date.toLocaleDateString();
+  }
+
+  private buildFileMetadata(files: File[]): FileMetadata[] {
+    const EXT_TO_LANGUAGE: Record<string, string> = {
+      cs: 'C#', ts: 'TypeScript', tsx: 'TypeScript', js: 'JavaScript', jsx: 'JavaScript',
+      html: 'HTML', htm: 'HTML', css: 'CSS', scss: 'SCSS', less: 'Less', sql: 'SQL',
+      py: 'Python', json: 'JSON', xml: 'XML', md: 'Markdown', txt: 'Plain Text',
+      sh: 'Shell', bash: 'Shell', yml: 'YAML', yaml: 'YAML',
+      rs: 'Rust', go: 'Go', java: 'Java', kt: 'Kotlin', swift: 'Swift',
+      rb: 'Ruby', php: 'PHP', cpp: 'C++', c: 'C', h: 'C/C++ Header', hpp: 'C++ Header',
+    };
+    return files.map(f => {
+      const name = f.name;
+      const path = (f as any).webkitRelativePath || name;
+      const parts = name.toLowerCase().split('.');
+      const extension = parts.length > 1 ? parts[parts.length - 1] : '';
+      return { name, path, extension, language: EXT_TO_LANGUAGE[extension] ?? 'Unknown', size: f.size };
+    });
   }
 }

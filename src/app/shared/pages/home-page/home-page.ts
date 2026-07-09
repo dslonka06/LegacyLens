@@ -1,5 +1,6 @@
 import { Component, OnInit, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { ThemeService } from '@app/core/services/theme.service';
@@ -19,7 +20,7 @@ const ANALYSIS_ROUTES: Record<AnalysisTarget, string> = {
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ValidationDialog],
+  imports: [CommonModule, FormsModule, RouterLink, ValidationDialog],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss'
 })
@@ -30,6 +31,14 @@ export class HomePage implements OnInit {
 
   repositories: ElectronRepository[] = [];
   isLoadingRepo: string | null = null;
+
+  // 'checking' shown only during initial load, avoids flash of missing state
+  repoPathStatus = new Map<string, 'ok' | 'missing' | 'checking'>();
+
+  editingRepoId: string | null = null;
+  editingName = '';
+
+  refreshingRepoId: string | null = null;
 
   validationResult: ValidationResult | null = null;
   private pendingAddPath: string | null = null;
@@ -57,11 +66,29 @@ export class HomePage implements OnInit {
   private async loadRepositories(): Promise<void> {
     this.repositories = await this.repoLibrary.getAll();
     this.cdr.detectChanges();
+    this.checkRepoPaths();
     this.maybeAutoRestore();
   }
 
+  private async checkRepoPaths(): Promise<void> {
+    for (const repo of this.repositories) {
+      this.repoPathStatus.set(repo.id, 'checking');
+    }
+    this.cdr.detectChanges();
+
+    await Promise.all(this.repositories.map(async repo => {
+      try {
+        const result = await this.electronService.detectTarget(repo.path);
+        this.repoPathStatus.set(repo.id, result.detected === 'invalid' ? 'missing' : 'ok');
+      } catch {
+        this.repoPathStatus.set(repo.id, 'missing');
+      }
+    }));
+    this.cdr.detectChanges();
+  }
+
   private maybeAutoRestore(): void {
-    const last = this.repositories[0]; // sorted by last_opened DESC
+    const last = this.repositories[0];
     if (!last?.lastOpened) return;
     const diffMs = Date.now() - new Date(last.lastOpened).getTime();
     if (diffMs < 86400000) {
@@ -100,6 +127,7 @@ export class HomePage implements OnInit {
     const repo = await this.repoLibrary.add({ name: folderName, path: folderPath });
     this.repositories = await this.repoLibrary.getAll();
     this.cdr.detectChanges();
+    this.checkRepoPaths();
     this.openRepositoryByPath(repo.id, folderPath);
   }
 
@@ -127,6 +155,7 @@ export class HomePage implements OnInit {
 
   async openRepository(repo: ElectronRepository): Promise<void> {
     if (this.isLoadingRepo) return;
+    if (this.repoPathStatus.get(repo.id) === 'missing') return;
     await this.repoLibrary.touch(repo.id);
     this.openRepositoryByPath(repo.id, repo.path);
   }
@@ -141,8 +170,58 @@ export class HomePage implements OnInit {
   async removeRepository(event: Event, id: string): Promise<void> {
     event.stopPropagation();
     await this.repoLibrary.remove(id);
+    this.repoPathStatus.delete(id);
     this.repositories = this.repositories.filter(r => r.id !== id);
     this.cdr.detectChanges();
+  }
+
+  // ── Rename ────────────────────────────────────────────────────────────────
+
+  startRename(event: Event, repo: ElectronRepository): void {
+    event.stopPropagation();
+    this.editingRepoId = repo.id;
+    this.editingName = repo.name;
+    this.cdr.detectChanges();
+  }
+
+  async commitRename(repo: ElectronRepository): Promise<void> {
+    const trimmed = this.editingName.trim();
+    this.editingRepoId = null;
+    if (!trimmed || trimmed === repo.name) return;
+    await this.repoLibrary.update(repo.id, { name: trimmed });
+    this.repositories = await this.repoLibrary.getAll();
+    this.cdr.detectChanges();
+  }
+
+  cancelRename(): void {
+    this.editingRepoId = null;
+    this.editingName = '';
+  }
+
+  // ── Refresh ───────────────────────────────────────────────────────────────
+
+  async refreshRepo(event: Event, repo: ElectronRepository): Promise<void> {
+    event.stopPropagation();
+    if (this.refreshingRepoId === repo.id) return;
+    this.refreshingRepoId = repo.id;
+    this.cdr.detectChanges();
+    try {
+      // touch re-reads git metadata on the main process side
+      await this.repoLibrary.touch(repo.id);
+      this.repositories = await this.repoLibrary.getAll();
+      // re-validate path after refresh
+      const result = await this.electronService.detectTarget(repo.path);
+      this.repoPathStatus.set(repo.id, result.detected === 'invalid' ? 'missing' : 'ok');
+    } finally {
+      this.refreshingRepoId = null;
+      this.cdr.detectChanges();
+    }
+  }
+
+  // ── Display helpers ───────────────────────────────────────────────────────
+
+  isPathMissing(id: string): boolean {
+    return this.repoPathStatus.get(id) === 'missing';
   }
 
   formatLastOpened(iso: string | null): string {

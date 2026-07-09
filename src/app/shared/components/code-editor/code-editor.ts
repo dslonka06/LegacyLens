@@ -7,14 +7,11 @@ import { SyntaxHighlightService } from '@app/core/services/syntax-highlight.serv
 import { ElectronService } from '@app/core/services/electron.service';
 import { AnalysisService } from '@app/analysis/services/analysis.service';
 import { AiAnalysisService } from '@app/ai/services/ai-analysis.service';
-import { FileInventoryService } from '@app/knowledge/services/file-inventory.service';
 import { WorkspaceClassifierService } from '@app/workspace/services/workspace-classifier.service';
-import { RepositoryKnowledgeService } from '@app/knowledge/services/repository-knowledge.service';
 import { CurrentWorkspaceService } from '@app/workspace/services/current-workspace.service';
 import { ActiveWorkspaceService } from '@app/core/services/active-workspace.service';
 import { AnalysisSession } from '@app/analysis/models/analysis-session.model';
-import { WorkspaceProfile } from '@app/workspace/models/workspace.model';
-import { RepositoryKnowledge } from '@app/knowledge/models/knowledge.model';
+import { WorkspaceProfile, FileMetadata } from '@app/workspace/models/workspace.model';
 import { WorkspaceType } from '@app/workspace/models/workspace-entity.model';
 
 // Extension → Shiki language ID
@@ -78,7 +75,6 @@ export class CodeEditor implements OnChanges, OnDestroy {
 
   @Output() readonly analyze = new EventEmitter<AnalysisSession>();
   @Output() readonly workspaceReady = new EventEmitter<WorkspaceProfile | null>();
-  @Output() readonly knowledgeReady = new EventEmitter<RepositoryKnowledge>();
   @Output() readonly filesUploaded = new EventEmitter<File[]>();
 
   code = '';
@@ -98,9 +94,7 @@ export class CodeEditor implements OnChanges, OnDestroy {
   constructor(
     private readonly analysisService: AnalysisService,
     private readonly aiAnalysisService: AiAnalysisService,
-    private readonly fileInventory: FileInventoryService,
     private readonly workspaceClassifier: WorkspaceClassifierService,
-    private readonly knowledgeService: RepositoryKnowledgeService,
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly activeWorkspace: ActiveWorkspaceService,
     private readonly cdr: ChangeDetectorRef,
@@ -206,7 +200,6 @@ export class CodeEditor implements OnChanges, OnDestroy {
     this.highlightedHtml = null;
     this.uploadedFiles = [];
     this.workspaceProfile = null;
-    this.knowledgeService.clear();
     this.currentWorkspace.clear();
     this.workspaceReady.emit(null);
     this.filesUploaded.emit([]);
@@ -259,19 +252,11 @@ export class CodeEditor implements OnChanges, OnDestroy {
     this.isLoadingFile = true;
     this.uploadedFiles = files;
 
-    const metadata = this.fileInventory.buildMetadata(files);
+    const metadata = this.buildFileMetadata(files);
     this.workspaceProfile = await this.workspaceClassifier.classify(metadata);
     this.currentWorkspace.set(this.workspaceProfile, files);
     this.workspaceReady.emit(this.workspaceProfile);
     this.filesUploaded.emit(files);
-
-    const profile = this.workspaceProfile;
-    this.knowledgeService.build(files, profile).then(knowledge => {
-      this.zone.run(() => {
-        this.knowledgeReady.emit(knowledge);
-        this.cdr.detectChanges();
-      });
-    });
 
     const primaryFile = this.selectPrimaryFile(files);
     this.fileName = primaryFile.name;
@@ -384,5 +369,23 @@ export class CodeEditor implements OnChanges, OnDestroy {
     if (code.trimStart().startsWith('<?xml') || code.trimStart().startsWith('<Project')) return 'xml';
 
     return 'plaintext';
+  }
+
+  private buildFileMetadata(files: File[]): FileMetadata[] {
+    const EXT_TO_LANGUAGE: Record<string, string> = {
+      cs: 'C#', ts: 'TypeScript', tsx: 'TypeScript', js: 'JavaScript', jsx: 'JavaScript',
+      html: 'HTML', htm: 'HTML', css: 'CSS', scss: 'SCSS', less: 'Less', sql: 'SQL',
+      py: 'Python', json: 'JSON', xml: 'XML', md: 'Markdown', txt: 'Plain Text',
+      sh: 'Shell', bash: 'Shell', yml: 'YAML', yaml: 'YAML',
+      rs: 'Rust', go: 'Go', java: 'Java', kt: 'Kotlin', swift: 'Swift',
+      rb: 'Ruby', php: 'PHP', cpp: 'C++', c: 'C', h: 'C/C++ Header', hpp: 'C++ Header',
+    };
+    return files.map(f => {
+      const name = f.name;
+      const path = (f as any).webkitRelativePath || name;
+      const parts = name.toLowerCase().split('.');
+      const extension = parts.length > 1 ? parts[parts.length - 1] : '';
+      return { name, path, extension, language: EXT_TO_LANGUAGE[extension] ?? 'Unknown', size: f.size };
+    });
   }
 }

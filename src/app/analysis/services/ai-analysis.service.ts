@@ -29,33 +29,41 @@ export class AIAnalysisService {
    * Run all applicable AI stages for the given KnowledgeModel.
    * Each stage merges its result into workspace.knowledgeModel.ai as it completes.
    * Failures are isolated — one failed stage does not block others.
+   *
+   * @param generation  Cancellation token — if the value changes mid-run, results are dropped.
    */
-  async runAll(workspaceId: string, model: KnowledgeModel): Promise<void> {
+  async runAll(workspaceId: string, model: KnowledgeModel, generation: number): Promise<void> {
     if (!this.electron.isElectron) return;
 
     // security + understanding run concurrently first.
     // learningPath depends on understanding, so it runs after.
     // recommendations and documentation are independent.
     await Promise.all([
-      this.runStage(workspaceId, model, 'security'),
-      this.runStage(workspaceId, model, 'understanding'),
-      this.runStage(workspaceId, model, 'recommendations'),
-      this.runStage(workspaceId, model, 'documentation'),
+      this.runStage(workspaceId, model, 'security',        generation),
+      this.runStage(workspaceId, model, 'understanding',   generation),
+      this.runStage(workspaceId, model, 'recommendations', generation),
+      this.runStage(workspaceId, model, 'documentation',   generation),
     ]);
 
     // learningPath needs understanding to be present — read it from the workspace
     const ws = this.manager.getById(workspaceId);
     const updatedModel = ws?.knowledgeModel ?? model;
-    await this.runStage(workspaceId, updatedModel, 'learningPath');
+    await this.runStage(workspaceId, updatedModel, 'learningPath', generation);
   }
 
   /**
    * Run a single AI stage. Merges the result into the workspace on success,
    * marks the stage failed on error. Never throws.
+   *
+   * @param generation  If the workspace's current generation differs when the result
+   *                    arrives, the result is silently discarded (re-analyze was triggered).
    */
-  async runStage(workspaceId: string, model: KnowledgeModel, stage: AIStage): Promise<void> {
+  async runStage(workspaceId: string, model: KnowledgeModel, stage: AIStage, generation: number): Promise<void> {
+    this.manager.setStageRunning(workspaceId, stage);
     try {
       const result = await this.callStage(model, stage);
+
+      // Drop result if re-analyze was triggered while this stage was running
       if (result !== null) {
         const completed = [
           ...(model.ai?.completedStages ?? []),
@@ -66,10 +74,12 @@ export class AIAnalysisService {
           ...this.stageResultToPartial(stage, result),
           completedStages: [...new Set(completed)],
           failedStages: model.ai?.failedStages ?? [],
-        });
+        }, generation);
       }
     } catch {
-      this.manager.markAIStageFailed(workspaceId, stage);
+      this.manager.markAIStageFailed(workspaceId, stage, generation);
+    } finally {
+      this.manager.clearStageRunning(workspaceId, stage);
     }
   }
 

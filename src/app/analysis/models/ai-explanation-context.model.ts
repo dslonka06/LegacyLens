@@ -1,5 +1,6 @@
 import { WorkflowSummary } from './data-flow.model';
-import { RepositoryInsight } from '@app/analysis/services/repository-insights.service';
+
+interface RepositoryInsight { title: string; description: string; severity: string; category: string; }
 
 // Context passed to AI for a repository-level explanation.
 // Populated entirely from SystemLens knowledge — no raw source code.

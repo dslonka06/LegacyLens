@@ -14,6 +14,7 @@ import type {
   ProcessWorkspaceRequest,
   IncrementalCheckResult,
   AnalysisTargetType,
+  PersistedWorkspace,
 } from '../../../electron';
 
 export interface OpenDialogOptions {
@@ -315,5 +316,22 @@ export class ElectronService {
   async processWorkspace(request: ProcessWorkspaceRequest): Promise<KnowledgeModel | null> {
     if (!this.api) return null;
     return this.api.intelligence.processWorkspace(request);
+  }
+
+  // ── Workspace Persistence ─────────────────────────────────────────────────
+
+  async getPersistedWorkspaces(): Promise<PersistedWorkspace[]> {
+    if (!this.api) return [];
+    return this.api.workspaces.getAll();
+  }
+
+  async saveWorkspace(workspace: PersistedWorkspace): Promise<PersistedWorkspace | null> {
+    if (!this.api) return null;
+    return this.api.workspaces.save(workspace);
+  }
+
+  async deleteWorkspace(id: string): Promise<boolean> {
+    if (!this.api) return false;
+    return this.api.workspaces.delete(id);
   }
 }

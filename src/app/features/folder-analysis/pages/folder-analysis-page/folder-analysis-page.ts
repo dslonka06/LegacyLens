@@ -13,8 +13,10 @@ import { FolderNode } from '@app/knowledge/models/repository.model';
 import { CurrentAnalysisService } from '@app/workspace/services/current-analysis.service';
 import { CurrentWorkspaceService } from '@app/workspace/services/current-workspace.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { WorkspaceKnowledgeService } from '@app/knowledge/services/workspace-knowledge.service';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
+import type { ElectronDirectoryEntry } from '../../../../../electron';
 
 interface TreeFolder {
   kind: 'folder';
@@ -78,6 +80,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly manager: WorkspaceManagerService,
+    private readonly workspaceKnowledge: WorkspaceKnowledgeService,
     private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
     private readonly router: Router,
@@ -133,6 +136,49 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
   onFilesUploaded(files: File[]): void {
     this.uploadedFiles = files;
+    this.triggerKnowledgePipeline(files);
+  }
+
+  private triggerKnowledgePipeline(files: File[]): void {
+    const id = this.manager.activeId;
+    if (!id || files.length === 0) return;
+
+    this.filesToEntries(files).then(entries => {
+      const name = this.workspaceContext?.workspaceName
+        ?? files[0]?.webkitRelativePath?.split('/')[0]
+        ?? 'folder';
+
+      this.workspaceKnowledge.process('folder', entries, {
+        workspaceId:   id,
+        workspaceName: name,
+        persist:       false,
+      }).subscribe({
+        error: () => { /* pipeline errors handled by manager.setError */ },
+      });
+    });
+  }
+
+  private filesToEntries(files: File[]): Promise<ElectronDirectoryEntry[]> {
+    return Promise.all(
+      files.map(f => new Promise<ElectronDirectoryEntry>(resolve => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({
+          name:         f.name,
+          relativePath: (f as any).webkitRelativePath || f.name,
+          content:      reader.result as string,
+          size:         f.size,
+          modifiedAt:   new Date(f.lastModified).toISOString(),
+        });
+        reader.onerror = () => resolve({
+          name:         f.name,
+          relativePath: (f as any).webkitRelativePath || f.name,
+          content:      null,
+          size:         f.size,
+          modifiedAt:   new Date(f.lastModified).toISOString(),
+        });
+        reader.readAsText(f);
+      }))
+    );
   }
 
   // ── Tree ──────────────────────────────────────────────────────────────────

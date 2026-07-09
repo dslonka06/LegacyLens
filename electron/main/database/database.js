@@ -53,6 +53,7 @@ function runMigrations(db) {
   const migrations = [
     migrate_v1,
     migrate_v2,
+    migrate_v3,
   ];
 
   for (let i = currentVersion; i < migrations.length; i++) {
@@ -126,6 +127,23 @@ function migrate_v2(db) {
     ALTER TABLE analyses ADD COLUMN status      TEXT DEFAULT 'complete';
     ALTER TABLE analyses ADD COLUMN ai_provider TEXT;
     ALTER TABLE analyses ADD COLUMN ai_model    TEXT;
+  `);
+}
+
+function migrate_v3(db) {
+  // Workspace session persistence. knowledge_model stored as a JSON blob.
+  // repository_id is advisory — no FK so file/folder workspaces can persist without a repository row.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS workspaces (
+      id               TEXT PRIMARY KEY,
+      name             TEXT NOT NULL,
+      type             TEXT NOT NULL,
+      status           TEXT NOT NULL,
+      created_at       TEXT NOT NULL,
+      last_modified_at TEXT NOT NULL,
+      repository_id    TEXT,
+      knowledge_model  TEXT
+    );
   `);
 }
 

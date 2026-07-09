@@ -100,4 +100,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   validation: {
     detectTarget: (targetPath) => invoke('validation:detectTarget', targetPath),
   },
+
+  // ── Workspaces ────────────────────────────────────────────────────────────
+  workspaces: {
+    getAll: ()            => invoke('workspaces:getAll'),
+    save:   (workspace)   => invoke('workspaces:save', workspace),
+    delete: (id)          => invoke('workspaces:delete', id),
+  },
 });

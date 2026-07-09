@@ -1,9 +1,21 @@
 import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Workspace, WorkspaceStatus, WorkspaceType } from '@app/workspace/models/workspace-entity.model';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { WorkspaceKnowledgeService } from '@app/knowledge/services/workspace-knowledge.service';
+import { ExportService } from '@app/analysis/services/export.service';
+import type { AIStage } from '@app/knowledge/models/knowledge-model.contract';
+
+const STAGE_LABELS: Record<AIStage, string> = {
+  understanding:   'Understanding',
+  security:        'Security',
+  recommendations: 'Recommendations',
+  learningPath:    'Learning Path',
+  documentation:   'Documentation',
+};
 
 @Component({
   selector: 'app-workspace-panel',
@@ -19,14 +31,32 @@ export class WorkspacePanel implements OnInit, OnDestroy {
   workspace: Workspace | null = null;
   renaming = false;
   renameValue = '';
+  activeStageLabels: string[] = [];
 
   private sub: Subscription | null = null;
 
-  constructor(private readonly manager: WorkspaceManagerService) {}
+  isExporting = false;
+
+  constructor(
+    private readonly manager:    WorkspaceManagerService,
+    private readonly knowledge:  WorkspaceKnowledgeService,
+    private readonly exportSvc:  ExportService,
+  ) {}
 
   ngOnInit(): void {
-    this.sub = this.manager.activeWorkspace$.subscribe(ws => {
+    this.sub = combineLatest([
+      this.manager.activeWorkspace$,
+      this.manager.activeStages$,
+    ]).pipe(
+      map(([ws, stages]) => ({ ws, stages })),
+    ).subscribe(({ ws, stages }) => {
       this.workspace = ws;
+      if (ws) {
+        const running = stages.get(ws.id) ?? new Set();
+        this.activeStageLabels = [...running].map(s => STAGE_LABELS[s] ?? s);
+      } else {
+        this.activeStageLabels = [];
+      }
     });
   }
 
@@ -50,6 +80,17 @@ export class WorkspacePanel implements OnInit, OnDestroy {
   deleteWorkspace(): void {
     if (!this.workspace) return;
     this.manager.delete(this.workspace.id);
+  }
+
+  reanalyze(): void {
+    if (!this.workspace) return;
+    const obs = this.knowledge.reanalyze(this.workspace.id);
+    if (obs) obs.subscribe({ error: () => {} });
+  }
+
+  cancelAnalysis(): void {
+    if (!this.workspace) return;
+    this.knowledge.cancelAnalysis(this.workspace.id);
   }
 
   // ── Rename ────────────────────────────────────────────────────────────────
@@ -79,6 +120,30 @@ export class WorkspacePanel implements OnInit, OnDestroy {
   onRenameKey(event: KeyboardEvent): void {
     if (event.key === 'Enter') this.commitRename();
     if (event.key === 'Escape') this.cancelRename();
+  }
+
+  // ── Export ────────────────────────────────────────────────────────────────
+
+  async exportJson(): Promise<void> {
+    const model = this.workspace?.knowledgeModel;
+    if (!model || this.isExporting) return;
+    this.isExporting = true;
+    try {
+      await this.exportSvc.export('json', model);
+    } finally {
+      this.isExporting = false;
+    }
+  }
+
+  async exportPdf(): Promise<void> {
+    const model = this.workspace?.knowledgeModel;
+    if (!model || this.isExporting) return;
+    this.isExporting = true;
+    try {
+      await this.exportSvc.export('pdf', model);
+    } finally {
+      this.isExporting = false;
+    }
   }
 
   // ── Display helpers ───────────────────────────────────────────────────────
@@ -121,6 +186,20 @@ export class WorkspacePanel implements OnInit, OnDestroy {
 
   get canCreateNew(): boolean {
     return this.manager.canCreate();
+  }
+
+  get canReanalyze(): boolean {
+    if (!this.workspace) return false;
+    return this.knowledge.canReanalyze(this.workspace.id)
+      && this.workspace.status !== 'processing';
+  }
+
+  get isAnalyzing(): boolean {
+    return this.workspace?.status === 'processing' || this.activeStageLabels.length > 0;
+  }
+
+  get canExport(): boolean {
+    return this.workspace?.status === 'ready' && this.workspace.knowledgeModel !== null;
   }
 
   get profile() {

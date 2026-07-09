@@ -22,6 +22,14 @@
 
   </div>
 
+  <!-- AI stage progress chips -->
+  <div class="wp-stages" *ngIf="activeStageLabels.length > 0">
+    <span class="wp-stage-chip" *ngFor="let label of activeStageLabels">
+      <span class="wp-stage-dot"></span>
+      {{ label }}
+    </span>
+  </div>
+
   <!-- Stats (shown once workspace has a profile) -->
   <div class="wp-stats" *ngIf="profile">
 
@@ -71,6 +79,29 @@
       New
     </button>
 
+    <button
+      *ngIf="canReanalyze"
+      class="wp-btn wp-btn-reanalyze"
+      (click)="reanalyze()"
+      title="Re-run analysis with current files">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+      Re-analyze
+    </button>
+
+    <button
+      *ngIf="isAnalyzing"
+      class="wp-btn wp-btn-cancel"
+      (click)="cancelAnalysis()"
+      title="Cancel current analysis">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+      </svg>
+      Cancel
+    </button>
+
     <button class="wp-btn wp-btn-delete" (click)="deleteWorkspace()" title="Delete this workspace">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -79,6 +110,32 @@
       Delete
     </button>
 
+  </div>
+
+  <!-- Export actions — only when a model is ready -->
+  <div class="wp-exports" *ngIf="canExport">
+    <button
+      class="wp-btn wp-btn-export"
+      (click)="exportJson()"
+      [disabled]="isExporting"
+      title="Download KnowledgeModel as JSON">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      JSON
+    </button>
+    <button
+      class="wp-btn wp-btn-export"
+      (click)="exportPdf()"
+      [disabled]="isExporting"
+      title="Export documentation as PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      PDF
+    </button>
   </div>
 
 </div>

@@ -261,6 +261,25 @@ interface ElectronValidationAPI {
   detectTarget(targetPath: string): Promise<{ path: string; detected: 'file' | 'folder' | 'repository' | 'unknown' | 'invalid' }>;
 }
 
+// ── Workspace persistence ──────────────────────────────────────────────────────
+
+export interface PersistedWorkspace {
+  id:             string;
+  name:           string;
+  type:           'file' | 'folder' | 'repository';
+  status:         'empty' | 'processing' | 'ready' | 'error';
+  createdAt:      string;
+  lastModifiedAt: string;
+  repositoryId:   string | null;
+  knowledgeModel: import('@app/knowledge/models/knowledge-model.contract').KnowledgeModel | null;
+}
+
+interface ElectronWorkspacesAPI {
+  getAll(): Promise<PersistedWorkspace[]>;
+  save(workspace: PersistedWorkspace): Promise<PersistedWorkspace>;
+  delete(id: string): Promise<boolean>;
+}
+
 interface ElectronAPI {
   repositories: ElectronRepositoriesAPI;
   analysis:     ElectronAnalysisAPI;
@@ -270,6 +289,7 @@ interface ElectronAPI {
   ai:           ElectronAiAPI;
   intelligence: ElectronIntelligenceAPI;
   validation:   ElectronValidationAPI;
+  workspaces:   ElectronWorkspacesAPI;
 }
 
 declare global {

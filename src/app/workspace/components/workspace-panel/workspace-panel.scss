@@ -202,6 +202,73 @@
   &:hover { background: rgba(239, 68, 68, 0.15); }
 }
 
+.wp-btn-reanalyze {
+  background: rgba(56, 189, 248, 0.08);
+  color: var(--info);
+  border-color: rgba(56, 189, 248, 0.2);
+
+  &:hover { background: rgba(56, 189, 248, 0.15); }
+}
+
+.wp-btn-cancel {
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--warning);
+  border-color: rgba(245, 158, 11, 0.2);
+
+  &:hover { background: rgba(245, 158, 11, 0.15); }
+}
+
+// ─── AI stage progress chips ──────────────────────────────
+.wp-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.wp-stage-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  letter-spacing: 0.03em;
+}
+
+.wp-stage-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+  animation: wp-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes wp-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+.wp-btn-export {
+  background: rgba(100, 116, 139, 0.08);
+  color: var(--text-secondary);
+  border-color: var(--border);
+
+  &:hover:not(:disabled) { background: rgba(100, 116, 139, 0.15); color: var(--text-primary); }
+  &:disabled { opacity: 0.5; cursor: default; }
+}
+
+.wp-exports {
+  display: flex;
+  gap: 6px;
+  padding-top: 2px;
+  border-top: 1px solid var(--border);
+}
+
 // ─── Empty state ─────────────────────────────────────────
 .wp-empty {
   justify-content: center;
