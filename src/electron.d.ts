@@ -138,6 +138,38 @@ interface ElectronAiAPI {
 
 export type AnalysisTargetType = 'file' | 'folder' | 'repository';
 
+export interface KnowledgeModel {
+  targetType: AnalysisTargetType;
+  builtAt: string;
+  workspaceName: string | null;
+  capabilities: string[];
+  capabilityErrors: Record<string, string>;
+  parsedFiles: unknown[];
+  sourceFiles: Array<{ path: string; extension: string; content: string }>;
+  languages: string[];
+  detectedTechnologies: unknown[];
+  frameworks: string[];
+  symbolIndex: Record<string, unknown>;
+  // folder + repository only
+  folderStructure?: unknown;
+  dependencyGraph?: unknown;
+  dependencyHubs?: unknown[];
+  dependencyRanks?: unknown[];
+  projects?: unknown[];
+  architecture?: unknown;
+  // repository only
+  architectureHints?: string[] | null;
+  gitAnalysis?: { available: boolean; branch?: string | null; originUrl?: string | null; reason?: string };
+  _analysisId?: string;
+}
+
+export interface BuildKnowledgeModelOptions {
+  repositoryPath?: string;
+  workspaceName?: string;
+  repositoryId?: string;
+  persist?: boolean;
+}
+
 export interface PipelineResult {
   targetType: AnalysisTargetType;
   plannedCapabilities: string[];
@@ -176,6 +208,8 @@ interface ElectronIntelligenceAPI {
   buildSummary(workspaceContext: unknown, knowledge: unknown, session: unknown): Promise<unknown>;
   runPipeline(targetType: AnalysisTargetType, files: unknown[]): Promise<PipelineResult>;
   capabilitiesFor(targetType: AnalysisTargetType): Promise<string[]>;
+  buildKnowledgeModel(targetType: AnalysisTargetType, files: unknown[], options?: BuildKnowledgeModelOptions): Promise<KnowledgeModel>;
+  getKnowledgeModel(repositoryId: string): Promise<KnowledgeModel | null>;
 }
 
 interface ElectronValidationAPI {

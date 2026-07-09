@@ -17,9 +17,13 @@ const { SecurityAnalysisEngine } = require('../engines/analysis/security-analysi
 const { RepositoryInsightsEngine } = require('../engines/analysis/repository-insights.engine');
 const { RepositorySummaryEngine } = require('../engines/analysis/repository-summary.engine');
 const { CapabilityPipelineEngine } = require('../engines/core/capability-pipeline.engine');
+const { KnowledgeModelEngine } = require('../engines/core/knowledge-model.engine');
+const { KnowledgeModelService } = require('../services/knowledge/knowledge-model.service');
 
 const analysisEngine = new AnalysisEngine();
 const capabilityPipeline = new CapabilityPipelineEngine();
+const knowledgeModelEngine = new KnowledgeModelEngine();
+const knowledgeModelService = new KnowledgeModelService();
 const architectureDetector = new ArchitectureDetectorEngine();
 const dependencyExplorer = new DependencyExplorerEngine();
 const dependencyMapper = new DependencyMapperEngine();
@@ -142,6 +146,35 @@ function registerIntelligenceHandlers() {
   // intelligence:capabilitiesFor — return which capabilities will run for a target type
   ipcMain.handle('intelligence:capabilitiesFor', wrapHandler(async (_event, targetType) => {
     return capabilityPipeline.capabilitiesFor(targetType);
+  }));
+
+  // intelligence:buildKnowledgeModel — D4: run pipeline + build + optionally persist KnowledgeModel
+  // options: { repositoryPath?, workspaceName?, repositoryId?, persist? }
+  ipcMain.handle('intelligence:buildKnowledgeModel', wrapHandler(async (_event, targetType, files, options) => {
+    if (!targetType || !['file', 'folder', 'repository'].includes(targetType)) {
+      throw new Error('targetType must be one of: file, folder, repository');
+    }
+    if (!Array.isArray(files)) throw new Error('files must be an array');
+
+    const opts = options ?? {};
+    const pipelineResult = capabilityPipeline.run(targetType, files);
+    const model = knowledgeModelEngine.build(pipelineResult, {
+      repositoryPath: opts.repositoryPath ?? null,
+      workspaceName: opts.workspaceName ?? null,
+    });
+
+    if (opts.persist && opts.repositoryId) {
+      const analysisId = knowledgeModelService.save(opts.repositoryId, model);
+      model._analysisId = analysisId;
+    }
+
+    return model;
+  }));
+
+  // intelligence:getKnowledgeModel — D4: retrieve persisted KnowledgeModel for a repository
+  ipcMain.handle('intelligence:getKnowledgeModel', wrapHandler(async (_event, repositoryId) => {
+    if (!repositoryId) throw new Error('repositoryId is required');
+    return knowledgeModelService.getLatest(repositoryId);
   }));
 }
 

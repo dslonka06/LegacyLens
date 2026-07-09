@@ -275,4 +275,18 @@ export class ElectronService {
     if (!this.api) return [];
     return this.api.intelligence.capabilitiesFor(targetType);
   }
+
+  async buildKnowledgeModel(
+    targetType: 'file' | 'folder' | 'repository',
+    files: unknown[],
+    options?: { repositoryPath?: string; workspaceName?: string; repositoryId?: string; persist?: boolean },
+  ): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.buildKnowledgeModel(targetType, files, options);
+  }
+
+  async getKnowledgeModel(repositoryId: string): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.getKnowledgeModel(repositoryId);
+  }
 }
