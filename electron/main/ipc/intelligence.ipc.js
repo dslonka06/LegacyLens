@@ -16,7 +16,7 @@ const { RecommendationAnalysisEngine } = require('../engines/analysis/recommenda
 const { SecurityAnalysisEngine } = require('../engines/analysis/security-analysis.engine');
 const { RepositoryInsightsEngine } = require('../engines/analysis/repository-insights.engine');
 const { RepositorySummaryEngine } = require('../engines/analysis/repository-summary.engine');
-const { CapabilityPipelineEngine } = require('../engines/core/capability-pipeline.engine');
+const { CapabilityPipelineEngine, CAPABILITY_MAP } = require('../engines/core/capability-pipeline.engine');
 const { KnowledgeModelEngine } = require('../engines/core/knowledge-model.engine');
 const { KnowledgeModelService } = require('../services/knowledge/knowledge-model.service');
 const { ContextGenerationEngine } = require('../engines/core/context-generation.engine');
@@ -45,6 +45,87 @@ const recommendations = new RecommendationAnalysisEngine();
 const securityAnalysis = new SecurityAnalysisEngine();
 const repositoryInsights = new RepositoryInsightsEngine();
 const repositorySummary = new RepositorySummaryEngine();
+
+/**
+ * Adapts the new KnowledgeModel contract shape to the legacy {knowledge, session}
+ * parameters that the AI analysis engines currently expect.
+ *
+ * This is a translation layer — the engines themselves are unchanged.
+ * File-scope models produce a session-shaped object and null knowledge.
+ * Folder/repository models produce a knowledge-shaped object and null session.
+ *
+ * Remove this adapter once the engines are rewritten to accept KnowledgeModel directly.
+ */
+function adaptModelForEngines(model) {
+  const isFile = model.targetType === 'file';
+
+  if (isFile) {
+    const s = model.structure ?? {};
+    const ins = model.insights ?? {};
+    const session = {
+      fileName:   s.filePath    ?? 'unknown',
+      sourceCode: s.sourceCode  ?? '',
+      analysis: {
+        language:              s.fileLanguage ?? s.languages?.[0] ?? 'Unknown',
+        type:                  'file',
+        summary:               '',
+        risks:                 (ins.risks ?? []).map(r => r.description),
+        responsibilities:      [],
+        dependencies:          [],
+        architectureLayers:    [],
+        patterns:              [],
+        modernizationSuggestions: [],
+        dataFlow:              ins.dataFlow?.steps?.join(' → ') ?? '',
+        inputs:                ins.dataFlow?.inputs  ?? [],
+        outputs:               ins.dataFlow?.outputs ?? [],
+        architecture:          '',
+        complexity:            ins.complexity      ?? 'Low',
+        maintainability:       ins.maintainability ?? 'High',
+      },
+      aiAnalysis: model.ai ? {
+        summary:         model.ai.understanding?.executiveSummary ?? '',
+        businessPurpose: model.ai.understanding?.businessPurpose  ?? '',
+        risks:           (model.ai.security?.findings ?? []).map(f => ({
+          title:       f.title,
+          description: f.issueDescription,
+          severity:    f.severity,
+        })),
+        modernizations: (model.ai.recommendations?.recommendations ?? []).slice(0, 5).map(r => ({
+          title:       r.title,
+          description: r.recommendedImprovement,
+        })),
+      } : undefined,
+    };
+    return { session, knowledge: null };
+  }
+
+  // folder / repository — translate new shape to old RepositoryKnowledge shape
+  const rel = model.relationships ?? {};
+  const knowledge = {
+    sourceFiles:     [],
+    dependencyGraph: rel.dependencies?.graph  ?? null,
+    architecture:    rel.architecture         ? { patterns: rel.architecture.patterns } : null,
+    builtAt:         model.metadata?.builtAt  ?? new Date().toISOString(),
+  };
+
+  const session = model.ai ? {
+    aiAnalysis: {
+      summary:         model.ai.understanding?.executiveSummary ?? '',
+      businessPurpose: model.ai.understanding?.businessPurpose  ?? '',
+      risks:           (model.ai.security?.findings ?? []).map(f => ({
+        title:       f.title,
+        description: f.issueDescription,
+        severity:    f.severity,
+      })),
+      modernizations: (model.ai.recommendations?.recommendations ?? []).slice(0, 5).map(r => ({
+        title:       r.title,
+        description: r.recommendedImprovement,
+      })),
+    },
+  } : null;
+
+  return { knowledge, session };
+}
 
 function registerIntelligenceHandlers() {
   // intelligence:analyzeCode — analyze a single source file string
@@ -92,8 +173,10 @@ function registerIntelligenceHandlers() {
     return workspaceClassifier.classify(files);
   }));
 
-  // intelligence:systemUnderstanding — file mode when no knowledge, knowledge mode otherwise
-  ipcMain.handle('intelligence:systemUnderstanding', wrapHandler(async (_event, session, knowledge) => {
+  // intelligence:systemUnderstanding — accepts KnowledgeModel, adapts to engine's expected shape
+  ipcMain.handle('intelligence:systemUnderstanding', wrapHandler(async (_event, model) => {
+    if (!model) throw new Error('model is required');
+    const { knowledge, session } = adaptModelForEngines(model);
     return knowledge
       ? systemUnderstanding.analyzeKnowledge(knowledge, session)
       : systemUnderstanding.analyzeFile(session);
@@ -104,8 +187,12 @@ function registerIntelligenceHandlers() {
     return workflowExplorer.buildSummaries(flows);
   }));
 
-  // intelligence:learningPath — file mode when no knowledge, knowledge mode otherwise
-  ipcMain.handle('intelligence:learningPath', wrapHandler(async (_event, session, knowledge, understanding, scope) => {
+  // intelligence:learningPath — accepts KnowledgeModel; understanding read from model.ai
+  ipcMain.handle('intelligence:learningPath', wrapHandler(async (_event, model) => {
+    if (!model) throw new Error('model is required');
+    const { knowledge, session } = adaptModelForEngines(model);
+    const understanding = model.ai?.understanding ?? null;
+    const scope = model.targetType ?? 'repository';
     return knowledge
       ? learningPath.analyzeKnowledge(knowledge, session, understanding, scope)
       : learningPath.analyzeFile(session, understanding);
@@ -116,15 +203,19 @@ function registerIntelligenceHandlers() {
     return dataFlowDiscovery.discoverWorkflows(knowledge, structure);
   }));
 
-  // intelligence:recommendations — file mode when no knowledge, knowledge mode otherwise
-  ipcMain.handle('intelligence:recommendations', wrapHandler(async (_event, session, knowledge) => {
+  // intelligence:recommendations — accepts KnowledgeModel, adapts to engine's expected shape
+  ipcMain.handle('intelligence:recommendations', wrapHandler(async (_event, model) => {
+    if (!model) throw new Error('model is required');
+    const { knowledge, session } = adaptModelForEngines(model);
     return knowledge
       ? recommendations.analyzeKnowledge(knowledge, session)
       : recommendations.analyzeFile(session);
   }));
 
-  // intelligence:security — file mode when no knowledge, knowledge mode otherwise
-  ipcMain.handle('intelligence:security', wrapHandler(async (_event, session, knowledge) => {
+  // intelligence:security — accepts KnowledgeModel, adapts to engine's expected shape
+  ipcMain.handle('intelligence:security', wrapHandler(async (_event, model) => {
+    if (!model) throw new Error('model is required');
+    const { knowledge, session } = adaptModelForEngines(model);
     return knowledge
       ? securityAnalysis.analyzeKnowledge(knowledge, session)
       : securityAnalysis.analyzeFile(session);
@@ -198,7 +289,8 @@ function registerIntelligenceHandlers() {
   ipcMain.handle('intelligence:checkIncremental', wrapHandler(async (_event, repositoryId, currentFiles, targetType) => {
     if (!repositoryId) throw new Error('repositoryId is required');
     if (!Array.isArray(currentFiles)) throw new Error('currentFiles must be an array');
-    return incrementalEngine.check(repositoryId, currentFiles, targetType);
+    const requiredCapabilities = CAPABILITY_MAP[targetType] ?? [];
+    return incrementalEngine.check(repositoryId, currentFiles, requiredCapabilities);
   }));
 
   // intelligence:processWorkspace — D7: unified entry point for all workspace analysis

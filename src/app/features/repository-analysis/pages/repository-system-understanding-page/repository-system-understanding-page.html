@@ -42,7 +42,7 @@
   <app-explanation-card
     *ngIf="showExplanationCard"
     title="Repository Intelligence"
-    [content]="aiExplanation!.content"
+    [content]="understanding?.understandingNarrative ?? ''"
     [isLoading]="false"
     [error]="null"
     (dismiss)="dismissExplanation()">

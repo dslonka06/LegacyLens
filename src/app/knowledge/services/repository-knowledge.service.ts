@@ -7,7 +7,7 @@ import { FileContentService } from './file-content.service';
 import { DependencyMapperService } from './dependency-mapper.service';
 import { ArchitectureDetectorService } from './architecture-detector.service';
 import { ElectronService } from '@app/core/services/electron.service';
-import type { ElectronDirectoryEntry } from '../../../../electron';
+import type { ElectronDirectoryEntry } from '../../../electron';
 import { hashContent } from '@app/core/utils/hash';
 
 @Injectable({ providedIn: 'root' })
@@ -19,41 +19,76 @@ export class RepositoryKnowledgeService {
   private readonly architectureDetector = inject(ArchitectureDetectorService);
   private readonly electron = inject(ElectronService);
 
+  // Derive KnowledgeState from workspace status for backward compatibility with pages
+  // that still observe this observable.
   readonly state$: Observable<KnowledgeState> = this.manager.activeWorkspace$.pipe(
-    map(ws => ws?.knowledgeState ?? KnowledgeState.NotStarted),
+    map(ws => {
+      switch (ws?.status) {
+        case 'processing': return KnowledgeState.BuildingDependencies;
+        case 'ready':      return KnowledgeState.Complete;
+        case 'error':      return KnowledgeState.Failed;
+        default:           return KnowledgeState.NotStarted;
+      }
+    }),
   );
 
+  // Expose the legacy RepositoryKnowledge shape derived from the KnowledgeModel.
+  // Architecture pages still consume this until they are migrated to read knowledgeModel directly.
   readonly knowledge$: Observable<RepositoryKnowledge | null> = this.manager.activeWorkspace$.pipe(
-    map(ws => ws?.knowledge ?? null),
+    map(ws => {
+      const model = ws?.knowledgeModel;
+      if (!model) return null;
+      return {
+        sourceFiles:     [],
+        dependencyGraph: model.relationships.dependencies?.graph,
+        architecture:    model.relationships.architecture
+          ? { patterns: model.relationships.architecture.patterns }
+          : undefined,
+        builtAt: model.metadata.builtAt,
+      };
+    }),
   );
 
   get state(): KnowledgeState {
-    return this.manager.getActive()?.knowledgeState ?? KnowledgeState.NotStarted;
+    const ws = this.manager.getActive();
+    switch (ws?.status) {
+      case 'processing': return KnowledgeState.BuildingDependencies;
+      case 'ready':      return KnowledgeState.Complete;
+      case 'error':      return KnowledgeState.Failed;
+      default:           return KnowledgeState.NotStarted;
+    }
   }
 
   get knowledge(): RepositoryKnowledge | null {
-    return this.manager.getActive()?.knowledge ?? null;
+    const model = this.manager.getActive()?.knowledgeModel;
+    if (!model) return null;
+    return {
+      sourceFiles:     [],
+      dependencyGraph: model.relationships.dependencies?.graph,
+      architecture:    model.relationships.architecture
+        ? { patterns: model.relationships.architecture.patterns }
+        : undefined,
+      builtAt: model.metadata.builtAt,
+    };
   }
 
   clear(): void {
     const id = this.manager.activeId;
-    if (id) this.manager.clearKnowledge(id);
+    if (id) this.manager.clearKnowledgeModel(id);
   }
 
   async build(rawFiles: File[], profile: WorkspaceProfile, entries?: ElectronDirectoryEntry[]): Promise<RepositoryKnowledge> {
     const id = this.manager.activeId;
     if (!id) throw new Error('No active workspace');
 
-    this.manager.setKnowledgeState(id, KnowledgeState.ReadingFiles);
+    this.manager.setProcessing(id);
     const sourceFiles = await this.fileContent.readFiles(rawFiles);
 
-    this.manager.setKnowledgeState(id, KnowledgeState.BuildingDependencies);
     let dependencyGraph = undefined;
     try {
       dependencyGraph = await this.dependencyMapper.buildGraph(sourceFiles);
     } catch { /* non-fatal */ }
 
-    this.manager.setKnowledgeState(id, KnowledgeState.DetectingArchitecture);
     let architecture = undefined;
     try {
       if (profile.repositoryStructure && dependencyGraph) {
@@ -67,9 +102,6 @@ export class RepositoryKnowledgeService {
       architecture,
       builtAt: new Date().toISOString(),
     };
-
-    this.manager.setKnowledgeState(id, KnowledgeState.Complete);
-    this.manager.setKnowledge(id, knowledge);
 
     this.persistAnalysis(id, knowledge, profile, entries);
 
@@ -114,4 +146,3 @@ export class RepositoryKnowledgeService {
       .catch(() => { /* non-fatal */ });
   }
 }
-

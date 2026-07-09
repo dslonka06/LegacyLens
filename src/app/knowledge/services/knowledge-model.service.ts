@@ -49,10 +49,9 @@ export class KnowledgeModelService {
    */
   toRepositoryKnowledge(model: KnowledgeModel) {
     return {
-      sourceFiles: model.sourceFiles,
-      dependencyGraph: model.dependencyGraph ?? undefined,
-      architecture: model.architecture ?? undefined,
-      builtAt: model.builtAt,
+      dependencyGraph: model.relationships.dependencies?.graph ?? undefined,
+      architecture:    model.relationships.architecture ?? undefined,
+      builtAt:         model.metadata.builtAt,
     };
   }
 }

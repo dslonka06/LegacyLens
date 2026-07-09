@@ -29,10 +29,10 @@ export class FolderArchitecturePage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.knowledge = this.knowledgeService.knowledge;
-    this.hasWorkspace = this.workspace.context !== null;
+    this.hasWorkspace = this.manager.getActive()?.knowledgeModel != null;
     this.subs.push(
       this.knowledgeService.knowledge$.subscribe(k => { this.knowledge = k; }),
-      this.workspace.context$.subscribe(ctx => { this.hasWorkspace = ctx !== null; }),
+      this.manager.activeWorkspace$.subscribe(ws => { this.hasWorkspace = ws?.knowledgeModel != null; }),
     );
   }
 
@@ -73,7 +73,7 @@ export class FolderArchitecturePage implements OnInit, OnDestroy {
   }
 
   get architectureNarrative(): string {
-    const ai = this.manager.getActive()?.aiExplanation?.content;
+    const ai = this.manager.getActive()?.knowledgeModel?.ai?.understanding?.executiveSummary;
     if (ai) return ai;
     const patterns = this.patterns;
     if (!patterns.length) return '';

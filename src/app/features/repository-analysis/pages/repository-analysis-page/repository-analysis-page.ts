@@ -18,21 +18,11 @@ import { PendingRepositoryService } from '@app/core/services/pending-repository.
 import { ElectronService } from '@app/core/services/electron.service';
 import { FileInventoryService } from '@app/knowledge/services/file-inventory.service';
 import { WorkspaceClassifierService } from '@app/workspace/services/workspace-classifier.service';
-import { SecurityAnalysisService } from '@app/analysis/services/security-analysis.service';
-import { SecurityAnalysis } from '@app/analysis/models/security-analysis.model';
-import { SystemUnderstandingService } from '@app/analysis/services/system-understanding.service';
-import { RecommendationAnalysisService } from '@app/analysis/services/recommendation-analysis.service';
-import { LearningPathAnalysisService } from '@app/analysis/services/learning-path-analysis.service';
-import { RepositoryKnowledgeService } from '@app/knowledge/services/repository-knowledge.service';
-import { AiKnowledgeService } from '../../../../ai/services/ai-knowledge.service';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
-import type { ExplanationResult } from '@app/analysis/models/ai-explanation-context.model';
-import type { SystemUnderstanding } from '@app/analysis/models/system-understanding.model';
-import type { RecommendationAnalysis } from '@app/analysis/models/recommendation-analysis.model';
-import type { LearningPathAnalysis } from '@app/analysis/models/learning-path-analysis.model';
-import type { ElectronAnalysis, ElectronDirectoryEntry } from '../../../../electron';
+import type { ElectronAnalysis, ElectronDirectoryEntry } from '../../../../../electron';
 import { hashContent } from '@app/core/utils/hash';
+import { WorkspaceKnowledgeService } from '@app/knowledge/services/workspace-knowledge.service';
 
 interface TreeFolder {
   kind: 'folder';
@@ -98,18 +88,12 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   private uploadedFiles: File[] = [];
   private contextSub: Subscription | null = null;
   private limitSub: Subscription | null = null;
-  private securitySub: Subscription | null = null;
 
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly manager: WorkspaceManagerService,
-    private readonly securityService: SecurityAnalysisService,
-    private readonly understandingService: SystemUnderstandingService,
-    private readonly recService: RecommendationAnalysisService,
-    private readonly learningPathService: LearningPathAnalysisService,
-    private readonly knowledgeService: RepositoryKnowledgeService,
-    private readonly aiKnowledge: AiKnowledgeService,
+    private readonly workspaceKnowledge: WorkspaceKnowledgeService,
     private readonly layoutService: PanelLayoutService,
     private readonly pendingRepo: PendingRepositoryService,
     private readonly electronService: ElectronService,
@@ -150,63 +134,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     });
 
     this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
-
-    // Generate security and system understanding once knowledge pipeline completes.
-    // All four analysis calls are guarded — if the workspace already has the result
-    // (navigating back to a completed analysis) we skip recomputation entirely.
-    this.securitySub = this.knowledgeService.knowledge$.subscribe(async knowledge => {
-      const id = this.manager.activeId;
-      if (knowledge && id) {
-        const ws = this.manager.getById(id);
-
-        let security: SecurityAnalysis;
-        const cachedSecurity = ws?.securityAnalysis;
-        if (cachedSecurity) {
-          security = cachedSecurity;
-        } else {
-          security = await this.securityService.analyzeKnowledge(knowledge, this.session);
-          this.manager.setSecurityAnalysis(id, security);
-        }
-
-        if (!ws?.systemUnderstanding) {
-          const understanding = await this.understandingService.analyzeKnowledge(knowledge, this.session);
-          this.manager.setSystemUnderstanding(id, understanding);
-        }
-
-        if (!ws?.recommendationAnalysis) {
-          const recs = await this.recService.analyzeKnowledge(knowledge, this.session);
-          this.manager.setRecommendationAnalysis(id, recs);
-        }
-
-        const wsAfter = this.manager.getById(id);
-        if (!wsAfter?.learningPathAnalysis && wsAfter?.systemUnderstanding) {
-          const lp = await this.learningPathService.analyzeKnowledge(knowledge, this.session, wsAfter.systemUnderstanding, 'repository');
-          this.manager.setLearningPathAnalysis(id, lp);
-        }
-
-        // Fire explanation and security overview concurrently — neither depends on
-        // the other's result. Both are skipped if already cached.
-        const ctx = this.workspaceContext;
-        if (ctx && !this.manager.getById(id)?.aiExplanation) {
-          this.aiKnowledge.explainRepository(ctx, knowledge).subscribe({
-            next: content => this.manager.setAiExplanation(id, {
-              type: 'repository',
-              title: 'Repository Explanation',
-              content,
-              generatedAt: new Date().toISOString(),
-            }),
-            error: () => { /* AI unavailable — explanation stays null, page degrades gracefully */ },
-          });
-        }
-
-        if (ctx && !this.manager.getById(id)?.securityOverview) {
-          this.aiKnowledge.generateSecurityOverview(ctx, security, 'repository').subscribe({
-            next: overview => this.manager.setSecurityOverview(id, overview),
-            error: () => { /* AI unavailable — overview stays null, page degrades gracefully */ },
-          });
-        }
-      }
-    });
+    // AI analysis is now handled by AIAnalysisService via WorkspaceKnowledgeService
   }
 
   private async loadFromPath(folderPath: string): Promise<void> {
@@ -251,9 +179,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       this.buildTree(profile);
     });
 
-    // Attempt incremental restore: if we have a saved analysis and no files have
-    // changed since it was recorded, restore AI results from DB instead of re-running
-    // the full pipeline.
     const id = this.manager.activeId;
     const ws = id ? this.manager.getById(id) : null;
     if (ws?.repositoryId) {
@@ -261,7 +186,16 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       if (restored) return;
     }
 
-    await this.knowledgeService.build(files, profile, entries);
+    if (!id) return;
+    this.workspaceKnowledge.process('repository', entries, {
+      workspaceId: id,
+      repositoryId: ws?.repositoryId ?? undefined,
+      repositoryPath: folderPath,
+      workspaceName: profile.files[0]?.name,
+      persist: true,
+    }).subscribe({
+      error: () => { /* pipeline error handled by manager.setError */ },
+    });
   }
 
   private async tryRestoreFromCache(
@@ -273,7 +207,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       const saved = await this.electronService.getLatestAnalysis(repositoryId);
       if (!saved?.aiResult) return false;
 
-      // Build a lightweight hash list from the current scan to check for changes.
       const currentHashes = entries
         .filter(e => e.content !== null)
         .map(e => ({ relativePath: e.relativePath, hash: hashContent(e.content!) }));
@@ -281,15 +214,14 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       const changedPaths = await this.electronService.getChangedFiles(repositoryId, currentHashes);
       if (changedPaths.length > 0) return false;
 
-      // No changes — restore saved AI results into the workspace.
-      const ai = saved.aiResult as any;
-      if (ai.explanation) this.manager.setAiExplanation(workspaceId, ai.explanation as ExplanationResult);
-      if (ai.securityOverview) this.manager.setSecurityOverview(workspaceId, ai.securityOverview as string);
-      if (ai.systemUnderstanding) this.manager.setSystemUnderstanding(workspaceId, ai.systemUnderstanding as SystemUnderstanding);
-      if (ai.recommendationAnalysis) this.manager.setRecommendationAnalysis(workspaceId, ai.recommendationAnalysis as RecommendationAnalysis);
-      if (ai.learningPathAnalysis) this.manager.setLearningPathAnalysis(workspaceId, ai.learningPathAnalysis as LearningPathAnalysis);
+      // No changes — restore saved model via the knowledge service
+      const restoredModel = await this.workspaceKnowledge.getLatest(repositoryId);
+      if (restoredModel) {
+        this.manager.setKnowledgeModel(workspaceId, restoredModel);
+        return true;
+      }
 
-      return true;
+      return false;
     } catch {
       return false;
     }
@@ -298,7 +230,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.contextSub?.unsubscribe();
     this.limitSub?.unsubscribe();
-    this.securitySub?.unsubscribe();
     this.scanProgressUnsub?.();
   }
 
@@ -496,7 +427,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   }
 
   get aiSummary(): string | null {
-    return this.manager.getActive()?.aiExplanation?.content ?? null;
+    return this.manager.getActive()?.knowledgeModel?.ai?.understanding?.executiveSummary ?? null;
   }
 
   get technologyCount(): number {
@@ -506,11 +437,11 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   }
 
   get dependencyCount(): number {
-    return this.manager.getActive()?.knowledge?.dependencyGraph?.edges.length ?? 0;
+    return this.manager.getActive()?.knowledgeModel?.dependencies?.graph?.edges.length ?? 0;
   }
 
   get displayRisks(): { severity: string; description: string }[] {
-    const recs = this.manager.getActive()?.recommendationAnalysis?.recommendations ?? [];
+    const recs = this.manager.getActive()?.knowledgeModel?.ai?.recommendations?.recommendations ?? [];
     return recs
       .filter(r => r.priority === 'critical' || r.priority === 'high')
       .slice(0, 8)
@@ -518,7 +449,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   }
 
   get displayModernizations(): { description: string }[] {
-    const recs = this.manager.getActive()?.recommendationAnalysis?.recommendations ?? [];
+    const recs = this.manager.getActive()?.knowledgeModel?.ai?.recommendations?.recommendations ?? [];
     return recs
       .filter(r => r.category === 'modernization')
       .slice(0, 6)
@@ -544,12 +475,8 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   restoreAnalysis(analysis: ElectronAnalysis): void {
     const id = this.manager.activeId;
     if (!id || !analysis.aiResult) return;
-    const ai = analysis.aiResult as any;
-    if (ai.explanation) this.manager.setAiExplanation(id, ai.explanation as ExplanationResult);
-    if (ai.securityOverview) this.manager.setSecurityOverview(id, ai.securityOverview as string);
-    if (ai.systemUnderstanding) this.manager.setSystemUnderstanding(id, ai.systemUnderstanding as SystemUnderstanding);
-    if (ai.recommendationAnalysis) this.manager.setRecommendationAnalysis(id, ai.recommendationAnalysis as RecommendationAnalysis);
-    if (ai.learningPathAnalysis) this.manager.setLearningPathAnalysis(id, ai.learningPathAnalysis as LearningPathAnalysis);
+    // Restoration via saved KnowledgeModel is handled by tryRestoreFromCache.
+    // Individual field restore is no longer supported — AI results live in knowledgeModel.ai.
   }
 
   formatHistoryDate(iso: string): string {

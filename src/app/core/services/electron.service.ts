@@ -221,9 +221,9 @@ export class ElectronService {
     return this.api.intelligence.classifyWorkspace(files);
   }
 
-  async intelligenceSystemUnderstanding(session: unknown, knowledge: unknown): Promise<unknown> {
+  async intelligenceSystemUnderstanding(model: KnowledgeModel, _ignored: null): Promise<unknown> {
     if (!this.api) return null;
-    return this.api.intelligence.systemUnderstanding(session, knowledge);
+    return this.api.intelligence.systemUnderstanding(model);
   }
 
   async intelligenceExploreWorkflows(flows: unknown[]): Promise<unknown[]> {
@@ -231,9 +231,9 @@ export class ElectronService {
     return this.api.intelligence.exploreWorkflows(flows);
   }
 
-  async intelligenceLearningPath(session: unknown, knowledge: unknown, understanding: unknown, scope: string): Promise<unknown> {
+  async intelligenceLearningPath(model: KnowledgeModel, _ignored: null, understanding: unknown, scope: string): Promise<unknown> {
     if (!this.api) return null;
-    return this.api.intelligence.learningPath(session, knowledge, understanding, scope);
+    return this.api.intelligence.learningPath(model);
   }
 
   async intelligenceDiscoverDataFlows(knowledge: unknown, structure: unknown): Promise<unknown[]> {
@@ -241,14 +241,14 @@ export class ElectronService {
     return this.api.intelligence.discoverDataFlows(knowledge, structure);
   }
 
-  async intelligenceRecommendations(session: unknown, knowledge: unknown): Promise<unknown> {
+  async intelligenceRecommendations(model: KnowledgeModel, _ignored: null): Promise<unknown> {
     if (!this.api) return null;
-    return this.api.intelligence.recommendations(session, knowledge);
+    return this.api.intelligence.recommendations(model);
   }
 
-  async intelligenceSecurity(session: unknown, knowledge: unknown): Promise<unknown> {
+  async intelligenceSecurity(model: KnowledgeModel, _ignored: null): Promise<unknown> {
     if (!this.api) return null;
-    return this.api.intelligence.security(session, knowledge);
+    return this.api.intelligence.security(model);
   }
 
   async intelligenceInsights(knowledge: unknown): Promise<unknown[]> {

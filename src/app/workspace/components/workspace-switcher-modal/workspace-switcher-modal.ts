@@ -59,18 +59,20 @@ export class WorkspaceSwitcherModal implements OnInit, OnDestroy {
 
   statusLabel(status: WorkspaceStatus): string {
     const map: Record<WorkspaceStatus, string> = {
-      'empty':     'Empty',
-      'loaded':    'Loaded',
-      'analyzing': 'Analyzing',
+      'empty':      'Empty',
+      'processing': 'Analyzing',
+      'ready':      'Ready',
+      'error':      'Error',
     };
     return map[status];
   }
 
   statusClass(status: WorkspaceStatus): string {
     const map: Record<WorkspaceStatus, string> = {
-      'empty':     'status-empty',
-      'loaded':    'status-loaded',
-      'analyzing': 'status-analyzing',
+      'empty':      'status-empty',
+      'processing': 'status-analyzing',
+      'ready':      'status-loaded',
+      'error':      'status-error',
     };
     return map[status];
   }

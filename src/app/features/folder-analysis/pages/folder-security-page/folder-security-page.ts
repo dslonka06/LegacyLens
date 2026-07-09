@@ -4,7 +4,6 @@ import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SecurityAnalysis, SecurityFinding, SecuritySeverity } from '@app/analysis/models/security-analysis.model';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
-import { CurrentWorkspaceService } from '@app/workspace/services/current-workspace.service';
 
 @Component({
   selector: 'app-folder-security-page',
@@ -27,24 +26,21 @@ export class FolderSecurityPage implements OnInit, OnDestroy {
 
   constructor(
     private readonly manager: WorkspaceManagerService,
-    private readonly workspace: CurrentWorkspaceService,
   ) {}
 
   ngOnInit(): void {
     const active = this.manager.getActive();
-    this.security = active?.securityAnalysis ?? null;
-    this.securityOverview = active?.securityOverview ?? null;
+    this.security = active?.knowledgeModel?.ai?.security ?? null;
+    this.securityOverview = active?.knowledgeModel?.ai?.securityOverview ?? null;
     this.overviewLoading = this.security !== null && this.securityOverview === null;
-    this.hasWorkspace = this.workspace.context !== null;
+    this.hasWorkspace = active?.knowledgeModel != null;
 
     this.subs.push(
       this.manager.activeWorkspace$.subscribe(ws => {
-        this.security = ws?.securityAnalysis ?? null;
-        this.securityOverview = ws?.securityOverview ?? null;
+        this.security = ws?.knowledgeModel?.ai?.security ?? null;
+        this.securityOverview = ws?.knowledgeModel?.ai?.securityOverview ?? null;
         this.overviewLoading = this.security !== null && this.securityOverview === null;
-      }),
-      this.workspace.context$.subscribe(ctx => {
-        this.hasWorkspace = ctx !== null;
+        this.hasWorkspace = ws?.knowledgeModel != null;
       }),
     );
   }

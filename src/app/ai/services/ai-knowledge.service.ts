@@ -90,7 +90,7 @@ export class AiKnowledgeService {
     ctx: WorkspaceContext,
     knowledge: RepositoryKnowledge,
   ): Promise<RepositoryExplanationContext> {
-    const summary = this.summaryService.build(ctx, knowledge, null);
+    const summary = await this.summaryService.build(ctx, knowledge, null);
     const insights: RepositoryInsight[] = await this.insightsService.analyze(knowledge);
     const flows = await this.dataFlowDiscovery.discoverWorkflows(
       knowledge,

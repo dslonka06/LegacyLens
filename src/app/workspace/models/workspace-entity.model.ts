@@ -1,37 +1,32 @@
-import { AnalysisSession } from '@app/analysis/models/analysis-session.model';
-import { WorkspaceContext } from './workspace-context.model';
-import { RepositoryKnowledge, KnowledgeState } from '@app/knowledge/models/knowledge.model';
-import { SecurityAnalysis } from '@app/analysis/models/security-analysis.model';
-import { SystemUnderstanding } from '@app/analysis/models/system-understanding.model';
-import { RecommendationAnalysis } from '@app/analysis/models/recommendation-analysis.model';
-import { LearningPathAnalysis } from '@app/analysis/models/learning-path-analysis.model';
-import { ExplanationResult } from '@app/analysis/models/ai-explanation-context.model';
+import type { KnowledgeModel } from '@app/knowledge/models/knowledge-model.contract';
 
 export type WorkspaceType = 'file' | 'folder' | 'repository';
 
 export type WorkspaceStatus =
-  | 'empty'      // created, nothing uploaded yet
-  | 'loaded'     // content uploaded, analysis complete
-  | 'analyzing'; // knowledge pipeline running
+  | 'empty'       // created, nothing uploaded yet
+  | 'processing'  // structural knowledge pipeline running
+  | 'ready'       // structural knowledge complete; AI may still be running
+  | 'error';      // pipeline failed
 
 export const MAX_WORKSPACES = 3;
 
 export interface Workspace {
-  id: string;
-  name: string;
-  type: WorkspaceType;
-  status: WorkspaceStatus;
-  createdAt: string;
+  id:             string;
+  name:           string;
+  type:           WorkspaceType;
+  status:         WorkspaceStatus;
+  createdAt:      string;
   lastModifiedAt: string;
-  repositoryId: string | null;  // SQLite repository ID — null for unsaved/file workspaces
-  session:        AnalysisSession | null;
-  context:        WorkspaceContext | null;
-  knowledge:        RepositoryKnowledge | null;
-  knowledgeState:   KnowledgeState;
-  securityAnalysis: SecurityAnalysis | null;
-  securityOverview: string | null;
-  systemUnderstanding: SystemUnderstanding | null;
-  recommendationAnalysis: RecommendationAnalysis | null;
-  learningPathAnalysis: LearningPathAnalysis | null;
-  aiExplanation: ExplanationResult | null;
+
+  /** Links to the SQLite repository record. null for file workspaces (not persisted). */
+  repositoryId: string | null;
+
+  /**
+   * The single source of truth for all analyzed content.
+   * null until WorkspaceKnowledgeService.process() completes its structural phase.
+   * ai.* fields are populated asynchronously after the structural build.
+   *
+   * READ ONLY everywhere except WorkspaceKnowledgeService.
+   */
+  knowledgeModel: KnowledgeModel | null;
 }

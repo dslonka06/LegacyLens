@@ -1,24 +1,29 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { WorkspaceContext } from '../models/workspace-context.model';
 import { WorkspaceProfile } from '../models/workspace.model';
 import { WorkspaceManagerService } from './workspace-manager.service';
 
+/**
+ * Provides the WorkspaceContext (profile + name) for the active workspace.
+ * Context is held transiently in memory — it is derived from uploaded files
+ * and not persisted on the Workspace entity.
+ */
 @Injectable({ providedIn: 'root' })
 export class CurrentWorkspaceService {
 
   private readonly manager = inject(WorkspaceManagerService);
 
-  readonly context$: Observable<WorkspaceContext | null> = this.manager.activeWorkspace$.pipe(
-    map(ws => ws?.context ?? null),
-  );
+  private readonly _context$ = new BehaviorSubject<WorkspaceContext | null>(null);
+
+  readonly context$: Observable<WorkspaceContext | null> = this._context$.asObservable();
 
   get context(): WorkspaceContext | null {
-    return this.manager.getActive()?.context ?? null;
+    return this._context$.value;
   }
 
   get profile(): WorkspaceProfile | null {
-    return this.manager.getActive()?.context?.profile ?? null;
+    return this._context$.value?.profile ?? null;
   }
 
   get uploadedFiles(): File[] {
@@ -31,15 +36,15 @@ export class CurrentWorkspaceService {
     if (!id) return;
     this.manager.setRawFiles(id, rawFiles);
     const workspaceName = this.deriveName(profile, rawFiles);
-    this.manager.setContext(id, { profile, uploadedAt: new Date(), workspaceName });
+    this._context$.next({ profile, uploadedAt: new Date(), workspaceName });
   }
 
   clear(): void {
     const id = this.manager.activeId;
     if (id) {
-      this.manager.clearContext(id);
       this.manager.clearRawFiles(id);
     }
+    this._context$.next(null);
   }
 
   private deriveName(profile: WorkspaceProfile, rawFiles: File[]): string {

@@ -1,6 +1,29 @@
 /**
  * Type declarations for window.electronAPI, exposed by electron/preload/preload.js.
+ *
+ * KnowledgeModel is the canonical contract — defined once in knowledge-model.contract.ts
+ * and re-exported here so IPC consumers use the same type as everything else.
  */
+
+export type {
+  KnowledgeModel,
+  KnowledgeCapability,
+  KnowledgeAIResults,
+  KnowledgeMetadata,
+  KnowledgeStructure,
+  KnowledgeRelationships,
+  KnowledgeInsights,
+  AnalysisTargetType,
+  AIStage,
+  SymbolSummary,
+  DependencyHub,
+  FileRanking,
+  ArchitecturePattern,
+  DataFlowInsight,
+  RiskInsight,
+} from '@app/knowledge/models/knowledge-model.contract';
+
+// ── Repository library ─────────────────────────────────────────────────────────
 
 export interface ElectronRepository {
   id: string;
@@ -31,6 +54,8 @@ export interface UpdateRepositoryRequest {
   gitBranch?: string;
 }
 
+// ── Analysis records ───────────────────────────────────────────────────────────
+
 export interface ElectronAnalysis {
   id: string;
   repositoryId: string;
@@ -56,6 +81,8 @@ export interface SaveAnalysisRequest {
   aiProvider?: string;
   aiModel?: string;
 }
+
+// ── File metadata ──────────────────────────────────────────────────────────────
 
 export interface ElectronFileMetadata {
   id: string;
@@ -84,6 +111,62 @@ export interface ElectronDirectoryEntry {
   modifiedAt: string;
 }
 
+export interface ScanProgressEvent {
+  scanId: string;
+  count: number;
+  path: string;
+}
+
+// ── Intelligence: workspace processing ────────────────────────────────────────
+
+export interface ProcessWorkspaceRequest {
+  targetType: import('@app/knowledge/models/knowledge-model.contract').AnalysisTargetType;
+  files: Array<{ name: string; path: string; extension: string; content: string | null }>;
+  options?: {
+    repositoryId?: string;
+    repositoryPath?: string;
+    workspaceName?: string;
+    persist?: boolean;
+    incremental?: boolean;
+  };
+}
+
+export interface IncrementalCheckResult {
+  needsFullRebuild: boolean;
+  needsPartialRebuild: boolean;
+  changedPaths: string[];
+  reason: string;
+  existingModel: import('@app/knowledge/models/knowledge-model.contract').KnowledgeModel | null;
+}
+
+export interface BuildKnowledgeModelOptions {
+  repositoryPath?: string;
+  workspaceName?: string;
+  repositoryId?: string;
+  persist?: boolean;
+}
+
+export interface PipelineResult {
+  targetType: import('@app/knowledge/models/knowledge-model.contract').AnalysisTargetType;
+  plannedCapabilities: string[];
+  executedCapabilities: string[];
+  capabilityErrors: Record<string, string>;
+  parsedFiles: unknown[];
+  languages: string[];
+  detectedTechnologies: unknown[];
+  frameworks: string[];
+  symbolIndex: Record<string, unknown>;
+  folderStructure: unknown | null;
+  dependencyGraph: unknown | null;
+  dependencyHubs: unknown[];
+  dependencyRanks: unknown[];
+  projects: unknown[];
+  gitAnalysis: { available: boolean; reason: string } | null;
+  architectureHints: string[] | null;
+}
+
+// ── API surface declarations ───────────────────────────────────────────────────
+
 interface ElectronRepositoriesAPI {
   getAll(): Promise<ElectronRepository[]>;
   add(request: AddRepositoryRequest): Promise<ElectronRepository>;
@@ -104,12 +187,6 @@ interface ElectronFilesAPI {
   getAll(repositoryId: string): Promise<ElectronFileMetadata[]>;
   getChanged(repositoryId: string, currentFiles: Array<{ relativePath: string; hash: string }>): Promise<string[]>;
   clearRepository(repositoryId: string): Promise<void>;
-}
-
-export interface ScanProgressEvent {
-  scanId: string;
-  count: number;
-  path: string;
 }
 
 interface ElectronFilesystemAPI {
@@ -136,81 +213,14 @@ interface ElectronAiAPI {
   setProviderUrl(url: string | null): Promise<void>;
 }
 
-export type AnalysisTargetType = 'file' | 'folder' | 'repository';
-
-export interface KnowledgeModel {
-  targetType: AnalysisTargetType;
-  builtAt: string;
-  workspaceName: string | null;
-  capabilities: string[];
-  capabilityErrors: Record<string, string>;
-  parsedFiles: unknown[];
-  sourceFiles: Array<{ path: string; extension: string; content: string }>;
-  languages: string[];
-  detectedTechnologies: unknown[];
-  frameworks: string[];
-  symbolIndex: Record<string, unknown>;
-  // folder + repository only
-  folderStructure?: unknown;
-  dependencyGraph?: unknown;
-  dependencyHubs?: unknown[];
-  dependencyRanks?: unknown[];
-  projects?: unknown[];
-  architecture?: unknown;
-  // repository only
-  architectureHints?: string[] | null;
-  gitAnalysis?: { available: boolean; branch?: string | null; originUrl?: string | null; reason?: string };
-  _analysisId?: string;
-}
-
-export interface BuildKnowledgeModelOptions {
-  repositoryPath?: string;
-  workspaceName?: string;
-  repositoryId?: string;
-  persist?: boolean;
-}
-
-export interface ProcessWorkspaceRequest {
-  targetType: AnalysisTargetType;
-  files: Array<{ name: string; path: string; extension: string; content: string | null }>;
-  options?: {
-    repositoryId?: string;
-    repositoryPath?: string;
-    workspaceName?: string;
-    persist?: boolean;
-    incremental?: boolean;
-  };
-}
-
-export interface IncrementalCheckResult {
-  needsFullRebuild: boolean;
-  needsPartialRebuild: boolean;
-  changedPaths: string[];
-  reason: string;
-  existingModel: KnowledgeModel | null;
-}
-
-export interface PipelineResult {
-  targetType: AnalysisTargetType;
-  plannedCapabilities: string[];
-  executedCapabilities: string[];
-  capabilityErrors: Record<string, string>;
-  parsedFiles: unknown[];
-  languages: string[];
-  detectedTechnologies: unknown[];
-  frameworks: string[];
-  symbolIndex: Record<string, unknown>;
-  folderStructure: unknown | null;
-  dependencyGraph: unknown | null;
-  dependencyHubs: unknown[];
-  dependencyRanks: unknown[];
-  projects: unknown[];
-  gitAnalysis: { available: boolean; reason: string } | null;
-  architectureHints: string[] | null;
-}
+type _KM = import('@app/knowledge/models/knowledge-model.contract').KnowledgeModel;
+type _AT = import('@app/knowledge/models/knowledge-model.contract').AnalysisTargetType;
 
 interface ElectronIntelligenceAPI {
+  // ── Legacy single-file analysis (still used by file hub during transition) ──
   analyzeCode(code: string): Promise<unknown>;
+
+  // ── Individual capabilities (used by legacy pages; being phased out) ─────────
   detectArchitecture(structure: unknown, graph: unknown): Promise<unknown>;
   buildDependencyGraph(sourceFiles: unknown[]): Promise<unknown>;
   exploreDependencies(graph: unknown): Promise<{ hubs: unknown[]; orphans: unknown[]; ranked: unknown[] }>;
@@ -218,21 +228,33 @@ interface ElectronIntelligenceAPI {
   discoverProjects(files: unknown[]): Promise<unknown[]>;
   scanRepository(files: unknown[]): Promise<unknown>;
   classifyWorkspace(files: unknown[]): Promise<unknown>;
-  systemUnderstanding(session: unknown, knowledge: unknown): Promise<unknown>;
   exploreWorkflows(flows: unknown[]): Promise<unknown[]>;
-  learningPath(session: unknown, knowledge: unknown, understanding: unknown, scope: string): Promise<unknown>;
   discoverDataFlows(knowledge: unknown, structure: unknown): Promise<unknown[]>;
-  recommendations(session: unknown, knowledge: unknown): Promise<unknown>;
-  security(session: unknown, knowledge: unknown): Promise<unknown>;
   insights(knowledge: unknown): Promise<unknown[]>;
   buildSummary(workspaceContext: unknown, knowledge: unknown, session: unknown): Promise<unknown>;
-  runPipeline(targetType: AnalysisTargetType, files: unknown[]): Promise<PipelineResult>;
-  capabilitiesFor(targetType: AnalysisTargetType): Promise<string[]>;
-  buildKnowledgeModel(targetType: AnalysisTargetType, files: unknown[], options?: BuildKnowledgeModelOptions): Promise<KnowledgeModel>;
-  getKnowledgeModel(repositoryId: string): Promise<KnowledgeModel | null>;
-  buildContext(contextType: 'repository' | 'workflow' | 'security' | 'analysis', knowledgeModel: KnowledgeModel, extras?: unknown): Promise<unknown>;
-  checkIncremental(repositoryId: string, currentFiles: Array<{ relativePath: string; hash: string }>, targetType: AnalysisTargetType): Promise<IncrementalCheckResult>;
-  processWorkspace(request: ProcessWorkspaceRequest): Promise<KnowledgeModel>;
+
+  // ── AI analysis — accept KnowledgeModel, return typed result ─────────────────
+  systemUnderstanding(model: _KM): Promise<unknown>;
+  learningPath(model: _KM): Promise<unknown>;
+  recommendations(model: _KM): Promise<unknown>;
+  security(model: _KM): Promise<unknown>;
+
+  // ── D2/D3 pipeline ────────────────────────────────────────────────────────────
+  runPipeline(targetType: _AT, files: unknown[]): Promise<PipelineResult>;
+  capabilitiesFor(targetType: _AT): Promise<string[]>;
+
+  // ── D4 model build ────────────────────────────────────────────────────────────
+  buildKnowledgeModel(targetType: _AT, files: unknown[], options?: BuildKnowledgeModelOptions): Promise<_KM>;
+  getKnowledgeModel(repositoryId: string): Promise<_KM | null>;
+
+  // ── D5 context generation ─────────────────────────────────────────────────────
+  buildContext(contextType: 'repository' | 'workflow' | 'security' | 'analysis', knowledgeModel: _KM, extras?: unknown): Promise<unknown>;
+
+  // ── D6 incremental check ──────────────────────────────────────────────────────
+  checkIncremental(repositoryId: string, currentFiles: Array<{ relativePath: string; hash: string }>, targetType: _AT): Promise<IncrementalCheckResult>;
+
+  // ── D7 unified workspace processing ──────────────────────────────────────────
+  processWorkspace(request: ProcessWorkspaceRequest): Promise<_KM>;
 }
 
 interface ElectronValidationAPI {
@@ -241,13 +263,13 @@ interface ElectronValidationAPI {
 
 interface ElectronAPI {
   repositories: ElectronRepositoriesAPI;
-  analysis: ElectronAnalysisAPI;
-  files: ElectronFilesAPI;
-  filesystem: ElectronFilesystemAPI;
-  settings: ElectronSettingsAPI;
-  ai: ElectronAiAPI;
+  analysis:     ElectronAnalysisAPI;
+  files:        ElectronFilesAPI;
+  filesystem:   ElectronFilesystemAPI;
+  settings:     ElectronSettingsAPI;
+  ai:           ElectronAiAPI;
   intelligence: ElectronIntelligenceAPI;
-  validation: ElectronValidationAPI;
+  validation:   ElectronValidationAPI;
 }
 
 declare global {

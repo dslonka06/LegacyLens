@@ -11,12 +11,7 @@ import { WorkspaceContext } from '@app/workspace/models/workspace-context.model'
 import { CurrentAnalysisService } from '@app/workspace/services/current-analysis.service';
 import { CurrentWorkspaceService } from '@app/workspace/services/current-workspace.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
-import { SecurityAnalysisService } from '@app/analysis/services/security-analysis.service';
-import { SystemUnderstandingService } from '@app/analysis/services/system-understanding.service';
-import { RecommendationAnalysisService } from '@app/analysis/services/recommendation-analysis.service';
-import { LearningPathAnalysisService } from '@app/analysis/services/learning-path-analysis.service';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
-import { AiKnowledgeService } from '@app/ai/services/ai-knowledge.service';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
 
 @Component({
@@ -48,12 +43,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly manager: WorkspaceManagerService,
-    private readonly securityService: SecurityAnalysisService,
-    private readonly understandingService: SystemUnderstandingService,
-    private readonly recService: RecommendationAnalysisService,
-    private readonly learningPathService: LearningPathAnalysisService,
     private readonly layoutService: PanelLayoutService,
-    private readonly aiKnowledge: AiKnowledgeService,
   ) {}
 
   ngOnInit(): void {
@@ -83,7 +73,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     this.limitSub?.unsubscribe();
   }
 
-  async onSessionCreated(session: AnalysisSession): Promise<void> {
+  onSessionCreated(session: AnalysisSession): void {
     this.session = session;
     this.restoredFileName = session.fileName;
     this.restoredSourceCode = session.sourceCode;
@@ -92,35 +82,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     const id = this.manager.activeId;
     if (id) {
       this.manager.rename(id, session.fileName);
-      const security = await this.securityService.analyzeFile(session);
-      this.manager.setSecurityAnalysis(id, security);
-      const understanding = await this.understandingService.analyzeFile(session);
-      this.manager.setSystemUnderstanding(id, understanding);
-      const recs = await this.recService.analyzeFile(session);
-      this.manager.setRecommendationAnalysis(id, recs);
-      const ws = this.manager.getById(id);
-      if (ws?.systemUnderstanding) {
-        const lp = await this.learningPathService.analyzeFile(session, ws.systemUnderstanding);
-        this.manager.setLearningPathAnalysis(id, lp);
-      }
-
-      const ctx = this.currentWorkspace.context;
-      if (ctx) {
-        this.aiKnowledge.generateSecurityOverview(ctx, security, 'file').subscribe({
-          next: overview => this.manager.setSecurityOverview(id, overview),
-          error: () => { /* AI unavailable — overview stays null, page degrades gracefully */ },
-        });
-      }
-
-      const aiSummary = session.aiAnalysis?.summary;
-      if (aiSummary) {
-        this.manager.setAiExplanation(id, {
-          type: 'repository',
-          title: 'File Intelligence',
-          content: aiSummary,
-          generatedAt: new Date().toISOString(),
-        });
-      }
+      // AI analysis is now handled by AIAnalysisService via WorkspaceKnowledgeService
     }
   }
 

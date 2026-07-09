@@ -9,7 +9,7 @@ import { Workspace } from '@app/workspace/models/workspace-entity.model';
  * to SQLite via Electron IPC. Runs as a root-level singleton — no component
  * needs to wire this up manually.
  *
- * Saves when both aiExplanation AND securityOverview are present, replacing
+ * Saves when both understanding AND securityOverview are present, replacing
  * any prior save for that repository. This avoids partial saves where only
  * one AI field has resolved.
  */
@@ -29,17 +29,17 @@ export class AnalysisPersistenceService implements OnDestroy {
       filter(ws =>
         ws !== null &&
         ws.repositoryId !== null &&
-        ws.aiExplanation !== null &&
-        ws.securityOverview !== null
+        ws.knowledgeModel?.ai?.understanding != null &&
+        ws.knowledgeModel?.ai?.securityOverview != null
       ),
       map(ws => ws!),
       distinctUntilChanged((a, b) =>
         a.id === b.id &&
-        a.aiExplanation === b.aiExplanation &&
-        a.securityOverview === b.securityOverview
+        a.knowledgeModel?.ai?.understanding === b.knowledgeModel?.ai?.understanding &&
+        a.knowledgeModel?.ai?.securityOverview === b.knowledgeModel?.ai?.securityOverview
       ),
     ).subscribe(ws => {
-      const saveKey = `${ws.id}:${ws.aiExplanation!.generatedAt}`;
+      const saveKey = `${ws.id}:${ws.knowledgeModel!.ai!.understanding!.generatedAt}`;
       if (this.saved.has(saveKey)) return;
       this.saved.add(saveKey);
       this.saveAiResults(ws.repositoryId!, ws);
@@ -50,11 +50,10 @@ export class AnalysisPersistenceService implements OnDestroy {
     if (!this.electron.isElectron) return;
 
     const aiResult = {
-      explanation: ws.aiExplanation,
-      securityOverview: ws.securityOverview,
-      systemUnderstanding: ws.systemUnderstanding ?? null,
-      recommendationAnalysis: ws.recommendationAnalysis ?? null,
-      learningPathAnalysis: ws.learningPathAnalysis ?? null,
+      securityOverview: ws.knowledgeModel?.ai?.securityOverview ?? null,
+      systemUnderstanding: ws.knowledgeModel?.ai?.understanding ?? null,
+      recommendationAnalysis: ws.knowledgeModel?.ai?.recommendations ?? null,
+      learningPathAnalysis: ws.knowledgeModel?.ai?.learningPath ?? null,
     };
 
     Promise.all([

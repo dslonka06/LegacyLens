@@ -4,7 +4,6 @@ import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { SystemUnderstanding } from '@app/analysis/models/system-understanding.model';
-import { ExplanationResult } from '@app/analysis/models/ai-explanation-context.model';
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
 
 @Component({
@@ -18,7 +17,6 @@ export class FileSystemUnderstandingPage implements OnInit, OnDestroy {
 
   understanding: SystemUnderstanding | null = null;
   hasWorkspace = false;
-  aiExplanation: ExplanationResult | null = null;
 
   private sub: Subscription | null = null;
 
@@ -27,8 +25,7 @@ export class FileSystemUnderstandingPage implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.sub = this.manager.activeWorkspace$.subscribe(ws => {
       this.hasWorkspace = ws !== null;
-      this.understanding = ws?.systemUnderstanding ?? null;
-      this.aiExplanation = ws?.aiExplanation ?? null;
+      this.understanding = ws?.knowledgeModel?.ai?.understanding ?? null;
     });
   }
 
@@ -37,12 +34,11 @@ export class FileSystemUnderstandingPage implements OnInit, OnDestroy {
   }
 
   dismissExplanation(): void {
-    const id = this.manager.activeId;
-    if (id) this.manager.clearAiExplanation(id);
+    // Explanation dismissal is no longer supported — it lives inside KnowledgeModel.
   }
 
   get showExplanationCard(): boolean {
-    return this.hasWorkspace && this.aiExplanation !== null;
+    return this.hasWorkspace && this.understanding !== null;
   }
 }
 

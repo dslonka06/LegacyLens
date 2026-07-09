@@ -2,14 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, map, distinctUntilChanged, switchMap, of } from 'rxjs';
 import { Router } from '@angular/router';
 import { Workspace, WorkspaceType, WorkspaceStatus, MAX_WORKSPACES } from '../models/workspace-entity.model';
-import { AnalysisSession } from '@app/analysis/models/analysis-session.model';
-import { WorkspaceContext } from '../models/workspace-context.model';
-import { RepositoryKnowledge, KnowledgeState } from '@app/knowledge/models/knowledge.model';
-import { SecurityAnalysis } from '@app/analysis/models/security-analysis.model';
-import { SystemUnderstanding } from '@app/analysis/models/system-understanding.model';
-import { RecommendationAnalysis } from '@app/analysis/models/recommendation-analysis.model';
-import { LearningPathAnalysis } from '@app/analysis/models/learning-path-analysis.model';
-import { ExplanationResult } from '@app/analysis/models/ai-explanation-context.model';
+import type { KnowledgeModel, KnowledgeAIResults, AIStage } from '@app/knowledge/models/knowledge-model.contract';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceManagerService {
@@ -71,9 +64,9 @@ export class WorkspaceManagerService {
   // ── Creation ──────────────────────────────────────────────────────────────
 
   create(type: WorkspaceType, name?: string): Workspace {
-    const id = this.generateId();
+    const id  = this.generateId();
     const now = new Date().toISOString();
-    const defaultName = type === 'file' ? 'File Workspace'
+    const defaultName = type === 'file'   ? 'File Workspace'
                       : type === 'folder' ? 'Folder Workspace'
                       : 'Repository Workspace';
 
@@ -81,20 +74,11 @@ export class WorkspaceManagerService {
       id,
       name: name ?? defaultName,
       type,
-      status: 'empty',
-      createdAt: now,
+      status:         'empty',
+      createdAt:      now,
       lastModifiedAt: now,
-      repositoryId: null,
-      session: null,
-      context: null,
-      knowledge: null,
-      knowledgeState: KnowledgeState.NotStarted,
-      securityAnalysis: null,
-      securityOverview: null,
-      systemUnderstanding: null,
-      recommendationAnalysis: null,
-      learningPathAnalysis: null,
-      aiExplanation: null,
+      repositoryId:   null,
+      knowledgeModel: null,
     };
 
     this._workspaces$.next([...this._workspaces$.value, ws]);
@@ -108,19 +92,16 @@ export class WorkspaceManagerService {
     const ws = this.getById(id);
     if (!ws) return;
     this._activeId$.next(id);
-    const route = this.routeForType(ws.type);
-    this.router.navigate([route]);
+    this.router.navigate([this.routeForType(ws.type)]);
   }
 
   // Called by navigation guard — sets active to the first workspace of that
-  // type if one exists, or creates a blank one. Returns the workspace, or null
-  // if limit reached and no workspace of that type exists.
+  // type if one exists, or creates a blank one. Returns null if limit reached.
   activateOrCreateForType(type: WorkspaceType): Workspace | null {
     const existing = this.getByType(type);
     if (existing.length > 0) {
-      // Prefer the currently active one if it matches, otherwise pick the first
       const current = this.getActive();
-      const target = (current?.type === type) ? current : existing[0];
+      const target  = (current?.type === type) ? current : existing[0];
       this._activeId$.next(target.id);
       return target;
     }
@@ -162,123 +143,77 @@ export class WorkspaceManagerService {
     this.patch(id, { repositoryId });
   }
 
-  // ── Session ───────────────────────────────────────────────────────────────
+  // ── Knowledge Model ───────────────────────────────────────────────────────
+  // These are the ONLY mutation points for knowledgeModel. Called exclusively
+  // by WorkspaceKnowledgeService — nothing else should call these directly.
 
-  setSession(id: string, session: AnalysisSession): void {
+  /** Set the structural KnowledgeModel after the Code Intelligence Engine completes. */
+  setKnowledgeModel(id: string, model: KnowledgeModel): void {
     this.patch(id, {
-      session,
-      status: this.deriveStatus(id, { session }),
+      knowledgeModel:  model,
+      status:          'ready',
+      lastModifiedAt:  new Date().toISOString(),
+    });
+  }
+
+  /** Mark the workspace as processing (structural pipeline running). */
+  setProcessing(id: string): void {
+    this.patch(id, { status: 'processing', lastModifiedAt: new Date().toISOString() });
+  }
+
+  /** Mark the workspace as failed. */
+  setError(id: string): void {
+    this.patch(id, { status: 'error', lastModifiedAt: new Date().toISOString() });
+  }
+
+  /**
+   * Merge AI results into the existing KnowledgeModel.
+   * Partial merge — only updates the fields present in `aiResults`.
+   * Called by AIAnalysisService as each AI stage completes.
+   */
+  mergeAIResults(id: string, aiResults: Partial<KnowledgeAIResults>): void {
+    const ws = this.getById(id);
+    if (!ws?.knowledgeModel) return;
+
+    const existing = ws.knowledgeModel.ai ?? { completedStages: [], failedStages: [] };
+    const merged: KnowledgeAIResults = { ...existing, ...aiResults };
+
+    this.patch(id, {
+      knowledgeModel: { ...ws.knowledgeModel, ai: merged },
       lastModifiedAt: new Date().toISOString(),
     });
   }
 
-  // ── Context ───────────────────────────────────────────────────────────────
+  /** Mark an AI stage as failed without losing other AI results. */
+  markAIStageFailed(id: string, stage: AIStage): void {
+    const ws = this.getById(id);
+    if (!ws?.knowledgeModel) return;
 
-  setContext(id: string, context: WorkspaceContext): void {
+    const existing = ws.knowledgeModel.ai ?? { completedStages: [], failedStages: [] };
+    const failedStages = [...new Set([...existing.failedStages, stage])];
+
     this.patch(id, {
-      context,
-      name: context.workspaceName,
-      status: this.deriveStatus(id, { context }),
-      lastModifiedAt: new Date().toISOString(),
+      knowledgeModel: {
+        ...ws.knowledgeModel,
+        ai: { ...existing, failedStages },
+      },
     });
   }
 
-  clearContext(id: string): void {
-    this.patch(id, { context: null, status: 'empty', lastModifiedAt: new Date().toISOString() });
-  }
-
-  // ── Knowledge ─────────────────────────────────────────────────────────────
-
-  setKnowledge(id: string, knowledge: RepositoryKnowledge): void {
+  clearKnowledgeModel(id: string): void {
     this.patch(id, {
-      knowledge,
-      status: this.deriveStatus(id, { knowledge }),
+      knowledgeModel: null,
+      status:         'empty',
       lastModifiedAt: new Date().toISOString(),
     });
-  }
-
-  setKnowledgeState(id: string, state: KnowledgeState): void {
-    const status: WorkspaceStatus = state === KnowledgeState.Complete ? 'loaded' : 'analyzing';
-    this.patch(id, { knowledgeState: state, status });
-  }
-
-  clearKnowledge(id: string): void {
-    this.patch(id, { knowledge: null, knowledgeState: KnowledgeState.NotStarted });
-  }
-
-  // ── Security Analysis ─────────────────────────────────────────────────────
-
-  setSecurityAnalysis(id: string, security: SecurityAnalysis): void {
-    this.patch(id, { securityAnalysis: security, lastModifiedAt: new Date().toISOString() });
-  }
-
-  clearSecurityAnalysis(id: string): void {
-    this.patch(id, { securityAnalysis: null });
-  }
-
-  // ── Security Overview (AI-generated narrative) ────────────────────────────
-
-  setSecurityOverview(id: string, overview: string): void {
-    this.patch(id, { securityOverview: overview, lastModifiedAt: new Date().toISOString() });
-  }
-
-  clearSecurityOverview(id: string): void {
-    this.patch(id, { securityOverview: null });
-  }
-
-  // ── System Understanding ──────────────────────────────────────────────────
-
-  setSystemUnderstanding(id: string, understanding: SystemUnderstanding): void {
-    this.patch(id, { systemUnderstanding: understanding, lastModifiedAt: new Date().toISOString() });
-  }
-
-  clearSystemUnderstanding(id: string): void {
-    this.patch(id, { systemUnderstanding: null });
-  }
-
-  // ── Recommendation Analysis ───────────────────────────────────────────────
-
-  setRecommendationAnalysis(id: string, analysis: RecommendationAnalysis): void {
-    this.patch(id, { recommendationAnalysis: analysis, lastModifiedAt: new Date().toISOString() });
-  }
-
-  clearRecommendationAnalysis(id: string): void {
-    this.patch(id, { recommendationAnalysis: null });
-  }
-
-  // ── Learning Path Analysis ────────────────────────────────────────────────
-
-  setLearningPathAnalysis(id: string, analysis: LearningPathAnalysis): void {
-    this.patch(id, { learningPathAnalysis: analysis, lastModifiedAt: new Date().toISOString() });
-  }
-
-  clearLearningPathAnalysis(id: string): void {
-    this.patch(id, { learningPathAnalysis: null });
-  }
-
-  // ── AI Explanation ────────────────────────────────────────────────────────
-
-  setAiExplanation(id: string, explanation: ExplanationResult): void {
-    this.patch(id, { aiExplanation: explanation, lastModifiedAt: new Date().toISOString() });
-  }
-
-  clearAiExplanation(id: string): void {
-    this.patch(id, { aiExplanation: null });
   }
 
   // ── Raw file storage ──────────────────────────────────────────────────────
+  // Kept separate from the Workspace entity — File objects are not serializable.
 
-  setRawFiles(id: string, files: File[]): void {
-    this._rawFiles.set(id, files);
-  }
-
-  getRawFiles(id: string): File[] {
-    return this._rawFiles.get(id) ?? [];
-  }
-
-  clearRawFiles(id: string): void {
-    this._rawFiles.delete(id);
-  }
+  setRawFiles(id: string, files: File[]): void { this._rawFiles.set(id, files); }
+  getRawFiles(id: string): File[]              { return this._rawFiles.get(id) ?? []; }
+  clearRawFiles(id: string): void              { this._rawFiles.delete(id); }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -289,17 +224,9 @@ export class WorkspaceManagerService {
     this._workspaces$.next(updated);
   }
 
-  private deriveStatus(id: string, delta: Partial<Workspace>): WorkspaceStatus {
-    const ws = this.getById(id);
-    if (!ws) return 'empty';
-    const merged = { ...ws, ...delta };
-    if (merged.knowledge || merged.session || merged.context) return 'loaded';
-    return 'empty';
-  }
-
   private routeForType(type: WorkspaceType): string {
-    if (type === 'file')       return '/file-analysis';
-    if (type === 'folder')     return '/folder-analysis';
+    if (type === 'file')   return '/file-analysis';
+    if (type === 'folder') return '/folder-analysis';
     return '/repository-analysis';
   }
 

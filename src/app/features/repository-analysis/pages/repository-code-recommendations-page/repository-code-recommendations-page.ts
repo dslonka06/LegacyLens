@@ -16,8 +16,8 @@ import { Workspace } from '@app/workspace/models/workspace-entity.model';
 export class RepositoryCodeRecommendationsPage implements OnInit, OnDestroy {
 
   workspace: Workspace | null = null;
-  get recs(): RecommendationAnalysis | null { return this.workspace?.recommendationAnalysis ?? null; }
-  get hasWorkspace(): boolean { return this.workspace !== null && (this.workspace.knowledge !== null || this.workspace.context !== null); }
+  get recs(): RecommendationAnalysis | null { return this.workspace?.knowledgeModel?.ai?.recommendations ?? null; }
+  get hasWorkspace(): boolean { return this.workspace !== null && this.workspace.knowledgeModel !== null; }
 
   expandedRecs = new Set<string>();
 

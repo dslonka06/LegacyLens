@@ -13,15 +13,14 @@ export class DataFlowDiscoveryService {
   }
 
   extractBehaviorInsights(knowledge: RepositoryKnowledge): BehaviorInsights {
-    // Derived directly from knowledge — no engine call needed for this lightweight aggregation
     const graph = knowledge.dependencyGraph;
-    if (!graph) return { patterns: [], hotspots: [], summary: '' };
-    const nodeCount = graph.nodes.length;
-    const edgeCount = graph.edges.length;
+    const nodeCount = graph?.nodes.length ?? 0;
+    const edgeCount = graph?.edges.length ?? 0;
     return {
-      patterns: [],
-      hotspots: [],
-      summary: `${nodeCount} components with ${edgeCount} dependency edges.`,
+      entryPoints: [],
+      mostReferencedServices: [],
+      frequentlyUsedRepositories: [],
+      workflowBottlenecks: [`${nodeCount} components with ${edgeCount} dependency edges.`],
     };
   }
 }

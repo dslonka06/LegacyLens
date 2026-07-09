@@ -16,8 +16,8 @@ import { Workspace } from '@app/workspace/models/workspace-entity.model';
 export class FolderLearningPathPage implements OnInit, OnDestroy {
 
   workspace: Workspace | null = null;
-  get lp(): LearningPathAnalysis | null { return this.workspace?.learningPathAnalysis ?? null; }
-  get hasWorkspace(): boolean { return this.workspace !== null && this.workspace.knowledge !== null; }
+  get lp(): LearningPathAnalysis | null { return this.workspace?.knowledgeModel?.ai?.learningPath ?? null; }
+  get hasWorkspace(): boolean { return this.workspace !== null && this.workspace.knowledgeModel !== null; }
 
   expandedSteps = new Set<number>();
   expandedConcepts = new Set<number>();

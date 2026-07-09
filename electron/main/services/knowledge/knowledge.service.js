@@ -62,8 +62,10 @@ class KnowledgeService {
       const check = this.incrementalEngine.check(repositoryId, currentHashes, requiredCapabilities);
 
       if (!check.needsFullRebuild && !check.needsPartialRebuild) {
-        // Model is current — return cached model directly
-        return { ...check.existingModel, _fromCache: true };
+        // Model is current — return cached model with metadata flag set
+        const cached = { ...check.existingModel };
+        cached.metadata = { ...cached.metadata, fromCache: true };
+        return cached;
       }
 
       if (!check.needsFullRebuild && check.needsPartialRebuild) {
@@ -81,7 +83,9 @@ class KnowledgeService {
           this.modelService.save(repositoryId, updatedModel);
         }
 
-        return { ...updatedModel, _fromCache: false, _partialRebuild: true };
+        const partial = { ...updatedModel };
+        partial.metadata = { ...partial.metadata, fromCache: false, partialRebuild: true };
+        return partial;
       }
     }
 
@@ -94,11 +98,13 @@ class KnowledgeService {
     // ── Persist ──────────────────────────────────────────────────────────────
     if (persist) {
       this.syncFileHashes(repositoryId, files);
-      const analysisId = this.modelService.save(repositoryId, model);
-      model._analysisId = analysisId;
+      const buildId = this.modelService.save(repositoryId, model);
+      model.metadata = { ...model.metadata, buildId };
     }
 
-    return { ...model, _fromCache: false, _partialRebuild: false };
+    const result = { ...model };
+    result.metadata = { ...result.metadata, fromCache: false, partialRebuild: false };
+    return result;
   }
 
   /**

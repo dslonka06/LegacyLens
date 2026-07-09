@@ -13,13 +13,6 @@ import { FolderNode } from '@app/knowledge/models/repository.model';
 import { CurrentAnalysisService } from '@app/workspace/services/current-analysis.service';
 import { CurrentWorkspaceService } from '@app/workspace/services/current-workspace.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
-import { SecurityAnalysisService } from '@app/analysis/services/security-analysis.service';
-import { SecurityAnalysis } from '@app/analysis/models/security-analysis.model';
-import { SystemUnderstandingService } from '@app/analysis/services/system-understanding.service';
-import { RecommendationAnalysisService } from '@app/analysis/services/recommendation-analysis.service';
-import { LearningPathAnalysisService } from '@app/analysis/services/learning-path-analysis.service';
-import { RepositoryKnowledgeService } from '@app/knowledge/services/repository-knowledge.service';
-import { AiKnowledgeService } from '@app/ai/services/ai-knowledge.service';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
 
@@ -80,18 +73,11 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   private uploadedFiles: File[] = [];
   private contextSub: Subscription | null = null;
   private limitSub: Subscription | null = null;
-  private securitySub: Subscription | null = null;
 
   constructor(
     private readonly currentAnalysis: CurrentAnalysisService,
     private readonly currentWorkspace: CurrentWorkspaceService,
     private readonly manager: WorkspaceManagerService,
-    private readonly securityService: SecurityAnalysisService,
-    private readonly understandingService: SystemUnderstandingService,
-    private readonly recService: RecommendationAnalysisService,
-    private readonly learningPathService: LearningPathAnalysisService,
-    private readonly knowledgeService: RepositoryKnowledgeService,
-    private readonly aiKnowledge: AiKnowledgeService,
     private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
     private readonly router: Router,
@@ -118,69 +104,12 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     });
 
     this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
-
-    // Generate security and system understanding once knowledge pipeline completes.
-    // All four analysis calls are guarded — if the workspace already has the result
-    // (navigating back to a completed analysis) we skip recomputation entirely.
-    this.securitySub = this.knowledgeService.knowledge$.subscribe(async knowledge => {
-      const id = this.manager.activeId;
-      if (knowledge && id) {
-        const ws = this.manager.getById(id);
-
-        let security: SecurityAnalysis;
-        const cachedSecurity = ws?.securityAnalysis;
-        if (cachedSecurity) {
-          security = cachedSecurity;
-        } else {
-          security = await this.securityService.analyzeKnowledge(knowledge, this.session);
-          this.manager.setSecurityAnalysis(id, security);
-        }
-
-        if (!ws?.systemUnderstanding) {
-          const understanding = await this.understandingService.analyzeKnowledge(knowledge, this.session);
-          this.manager.setSystemUnderstanding(id, understanding);
-        }
-
-        if (!ws?.recommendationAnalysis) {
-          const recs = await this.recService.analyzeKnowledge(knowledge, this.session);
-          this.manager.setRecommendationAnalysis(id, recs);
-        }
-
-        const wsAfter = this.manager.getById(id);
-        if (!wsAfter?.learningPathAnalysis && wsAfter?.systemUnderstanding) {
-          const lp = await this.learningPathService.analyzeKnowledge(knowledge, this.session, wsAfter.systemUnderstanding, 'folder');
-          this.manager.setLearningPathAnalysis(id, lp);
-        }
-
-        // Fire explanation and security overview concurrently — neither depends on
-        // the other's result. Both are skipped if already cached.
-        const ctx = this.workspaceContext;
-        if (ctx && !this.manager.getById(id)?.aiExplanation) {
-          this.aiKnowledge.explainRepository(ctx, knowledge).subscribe({
-            next: content => this.manager.setAiExplanation(id, {
-              type: 'repository',
-              title: 'Repository Explanation',
-              content,
-              generatedAt: new Date().toISOString(),
-            }),
-            error: () => { /* AI unavailable — explanation stays null, page degrades gracefully */ },
-          });
-        }
-
-        if (ctx && !this.manager.getById(id)?.securityOverview) {
-          this.aiKnowledge.generateSecurityOverview(ctx, security, 'folder').subscribe({
-            next: overview => this.manager.setSecurityOverview(id, overview),
-            error: () => { /* AI unavailable — overview stays null, page degrades gracefully */ },
-          });
-        }
-      }
-    });
+    // AI analysis is now handled by AIAnalysisService via WorkspaceKnowledgeService
   }
 
   ngOnDestroy(): void {
     this.contextSub?.unsubscribe();
     this.limitSub?.unsubscribe();
-    this.securitySub?.unsubscribe();
   }
 
   // ── CodeEditor event handlers ─────────────────────────────────────────────
@@ -385,7 +314,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   }
 
   get aiSummary(): string | null {
-    return this.manager.getActive()?.aiExplanation?.content ?? null;
+    return this.manager.getActive()?.knowledgeModel?.ai?.understanding?.executiveSummary ?? null;
   }
 
   get technologyCount(): number {
@@ -395,11 +324,11 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   }
 
   get dependencyCount(): number {
-    return this.manager.getActive()?.knowledge?.dependencyGraph?.edges.length ?? 0;
+    return this.manager.getActive()?.knowledgeModel?.dependencies?.graph?.edges.length ?? 0;
   }
 
   get displayRisks(): { severity: string; description: string }[] {
-    const recs = this.manager.getActive()?.recommendationAnalysis?.recommendations ?? [];
+    const recs = this.manager.getActive()?.knowledgeModel?.ai?.recommendations?.recommendations ?? [];
     return recs
       .filter(r => r.priority === 'critical' || r.priority === 'high')
       .slice(0, 8)
@@ -407,7 +336,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   }
 
   get displayModernizations(): { description: string }[] {
-    const recs = this.manager.getActive()?.recommendationAnalysis?.recommendations ?? [];
+    const recs = this.manager.getActive()?.knowledgeModel?.ai?.recommendations?.recommendations ?? [];
     return recs
       .filter(r => r.category === 'modernization')
       .slice(0, 6)

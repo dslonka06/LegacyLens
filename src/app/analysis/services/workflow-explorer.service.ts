@@ -11,17 +11,15 @@ export class WorkflowExplorerService {
   }
 
   summariesForNode(nodeId: string, flows: DataFlow[]): WorkflowSummary[] {
-    // Pure filter — no engine needed, operates on already-built flows
     return flows
       .filter(f => f.nodes.some(n => n.id === nodeId || n.name === nodeId))
       .map(f => ({
-        id: f.id,
-        name: f.name,
+        title:       f.name,
         description: f.description ?? '',
-        flowPath: f.nodes.map(n => n.name ?? n.id),
-        steps: [],
-        category: f.category ?? 'unknown',
-        complexity: f.complexity ?? 'low',
+        flowPath:    f.nodes.map(n => n.name ?? n.id),
+        steps:       [],
+        confidence:  f.confidence ?? 0,
+        category:    'generic' as const,
       }));
   }
 }

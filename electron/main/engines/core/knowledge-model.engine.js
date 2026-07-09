@@ -3,118 +3,161 @@
 const { readGitMetadata } = require('../../services/git/git-reader.service');
 
 /**
- * KnowledgeModelEngine
+ * KnowledgeModelEngine — D4
  *
- * Converts a PipelineResult (D2/D3) into a structured KnowledgeModel.
- * The model adapts to the validated target type — file models contain only
- * file-relevant data; folder/repository models add progressively more.
+ * Converts a PipelineResult (D2/D3) into a KnowledgeModel with the domain-layer
+ * structure: identity, capabilities, metadata, structure, relationships, insights.
  *
- * Backward-compatible: sourceFiles, dependencyGraph, and architecture fields
- * are present in all target types that support them, preserving the shape
- * existing analysis consumers expect from RepositoryKnowledge.
+ * The model describes what the application KNOWS, not how it learned it.
+ * Each layer builds on the previous:
+ *   structure     → what objectively exists
+ *   relationships → how those things connect
+ *   insights      → what we can deterministically conclude
  */
 class KnowledgeModelEngine {
 
   /**
-   * Build a KnowledgeModel from a PipelineResult.
-   *
    * @param {object} pipelineResult  Output of CapabilityPipelineEngine.run()
    * @param {object} [options]
-   * @param {string} [options.repositoryPath]  Absolute path — enables git metadata read for repository targets
+   * @param {string} [options.repositoryPath]  Enables git metadata read for repository targets
    * @param {string} [options.workspaceName]
    * @returns {KnowledgeModel}
    */
   build(pipelineResult, options = {}) {
     const { targetType, executedCapabilities, capabilityErrors } = pipelineResult;
+    const isFile       = targetType === 'file';
+    const isMultiFile  = targetType === 'folder' || targetType === 'repository';
+    const isRepository = targetType === 'repository';
 
-    const model = {
-      // ── Identity ────────────────────────────────────────────────────────
-      targetType,
-      builtAt: new Date().toISOString(),
-      workspaceName: options.workspaceName ?? null,
-      capabilities: executedCapabilities,
-      capabilityErrors,
-
-      // ── Code Processing (D3) ────────────────────────────────────────────
-      // parsedFiles carries the PatternParser output for every source file.
-      // Consumers that previously read sourceFiles can use parsedFiles instead —
-      // each entry has path, extension, language, classes, methods, imports, exports.
-      parsedFiles: pipelineResult.parsedFiles ?? [],
-
-      // ── Language & Technology ────────────────────────────────────────────
-      languages: pipelineResult.languages ?? [],
-      detectedTechnologies: pipelineResult.detectedTechnologies ?? [],
-      frameworks: pipelineResult.frameworks ?? [],
-
-      // ── Symbol Index ─────────────────────────────────────────────────────
-      // Path-keyed map: { [path]: { classes, methods, imports, exports, language, type } }
-      symbolIndex: pipelineResult.symbolIndex ?? {},
-
-      // ── Backward-compatible sourceFiles ──────────────────────────────────
-      // Reconstructed from parsedFiles so existing consumers (SystemUnderstanding,
-      // Security, Recommendations) continue working without changes.
-      sourceFiles: this.toSourceFiles(pipelineResult.parsedFiles ?? []),
+    // ── Structure ──────────────────────────────────────────────────────────────
+    const structure = {
+      totalFiles:   pipelineResult.parsedFiles?.length ?? 0,
+      languages:    pipelineResult.languages    ?? [],
+      frameworks:   pipelineResult.frameworks   ?? [],
+      technologies: pipelineResult.detectedTechnologies ?? [],
+      symbols:      pipelineResult.symbolIndex  ?? {},
     };
 
-    // ── Folder & above ───────────────────────────────────────────────────────
-    if (targetType === 'folder' || targetType === 'repository') {
-      model.folderStructure  = pipelineResult.folderStructure ?? null;
-      model.dependencyGraph  = pipelineResult.dependencyGraph ?? null;
-      model.dependencyHubs   = pipelineResult.dependencyHubs ?? [];
-      model.dependencyRanks  = pipelineResult.dependencyRanks ?? [];
-      model.projects         = pipelineResult.projects ?? [];
-
-      // Backward-compatible architecture field
-      model.architecture = pipelineResult.architectureHints
-        ? { patterns: pipelineResult.architectureHints.map(hint => ({ name: hint, confidence: null, indicators: [] })) }
-        : null;
+    if (isMultiFile) {
+      structure.folderTree = pipelineResult.folderStructure ?? null;
+      structure.projects   = pipelineResult.projects        ?? [];
     }
 
-    // ── Repository only ──────────────────────────────────────────────────────
-    if (targetType === 'repository') {
-      model.architectureHints = pipelineResult.architectureHints ?? null;
-
-      // Git metadata — read from filesystem if repo path provided
-      model.gitAnalysis = this.buildGitAnalysis(pipelineResult, options.repositoryPath);
+    // File-scope extras — source code kept in model (file is small)
+    if (isFile && pipelineResult.parsedFiles?.[0]) {
+      const pf = pipelineResult.parsedFiles[0];
+      structure.sourceCode  = pf.content    ?? null;
+      structure.filePath    = pf.path       ?? null;
+      structure.fileLanguage = pf.language  ?? (pipelineResult.languages?.[0] ?? null);
     }
 
-    return model;
+    // ── Relationships ──────────────────────────────────────────────────────────
+    const relationships = {};
+
+    if (isMultiFile && pipelineResult.dependencyGraph) {
+      relationships.dependencies = {
+        graph: pipelineResult.dependencyGraph,
+        hubs:  pipelineResult.dependencyHubs  ?? [],
+        ranks: pipelineResult.dependencyRanks ?? [],
+      };
+    }
+
+    if (isMultiFile && pipelineResult.architectureHints?.length) {
+      relationships.architecture = {
+        patterns: pipelineResult.architectureHints.map(hint =>
+          typeof hint === 'string'
+            ? { name: hint, confidence: null, indicators: [] }
+            : hint,
+        ),
+      };
+    }
+
+    if (isRepository) {
+      relationships.git = this.buildGitAnalysis(pipelineResult, options.repositoryPath);
+    }
+
+    // ── Insights ───────────────────────────────────────────────────────────────
+    // Deterministic conclusions from code analysis.
+    // For file targets the PatternParser produces structured analysis results.
+    const insights = {};
+
+    if (isFile && pipelineResult.parsedFiles?.[0]) {
+      const pf = pipelineResult.parsedFiles[0];
+      const ar = pf.analysisResult ?? {};  // raw PatternParser output
+
+      if (ar.complexity)      insights.complexity      = ar.complexity;
+      if (ar.maintainability) insights.maintainability = ar.maintainability;
+
+      if (ar.risks?.length) {
+        insights.risks = ar.risks.map(r => ({
+          severity:    r.severity    ?? 'low',
+          description: r.description ?? String(r),
+          location:    r.location    ?? undefined,
+        }));
+      }
+
+      // Structured data flow — steps + inputs + outputs
+      const rawDataFlow = ar.dataFlow;
+      if (rawDataFlow) {
+        const steps = typeof rawDataFlow === 'string'
+          ? rawDataFlow.split(/→|->/).map(s => s.trim()).filter(Boolean)
+          : (rawDataFlow.steps ?? []);
+        insights.dataFlow = {
+          steps,
+          inputs:  ar.inputs  ?? [],
+          outputs: ar.outputs ?? [],
+        };
+      }
+
+      if (ar.hotspots?.length) insights.hotspots = ar.hotspots;
+    }
+
+    // ── Metadata ───────────────────────────────────────────────────────────────
+    const metadata = {
+      builtAt:       new Date().toISOString(),
+      schemaVersion: '2',
+    };
+
+    return {
+      // Identity
+      targetType,
+      workspaceName: options.workspaceName ?? null,
+
+      // Capabilities — gates UI sections
+      capabilities:     executedCapabilities,
+      capabilityErrors: capabilityErrors ?? {},
+
+      // Layers
+      metadata,
+      structure,
+      relationships,
+      insights,
+
+      // AI — populated asynchronously by AIAnalysisService after this returns
+      // ai: undefined
+    };
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
-  toSourceFiles(parsedFiles) {
-    // PatternParser stores the raw content in _analysisResult — not retained.
-    // Reconstruct the minimal SourceFile shape { path, extension, content: '' }
-    // so downstream engines that iterate sourceFiles still get a valid array.
-    // Content is intentionally empty here — D5 Context Generation will provide
-    // content-aware context without storing full file content in the KnowledgeModel.
-    return parsedFiles.map(pf => ({
-      path: pf.path,
-      extension: pf.extension ?? '',
-      content: '',
-    }));
-  }
+  // ── Helpers ──────────────────────────────────────────────────────────────────
 
   buildGitAnalysis(pipelineResult, repositoryPath) {
-    // If the pipeline already ran GIT_ANALYSIS and reported unavailable, honor it
     if (pipelineResult.gitAnalysis && !pipelineResult.gitAnalysis.available) {
       if (!repositoryPath) return pipelineResult.gitAnalysis;
     }
 
     if (!repositoryPath) {
-      return { available: false, reason: 'No repository path provided' };
+      return { available: false, branch: null, originUrl: null };
     }
 
     try {
       const meta = readGitMetadata(repositoryPath);
       return {
         available: true,
-        branch: meta.gitBranch,
-        originUrl: meta.gitUrl,
+        branch:    meta.gitBranch  ?? null,
+        originUrl: meta.gitUrl     ?? null,
       };
     } catch {
-      return { available: false, reason: 'Failed to read git metadata' };
+      return { available: false, branch: null, originUrl: null };
     }
   }
 }

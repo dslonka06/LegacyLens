@@ -4,10 +4,7 @@
   <div class="sidebar-brand" *ngIf="!collapsed">
     <a routerLink="/" class="brand-home-link">
       <div class="brand-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          <path d="M11 8v6M8 11h6"/>
-        </svg>
+        <img src="assets/logo.png" alt="LegacyLens logo" width="22" height="22" />
       </div>
       <div class="brand-text">
         <div class="brand-name-row">
@@ -27,10 +24,7 @@
   <!-- Brand — collapsed -->
   <div class="sidebar-brand-collapsed" *ngIf="collapsed">
     <a routerLink="/" class="brand-icon brand-icon-link" title="Home">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        <path d="M11 8v6M8 11h6"/>
-      </svg>
+      <img src="assets/logo.png" alt="LegacyLens logo" width="22" height="22" />
     </a>
     <button class="collapse-btn-collapsed" (click)="toggle()" title="Expand sidebar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
