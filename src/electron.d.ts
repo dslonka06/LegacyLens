@@ -210,6 +210,7 @@ interface ElectronIntelligenceAPI {
   capabilitiesFor(targetType: AnalysisTargetType): Promise<string[]>;
   buildKnowledgeModel(targetType: AnalysisTargetType, files: unknown[], options?: BuildKnowledgeModelOptions): Promise<KnowledgeModel>;
   getKnowledgeModel(repositoryId: string): Promise<KnowledgeModel | null>;
+  buildContext(contextType: 'repository' | 'workflow' | 'security' | 'analysis', knowledgeModel: KnowledgeModel, extras?: unknown): Promise<unknown>;
 }
 
 interface ElectronValidationAPI {

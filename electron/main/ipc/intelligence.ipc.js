@@ -19,11 +19,13 @@ const { RepositorySummaryEngine } = require('../engines/analysis/repository-summ
 const { CapabilityPipelineEngine } = require('../engines/core/capability-pipeline.engine');
 const { KnowledgeModelEngine } = require('../engines/core/knowledge-model.engine');
 const { KnowledgeModelService } = require('../services/knowledge/knowledge-model.service');
+const { ContextGenerationEngine } = require('../engines/core/context-generation.engine');
 
 const analysisEngine = new AnalysisEngine();
 const capabilityPipeline = new CapabilityPipelineEngine();
 const knowledgeModelEngine = new KnowledgeModelEngine();
 const knowledgeModelService = new KnowledgeModelService();
+const contextEngine = new ContextGenerationEngine();
 const architectureDetector = new ArchitectureDetectorEngine();
 const dependencyExplorer = new DependencyExplorerEngine();
 const dependencyMapper = new DependencyMapperEngine();
@@ -175,6 +177,15 @@ function registerIntelligenceHandlers() {
   ipcMain.handle('intelligence:getKnowledgeModel', wrapHandler(async (_event, repositoryId) => {
     if (!repositoryId) throw new Error('repositoryId is required');
     return knowledgeModelService.getLatest(repositoryId);
+  }));
+
+  // intelligence:buildContext — D5: generate feature-specific context from a KnowledgeModel
+  // contextType: 'repository' | 'workflow' | 'security' | 'analysis'
+  // extras: feature-specific supplemental data (workflow, securityAnalysis, scope, workspaceName)
+  ipcMain.handle('intelligence:buildContext', wrapHandler(async (_event, contextType, knowledgeModel, extras) => {
+    if (!contextType) throw new Error('contextType is required');
+    if (!knowledgeModel) throw new Error('knowledgeModel is required');
+    return contextEngine.build(contextType, knowledgeModel, extras ?? {});
   }));
 }
 

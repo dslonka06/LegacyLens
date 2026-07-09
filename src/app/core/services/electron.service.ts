@@ -289,4 +289,13 @@ export class ElectronService {
     if (!this.api) return null;
     return this.api.intelligence.getKnowledgeModel(repositoryId);
   }
+
+  async buildContext(
+    contextType: 'repository' | 'workflow' | 'security' | 'analysis',
+    knowledgeModel: unknown,
+    extras?: unknown,
+  ): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.buildContext(contextType, knowledgeModel as any, extras);
+  }
 }
