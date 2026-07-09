@@ -19,44 +19,45 @@ export const routes: Routes = [
     path: 'file-analysis/architecture',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/file-analysis/pages/file-architecture-page/file-architecture-page').then(m => m.FileArchitecturePage)
+      import('../features/analysis/pages/architecture-page/architecture-page').then(m => m.ArchitecturePage)
   },
   {
     path: 'file-analysis/data-flow',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/file-analysis/pages/file-data-flow-page/file-data-flow-page').then(m => m.FileDataFlowPage)
+      import('../features/analysis/pages/data-flow-page/data-flow-page').then(m => m.DataFlowPage)
   },
   {
     path: 'file-analysis/code-recommendations',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/file-analysis/pages/file-code-recommendations-page/file-code-recommendations-page').then(m => m.FileCodeRecommendationsPage)
+      import('../features/analysis/pages/code-recommendations-page/code-recommendations-page').then(m => m.CodeRecommendationsPage)
   },
   {
     path: 'file-analysis/security',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/file-analysis/pages/file-security-page/file-security-page').then(m => m.FileSecurityPage)
+      import('../features/analysis/pages/security-page/security-page').then(m => m.SecurityPage)
   },
   {
     path: 'file-analysis/documentation',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/file-analysis/pages/file-documentation-page/file-documentation-page').then(m => m.FileDocumentationPage)
+      import('../features/analysis/pages/documentation-page/documentation-page').then(m => m.DocumentationPage)
   },
   {
     path: 'file-analysis/system-understanding',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/file-analysis/pages/file-system-understanding-page/file-system-understanding-page').then(m => m.FileSystemUnderstandingPage)
+      import('../features/analysis/pages/system-understanding-page/system-understanding-page').then(m => m.SystemUnderstandingPage)
   },
   {
     path: 'file-analysis/learning-path',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/file-analysis/pages/file-learning-path-page/file-learning-path-page').then(m => m.FileLearningPathPage)
+      import('../features/analysis/pages/learning-path-page/learning-path-page').then(m => m.LearningPathPage)
   },
+
   // ── Folder Analysis workspace ─────────────────────────────────────────────
   {
     path: 'folder-analysis',
@@ -68,44 +69,45 @@ export const routes: Routes = [
     path: 'folder-analysis/architecture',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/folder-analysis/pages/folder-architecture-page/folder-architecture-page').then(m => m.FolderArchitecturePage)
+      import('../features/analysis/pages/architecture-page/architecture-page').then(m => m.ArchitecturePage)
   },
   {
     path: 'folder-analysis/data-flow',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/folder-analysis/pages/folder-data-flow-page/folder-data-flow-page').then(m => m.FolderDataFlowPage)
+      import('../features/analysis/pages/data-flow-page/data-flow-page').then(m => m.DataFlowPage)
   },
   {
     path: 'folder-analysis/code-recommendations',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/folder-analysis/pages/folder-code-recommendations-page/folder-code-recommendations-page').then(m => m.FolderCodeRecommendationsPage)
+      import('../features/analysis/pages/code-recommendations-page/code-recommendations-page').then(m => m.CodeRecommendationsPage)
   },
   {
     path: 'folder-analysis/security',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/folder-analysis/pages/folder-security-page/folder-security-page').then(m => m.FolderSecurityPage)
+      import('../features/analysis/pages/security-page/security-page').then(m => m.SecurityPage)
   },
   {
     path: 'folder-analysis/documentation',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/folder-analysis/pages/folder-documentation-page/folder-documentation-page').then(m => m.FolderDocumentationPage)
+      import('../features/analysis/pages/documentation-page/documentation-page').then(m => m.DocumentationPage)
   },
   {
     path: 'folder-analysis/system-understanding',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/folder-analysis/pages/folder-system-understanding-page/folder-system-understanding-page').then(m => m.FolderSystemUnderstandingPage)
+      import('../features/analysis/pages/system-understanding-page/system-understanding-page').then(m => m.SystemUnderstandingPage)
   },
   {
     path: 'folder-analysis/learning-path',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/folder-analysis/pages/folder-learning-path-page/folder-learning-path-page').then(m => m.FolderLearningPathPage)
+      import('../features/analysis/pages/learning-path-page/learning-path-page').then(m => m.LearningPathPage)
   },
+
   // ── Repository Analysis workspace ──────────────────────────────────────────
   {
     path: 'repository-analysis',
@@ -117,44 +119,45 @@ export const routes: Routes = [
     path: 'repository-analysis/architecture',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/repository-analysis/pages/repository-architecture-page/repository-architecture-page').then(m => m.RepositoryArchitecturePage)
+      import('../features/analysis/pages/architecture-page/architecture-page').then(m => m.ArchitecturePage)
   },
   {
     path: 'repository-analysis/data-flow',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/repository-analysis/pages/repository-data-flow-page/repository-data-flow-page').then(m => m.RepositoryDataFlowPage)
+      import('../features/analysis/pages/data-flow-page/data-flow-page').then(m => m.DataFlowPage)
   },
   {
     path: 'repository-analysis/code-recommendations',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/repository-analysis/pages/repository-code-recommendations-page/repository-code-recommendations-page').then(m => m.RepositoryCodeRecommendationsPage)
+      import('../features/analysis/pages/code-recommendations-page/code-recommendations-page').then(m => m.CodeRecommendationsPage)
   },
   {
     path: 'repository-analysis/security',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/repository-analysis/pages/repository-security-page/repository-security-page').then(m => m.RepositorySecurityPage)
+      import('../features/analysis/pages/security-page/security-page').then(m => m.SecurityPage)
   },
   {
     path: 'repository-analysis/documentation',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/repository-analysis/pages/repository-documentation-page/repository-documentation-page').then(m => m.RepositoryDocumentationPage)
+      import('../features/analysis/pages/documentation-page/documentation-page').then(m => m.DocumentationPage)
   },
   {
     path: 'repository-analysis/system-understanding',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/repository-analysis/pages/repository-system-understanding-page/repository-system-understanding-page').then(m => m.RepositorySystemUnderstandingPage)
+      import('../features/analysis/pages/system-understanding-page/system-understanding-page').then(m => m.SystemUnderstandingPage)
   },
   {
     path: 'repository-analysis/learning-path',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
-      import('../features/repository-analysis/pages/repository-learning-path-page/repository-learning-path-page').then(m => m.RepositoryLearningPathPage)
+      import('../features/analysis/pages/learning-path-page/learning-path-page').then(m => m.LearningPathPage)
   },
+
   // ── Global ─────────────────────────────────────────────────────────────────
   {
     path: 'settings',

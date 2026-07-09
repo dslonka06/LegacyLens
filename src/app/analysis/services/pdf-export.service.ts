@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { AnalysisSession } from '../models/analysis-session.model';
-import { DocumentationSectionId, RepositorySummary } from '../models/repository-summary.model';
-import { DocumentationBuilderService, DocumentationScope } from './documentation-builder.service';
+import { DocumentationSectionId } from '../models/repository-summary.model';
+import { DocumentationBuilderService } from './documentation-builder.service';
+import type { KnowledgeModel } from '@app/knowledge/models/knowledge-model.contract';
 
 type JsPDF = import('jspdf').jsPDF;
 
@@ -34,19 +35,17 @@ export class PdfExportService {
 
   constructor(private readonly builder: DocumentationBuilderService) {}
 
-  // ── New: export selected documentation sections from RepositorySummary ──
-  async exportDocumentation(
-    summary: RepositorySummary,
+  async exportFromModel(
+    model: KnowledgeModel,
     selectedIds: DocumentationSectionId[],
-    scope: DocumentationScope = 'repository',
   ): Promise<void> {
     const { jsPDF } = await import('jspdf');
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const ctx = new RenderContext(doc);
 
-    this.renderDocumentationCover(ctx, summary, scope);
+    this.renderDocumentationCover(ctx, model);
 
-    const rendered = this.builder.renderPreview(summary, selectedIds, scope);
+    const rendered = this.builder.renderPreview(model, selectedIds);
     const sections = rendered.split('\n\n').filter(Boolean);
 
     for (const block of sections) {
@@ -77,21 +76,23 @@ export class PdfExportService {
       ctx.spacer(4);
     }
 
-    this.renderDocumentationMetadata(ctx, summary, scope);
+    this.renderDocumentationMetadata(ctx, model);
     this.renderFooters(ctx);
 
-    const safeName = summary.workspaceName.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    const safeName = (model.workspaceName ?? 'workspace').replace(/[^a-z0-9]/gi, '-').toLowerCase();
     doc.save(`${safeName}-Documentation.pdf`);
   }
 
-  private renderDocumentationCover(ctx: RenderContext, summary: RepositorySummary, scope: DocumentationScope): void {
+  private renderDocumentationCover(ctx: RenderContext, model: KnowledgeModel): void {
     const doc = ctx.doc;
     const cx  = PAGE_W / 2;
 
-    const scopeLabel = scope === 'file' ? 'FILE ANALYSIS' : scope === 'folder' ? 'FOLDER ANALYSIS' : 'REPOSITORY ANALYSIS';
-    const subtitleLine = scope === 'file'
-      ? `${summary.languages[0] ?? summary.workspaceType} · 1 file`
-      : `${summary.workspaceType} · ${summary.totalFiles} files`;
+    const t = model.targetType;
+    const scopeLabel = t === 'file' ? 'FILE ANALYSIS' : t === 'folder' ? 'FOLDER ANALYSIS' : 'REPOSITORY ANALYSIS';
+    const primaryLang = model.structure.languages[0] ?? model.targetType;
+    const subtitleLine = t === 'file'
+      ? `${primaryLang} · 1 file`
+      : `${model.targetType} · ${model.structure.totalFiles} files`;
 
     const HEADER_H = 72;
     doc.setFillColor(...C.brand);
@@ -111,13 +112,13 @@ export class PdfExportService {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(230, 225, 255);
-    const nameLines = doc.splitTextToSize(summary.workspaceName, CONTENT_W - 10) as string[];
+    const nameLines = doc.splitTextToSize(model.workspaceName ?? 'Workspace', CONTENT_W - 10) as string[];
     doc.text(nameLines[0], cx, 38, { align: 'center' });
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(190, 185, 235);
-    const date = new Date(summary.generatedAt).toLocaleDateString('en-GB', {
+    const date = new Date(model.metadata.builtAt).toLocaleDateString('en-GB', {
       day: 'numeric', month: 'long', year: 'numeric',
     });
     doc.text(date, cx, 49, { align: 'center' });
@@ -129,25 +130,27 @@ export class PdfExportService {
     doc.line(MARGIN, ctx.y - 4, PAGE_W - MARGIN, ctx.y - 4);
   }
 
-  private renderDocumentationMetadata(ctx: RenderContext, summary: RepositorySummary, scope: DocumentationScope = 'repository'): void {
-    const nameLabel = scope === 'file' ? 'File' : scope === 'folder' ? 'Folder' : 'Repository';
+  private renderDocumentationMetadata(ctx: RenderContext, model: KnowledgeModel): void {
+    const t = model.targetType;
+    const nameLabel = t === 'file' ? 'File' : t === 'folder' ? 'Folder' : 'Repository';
     ctx.checkPage(40);
     ctx.spacer(10);
     ctx.sectionHeader('Document Metadata');
     ctx.fieldLabel(nameLabel);
-    ctx.body(summary.workspaceName);
+    ctx.body(model.workspaceName ?? 'Workspace');
     ctx.spacer(4);
     ctx.fieldLabel('Workspace Type');
-    ctx.body(summary.workspaceType);
+    ctx.body(model.targetType);
     ctx.spacer(4);
     ctx.fieldLabel('Generated');
-    ctx.body(new Date(summary.generatedAt).toLocaleString('en-GB', {
+    ctx.body(new Date(model.metadata.builtAt).toLocaleString('en-GB', {
       day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
     }));
-    if (summary.technologies.length) {
+    const techs = model.structure.technologies.map(t2 => t2.technology ?? String(t2)).filter(Boolean);
+    if (techs.length) {
       ctx.spacer(4);
       ctx.fieldLabel('Technologies');
-      ctx.body(summary.technologies.slice(0, 10).join(', '));
+      ctx.body(techs.slice(0, 10).join(', '));
     }
     ctx.spacer(4);
     ctx.fieldLabel('Generated By');

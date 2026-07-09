@@ -10,8 +10,6 @@ import { CurrentWorkspaceService } from '@app/workspace/services/current-workspa
 import { RepositoryKnowledgeService } from '@app/knowledge/services/repository-knowledge.service';
 import { DataFlowDiscoveryService } from '@app/analysis/services/data-flow-discovery.service';
 import { WorkflowExplorerService } from '@app/analysis/services/workflow-explorer.service';
-import { DocumentationBuilderService } from '@app/analysis/services/documentation-builder.service';
-import { RepositorySummaryService } from '@app/analysis/services/repository-summary.service';
 
 // Internal flat representation of every searchable entity.
 // Built once per workspace/knowledge change; queried on every keystroke.
@@ -44,8 +42,6 @@ export class RepositorySearchService implements OnDestroy {
     private readonly dataFlowDiscovery: DataFlowDiscoveryService,
     private readonly workflowExplorer: WorkflowExplorerService,
     private readonly insightsService: RepositoryInsightsService,
-    private readonly docBuilder: DocumentationBuilderService,
-    private readonly summaryService: RepositorySummaryService,
   ) {
     // Rebuild the index whenever workspace context or knowledge changes.
     this.subs.push(
@@ -109,10 +105,6 @@ export class RepositorySearchService implements OnDestroy {
       this.indexDependencyNodes(knowledge);
       await this.indexInsights(knowledge);
       await this.indexWorkflows(knowledge, ctx);
-    }
-
-    if (ctx) {
-      await this.indexDocumentationSections(ctx, knowledge);
     }
 
     this._indexReady$.next(true);
@@ -259,61 +251,6 @@ export class RepositorySearchService implements OnDestroy {
           // flowPath[0] is the entry node; navigate to it to show the workflow
           nodeName: wf.flowPath[0] ?? wf.title,
         },
-      });
-    }
-  }
-
-  // Documentation sections from the doc builder
-  private async indexDocumentationSections(ctx: WorkspaceContext, knowledge: RepositoryKnowledge | null): Promise<void> {
-    const summary = await this.summaryService.build(ctx, knowledge, null);
-    const sections = this.docBuilder.buildSectionList(summary);
-
-    for (const section of sections) {
-      if (!section.available) continue;
-
-      this.index.push({
-        id:          `doc:${section.id}`,
-        type:        'documentation',
-        tokens:      this.tokenize(section.title, section.description, section.id),
-        title:       section.title,
-        description: section.description,
-        source:      'Documentation',
-        baseWeight:  6,
-        navigationTarget: {
-          route:     '/documentation',
-          sectionId: section.id,
-        },
-      });
-    }
-
-    // Also index key files and key projects from summary as repository-section hits
-    for (const kf of summary.keyFiles ?? []) {
-      this.index.push({
-        id:          `keysection-file:${kf.path}`,
-        type:        'repository-section',
-        tokens:      this.tokenize(kf.name, kf.path, kf.reason),
-        title:       kf.name,
-        description: kf.reason,
-        source:      'Key Files',
-        baseWeight:  7,
-        navigationTarget: {
-          route:    '/repository-navigation',
-          nodeName: kf.name,
-          nodePath: kf.path,
-        },
-      });
-    }
-
-    for (const kp of summary.keyProjects ?? []) {
-      this.index.push({
-        id:          `keysection-project:${kp.path}`,
-        type:        'repository-section',
-        tokens:      this.tokenize(kp.name, kp.path, kp.type, kp.framework, kp.language),
-        title:       kp.name,
-        description: `${kp.type} · ${kp.framework}`,
-        source:      'Key Projects',
-        baseWeight:  7,
-        navigationTarget: { route: '/repository-analysis' },
       });
     }
   }

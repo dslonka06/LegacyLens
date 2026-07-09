@@ -138,7 +138,7 @@ export class RepositoryKnowledgeService {
         extension: f.extension,
         size: entry?.size ?? f.content.length,
         hash: hashContent(f.content),
-        modifiedAt: entry?.modifiedAt ?? null,
+        modifiedAt: entry?.modifiedAt ?? undefined,
       };
     });
 

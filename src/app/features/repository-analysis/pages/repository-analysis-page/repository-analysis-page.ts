@@ -437,7 +437,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   }
 
   get dependencyCount(): number {
-    return this.manager.getActive()?.knowledgeModel?.dependencies?.graph?.edges.length ?? 0;
+    return this.manager.getActive()?.knowledgeModel?.relationships.dependencies?.graph?.edges.length ?? 0;
   }
 
   get displayRisks(): { severity: string; description: string }[] {

@@ -1,210 +1,260 @@
 import { Injectable } from '@angular/core';
-import {
-  DocumentationSection,
-  DocumentationSectionId,
-  RepositorySummary,
-} from '../models/repository-summary.model';
+import { DocumentationSection, DocumentationSectionId } from '../models/repository-summary.model';
+import type { KnowledgeModel } from '@app/knowledge/models/knowledge-model.contract';
 
 export type DocumentationScope = 'file' | 'folder' | 'repository';
 
+// ── Section catalogue ──────────────────────────────────────────────────────────
+
 interface SectionDef {
-  id: DocumentationSectionId;
-  title: string;
+  id:          DocumentationSectionId;
+  title:       string;
   description: string;
 }
 
-// Full catalogue with all 11 sections (repository scope)
 const REPO_SECTIONS: SectionDef[] = [
-  {
-    id: 'executive-summary',
-    title: 'Executive Summary',
-    description: 'High-level overview of what this system is and what it does.',
-  },
-  {
-    id: 'repository-overview',
-    title: 'Repository Overview',
-    description: 'File counts, folder structure, projects, and workspace statistics.',
-  },
-  {
-    id: 'architecture-overview',
-    title: 'Architecture Overview',
-    description: 'Detected architectural patterns, layers, and structural design.',
-  },
-  {
-    id: 'data-flow',
-    title: 'Data Flow Analysis',
-    description: 'How data moves through the system — requests, services, and storage.',
-  },
-  {
-    id: 'dependency-analysis',
-    title: 'Dependency Analysis',
-    description: 'Dependency graph statistics, most-connected files, and coupling metrics.',
-  },
-  {
-    id: 'risk-assessment',
-    title: 'Risk Assessment',
-    description: 'Identified risks, high-coupling areas, and change-impact concerns.',
-  },
-  {
-    id: 'modernization',
-    title: 'Modernization Opportunities',
-    description: 'Outdated patterns, technical debt, and recommended improvements.',
-  },
-  {
-    id: 'key-files',
-    title: 'Key Files',
-    description: 'The most important files to understand the system.',
-  },
-  {
-    id: 'key-projects',
-    title: 'Key Projects',
-    description: 'Discovered projects with their types, frameworks, and languages.',
-  },
-  {
-    id: 'repository-insights',
-    title: 'Repository Insights',
-    description: 'High-coupling components, system hubs, broad-scope files, and orphans.',
-  },
-  {
-    id: 'onboarding-guide',
-    title: 'Onboarding Guide',
-    description: 'Step-by-step guide for a new developer joining this project.',
-  },
+  { id: 'executive-summary',    title: 'Executive Summary',           description: 'High-level overview of what this system is and what it does.' },
+  { id: 'repository-overview',  title: 'Repository Overview',         description: 'File counts, folder structure, projects, and workspace statistics.' },
+  { id: 'architecture-overview',title: 'Architecture Overview',       description: 'Detected architectural patterns, layers, and structural design.' },
+  { id: 'data-flow',            title: 'Data Flow Analysis',          description: 'How data moves through the system — requests, services, and storage.' },
+  { id: 'dependency-analysis',  title: 'Dependency Analysis',         description: 'Dependency graph statistics, most-connected files, and coupling metrics.' },
+  { id: 'risk-assessment',      title: 'Risk Assessment',             description: 'Identified risks, high-coupling areas, and change-impact concerns.' },
+  { id: 'modernization',        title: 'Modernization Opportunities', description: 'Technical debt and recommended improvements.' },
+  { id: 'key-files',            title: 'Key Files',                   description: 'The most important files to understand the system.' },
+  { id: 'key-projects',         title: 'Key Projects',                description: 'Discovered projects with their types, frameworks, and languages.' },
+  { id: 'repository-insights',  title: 'Repository Insights',         description: 'High-coupling components, system hubs, and orphan files.' },
+  { id: 'onboarding-guide',     title: 'Onboarding Guide',            description: 'Step-by-step guide for a new developer joining this project.' },
 ];
 
-// Folder scope — excludes key-projects and repository-insights; renames overview/insights
 const FOLDER_SECTIONS: SectionDef[] = [
-  { id: 'executive-summary',   title: 'Executive Summary',          description: 'High-level overview of what this folder contains and does.' },
-  { id: 'repository-overview', title: 'Folder Overview',            description: 'File counts, subfolder structure, and workspace statistics.' },
-  { id: 'architecture-overview', title: 'Architecture Overview',    description: 'Detected architectural patterns, layers, and structural design.' },
-  { id: 'data-flow',           title: 'Data Flow Analysis',         description: 'How data moves through the modules in this folder.' },
-  { id: 'dependency-analysis', title: 'Dependency Analysis',        description: 'Dependency graph statistics, most-connected files, and coupling metrics.' },
-  { id: 'risk-assessment',     title: 'Risk Assessment',            description: 'Identified risks, high-coupling areas, and change-impact concerns.' },
-  { id: 'modernization',       title: 'Modernization Opportunities', description: 'Outdated patterns, technical debt, and recommended improvements.' },
-  { id: 'key-files',           title: 'Key Files',                  description: 'The most important files to understand this folder.' },
-  { id: 'onboarding-guide',    title: 'Onboarding Guide',           description: 'Step-by-step guide for a new developer working in this folder.' },
+  { id: 'executive-summary',    title: 'Executive Summary',           description: 'High-level overview of what this folder contains and does.' },
+  { id: 'repository-overview',  title: 'Folder Overview',             description: 'File counts, subfolder structure, and workspace statistics.' },
+  { id: 'architecture-overview',title: 'Architecture Overview',       description: 'Detected architectural patterns, layers, and structural design.' },
+  { id: 'data-flow',            title: 'Data Flow Analysis',          description: 'How data moves through the modules in this folder.' },
+  { id: 'dependency-analysis',  title: 'Dependency Analysis',         description: 'Dependency graph statistics, most-connected files, and coupling metrics.' },
+  { id: 'risk-assessment',      title: 'Risk Assessment',             description: 'Identified risks, high-coupling areas, and change-impact concerns.' },
+  { id: 'modernization',        title: 'Modernization Opportunities', description: 'Technical debt and recommended improvements.' },
+  { id: 'key-files',            title: 'Key Files',                   description: 'The most important files to understand this folder.' },
+  { id: 'onboarding-guide',     title: 'Onboarding Guide',            description: 'Step-by-step guide for a new developer working in this folder.' },
 ];
 
-// File scope — single file; no repository-level, project, or graph sections
 const FILE_SECTIONS: SectionDef[] = [
-  { id: 'executive-summary',    title: 'Executive Summary',          description: 'What this file is and what it is responsible for.' },
-  { id: 'architecture-overview', title: 'Architecture Overview',     description: 'Detected patterns, responsibilities, and structural role of this file.' },
-  { id: 'data-flow',            title: 'Data Flow',                  description: 'How data enters, moves through, and exits this file.' },
-  { id: 'risk-assessment',      title: 'Risk Assessment',            description: 'Identified risks and code quality concerns in this file.' },
-  { id: 'modernization',        title: 'Modernization Opportunities', description: 'Outdated patterns and recommended improvements for this file.' },
-  { id: 'key-files',            title: 'Key Dependencies',           description: 'Files this code directly depends on.' },
-  { id: 'onboarding-guide',     title: 'Onboarding Guide',           description: 'How to get up to speed with this file quickly.' },
+  { id: 'executive-summary',    title: 'Executive Summary',           description: 'What this file is and what it is responsible for.' },
+  { id: 'architecture-overview',title: 'Architecture Overview',       description: 'Detected patterns, responsibilities, and structural role of this file.' },
+  { id: 'data-flow',            title: 'Data Flow',                   description: 'How data enters, moves through, and exits this file.' },
+  { id: 'risk-assessment',      title: 'Risk Assessment',             description: 'Identified risks and code quality concerns in this file.' },
+  { id: 'modernization',        title: 'Modernization Opportunities', description: 'Recommended improvements for this file.' },
+  { id: 'key-files',            title: 'Key Dependencies',            description: 'Files this code directly depends on.' },
+  { id: 'onboarding-guide',     title: 'Onboarding Guide',            description: 'How to get up to speed with this file quickly.' },
 ];
 
 function sectionsForScope(scope: DocumentationScope): SectionDef[] {
-  if (scope === 'file')       return FILE_SECTIONS;
-  if (scope === 'folder')     return FOLDER_SECTIONS;
+  if (scope === 'file')   return FILE_SECTIONS;
+  if (scope === 'folder') return FOLDER_SECTIONS;
   return REPO_SECTIONS;
 }
+
+// ── Service ────────────────────────────────────────────────────────────────────
 
 @Injectable({ providedIn: 'root' })
 export class DocumentationBuilderService {
 
-  buildSectionList(summary: RepositorySummary, scope: DocumentationScope = 'repository'): DocumentationSection[] {
+  /**
+   * Build the section list for the given KnowledgeModel.
+   * Availability is gated on model.capabilities — never on targetType directly.
+   */
+  buildSectionList(model: KnowledgeModel): DocumentationSection[] {
+    const scope = model.targetType as DocumentationScope;
     return sectionsForScope(scope).map(s => ({
       ...s,
-      available: this.isSectionAvailable(s.id, summary),
+      available: this.isSectionAvailable(s.id, model),
     }));
   }
 
-  defaultSelections(summary: RepositorySummary, scope: DocumentationScope = 'repository'): DocumentationSectionId[] {
-    return this.buildSectionList(summary, scope)
+  defaultSelections(model: KnowledgeModel): DocumentationSectionId[] {
+    return this.buildSectionList(model)
       .filter(s => s.available)
       .map(s => s.id);
   }
 
-  // Render selected sections as a structured plain-text document for preview.
-  renderPreview(summary: RepositorySummary, selectedIds: DocumentationSectionId[], scope: DocumentationScope = 'repository'): string {
+  /**
+   * Render selected sections as structured plain-text for the preview panel.
+   * This is a pure assembly — nothing is computed or fetched here.
+   */
+  renderPreview(model: KnowledgeModel, selectedIds: DocumentationSectionId[]): string {
+    const scope     = model.targetType as DocumentationScope;
     const catalogue = sectionsForScope(scope);
     const lines: string[] = [];
-    let sectionNum = 1;
+    let n = 1;
 
     for (const id of selectedIds) {
       const section = catalogue.find(s => s.id === id);
-      if (!section || !this.isSectionAvailable(id, summary)) continue;
-
-      lines.push(`${sectionNum}. ${section.title}`);
+      if (!section || !this.isSectionAvailable(id, model)) continue;
+      lines.push(`${n}. ${section.title}`);
       lines.push('─'.repeat(section.title.length + 4));
-      lines.push(this.renderSectionContent(id, summary));
+      lines.push(this.renderSectionContent(id, model));
       lines.push('');
-      sectionNum++;
+      n++;
     }
 
     return lines.join('\n');
   }
 
-  private isSectionAvailable(id: DocumentationSectionId, summary: RepositorySummary): boolean {
+  // ── Availability ─────────────────────────────────────────────────────────────
+
+  private isSectionAvailable(id: DocumentationSectionId, model: KnowledgeModel): boolean {
+    const caps = model.capabilities;
+    const ai   = model.ai;
+
     switch (id) {
-      case 'executive-summary':    return !!summary.executiveSummary;
-      case 'repository-overview':  return !!summary.repositoryOverview;
-      case 'architecture-overview':return !!(summary.architectureSummary || summary.architecturePatterns?.length);
-      case 'data-flow':            return !!summary.dataFlowSummary;
-      case 'dependency-analysis':  return !!summary.dependencyStats;
-      case 'risk-assessment':      return (summary.risks?.length ?? 0) > 0;
-      case 'modernization':        return (summary.modernizations?.length ?? 0) > 0;
-      case 'key-files':            return (summary.keyFiles?.length ?? 0) > 0;
-      case 'key-projects':         return (summary.keyProjects?.length ?? 0) > 0;
-      case 'repository-insights':  return (summary.insights?.length ?? 0) > 0;
-      case 'onboarding-guide':     return !!(summary.onboardingNotes || summary.onboardingSteps?.length);
+      case 'executive-summary':
+        return !!(ai?.understanding?.executiveSummary);
+
+      case 'repository-overview':
+        return model.structure.totalFiles > 0;
+
+      case 'architecture-overview':
+        return caps.includes('architectureDiscovery') &&
+          (model.relationships.architecture?.patterns.length ?? 0) > 0;
+
+      case 'data-flow':
+        // File: deterministic data flow steps; multi-file: dependency graph
+        return model.targetType === 'file'
+          ? (model.insights.dataFlow?.steps.length ?? 0) > 0
+          : caps.includes('dependencyResolution') &&
+            (model.relationships.dependencies?.graph.nodes.length ?? 0) >= 3;
+
+      case 'dependency-analysis':
+        return caps.includes('dependencyResolution') &&
+          (model.relationships.dependencies?.graph.edges.length ?? 0) > 0;
+
+      case 'risk-assessment':
+        return (model.insights.risks?.length ?? 0) > 0 ||
+          (ai?.security?.findings.length ?? 0) > 0;
+
+      case 'modernization':
+        return (ai?.recommendations?.recommendations.length ?? 0) > 0;
+
+      case 'key-files':
+        return (model.relationships.dependencies?.ranks.length ?? 0) > 0 ||
+          (model.structure.symbols && Object.keys(model.structure.symbols).length > 0);
+
+      case 'key-projects':
+        return caps.includes('multiProject') &&
+          (model.structure.projects?.length ?? 0) > 0;
+
+      case 'repository-insights':
+        return caps.includes('dependencyResolution') &&
+          (model.relationships.dependencies?.hubs.length ?? 0) > 0;
+
+      case 'onboarding-guide':
+        return !!(ai?.learningPath);
     }
   }
 
-  private renderSectionContent(id: DocumentationSectionId, s: RepositorySummary): string {
+  // ── Content rendering ─────────────────────────────────────────────────────────
+
+  private renderSectionContent(id: DocumentationSectionId, model: KnowledgeModel): string {
+    const s   = model.structure;
+    const rel = model.relationships;
+    const ins = model.insights;
+    const ai  = model.ai;
+
     switch (id) {
       case 'executive-summary':
-        return s.executiveSummary ?? '';
+        return ai?.understanding?.executiveSummary ?? '';
 
-      case 'repository-overview':
-        return [
-          s.repositoryOverview ?? '',
-          `Workspace Type: ${s.workspaceType}`,
+      case 'repository-overview': {
+        const lines = [
+          `Workspace: ${model.workspaceName ?? 'Unknown'}`,
+          `Type: ${model.targetType}`,
           `Total Files: ${s.totalFiles}`,
-          s.languages.length ? `Languages: ${s.languages.join(', ')}` : '',
-          s.technologies.length ? `Technologies: ${s.technologies.slice(0, 8).join(', ')}` : '',
-        ].filter(Boolean).join('\n');
+          s.languages.length   ? `Languages: ${s.languages.join(', ')}`                              : '',
+          s.frameworks.length  ? `Frameworks: ${s.frameworks.join(', ')}`                            : '',
+          s.technologies.length ? `Technologies: ${s.technologies.slice(0, 8).map(t => t.technology ?? String(t)).join(', ')}` : '',
+        ];
+        return lines.filter(Boolean).join('\n');
+      }
 
-      case 'architecture-overview':
+      case 'architecture-overview': {
+        const patterns = rel.architecture?.patterns ?? [];
+        return patterns.map(p =>
+          `• ${p.name} (${Math.round((p.confidence ?? 0) * 100)}%) — ${p.indicators.join(', ')}`
+        ).join('\n');
+      }
+
+      case 'data-flow': {
+        if (model.targetType === 'file') {
+          const df = ins.dataFlow;
+          if (!df) return '';
+          const parts: string[] = [];
+          if (df.inputs.length)  parts.push(`Inputs: ${df.inputs.join(', ')}`);
+          if (df.steps.length)   parts.push(`Flow: ${df.steps.join(' → ')}`);
+          if (df.outputs.length) parts.push(`Outputs: ${df.outputs.join(', ')}`);
+          return parts.join('\n');
+        }
+        const graph = rel.dependencies?.graph;
+        if (!graph) return '';
+        const nodeMap = new Map(graph.nodes.map(n => [n.id, n.name]));
+        const counts  = new Map<string, number>();
+        graph.edges.forEach(e => counts.set(e.target, (counts.get(e.target) ?? 0) + 1));
+        const top = [...counts.entries()]
+          .sort((a, b) => b[1] - a[1]).slice(0, 8)
+          .map(([id, c]) => `• ${nodeMap.get(id) ?? id} (${c} dependents)`);
+        return [`Top dependency targets:`, ...top].join('\n');
+      }
+
+      case 'dependency-analysis': {
+        const graph = rel.dependencies?.graph;
+        if (!graph) return '';
+        const avgConn = graph.nodes.length > 0
+          ? (graph.edges.length / graph.nodes.length).toFixed(1)
+          : '0';
         return [
-          s.architectureSummary ?? '',
-          ...(s.architecturePatterns?.map(p =>
-            `• ${p.name} (${Math.round(p.confidence * 100)}%) — indicators: ${p.indicators.join(', ')}`
-          ) ?? []),
-        ].filter(Boolean).join('\n');
+          `Nodes: ${graph.nodes.length} · Edges: ${graph.edges.length} · Avg connectivity: ${avgConn}`,
+          ...(rel.dependencies?.hubs.slice(0, 5).map(h => `• Hub: ${h.name} (${h.inboundCount} inbound)`) ?? []),
+        ].join('\n');
+      }
 
-      case 'data-flow':
-        return s.dataFlowSummary ?? '';
-
-      case 'dependency-analysis':
-        return [
-          s.dependencySummary ?? '',
-          s.dependencyStats ? `Nodes: ${s.dependencyStats.nodes} · Edges: ${s.dependencyStats.edges} · Avg connectivity: ${s.dependencyStats.averageConnectivity}` : '',
-        ].filter(Boolean).join('\n');
-
-      case 'risk-assessment':
-        return (s.risks ?? []).map(r => `[${r.severity.toUpperCase()}] ${r.title}\n  ${r.description}`).join('\n');
+      case 'risk-assessment': {
+        const detRisks = (ins.risks ?? []).map(r => `[${r.severity.toUpperCase()}] ${r.description}`);
+        const aiRisks  = (ai?.security?.findings ?? []).slice(0, 10)
+          .map(f => `[${f.severity.toUpperCase()}] ${f.title}: ${f.issueDescription}`);
+        return [...detRisks, ...aiRisks].join('\n');
+      }
 
       case 'modernization':
-        return (s.modernizations ?? []).map(m => `• ${m.title}\n  ${m.description}`).join('\n');
+        return (ai?.recommendations?.recommendations ?? [])
+          .filter(r => r.category === 'modernization' || r.category === 'technical-debt')
+          .slice(0, 10)
+          .map(r => `• ${r.title}\n  ${r.recommendedImprovement}`)
+          .join('\n');
 
-      case 'key-files':
-        return (s.keyFiles ?? []).map(f => `• ${f.name}${f.reason ? ' — ' + f.reason : ''}`).join('\n');
+      case 'key-files': {
+        const ranks = rel.dependencies?.ranks ?? [];
+        if (ranks.length) {
+          return ranks.slice(0, 10).map((r, i) => `${i + 1}. ${r.name} (degree: ${r.degree})`).join('\n');
+        }
+        return Object.keys(s.symbols).slice(0, 10).map(p => `• ${p}`).join('\n');
+      }
 
       case 'key-projects':
-        return (s.keyProjects ?? []).map(p => `• ${p.name} (${p.type}) — ${p.framework} / ${p.language}`).join('\n');
+        return (s.projects ?? []).map(p => `• ${p.name} (${p.type}) — ${p.framework} / ${p.language}`).join('\n');
 
       case 'repository-insights':
-        return (s.insights ?? []).filter(i => i.severity !== 'info').map(i => `[${i.severity.toUpperCase()}] ${i.title}\n  ${i.description}`).join('\n');
+        return (rel.dependencies?.hubs ?? [])
+          .filter(h => h.isHub)
+          .slice(0, 10)
+          .map(h => `• ${h.name} — ${h.inboundCount} inbound connections`)
+          .join('\n');
 
-      case 'onboarding-guide':
-        return [
-          s.onboardingNotes ?? '',
-          ...(s.onboardingSteps?.map((step, i) => `${i + 1}. ${step}`) ?? []),
-        ].filter(Boolean).join('\n');
+      case 'onboarding-guide': {
+        const lp = ai?.learningPath;
+        if (!lp) return '';
+        const steps = (lp.roadmap ?? []).slice(0, 5)
+          .map(step => `${step.stepNumber}. ${step.title}\n   ${step.goal}`);
+        return [lp.focusFirst ? `Start here: ${lp.focusFirst}` : '', ...steps].filter(Boolean).join('\n');
+      }
     }
   }
 }

@@ -105,7 +105,7 @@ export class AIAnalysisService {
       case 'understanding':   return { understanding:   result as SystemUnderstanding };
       case 'recommendations': return { recommendations: result as RecommendationAnalysis };
       case 'learningPath':    return { learningPath:    result as LearningPathAnalysis };
-      case 'documentation':   return { documentation:   result as any };
+      case 'documentation':   return {};
       default:                return {};
     }
   }

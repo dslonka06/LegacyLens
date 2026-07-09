@@ -26,31 +26,31 @@
   <div class="wp-stats" *ngIf="profile">
 
     <div class="wp-stat">
-      <span class="wp-stat-value">{{ profile.totalFiles }}</span>
-      <span class="wp-stat-label">{{ profile.totalFiles === 1 ? 'File' : 'Files' }}</span>
+      <span class="wp-stat-value">{{ profile.structure.totalFiles }}</span>
+      <span class="wp-stat-label">{{ profile.structure.totalFiles === 1 ? 'File' : 'Files' }}</span>
     </div>
 
     <div class="wp-stat-divider"></div>
 
     <div class="wp-stat">
-      <span class="wp-stat-value">{{ profile.languages.length }}</span>
-      <span class="wp-stat-label">{{ profile.languages.length === 1 ? 'Language' : 'Languages' }}</span>
+      <span class="wp-stat-value">{{ profile.structure.languages.length }}</span>
+      <span class="wp-stat-label">{{ profile.structure.languages.length === 1 ? 'Language' : 'Languages' }}</span>
     </div>
 
-    <ng-container *ngIf="profile.technologies.length">
+    <ng-container *ngIf="profile.structure.technologies.length">
       <div class="wp-stat-divider"></div>
       <div class="wp-stat">
-        <span class="wp-stat-value">{{ profile.technologies.length }}</span>
-        <span class="wp-stat-label">{{ profile.technologies.length === 1 ? 'Technology' : 'Technologies' }}</span>
+        <span class="wp-stat-value">{{ profile.structure.technologies.length }}</span>
+        <span class="wp-stat-label">{{ profile.structure.technologies.length === 1 ? 'Technology' : 'Technologies' }}</span>
       </div>
     </ng-container>
 
   </div>
 
   <!-- Tags -->
-  <div class="wp-tags" *ngIf="profile && (profile.languages.length || profile.technologies.length)">
-    <span class="wp-tag lang-tag" *ngFor="let lang of profile.languages">{{ lang }}</span>
-    <span class="wp-tag tech-tag" *ngFor="let tech of profile.technologies">{{ tech }}</span>
+  <div class="wp-tags" *ngIf="profile && (profile.structure.languages.length || profile.structure.technologies.length)">
+    <span class="wp-tag lang-tag" *ngFor="let lang of profile.structure.languages">{{ lang }}</span>
+    <span class="wp-tag tech-tag" *ngFor="let tech of profile.structure.technologies">{{ tech }}</span>
   </div>
 
   <!-- Actions -->

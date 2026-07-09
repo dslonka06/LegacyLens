@@ -1,0 +1,171 @@
+<div class="lp-no-workspace" *ngIf="!hasWorkspace">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+  </svg>
+  <h3>No workspace active</h3>
+  <p>Upload a file, folder, or repository to generate a learning path.</p>
+</div>
+
+<div class="lp-layout" *ngIf="hasWorkspace">
+
+  <div class="lp-page-header">
+    <div class="lp-page-header-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+      </svg>
+    </div>
+    <div class="lp-page-header-text">
+      <h1 class="lp-page-title">Learning Path</h1>
+      <p class="lp-page-description">Follow the roadmap below to learn this codebase in a structured order. Each stage builds on the previous one and is intended to maximise understanding while minimising unnecessary complexity.</p>
+    </div>
+  </div>
+
+  <div class="lp-pending" *ngIf="!lp">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+    </svg>
+    <p>Learning path is being generated. It will appear here once analysis completes.</p>
+  </div>
+
+  <ng-container *ngIf="lp">
+    <div class="lp-body">
+
+      <div class="lp-col-left">
+        <div class="lp-section-card">
+          <div class="lp-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+              <line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+              <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            Your Learning Roadmap
+            <span class="lp-count-badge">{{ lp!.roadmap.length }} steps</span>
+          </div>
+
+          <div class="lp-roadmap">
+            <div *ngFor="let step of lp!.roadmap"
+                 class="lp-step"
+                 [class.expanded]="isStepExpanded(step.stepNumber)"
+                 (click)="toggleStep(step.stepNumber)">
+
+              <div class="lp-step-header">
+                <div class="lp-step-number">{{ step.stepNumber }}</div>
+                <div class="lp-step-meta">
+                  <div class="lp-step-title">{{ step.title }}</div>
+                  <div class="lp-step-preview">{{ step.goal }}</div>
+                </div>
+                <svg class="lp-step-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+
+              <div class="lp-step-body" *ngIf="isStepExpanded(step.stepNumber)">
+
+                <div class="lp-step-section lp-step-why">
+                  <div class="lp-step-section-label lp-label-why">Why this matters</div>
+                  <p>{{ step.whyItMatters }}</p>
+                </div>
+
+                <div class="lp-step-artifacts" *ngIf="step.recommendedFiles.length > 0 || step.recommendedFolders.length > 0">
+                  <div class="lp-step-artifacts-col" *ngIf="step.recommendedFiles.length > 0">
+                    <div class="lp-step-section-label">Recommended files</div>
+                    <ul class="lp-file-list">
+                      <li *ngFor="let file of step.recommendedFiles">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                          <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        <span>{{ file }}</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="lp-step-artifacts-col" *ngIf="step.recommendedFolders.length > 0">
+                    <div class="lp-step-section-label">Recommended folders</div>
+                    <ul class="lp-file-list lp-folder-list">
+                      <li *ngFor="let folder of step.recommendedFolders">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <span>{{ folder }}/</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="lp-step-section lp-step-checkpoints" *ngIf="step.checkpoints.length > 0">
+                  <div class="lp-step-section-label">Before moving on</div>
+                  <ul class="lp-checkpoint-list">
+                    <li *ngFor="let checkpoint of step.checkpoints">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      <span>{{ checkpoint }}</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="lp-step-section lp-step-next">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                  </svg>
+                  {{ step.whereToNext }}
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lp-section-card lp-nextsteps-card" *ngIf="lp!.nextSteps.length > 0">
+          <div class="lp-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+            Next Steps
+          </div>
+          <div class="lp-nextsteps-grid">
+            <a *ngFor="let step of lp!.nextSteps" [routerLink]="step.route" class="lp-nextstep-card">
+              <div class="lp-nextstep-dest">{{ step.destination }}</div>
+              <p class="lp-nextstep-guidance">{{ step.guidance }}</p>
+              <div class="lp-nextstep-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="lp-col-right" *ngIf="lp!.keyConcepts.length > 0">
+        <div class="lp-section-card">
+          <div class="lp-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.48 2 2 0 0 1 3.6 1.25h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96"/>
+            </svg>
+            Key Concepts
+            <span class="lp-count-badge">{{ lp!.keyConcepts.length }}</span>
+          </div>
+          <div class="lp-concepts-list">
+            <div class="lp-concept-card" *ngFor="let concept of lp!.keyConcepts">
+              <div class="lp-concept-name">{{ concept.name }}</div>
+              <p class="lp-concept-def">{{ concept.plainEnglishDefinition }}</p>
+              <div class="lp-concept-meta">
+                <div class="lp-concept-why">{{ concept.whyItMatters }}</div>
+                <div class="lp-concept-where">
+                  <span class="lp-concept-where-label">Appears in:</span>
+                  {{ concept.whereItAppears }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </ng-container>
+</div>
