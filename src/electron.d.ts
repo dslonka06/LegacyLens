@@ -170,6 +170,26 @@ export interface BuildKnowledgeModelOptions {
   persist?: boolean;
 }
 
+export interface ProcessWorkspaceRequest {
+  targetType: AnalysisTargetType;
+  files: Array<{ name: string; path: string; extension: string; content: string | null }>;
+  options?: {
+    repositoryId?: string;
+    repositoryPath?: string;
+    workspaceName?: string;
+    persist?: boolean;
+    incremental?: boolean;
+  };
+}
+
+export interface IncrementalCheckResult {
+  needsFullRebuild: boolean;
+  needsPartialRebuild: boolean;
+  changedPaths: string[];
+  reason: string;
+  existingModel: KnowledgeModel | null;
+}
+
 export interface PipelineResult {
   targetType: AnalysisTargetType;
   plannedCapabilities: string[];
@@ -211,6 +231,8 @@ interface ElectronIntelligenceAPI {
   buildKnowledgeModel(targetType: AnalysisTargetType, files: unknown[], options?: BuildKnowledgeModelOptions): Promise<KnowledgeModel>;
   getKnowledgeModel(repositoryId: string): Promise<KnowledgeModel | null>;
   buildContext(contextType: 'repository' | 'workflow' | 'security' | 'analysis', knowledgeModel: KnowledgeModel, extras?: unknown): Promise<unknown>;
+  checkIncremental(repositoryId: string, currentFiles: Array<{ relativePath: string; hash: string }>, targetType: AnalysisTargetType): Promise<IncrementalCheckResult>;
+  processWorkspace(request: ProcessWorkspaceRequest): Promise<KnowledgeModel>;
 }
 
 interface ElectronValidationAPI {

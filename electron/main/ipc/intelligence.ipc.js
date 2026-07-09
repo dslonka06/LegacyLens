@@ -20,12 +20,16 @@ const { CapabilityPipelineEngine } = require('../engines/core/capability-pipelin
 const { KnowledgeModelEngine } = require('../engines/core/knowledge-model.engine');
 const { KnowledgeModelService } = require('../services/knowledge/knowledge-model.service');
 const { ContextGenerationEngine } = require('../engines/core/context-generation.engine');
+const { IncrementalUpdateEngine } = require('../engines/core/incremental-update.engine');
+const { KnowledgeService } = require('../services/knowledge/knowledge.service');
 
 const analysisEngine = new AnalysisEngine();
 const capabilityPipeline = new CapabilityPipelineEngine();
 const knowledgeModelEngine = new KnowledgeModelEngine();
 const knowledgeModelService = new KnowledgeModelService();
 const contextEngine = new ContextGenerationEngine();
+const incrementalEngine = new IncrementalUpdateEngine();
+const knowledgeService = new KnowledgeService();
 const architectureDetector = new ArchitectureDetectorEngine();
 const dependencyExplorer = new DependencyExplorerEngine();
 const dependencyMapper = new DependencyMapperEngine();
@@ -186,6 +190,27 @@ function registerIntelligenceHandlers() {
     if (!contextType) throw new Error('contextType is required');
     if (!knowledgeModel) throw new Error('knowledgeModel is required');
     return contextEngine.build(contextType, knowledgeModel, extras ?? {});
+  }));
+
+  // intelligence:checkIncremental — D6: check whether a rebuild is needed for a repository
+  // currentFiles: Array<{ relativePath, hash }>
+  // Returns: { needsFullRebuild, needsPartialRebuild, changedPaths, reason, existingModel }
+  ipcMain.handle('intelligence:checkIncremental', wrapHandler(async (_event, repositoryId, currentFiles, targetType) => {
+    if (!repositoryId) throw new Error('repositoryId is required');
+    if (!Array.isArray(currentFiles)) throw new Error('currentFiles must be an array');
+    return incrementalEngine.check(repositoryId, currentFiles, targetType);
+  }));
+
+  // intelligence:processWorkspace — D7: unified entry point for all workspace analysis
+  // Chains: D6 incremental check → D2/D3 pipeline (if needed) → D4 model build → persist
+  // request: { targetType, files, options: { repositoryId?, repositoryPath?, workspaceName?, persist?, incremental? } }
+  ipcMain.handle('intelligence:processWorkspace', wrapHandler(async (_event, request) => {
+    if (!request) throw new Error('request is required');
+    if (!request.targetType || !['file', 'folder', 'repository'].includes(request.targetType)) {
+      throw new Error('targetType must be one of: file, folder, repository');
+    }
+    if (!Array.isArray(request.files)) throw new Error('files must be an array');
+    return knowledgeService.process(request);
   }));
 }
 

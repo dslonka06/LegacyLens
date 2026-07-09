@@ -10,6 +10,10 @@ import type {
   SyncFileEntry,
   ElectronDirectoryEntry,
   ScanProgressEvent,
+  KnowledgeModel,
+  ProcessWorkspaceRequest,
+  IncrementalCheckResult,
+  AnalysisTargetType,
 } from '../../../electron';
 
 export interface OpenDialogOptions {
@@ -297,5 +301,19 @@ export class ElectronService {
   ): Promise<unknown> {
     if (!this.api) return null;
     return this.api.intelligence.buildContext(contextType, knowledgeModel as any, extras);
+  }
+
+  async checkIncremental(
+    repositoryId: string,
+    currentFiles: Array<{ relativePath: string; hash: string }>,
+    targetType: AnalysisTargetType,
+  ): Promise<IncrementalCheckResult | null> {
+    if (!this.api) return null;
+    return this.api.intelligence.checkIncremental(repositoryId, currentFiles, targetType);
+  }
+
+  async processWorkspace(request: ProcessWorkspaceRequest): Promise<KnowledgeModel | null> {
+    if (!this.api) return null;
+    return this.api.intelligence.processWorkspace(request);
   }
 }

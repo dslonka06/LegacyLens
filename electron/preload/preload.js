@@ -92,6 +92,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     buildKnowledgeModel:  (targetType, files, options)          => invoke('intelligence:buildKnowledgeModel', targetType, files, options),
     getKnowledgeModel:    (repositoryId)                        => invoke('intelligence:getKnowledgeModel', repositoryId),
     buildContext:         (contextType, knowledgeModel, extras) => invoke('intelligence:buildContext', contextType, knowledgeModel, extras),
+    checkIncremental:     (repositoryId, currentFiles, targetType) => invoke('intelligence:checkIncremental', repositoryId, currentFiles, targetType),
+    processWorkspace:     (request)                            => invoke('intelligence:processWorkspace', request),
   },
 
   // ── Validation ────────────────────────────────────────────────────────────
