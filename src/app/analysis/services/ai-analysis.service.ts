@@ -76,8 +76,9 @@ export class AIAnalysisService {
           failedStages: model.ai?.failedStages ?? [],
         }, generation);
       }
-    } catch {
-      this.manager.markAIStageFailed(workspaceId, stage, generation);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.manager.markAIStageFailed(workspaceId, stage, generation, message);
     } finally {
       this.manager.clearStageRunning(workspaceId, stage);
     }

@@ -136,6 +136,8 @@
   &.status-analyzing  { background: rgba(245,158,11,0.12);  color: var(--warning);        border: 1px solid rgba(245,158,11,0.2); }
   &.status-modified   { background: rgba(56,189,248,0.12);  color: var(--info);           border: 1px solid rgba(56,189,248,0.2); }
   &.status-changes    { background: rgba(124,92,255,0.12);  color: var(--accent);         border: 1px solid rgba(124,92,255,0.2); }
+  &.status-failed     { background: rgba(245,158,11,0.12);  color: var(--warning);        border: 1px solid rgba(245,158,11,0.2); }
+  &.status-error      { background: rgba(239,68,68,0.12);   color: var(--error, #ef4444); border: 1px solid rgba(239,68,68,0.2); }
 }
 
 // ─── Delete button ───────────────────────────────────────

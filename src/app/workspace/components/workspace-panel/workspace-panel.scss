@@ -81,6 +81,8 @@
   &.status-analyzing  { background: rgba(245,158,11,0.12);  color: var(--warning);        border: 1px solid rgba(245,158,11,0.2); }
   &.status-modified   { background: rgba(56,189,248,0.12);  color: var(--info);           border: 1px solid rgba(56,189,248,0.2); }
   &.status-changes    { background: rgba(124,92,255,0.12);  color: var(--accent);         border: 1px solid rgba(124,92,255,0.2); }
+  &.status-failed     { background: rgba(245,158,11,0.12);  color: var(--warning);        border: 1px solid rgba(245,158,11,0.2); }
+  &.status-error      { background: rgba(239,68,68,0.12);   color: var(--error, #ef4444); border: 1px solid rgba(239,68,68,0.2); }
 }
 
 // ─── Stats row ──────────────────────────────────────────
@@ -216,6 +218,31 @@
   border-color: rgba(245, 158, 11, 0.2);
 
   &:hover { background: rgba(245, 158, 11, 0.15); }
+}
+
+// ─── Recovery / partial failure notices ──────────────────────────────────────
+.wp-recovery {
+  padding: 6px 10px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 6px;
+}
+
+.wp-recovery-text {
+  font-size: 11px;
+  color: var(--warning);
+}
+
+.wp-partial-failure {
+  padding: 6px 10px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 6px;
+}
+
+.wp-partial-failure-text {
+  font-size: 11px;
+  color: var(--error, #ef4444);
 }
 
 // ─── AI stage progress chips ──────────────────────────────

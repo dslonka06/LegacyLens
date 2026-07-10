@@ -176,6 +176,8 @@ export interface KnowledgeAIResults {
   completedStages:  AIStage[];
   /** AI stages that failed — partial results remain usable. */
   failedStages:     AIStage[];
+  /** Error messages keyed by stage — present only for failed stages. */
+  stageErrors?:     Partial<Record<AIStage, string>>;
 }
 
 // ── Metadata ───────────────────────────────────────────────────────────────────

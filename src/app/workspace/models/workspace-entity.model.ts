@@ -6,7 +6,8 @@ export type WorkspaceStatus =
   | 'empty'       // created, nothing uploaded yet
   | 'processing'  // structural knowledge pipeline running
   | 'ready'       // structural knowledge complete; AI may still be running
-  | 'error';      // pipeline failed
+  | 'failed'      // app closed or crashed mid-analysis; previous run did not complete
+  | 'error';      // pipeline failed during the current session
 
 export const MAX_WORKSPACES = 3;
 

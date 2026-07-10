@@ -62,6 +62,7 @@ export class WorkspaceSwitcherModal implements OnInit, OnDestroy {
       'empty':      'Empty',
       'processing': 'Analyzing',
       'ready':      'Ready',
+      'failed':     'Incomplete',
       'error':      'Error',
     };
     return map[status];
@@ -72,6 +73,7 @@ export class WorkspaceSwitcherModal implements OnInit, OnDestroy {
       'empty':      'status-empty',
       'processing': 'status-analyzing',
       'ready':      'status-loaded',
+      'failed':     'status-failed',
       'error':      'status-error',
     };
     return map[status];

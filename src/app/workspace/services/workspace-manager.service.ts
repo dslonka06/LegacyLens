@@ -212,18 +212,21 @@ export class WorkspaceManagerService {
   }
 
   /** Mark an AI stage as failed without losing other AI results. */
-  markAIStageFailed(id: string, stage: AIStage, generation?: number): void {
+  markAIStageFailed(id: string, stage: AIStage, generation?: number, errorMessage?: string): void {
     if (generation !== undefined && this.getGeneration(id) !== generation) return;
     const ws = this.getById(id);
     if (!ws?.knowledgeModel) return;
 
     const existing = ws.knowledgeModel.ai ?? { completedStages: [], failedStages: [] };
     const failedStages = [...new Set([...existing.failedStages, stage])];
+    const stageErrors = errorMessage
+      ? { ...(existing.stageErrors ?? {}), [stage]: errorMessage }
+      : existing.stageErrors;
 
     this.patch(id, {
       knowledgeModel: {
         ...ws.knowledgeModel,
-        ai: { ...existing, failedStages },
+        ai: { ...existing, failedStages, stageErrors },
       },
     });
   }
@@ -297,18 +300,25 @@ export class WorkspaceManagerService {
       const persisted = await this.electronService.getPersistedWorkspaces();
       if (persisted.length === 0) return;
 
-      const restored: Workspace[] = persisted.map(p => ({
-        id:             p.id,
-        name:           p.name,
-        type:           p.type,
-        // A restored workspace with a model is ready; one without is treated as empty
-        // since the raw files are gone and re-upload is required.
-        status:         (p.knowledgeModel ? 'ready' : 'empty') as WorkspaceStatus,
-        createdAt:      p.createdAt,
-        lastModifiedAt: p.lastModifiedAt,
-        repositoryId:   p.repositoryId,
-        knowledgeModel: p.knowledgeModel,
-      }));
+      const restored: Workspace[] = persisted.map(p => {
+        // processing means the app closed mid-analysis — mark as failed so the
+        // UI can show a recovery prompt rather than pretending nothing happened.
+        const status: WorkspaceStatus =
+          p.knowledgeModel    ? 'ready'
+          : p.status === 'processing' ? 'failed'
+          : 'empty';
+
+        return {
+          id:             p.id,
+          name:           p.name,
+          type:           p.type,
+          status,
+          createdAt:      p.createdAt,
+          lastModifiedAt: p.lastModifiedAt,
+          repositoryId:   p.repositoryId,
+          knowledgeModel: p.knowledgeModel,
+        };
+      });
 
       this._workspaces$.next(restored);
       // Activate the most recently modified workspace

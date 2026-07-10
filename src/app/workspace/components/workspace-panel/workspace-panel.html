@@ -22,6 +22,18 @@
 
   </div>
 
+  <!-- Recovery notice: app closed mid-analysis -->
+  <div class="wp-recovery" *ngIf="recoveryMessage">
+    <span class="wp-recovery-text">{{ recoveryMessage }}</span>
+  </div>
+
+  <!-- Partial AI failure notice: one or more stages failed but model is intact -->
+  <div class="wp-partial-failure" *ngIf="hasPartialFailure && !isAnalyzing">
+    <span class="wp-partial-failure-text">
+      Analysis completed with warnings — {{ failedStageLabels.join(', ') }} failed.
+    </span>
+  </div>
+
   <!-- AI stage progress chips -->
   <div class="wp-stages" *ngIf="activeStageLabels.length > 0">
     <span class="wp-stage-chip" *ngFor="let label of activeStageLabels">

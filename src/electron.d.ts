@@ -267,7 +267,7 @@ export interface PersistedWorkspace {
   id:             string;
   name:           string;
   type:           'file' | 'folder' | 'repository';
-  status:         'empty' | 'processing' | 'ready' | 'error';
+  status:         'empty' | 'processing' | 'ready' | 'failed' | 'error';
   createdAt:      string;
   lastModifiedAt: string;
   repositoryId:   string | null;

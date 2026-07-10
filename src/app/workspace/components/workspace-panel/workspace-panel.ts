@@ -164,6 +164,7 @@ export class WorkspacePanel implements OnInit, OnDestroy {
       'empty':      'Empty',
       'processing': 'Loading',
       'ready':      'Ready',
+      'failed':     'Incomplete',
       'error':      'Error',
     };
     return map[this.workspace.status];
@@ -175,9 +176,26 @@ export class WorkspacePanel implements OnInit, OnDestroy {
       'empty':      'status-empty',
       'processing': 'status-analyzing',
       'ready':      'status-loaded',
+      'failed':     'status-failed',
       'error':      'status-error',
     };
     return map[this.workspace.status];
+  }
+
+  get failedStageLabels(): string[] {
+    const stages = this.workspace?.knowledgeModel?.ai?.failedStages ?? [];
+    return stages.map(s => STAGE_LABELS[s] ?? s);
+  }
+
+  get hasPartialFailure(): boolean {
+    return (this.workspace?.knowledgeModel?.ai?.failedStages?.length ?? 0) > 0;
+  }
+
+  get recoveryMessage(): string | null {
+    if (this.workspace?.status === 'failed') {
+      return 'Previous analysis did not complete.';
+    }
+    return null;
   }
 
   get workspaceCount(): number {
