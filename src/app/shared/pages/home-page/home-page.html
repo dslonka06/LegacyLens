@@ -7,81 +7,21 @@
 </app-validation-dialog>
 
 <div class="home-page">
-  <!-- ── Header ───────────────────────────────────────────────────────────── -->
-  <header class="home-header">
-    <div class="home-header-actions">
-      <button
-        class="home-header-btn"
-        (click)="theme.toggle()"
-        [title]="theme.isDark ? 'Light mode' : 'Dark mode'"
-      >
-        <svg
-          *ngIf="theme.isDark"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          width="15"
-          height="15"
-        >
-          <circle cx="12" cy="12" r="5" />
-          <line x1="12" y1="1" x2="12" y2="3" />
-          <line x1="12" y1="21" x2="12" y2="23" />
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-          <line x1="1" y1="12" x2="3" y2="12" />
-          <line x1="21" y1="12" x2="23" y2="12" />
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-        </svg>
-        <svg
-          *ngIf="!theme.isDark"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          width="15"
-          height="15"
-        >
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-        </svg>
-      </button>
-      <a routerLink="/settings" class="home-header-btn">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          width="15"
-          height="15"
-        >
-          <circle cx="12" cy="12" r="3" />
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
-        </svg>
-        Settings
-      </a>
-    </div>
-  </header>
+  <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-overlay"></div>
 
-  <!-- ── Body ─────────────────────────────────────────────────────────────── -->
-  <main class="home-main">
-    <!-- Hero -->
-    <section class="home-hero">
-      <div class="home-hero-brand">
-        <div class="home-hero-logo">
+    <!-- Brand bar — sits at top of hero -->
+    <header class="hero-bar">
+      <div class="hero-brand">
+        <div class="hero-logo">
           <svg
-            width="52"
-            height="52"
+            width="22"
+            height="22"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="1.5"
+            stroke-width="1.8"
             stroke-linecap="round"
             stroke-linejoin="round"
           >
@@ -90,28 +30,209 @@
             <path d="M11 8v6M8 11h6" />
           </svg>
         </div>
-        <span class="home-hero-brand-name">SystemLens</span>
-        <span class="home-hero-brand-tag">AI</span>
+        <span class="hero-brand-name">SystemLens</span>
+        <span class="hero-brand-tag">Understand. Analyze. Modernize.</span>
       </div>
-      <div class="home-hero-eyebrow">
-        <span class="home-hero-dot"></span>
+      <div class="hero-bar-actions">
+        <div
+          class="hero-ai-status"
+          [class.hero-ai-status--ok]="aiProviderStatus === 'configured'"
+          [class.hero-ai-status--err]="aiProviderStatus === 'not-configured'"
+        >
+          <span class="hero-ai-dot"></span>
+          <span class="hero-ai-label" *ngIf="aiProviderStatus === 'configured'">{{
+            aiProviderLabel
+          }}</span>
+          <span class="hero-ai-label" *ngIf="aiProviderStatus === 'not-configured'"
+            >AI not configured</span
+          >
+          <span class="hero-ai-label" *ngIf="aiProviderStatus === 'checking'">Checking…</span>
+        </div>
+        <button
+          class="hero-action-btn"
+          (click)="theme.toggle()"
+          [title]="theme.isDark ? 'Light mode' : 'Dark mode'"
+        >
+          <svg
+            *ngIf="theme.isDark"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            *ngIf="!theme.isDark"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+        <a routerLink="/settings" class="hero-action-btn">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+            />
+          </svg>
+          Settings
+        </a>
+      </div>
+    </header>
+
+    <!-- Headline content -->
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <span class="hero-eyebrow-dot"></span>
         AI-Powered Code Intelligence
       </div>
-      <h1 class="home-hero-title">
-        Understand any codebase,<br /><span class="home-hero-gradient">instantly.</span>
+      <h1 class="hero-title">
+        Understand any codebase,<br /><span class="hero-gradient">instantly.</span>
       </h1>
-      <p class="home-hero-subtitle">
-        Upload a file, folder, or full repository. SystemLens reveals architecture, data flows,
-        dependencies, risks, and generates documentation — powered by AI.
+      <p class="hero-subtitle">
+        Drop in a file, folder, or repository. SystemLens maps your architecture, traces data flows,
+        finds risks, and generates documentation — all powered by AI.
       </p>
-    </section>
+    </div>
 
+    <!-- Analysis entry cards — frosted, overlaps bottom of hero -->
+    <div class="analysis-cards">
+      <a routerLink="/file-analysis" class="ac ac-file">
+        <div class="ac-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+        </div>
+        <div class="ac-body">
+          <span class="ac-scope">Single file</span>
+          <span class="ac-title">File Analysis</span>
+          <span class="ac-desc">Language detection, complexity, security, and AI docs.</span>
+        </div>
+        <svg
+          class="ac-arrow"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </a>
+
+      <a routerLink="/folder-analysis" class="ac ac-folder">
+        <div class="ac-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          </svg>
+        </div>
+        <div class="ac-body">
+          <span class="ac-scope">Feature scope</span>
+          <span class="ac-title">Folder Analysis</span>
+          <span class="ac-desc">Dependency graphs, workflows, and architecture patterns.</span>
+        </div>
+        <svg
+          class="ac-arrow"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </a>
+
+      <a routerLink="/repository-analysis" class="ac ac-repo">
+        <div class="ac-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="18" r="3" />
+            <circle cx="6" cy="6" r="3" />
+            <circle cx="18" cy="6" r="3" />
+            <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" />
+            <line x1="12" y1="12" x2="12" y2="15" />
+          </svg>
+        </div>
+        <div class="ac-body">
+          <span class="ac-scope">Full repository</span>
+          <span class="ac-title">Repository Analysis</span>
+          <span class="ac-desc">System-wide architecture, risks, and full documentation.</span>
+        </div>
+        <svg
+          class="ac-arrow"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ── Body ─────────────────────────────────────────────────────────────── -->
+  <main class="home-body">
     <!-- Repository Library — Electron only -->
     <section class="home-library" *ngIf="electronService.isElectron">
-      <div class="home-section-header">
-        <span class="home-section-label">Your Repositories</span>
-        <div class="home-section-line"></div>
-        <button class="home-header-btn lib-add-btn" (click)="addRepository()">
+      <div class="section-header">
+        <span class="section-label">Repository Library</span>
+        <div class="section-line"></div>
+        <button class="lib-add-btn" (click)="addRepository()">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -119,8 +240,6 @@
             stroke-width="2.5"
             stroke-linecap="round"
             stroke-linejoin="round"
-            width="13"
-            height="13"
           >
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
@@ -154,10 +273,13 @@
           class="lib-card"
           *ngFor="let repo of repositories"
           (click)="openRepository(repo)"
-          [class.lib-card-loading]="isLoadingRepo === repo.id"
-          [class.lib-card-missing]="isPathMissing(repo.id)"
+          [class.lib-card--loading]="isLoadingRepo === repo.id"
+          [class.lib-card--missing]="isPathMissing(repo.id)"
         >
-          <div class="lib-card-main">
+          <!-- Accent glow strip -->
+          <div class="lib-card-glow"></div>
+
+          <div class="lib-card-top">
             <div class="lib-card-icon">
               <svg
                 viewBox="0 0 24 24"
@@ -174,39 +296,8 @@
                 <line x1="12" y1="12" x2="12" y2="15" />
               </svg>
             </div>
-            <div class="lib-card-info">
-              <input
-                *ngIf="editingRepoId === repo.id"
-                class="lib-card-name-input"
-                [(ngModel)]="editingName"
-                (click)="$event.stopPropagation()"
-                (keydown.enter)="commitRename(repo)"
-                (keydown.escape)="cancelRename()"
-                (blur)="commitRename(repo)"
-                autofocus
-              />
-              <div class="lib-card-name" *ngIf="editingRepoId !== repo.id">
-                {{ repo.name }}
-                <span class="lib-badge-missing" *ngIf="isPathMissing(repo.id)">Path missing</span>
-              </div>
-              <div class="lib-card-path" [title]="repo.path">{{ repo.path }}</div>
-            </div>
-          </div>
-
-          <div class="lib-card-meta">
-            <div class="lib-card-tags">
-              <span class="lib-tag lib-tag-lang" *ngIf="repo.language">{{ repo.language }}</span>
-              <span class="lib-tag lib-tag-framework" *ngIf="repo.framework">{{
-                repo.framework
-              }}</span>
-            </div>
             <div class="lib-card-actions">
-              <span class="lib-card-date">{{ formatLastOpened(repo.lastOpened) }}</span>
-              <button
-                class="lib-card-action-btn"
-                (click)="startRename($event, repo)"
-                title="Rename"
-              >
+              <button class="lib-card-action" (click)="startRename($event, repo)" title="Rename">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -220,8 +311,8 @@
                 </svg>
               </button>
               <button
-                class="lib-card-action-btn"
-                [class.lib-card-action-btn-spinning]="refreshingRepoId === repo.id"
+                class="lib-card-action"
+                [class.lib-card-action--spinning]="refreshingRepoId === repo.id"
                 (click)="refreshRepo($event, repo)"
                 title="Refresh"
               >
@@ -238,9 +329,9 @@
                 </svg>
               </button>
               <button
-                class="lib-card-remove"
+                class="lib-card-action lib-card-action--remove"
                 (click)="removeRepository($event, repo.id)"
-                title="Remove from library"
+                title="Remove"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -257,170 +348,46 @@
             </div>
           </div>
 
+          <div class="lib-card-info">
+            <input
+              *ngIf="editingRepoId === repo.id"
+              class="lib-card-name-input"
+              [(ngModel)]="editingName"
+              (click)="$event.stopPropagation()"
+              (keydown.enter)="commitRename(repo)"
+              (keydown.escape)="cancelRename()"
+              (blur)="commitRename(repo)"
+              autofocus
+            />
+            <div class="lib-card-name" *ngIf="editingRepoId !== repo.id">
+              {{ repo.name }}
+              <span class="lib-badge-missing" *ngIf="isPathMissing(repo.id)">Path missing</span>
+            </div>
+            <div class="lib-card-path" [title]="repo.path">{{ repo.path }}</div>
+          </div>
+
+          <div class="lib-card-footer">
+            <div class="lib-card-tags">
+              <span class="lib-tag lib-tag--lang" *ngIf="repo.language">{{ repo.language }}</span>
+              <span class="lib-tag lib-tag--fw" *ngIf="repo.framework">{{ repo.framework }}</span>
+            </div>
+            <span class="lib-card-date">{{ formatLastOpened(repo.lastOpened) }}</span>
+          </div>
+
           <div class="lib-card-loading-bar" *ngIf="isLoadingRepo === repo.id"></div>
         </div>
       </div>
     </section>
 
-    <!-- Workspace cards -->
-    <section class="home-workspaces">
-      <div class="home-section-header">
-        <span class="home-section-label">Start an analysis</span>
-        <div class="home-section-line"></div>
+    <!-- Capabilities strip -->
+    <section class="home-caps">
+      <div class="section-header">
+        <span class="section-label">What you get</span>
+        <div class="section-line"></div>
       </div>
-      <div class="home-workspace-grid">
-        <a routerLink="/file-analysis" class="hwc hwc-file">
-          <div class="hwc-body">
-            <div class="hwc-top">
-              <div class="hwc-icon">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
-              </div>
-              <span class="hwc-scope">Single file</span>
-            </div>
-            <div class="hwc-title">File Analysis</div>
-            <div class="hwc-desc">
-              Language detection, complexity, architecture patterns, data flow, and AI documentation
-              for a single source file.
-            </div>
-            <div class="hwc-footer">
-              <div class="hwc-tags">
-                <span class="hwc-tag">Instant</span>
-                <span class="hwc-tag">Deep dive</span>
-              </div>
-              <div class="hwc-arrow">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </a>
-
-        <a routerLink="/folder-analysis" class="hwc hwc-folder">
-          <div class="hwc-body">
-            <div class="hwc-top">
-              <div class="hwc-icon">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path
-                    d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
-                  />
-                </svg>
-              </div>
-              <span class="hwc-scope">Feature scope</span>
-            </div>
-            <div class="hwc-title">Folder Analysis</div>
-            <div class="hwc-desc">
-              Explore file relationships, dependency graphs, workflows, and folder-level
-              architecture across a feature or module.
-            </div>
-            <div class="hwc-footer">
-              <div class="hwc-tags">
-                <span class="hwc-tag">Dependencies</span>
-                <span class="hwc-tag">Workflows</span>
-              </div>
-              <div class="hwc-arrow">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </a>
-
-        <a routerLink="/repository-analysis" class="hwc hwc-repo">
-          <div class="hwc-body">
-            <div class="hwc-top">
-              <div class="hwc-icon">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <circle cx="12" cy="18" r="3" />
-                  <circle cx="6" cy="6" r="3" />
-                  <circle cx="18" cy="6" r="3" />
-                  <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" />
-                  <line x1="12" y1="12" x2="12" y2="15" />
-                </svg>
-              </div>
-              <span class="hwc-scope">Full repository</span>
-            </div>
-            <div class="hwc-title">Repository Analysis</div>
-            <div class="hwc-desc">
-              Navigate the full file tree, inspect system-wide architecture, discover business
-              workflows, and generate complete documentation.
-            </div>
-            <div class="hwc-footer">
-              <div class="hwc-tags">
-                <span class="hwc-tag">System-wide</span>
-                <span class="hwc-tag">Docs</span>
-              </div>
-              <div class="hwc-arrow">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </a>
-      </div>
-    </section>
-
-    <!-- What SystemLens reveals -->
-    <section class="home-capabilities">
-      <div class="home-section-header">
-        <span class="home-section-label">What you get</span>
-        <div class="home-section-line"></div>
-      </div>
-      <div class="home-cap-grid">
-        <div class="home-cap-item home-cap-arch">
-          <div class="home-cap-icon">
+      <div class="caps-grid">
+        <div class="cap cap--arch">
+          <div class="cap-icon">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -435,12 +402,11 @@
               <rect x="14" y="14" width="7" height="7" />
             </svg>
           </div>
-          <div class="home-cap-label">Architecture</div>
-          <div class="home-cap-desc">Layers, patterns, and system design</div>
+          <span class="cap-label">Architecture</span>
+          <span class="cap-desc">Layers, patterns, system design</span>
         </div>
-
-        <div class="home-cap-item home-cap-flow">
-          <div class="home-cap-icon">
+        <div class="cap cap--flow">
+          <div class="cap-icon">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -452,12 +418,11 @@
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
           </div>
-          <div class="home-cap-label">Data Flow</div>
-          <div class="home-cap-desc">Workflows and system interactions</div>
+          <span class="cap-label">Data Flow</span>
+          <span class="cap-desc">Workflows and interactions</span>
         </div>
-
-        <div class="home-cap-item home-cap-security">
-          <div class="home-cap-icon">
+        <div class="cap cap--security">
+          <div class="cap-icon">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -469,12 +434,11 @@
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
           </div>
-          <div class="home-cap-label">Security</div>
-          <div class="home-cap-desc">Findings, risks, and sensitive areas</div>
+          <span class="cap-label">Security</span>
+          <span class="cap-desc">Findings, risks, sensitive areas</span>
         </div>
-
-        <div class="home-cap-item home-cap-recs">
-          <div class="home-cap-icon">
+        <div class="cap cap--recs">
+          <div class="cap-icon">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -487,12 +451,11 @@
               <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
           </div>
-          <div class="home-cap-label">Recommendations</div>
-          <div class="home-cap-desc">Prioritized modernization roadmap</div>
+          <span class="cap-label">Recommendations</span>
+          <span class="cap-desc">Prioritized modernization roadmap</span>
         </div>
-
-        <div class="home-cap-item home-cap-deps">
-          <div class="home-cap-icon">
+        <div class="cap cap--deps">
+          <div class="cap-icon">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -506,12 +469,11 @@
               <path d="M6 21V9a9 9 0 0 0 9 9" />
             </svg>
           </div>
-          <div class="home-cap-label">Dependencies</div>
-          <div class="home-cap-desc">Graphs, hubs, and orphaned files</div>
+          <span class="cap-label">Dependencies</span>
+          <span class="cap-desc">Graphs, hubs, orphaned files</span>
         </div>
-
-        <div class="home-cap-item home-cap-docs">
-          <div class="home-cap-icon">
+        <div class="cap cap--docs">
+          <div class="cap-icon">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -526,8 +488,8 @@
               <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
           </div>
-          <div class="home-cap-label">Documentation</div>
-          <div class="home-cap-desc">AI-generated docs and export to PDF</div>
+          <span class="cap-label">Documentation</span>
+          <span class="cap-desc">AI-generated docs, export to PDF</span>
         </div>
       </div>
     </section>
