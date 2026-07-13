@@ -30,6 +30,7 @@
         "filter": [
           "dist/browser/**/*",
           "electron/**/*",
+          "node_modules/**/*",
           "package.json"
         ]
       }
@@ -55,6 +56,7 @@
     }
   },
   "dependencies": {
+    "better-sqlite3": "^11.10.0",
     "electron-updater": "^6.8.9"
   },
   "devDependencies": {
