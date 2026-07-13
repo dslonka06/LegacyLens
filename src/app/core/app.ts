@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs';
 import { Sidebar } from '@app/shell/sidebar/sidebar';
 import { AiChatPanel } from '@app/shell/ai-chat-panel/ai-chat-panel';
+import { UpdatePrompt } from '@app/shell/update-prompt/update-prompt';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, Sidebar, AiChatPanel, CommonModule],
+  imports: [RouterOutlet, Sidebar, AiChatPanel, UpdatePrompt, CommonModule],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

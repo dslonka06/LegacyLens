@@ -11,6 +11,7 @@ const { registerAiHandlers } = require('./main/ipc/ai.ipc');
 const { registerIntelligenceHandlers } = require('./main/ipc/intelligence.ipc');
 const { registerValidationHandlers } = require('./main/ipc/validation.ipc');
 const { registerWorkspaceHandlers } = require('./main/ipc/workspace.ipc');
+const { registerUpdaterHandlers } = require('./main/ipc/updater.ipc');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -45,8 +46,18 @@ app.whenReady().then(() => {
   registerIntelligenceHandlers();
   registerValidationHandlers();
   registerWorkspaceHandlers();
+  registerUpdaterHandlers();
 
   createWindow();
+
+  // Check for updates ~5 s after launch so the window is fully loaded first.
+  // Only runs in packaged builds; dev mode skips silently.
+  if (app.isPackaged) {
+    setTimeout(() => {
+      const { autoUpdater } = require('electron-updater');
+      autoUpdater.checkForUpdates().catch(() => {});
+    }, 5000);
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

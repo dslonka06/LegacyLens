@@ -280,6 +280,34 @@ interface ElectronWorkspacesAPI {
   delete(id: string): Promise<boolean>;
 }
 
+// ── Auto-updater ───────────────────────────────────────────────────────────────
+
+export interface UpdateAvailablePayload {
+  version:       string;
+  releaseNotes:  string | null;
+}
+
+export interface DownloadProgressPayload {
+  percent:        number;
+  transferred:    number;
+  total:          number;
+  bytesPerSecond: number;
+}
+
+export interface UpdateDownloadedPayload {
+  version: string;
+}
+
+interface ElectronUpdaterAPI {
+  checkForUpdates():   Promise<void>;
+  downloadUpdate():    Promise<void>;
+  installAndRestart(): Promise<void>;
+  onUpdateAvailable(cb: (payload: UpdateAvailablePayload) => void):      () => void;
+  onUpdateNotAvailable(cb: (payload: Record<string, never>) => void):    () => void;
+  onDownloadProgress(cb: (payload: DownloadProgressPayload) => void):    () => void;
+  onUpdateDownloaded(cb: (payload: UpdateDownloadedPayload) => void):    () => void;
+}
+
 interface ElectronAPI {
   repositories: ElectronRepositoriesAPI;
   analysis:     ElectronAnalysisAPI;
@@ -290,6 +318,7 @@ interface ElectronAPI {
   intelligence: ElectronIntelligenceAPI;
   validation:   ElectronValidationAPI;
   workspaces:   ElectronWorkspacesAPI;
+  updater:      ElectronUpdaterAPI;
 }
 
 declare global {

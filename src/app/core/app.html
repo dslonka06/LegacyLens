@@ -3,6 +3,9 @@
   <router-outlet></router-outlet>
 </div>
 
+<!-- Update prompt — fixed to bottom of window, visible on all pages -->
+<app-update-prompt></app-update-prompt>
+
 <!-- All other pages: sidebar + content + chat overlay -->
 <div *ngIf="!isHome" class="app-layout">
 

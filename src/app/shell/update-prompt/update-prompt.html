@@ -1,0 +1,55 @@
+<div class="update-bar" [class.update-bar--visible]="visible" *ngIf="visible">
+
+  <!-- Update available — prompt to download -->
+  <ng-container *ngIf="state === 'available'">
+    <div class="update-bar-icon update-bar-icon--available">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+    </div>
+    <span class="update-bar-text">
+      <strong>v{{ info?.version }}</strong> is available
+    </span>
+    <button class="update-bar-btn update-bar-btn--primary" (click)="download()">Download</button>
+    <button class="update-bar-btn update-bar-btn--dismiss" (click)="dismiss()" title="Dismiss">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </ng-container>
+
+  <!-- Downloading — show progress bar -->
+  <ng-container *ngIf="state === 'downloading'">
+    <div class="update-bar-icon update-bar-icon--downloading">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+    </div>
+    <span class="update-bar-text">Downloading update… {{ progress }}%</span>
+    <div class="update-bar-progress">
+      <div class="update-bar-progress-fill" [style.width.%]="progress"></div>
+    </div>
+  </ng-container>
+
+  <!-- Downloaded — prompt to restart -->
+  <ng-container *ngIf="state === 'ready'">
+    <div class="update-bar-icon update-bar-icon--ready">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <span class="update-bar-text">
+      <strong>v{{ info?.version }}</strong> downloaded — restart to apply
+    </span>
+    <button class="update-bar-btn update-bar-btn--primary" (click)="install()">Restart &amp; Install</button>
+    <button class="update-bar-btn update-bar-btn--dismiss" (click)="dismiss()" title="Later">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </ng-container>
+
+</div>

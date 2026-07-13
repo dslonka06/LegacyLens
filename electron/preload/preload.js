@@ -107,4 +107,32 @@ contextBridge.exposeInMainWorld('electronAPI', {
     save:   (workspace)   => invoke('workspaces:save', workspace),
     delete: (id)          => invoke('workspaces:delete', id),
   },
+
+  // ── Auto-updater ──────────────────────────────────────────────────────────
+  updater: {
+    checkForUpdates:  ()  => invoke('updater:checkForUpdates'),
+    downloadUpdate:   ()  => invoke('updater:downloadUpdate'),
+    installAndRestart: () => invoke('updater:installAndRestart'),
+
+    onUpdateAvailable: (cb) => {
+      const h = (_e, payload) => cb(payload);
+      ipcRenderer.on('updater:updateAvailable', h);
+      return () => ipcRenderer.removeListener('updater:updateAvailable', h);
+    },
+    onUpdateNotAvailable: (cb) => {
+      const h = (_e, payload) => cb(payload);
+      ipcRenderer.on('updater:updateNotAvailable', h);
+      return () => ipcRenderer.removeListener('updater:updateNotAvailable', h);
+    },
+    onDownloadProgress: (cb) => {
+      const h = (_e, payload) => cb(payload);
+      ipcRenderer.on('updater:downloadProgress', h);
+      return () => ipcRenderer.removeListener('updater:downloadProgress', h);
+    },
+    onUpdateDownloaded: (cb) => {
+      const h = (_e, payload) => cb(payload);
+      ipcRenderer.on('updater:updateDownloaded', h);
+      return () => ipcRenderer.removeListener('updater:updateDownloaded', h);
+    },
+  },
 });
