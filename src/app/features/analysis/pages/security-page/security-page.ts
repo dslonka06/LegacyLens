@@ -5,12 +5,15 @@ import { Subscription } from 'rxjs';
 import { SecurityAnalysis, SecurityFinding, SecuritySeverity } from '@app/analysis/models/security-analysis.model';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
+import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
+import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
+import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
 @Component({
   selector: 'app-security-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, FileTreePanel],
+  imports: [CommonModule, RouterLink, FileTreePanel, CodeEditor, ResizeDividerComponent],
   templateUrl: './security-page.html',
   styleUrl: './security-page.scss',
 })
@@ -22,14 +25,20 @@ export class SecurityPage implements OnInit, OnDestroy {
   hasWorkspace = false;
   expandedFindings = new Set<string>();
   highlightedFilePath: string | null = null;
+  codeEditorWidth = 420;
 
   readonly SEVERITY_ORDER: SecuritySeverity[] = ['critical', 'high', 'medium', 'low'];
 
   private sub: Subscription | null = null;
 
-  constructor(private readonly manager: WorkspaceManagerService) {}
+  constructor(
+    private readonly manager: WorkspaceManagerService,
+    private readonly layoutService: PanelLayoutService,
+  ) {}
 
   ngOnInit(): void {
+    this.codeEditorWidth = this.layoutService.load('security-code')?.[0] ?? 420;
+
     const active = this.manager.getActive();
     this.security         = active?.knowledgeModel?.ai?.security ?? null;
     this.securityOverview = active?.knowledgeModel?.ai?.securityOverview ?? null;
@@ -45,6 +54,21 @@ export class SecurityPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void { this.sub?.unsubscribe(); }
+
+  onCodePanelResize(width: number): void {
+    this.codeEditorWidth = width;
+    this.layoutService.save('security-code', [width]);
+  }
+
+  get sourceCode(): string | undefined {
+    return this.manager.getActive()?.knowledgeModel?.structure.sourceCode;
+  }
+
+  get sourceFileName(): string | undefined {
+    return this.manager.getActive()?.knowledgeModel?.structure.filePath
+      ?? this.manager.getActive()?.knowledgeModel?.workspaceName
+      ?? undefined;
+  }
 
   toggleFinding(id: string, fileName?: string): void {
     if (this.expandedFindings.has(id)) {

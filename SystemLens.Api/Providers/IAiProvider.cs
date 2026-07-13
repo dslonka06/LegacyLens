@@ -1,6 +1,6 @@
-using LegacyLens.Api.Models;
+using SystemLens.Api.Models;
 
-namespace LegacyLens.Api.Providers;
+namespace SystemLens.Api.Providers;
 
 /// <summary>
 /// Swap point for AI backends: OpenAI, Anthropic, Ollama, Odysseus, etc.

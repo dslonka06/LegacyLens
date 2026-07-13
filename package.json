@@ -39,7 +39,7 @@
     "publish": {
       "provider": "github",
       "owner": "DSlonka",
-      "repo": "LegacyLens"
+      "repo": "SystemLens"
     }
   },
   "dependencies": {

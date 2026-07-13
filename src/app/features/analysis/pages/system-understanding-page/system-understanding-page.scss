@@ -3,8 +3,31 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
-  overflow-y: auto;
+  overflow: hidden;
   height: 100%;
+}
+
+.page-split {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.code-panel {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.page-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .su-card {

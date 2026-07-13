@@ -18,6 +18,22 @@
 
 <div class="insight-page" *ngIf="hasWorkspace && security">
 
+  <div class="page-split" [class.page-split--has-code]="sourceCode">
+
+    <!-- Code viewer panel (file workspaces only) -->
+    <div *ngIf="sourceCode" class="code-panel" [style.width.px]="codeEditorWidth">
+      <app-code-editor
+        [restoredFileName]="sourceFileName ?? null"
+        [restoredSourceCode]="sourceCode"
+        [readOnly]="true"
+        [hideFolderUpload]="true">
+      </app-code-editor>
+    </div>
+    <app-resize-divider *ngIf="sourceCode" [minLeft]="280" [minRight]="400" (leftWidthChange)="onCodePanelResize($event)"></app-resize-divider>
+
+    <!-- Main content -->
+    <div class="page-main">
+
   <div class="page-header">
     <div class="page-title">
       <div class="page-icon red">
@@ -191,5 +207,8 @@
     </div><!-- /sec-content -->
     </div><!-- /sec-layout -->
   </div>
+
+    </div><!-- /page-main -->
+  </div><!-- /page-split -->
 
 </div>

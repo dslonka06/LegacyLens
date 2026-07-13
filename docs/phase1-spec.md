@@ -5,7 +5,7 @@
 
 ## Objective
 
-Establish Electron as the platform layer for LegacyLens. Angular transitions from a full-stack application into a UI-only presentation layer. All platform concerns — filesystem access, database interaction, AI communication, and code analysis — move to the Electron main process.
+Establish Electron as the platform layer for SystemLens. Angular transitions from a full-stack application into a UI-only presentation layer. All platform concerns — filesystem access, database interaction, AI communication, and code analysis — move to the Electron main process.
 
 Phase 1 creates the architectural foundation that every subsequent phase builds on. It introduces the IPC contract between Angular and Electron, the security model governing that communication, and the initial set of backend engines and services. Angular has no direct access to the filesystem or any platform API after this phase is complete.
 

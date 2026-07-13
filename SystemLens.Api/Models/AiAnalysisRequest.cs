@@ -1,4 +1,4 @@
-namespace LegacyLens.Api.Models;
+namespace SystemLens.Api.Models;
 
 public sealed record AiAnalysisRequest(
     string FileName,

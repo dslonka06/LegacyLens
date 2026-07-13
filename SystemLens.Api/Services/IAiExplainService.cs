@@ -1,6 +1,6 @@
-using LegacyLens.Api.Models;
+using SystemLens.Api.Models;
 
-namespace LegacyLens.Api.Services;
+namespace SystemLens.Api.Services;
 
 public interface IAiExplainService
 {

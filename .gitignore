@@ -1,9 +1,9 @@
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
 # .NET backend — never commit dev settings with API keys
-LegacyLens.Api/appsettings.Development.json
-LegacyLens.Api/bin/
-LegacyLens.Api/obj/
+SystemLens.Api/appsettings.Development.json
+SystemLens.Api/bin/
+SystemLens.Api/obj/
 
 # Compiled output
 /dist

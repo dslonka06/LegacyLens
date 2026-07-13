@@ -1,8 +1,8 @@
-using LegacyLens.Api.Models;
-using LegacyLens.Api.Services;
+using SystemLens.Api.Models;
+using SystemLens.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LegacyLens.Api.Controllers;
+namespace SystemLens.Api.Controllers;
 
 [ApiController]
 [Route("api/ai")]

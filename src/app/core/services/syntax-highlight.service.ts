@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 import { createHighlighter, type Highlighter } from 'shiki';
 import { ThemeService } from './theme.service';
 
 const SUPPORTED_LANGUAGES = [
   'typescript', 'javascript', 'csharp', 'html', 'css', 'scss',
   'less', 'sql', 'python', 'json', 'xml', 'markdown', 'yaml', 'shellscript',
+  'plaintext',
 ] as const;
 
 const DARK_THEME  = 'github-dark-dimmed';
@@ -13,10 +15,15 @@ const LIGHT_THEME = 'github-light';
 @Injectable({ providedIn: 'root' })
 export class SyntaxHighlightService {
 
+  /** Emits whenever the active theme changes — subscribers should re-highlight. */
+  readonly themeChange$: Observable<boolean>;
+
   private highlighter: Highlighter | null = null;
   private initPromise: Promise<void> | null = null;
 
-  constructor(private readonly themeService: ThemeService) {}
+  constructor(private readonly themeService: ThemeService) {
+    this.themeChange$ = themeService.isDark$;
+  }
 
   private init(): Promise<void> {
     if (this.initPromise) return this.initPromise;

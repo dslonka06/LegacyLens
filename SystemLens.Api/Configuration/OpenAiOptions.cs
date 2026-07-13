@@ -1,4 +1,4 @@
-namespace LegacyLens.Api.Configuration;
+namespace SystemLens.Api.Configuration;
 
 public sealed class OpenAiOptions
 {

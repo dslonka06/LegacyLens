@@ -1,6 +1,6 @@
-using LegacyLens.Api.Configuration;
-using LegacyLens.Api.Providers;
-using LegacyLens.Api.Services;
+using SystemLens.Api.Configuration;
+using SystemLens.Api.Providers;
+using SystemLens.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

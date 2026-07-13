@@ -1,6 +1,6 @@
-import { Component, EventEmitter, Input, Output, OnChanges, OnDestroy, SimpleChanges, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, OnDestroy, SimpleChanges, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { firstValueFrom } from 'rxjs';
 import { SyntaxHighlightService } from '@app/core/services/syntax-highlight.service';
@@ -62,11 +62,11 @@ const LANGUAGE_LABEL: Record<string, string> = {
 @Component({
   selector: 'app-code-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './code-editor.html',
   styleUrl: './code-editor.scss'
 })
-export class CodeEditor implements OnChanges, OnDestroy {
+export class CodeEditor implements OnInit, OnChanges, OnDestroy {
 
   @Input() restoredFileName: string | null = null;
   @Input() restoredSourceCode: string | null = null;
@@ -88,6 +88,7 @@ export class CodeEditor implements OnChanges, OnDestroy {
   workspaceProfile: WorkspaceProfile | null = null;
 
   private currentLanguage = 'plaintext';
+  private themeSub: Subscription | null = null;
 
   aiError: string | null = null;
 
@@ -103,6 +104,12 @@ export class CodeEditor implements OnChanges, OnDestroy {
     private readonly sanitizer: DomSanitizer,
     readonly electronService: ElectronService
   ) {}
+
+  ngOnInit(): void {
+    this.themeSub = this.highlighter.themeChange$.subscribe(() => {
+      if (this.code) this.renderHighlight();
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['restoredFileName'] && this.restoredFileName) {
@@ -122,7 +129,9 @@ export class CodeEditor implements OnChanges, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    this.themeSub?.unsubscribe();
+  }
 
   private renderHighlight(): void {
     if (!this.code) {

@@ -6,12 +6,15 @@ import { WorkspaceManagerService } from '@app/workspace/services/workspace-manag
 import { RecommendationAnalysis, Recommendation } from '@app/analysis/models/recommendation-analysis.model';
 import { Workspace } from '@app/workspace/models/workspace-entity.model';
 import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
+import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
+import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
+import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
 @Component({
   selector: 'app-code-recommendations-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, FileTreePanel],
+  imports: [CommonModule, RouterLink, FileTreePanel, CodeEditor, ResizeDividerComponent],
   templateUrl: './code-recommendations-page.html',
   styleUrl: './code-recommendations-page.scss',
 })
@@ -23,17 +26,37 @@ export class CodeRecommendationsPage implements OnInit, OnDestroy {
 
   expandedRecs = new Set<string>();
   highlightedFilePath: string | null = null;
+  codeEditorWidth = 420;
 
   private sub: Subscription | null = null;
 
-  constructor(private readonly manager: WorkspaceManagerService) {}
+  constructor(
+    private readonly manager: WorkspaceManagerService,
+    private readonly layoutService: PanelLayoutService,
+  ) {}
 
   ngOnInit(): void {
+    this.codeEditorWidth = this.layoutService.load('recs-code')?.[0] ?? 420;
     this.workspace = this.manager.getActive();
     this.sub = this.manager.activeWorkspace$.subscribe(ws => { this.workspace = ws; });
   }
 
   ngOnDestroy(): void { this.sub?.unsubscribe(); }
+
+  onCodePanelResize(width: number): void {
+    this.codeEditorWidth = width;
+    this.layoutService.save('recs-code', [width]);
+  }
+
+  get sourceCode(): string | undefined {
+    return this.workspace?.knowledgeModel?.structure.sourceCode;
+  }
+
+  get sourceFileName(): string | undefined {
+    return this.workspace?.knowledgeModel?.structure.filePath
+      ?? this.workspace?.knowledgeModel?.workspaceName
+      ?? undefined;
+  }
 
   toggleRec(id: string, fileName?: string): void {
     if (this.expandedRecs.has(id)) {

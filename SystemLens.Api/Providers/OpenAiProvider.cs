@@ -1,11 +1,11 @@
 using System.Text.Json;
-using LegacyLens.Api.Configuration;
-using LegacyLens.Api.Models;
+using SystemLens.Api.Configuration;
+using SystemLens.Api.Models;
 using Microsoft.Extensions.Options;
 using OpenAI;
 using OpenAI.Chat;
 
-namespace LegacyLens.Api.Providers;
+namespace SystemLens.Api.Providers;
 
 public sealed class OpenAiProvider : IAiProvider
 {

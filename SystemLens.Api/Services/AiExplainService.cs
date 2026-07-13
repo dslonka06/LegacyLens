@@ -1,7 +1,7 @@
-using LegacyLens.Api.Models;
-using LegacyLens.Api.Providers;
+using SystemLens.Api.Models;
+using SystemLens.Api.Providers;
 
-namespace LegacyLens.Api.Services;
+namespace SystemLens.Api.Services;
 
 public sealed class AiExplainService : IAiExplainService
 {

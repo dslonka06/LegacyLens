@@ -7,7 +7,7 @@
 
 Move all AI HTTP transport into the Electron main process. Angular no longer makes direct HTTP calls to the AI provider. Instead, Angular sends prompts via IPC, Electron resolves the provider URL from settings, and Electron performs the HTTP request. The provider base URL is user-configurable from the settings page.
 
-Phase 3 is the third layer of the LegacyLens platform migration. Phase 1 established the Electron shell and IPC infrastructure. Phase 2 added SQLite persistence. Phase 3 uses both of those foundations — IPC channels carry AI requests, SQLite stores the provider URL — to fully decouple Angular from the AI provider.
+Phase 3 is the third layer of the SystemLens platform migration. Phase 1 established the Electron shell and IPC infrastructure. Phase 2 added SQLite persistence. Phase 3 uses both of those foundations — IPC channels carry AI requests, SQLite stores the provider URL — to fully decouple Angular from the AI provider.
 
 ---
 
