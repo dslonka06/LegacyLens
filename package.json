@@ -25,9 +25,19 @@
       "output": "release"
     },
     "files": [
-      "dist/browser/**/*",
-      "electron/**/*",
-      "package.json"
+      {
+        "from": ".",
+        "filter": [
+          "dist/browser/**/*",
+          "electron/**/*",
+          "package.json"
+        ]
+      }
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/electron-updater/**/*",
+      "node_modules/better-sqlite3/**/*"
     ],
     "win": {
       "target": "nsis",
@@ -45,27 +55,27 @@
     }
   },
   "dependencies": {
-    "electron-updater": "^6.8.9",
-    "@angular/common": "^21.2.0",
-    "@angular/compiler": "^21.2.0",
-    "@angular/core": "^21.2.0",
-    "@angular/forms": "^21.2.0",
-    "@angular/platform-browser": "^21.2.0",
-    "@angular/router": "^21.2.0",
-    "jspdf": "^2.5.2",
-    "postcss-media-query-parser": "^0.2.3",
-    "rxjs": "~7.8.0",
-    "shiki": "^1.29.2",
-    "tslib": "^2.3.0"
+    "electron-updater": "^6.8.9"
   },
   "devDependencies": {
     "@angular/build": "^21.2.13",
     "@angular/cli": "^21.2.13",
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
     "@angular/compiler-cli": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
     "electron": "^42.4.1",
     "electron-builder": "^26.15.3",
     "jsdom": "^28.0.0",
+    "jspdf": "^2.5.2",
+    "postcss-media-query-parser": "^0.2.3",
     "prettier": "^3.8.1",
+    "rxjs": "~7.8.0",
+    "shiki": "^1.29.2",
+    "tslib": "^2.3.0",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
   }
