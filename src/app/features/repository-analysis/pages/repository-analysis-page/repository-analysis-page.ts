@@ -1,140 +1,118 @@
-import { Component, NgZone, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, NgZone, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
-import { WorkspacePanel } from '@app/workspace/components/workspace-panel/workspace-panel';
 import { WorkspaceSwitcherModal } from '@app/workspace/components/workspace-switcher-modal/workspace-switcher-modal';
 import { ValidationDialog } from '@app/shared/components/validation-dialog/validation-dialog';
 import { TargetValidationService, ValidationResult, AnalysisTarget } from '@app/core/services/target-validation.service';
-import { AnalysisSession } from '@app/analysis/models/analysis-session.model';
-import { WorkspaceProfile } from '@app/workspace/models/workspace.model';
-import { WorkspaceContext } from '@app/workspace/models/workspace-context.model';
-import { FolderNode } from '@app/knowledge/models/repository.model';
-import { CurrentAnalysisService } from '@app/workspace/services/current-analysis.service';
-import { CurrentWorkspaceService } from '@app/workspace/services/current-workspace.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { WorkspaceKnowledgeService } from '@app/knowledge/services/workspace-knowledge.service';
 import { PendingRepositoryService } from '@app/core/services/pending-repository.service';
 import { ElectronService } from '@app/core/services/electron.service';
 import { WorkspaceClassifierService } from '@app/workspace/services/workspace-classifier.service';
-import { FileMetadata } from '@app/workspace/models/workspace.model';
+import { CurrentWorkspaceService } from '@app/workspace/services/current-workspace.service';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
-import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
-import type { ElectronAnalysis, ElectronDirectoryEntry } from '../../../../../electron';
+import { FileMetadata } from '@app/workspace/models/workspace.model';
+import { Workspace, WorkspaceStatus } from '@app/workspace/models/workspace-entity.model';
+import type { KnowledgeModel, AIStage } from '@app/knowledge/models/knowledge-model.contract';
+import type { ElectronDirectoryEntry } from '../../../../../electron';
 import { hashContent } from '@app/core/utils/hash';
-import { WorkspaceKnowledgeService } from '@app/knowledge/services/workspace-knowledge.service';
 
-interface TreeFolder {
-  kind: 'folder';
-  name: string;
-  path: string;
-  children: TreeItem[];
-  expanded: boolean;
-  fileCount: number;
+export type HealthTier = 'healthy' | 'fair' | 'needs-attention' | 'critical' | 'unknown';
+
+export interface HubMetricCard {
+  id:        string;
+  icon:      string;
+  count:     number | null;
+  label:     string;
+  route:     string;
+  suggested: boolean;
+  pending:   boolean;
 }
 
-interface TreeFile {
-  kind: 'file';
-  name: string;
-  path: string;
-  extension: string;
-}
-
-type TreeItem = TreeFolder | TreeFile;
-
-const EXT_ICON: Record<string, string> = {
-  ts: '🔷', tsx: '🔷', js: '🟡', jsx: '🟡', cs: '🟣', html: '🟠',
-  css: '🔵', scss: '🔵', json: '📋', xml: '📋', sql: '🗄️', md: '📝',
-  py: '🐍', sh: '📜', bash: '📜', yml: '⚙️', yaml: '⚙️',
+const STAGE_LABELS: Record<AIStage, string> = {
+  understanding:   'Understanding',
+  security:        'Security',
+  recommendations: 'Recommendations',
+  learningPath:    'Learning Path',
+  documentation:   'Documentation',
 };
 
 @Component({
   selector: 'app-repository-analysis-page',
   standalone: true,
-  imports: [CommonModule, CodeEditor, WorkspacePanel, WorkspaceSwitcherModal, ResizeDividerComponent, ValidationDialog],
+  imports: [CommonModule, WorkspaceSwitcherModal, ValidationDialog],
   templateUrl: './repository-analysis-page.html',
-  styleUrl: './repository-analysis-page.scss',
+  styleUrl:    './repository-analysis-page.scss',
 })
 export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
-  @ViewChild(CodeEditor) private editor!: CodeEditor;
-
-  session: AnalysisSession | null = null;
-  workspaceProfile: WorkspaceProfile | null = null;
-  workspaceContext: WorkspaceContext | null = null;
-
-  restoredFileName: string | null = null;
-  restoredSourceCode: string | null = null;
-
-  treeRoots: TreeItem[] = [];
-  selectedFilePath: string | null = null;
-  panelWidths = [220, 460];
-
-  showSwitcher = false;
+  workspace:           Workspace | null      = null;
+  model:               KnowledgeModel | null = null;
+  showSwitcher         = false;
   switcherLimitReached = false;
-  summaryExpanded = false;
-  risksExpanded = false;
-  modernizationExpanded = false;
-  historyExpanded = false;
 
-  analysisHistory: ElectronAnalysis[] = [];
+  showIdentity    = false;
+  showInfoCards   = false;
+  showMetricCards = false;
+  showSuggested   = false;
 
-  scanFileCount = 0;
-  isScanning = false;
-  validationResult: ValidationResult | null = null;
-  private pendingValidationPath: string | null = null;
+  // Electron / repo loading state
+  isScanning          = false;
+  scanFileCount       = 0;
+  validationResult:   ValidationResult | null = null;
+
+  private pendingValidationPath: string | null  = null;
   private scanProgressUnsub: (() => void) | null = null;
-
-  private uploadedFiles: File[] = [];
-  private contextSub: Subscription | null = null;
-  private limitSub: Subscription | null = null;
+  private sub:       Subscription | null = null;
+  private limitSub:  Subscription | null = null;
+  private animTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
-    private readonly currentAnalysis: CurrentAnalysisService,
-    private readonly currentWorkspace: CurrentWorkspaceService,
-    private readonly manager: WorkspaceManagerService,
-    private readonly workspaceKnowledge: WorkspaceKnowledgeService,
-    private readonly layoutService: PanelLayoutService,
-    private readonly pendingRepo: PendingRepositoryService,
-    private readonly electronService: ElectronService,
+    private readonly manager:           WorkspaceManagerService,
+    private readonly knowledge:         WorkspaceKnowledgeService,
+    private readonly pendingRepo:        PendingRepositoryService,
+    private readonly electronService:   ElectronService,
     private readonly workspaceClassifier: WorkspaceClassifierService,
-    private readonly targetValidation: TargetValidationService,
-    private readonly zone: NgZone,
-    private readonly router: Router,
+    private readonly currentWorkspace:  CurrentWorkspaceService,
+    private readonly targetValidation:  TargetValidationService,
+    private readonly layoutService:     PanelLayoutService,
+    private readonly zone:              NgZone,
+    private readonly router:            Router,
   ) {}
 
   ngOnInit(): void {
-    this.panelWidths = this.layoutService.load('repository-analysis') ?? [220, 460];
+    this.sub = this.manager.activeWorkspace$.subscribe(ws => {
+      const prevId    = this.workspace?.id;
+      const prevModel = this.workspace?.knowledgeModel;
+      this.workspace  = ws;
+      this.model      = ws?.knowledgeModel ?? null;
 
+      const switched     = prevId !== ws?.id;
+      const modelArrived = !prevModel && !!ws?.knowledgeModel;
+      if (switched || modelArrived) this.runAnimations();
+    });
+
+    this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
+    this.runAnimations();
+
+    // Consume the pending repository path set by the home page library
     const pending = this.pendingRepo.consume();
     if (pending) {
       const id = this.manager.activeId;
       if (id) this.manager.setRepositoryId(id, pending.repositoryId);
       this.loadFromPath(pending.path);
-      this.loadAnalysisHistory(pending.repositoryId);
     }
-
-    const existing = this.currentAnalysis.getSession();
-    if (existing) {
-      this.session = existing;
-      this.restoredFileName = existing.fileName;
-      this.restoredSourceCode = existing.sourceCode;
-      this.workspaceProfile = existing.workspaceContext ?? null;
-    }
-
-    this.workspaceContext = this.currentWorkspace.context;
-    if (this.workspaceContext) {
-      this.workspaceProfile = this.workspaceContext.profile;
-      this.buildTree(this.workspaceProfile);
-    }
-
-    this.contextSub = this.currentWorkspace.context$.subscribe(ctx => {
-      this.workspaceContext = ctx;
-    });
-
-    this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
-    // AI analysis is now handled by AIAnalysisService via WorkspaceKnowledgeService
   }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+    this.limitSub?.unsubscribe();
+    this.scanProgressUnsub?.();
+    if (this.animTimer) clearTimeout(this.animTimer);
+  }
+
+  // ── Repo loading (Electron IPC) ────────────────────────────────────────────
 
   private async loadFromPath(folderPath: string): Promise<void> {
     const validation = await this.targetValidation.validate(folderPath, 'repository');
@@ -143,11 +121,9 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       this.validationResult = validation;
       return;
     }
-    if (!validation.valid) {
-      return;
-    }
+    if (!validation.valid) return;
 
-    this.isScanning = true;
+    this.isScanning   = true;
     this.scanFileCount = 0;
 
     this.scanProgressUnsub = this.electronService.onScanProgress(event => {
@@ -155,7 +131,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     });
 
     const entries = await this.electronService.readDirectory(folderPath);
-
     this.scanProgressUnsub?.();
     this.scanProgressUnsub = null;
     this.isScanning = false;
@@ -170,12 +145,10 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     });
 
     const metadata = this.buildFileMetadata(files);
-    const profile = await this.workspaceClassifier.classify(metadata);
+    const profile  = await this.workspaceClassifier.classify(metadata);
 
     this.zone.run(() => {
       this.currentWorkspace.set(profile, files);
-      this.workspaceProfile = profile;
-      this.buildTree(profile);
     });
 
     const id = this.manager.activeId;
@@ -186,15 +159,13 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     }
 
     if (!id) return;
-    this.workspaceKnowledge.process('repository', entries, {
-      workspaceId: id,
-      repositoryId: ws?.repositoryId ?? undefined,
+    this.knowledge.process('repository', entries, {
+      workspaceId:    id,
+      repositoryId:   ws?.repositoryId ?? undefined,
       repositoryPath: folderPath,
-      workspaceName: profile.files[0]?.name,
-      persist: true,
-    }).subscribe({
-      error: () => { /* pipeline error handled by manager.setError */ },
-    });
+      workspaceName:  profile.files[0]?.name,
+      persist:        true,
+    }).subscribe({ error: () => {} });
   }
 
   private async tryRestoreFromCache(
@@ -213,279 +184,15 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       const changedPaths = await this.electronService.getChangedFiles(repositoryId, currentHashes);
       if (changedPaths.length > 0) return false;
 
-      // No changes — restore saved model via the knowledge service
-      const restoredModel = await this.workspaceKnowledge.getLatest(repositoryId);
+      const restoredModel = await this.knowledge.getLatest(repositoryId);
       if (restoredModel) {
         this.manager.setKnowledgeModel(workspaceId, restoredModel);
         return true;
       }
-
       return false;
     } catch {
       return false;
     }
-  }
-
-  ngOnDestroy(): void {
-    this.contextSub?.unsubscribe();
-    this.limitSub?.unsubscribe();
-    this.scanProgressUnsub?.();
-  }
-
-  onPanelResize(index: number, width: number): void {
-    this.panelWidths = this.panelWidths.map((w, i) => i === index ? width : w);
-    this.layoutService.save('repository-analysis', this.panelWidths);
-  }
-
-  // ── CodeEditor event handlers ─────────────────────────────────────────────
-
-  onSessionCreated(session: AnalysisSession): void {
-    this.session = session;
-    this.restoredFileName = session.fileName;
-    this.restoredSourceCode = session.sourceCode;
-    this.currentAnalysis.setSession(session);
-  }
-
-  onWorkspaceReady(profile: WorkspaceProfile | null): void {
-    this.workspaceProfile = profile;
-    if (profile) {
-      this.buildTree(profile);
-    } else {
-      this.treeRoots = [];
-      this.selectedFilePath = null;
-    }
-  }
-
-  onFilesUploaded(files: File[]): void {
-    this.uploadedFiles = files;
-  }
-
-  // ── Tree ──────────────────────────────────────────────────────────────────
-
-  private buildTree(profile: WorkspaceProfile): void {
-    const structure = profile.repositoryStructure;
-    if (!structure) {
-      this.treeRoots = profile.files.map(f => ({
-        kind: 'file' as const,
-        name: f.name,
-        path: f.path,
-        extension: f.extension,
-      }));
-      return;
-    }
-    this.treeRoots = this.folderToItems(structure.root);
-  }
-
-  private folderToItems(folder: FolderNode): TreeItem[] {
-    const subfolders: TreeFolder[] = folder.children.map(child => ({
-      kind: 'folder' as const,
-      name: child.name,
-      path: child.path,
-      children: this.folderToItems(child),
-      expanded: false,
-      fileCount: child.totalFileCount,
-    }));
-    const files: TreeFile[] = folder.files.map(f => ({
-      kind: 'file' as const,
-      name: f.name,
-      path: f.path,
-      extension: f.extension,
-    }));
-    return [...subfolders, ...files];
-  }
-
-  toggleFolder(folder: TreeFolder): void {
-    folder.expanded = !folder.expanded;
-  }
-
-  selectFile(file: TreeFile): void {
-    this.selectedFilePath = file.path;
-    const raw = this.findRawFile(file);
-    if (!raw) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.zone.run(() => {
-        this.editor.loadFile(file.name, reader.result as string);
-      });
-    };
-    reader.readAsText(raw);
-  }
-
-  isFileSelected(file: TreeFile): boolean {
-    return this.selectedFilePath === file.path;
-  }
-
-  fileIcon(ext: string): string {
-    return EXT_ICON[ext?.toLowerCase()] ?? '📄';
-  }
-
-  private findRawFile(file: TreeFile): File | undefined {
-    const pool = this.uploadedFiles.length > 0
-      ? this.uploadedFiles
-      : this.currentWorkspace.uploadedFiles;
-    const norm = (p: string) => p.replace(/\\/g, '/').toLowerCase();
-    const target = norm(file.path);
-    return pool.find(f => {
-      const rel = norm((f as any).webkitRelativePath || f.name);
-      return rel === target || rel.endsWith('/' + target) || target.endsWith('/' + norm(f.name));
-    });
-  }
-
-  navigateTo(path: string): void {
-    this.router.navigate([path]);
-  }
-
-  openSwitcher(): void {
-    this.switcherLimitReached = !this.manager.canCreate();
-    this.showSwitcher = true;
-  }
-
-  closeSwitcher(): void {
-    this.showSwitcher = false;
-    this.switcherLimitReached = false;
-  }
-
-  onValidationProceed(target: AnalysisTarget): void {
-    const path = this.pendingValidationPath;
-    this.validationResult = null;
-    this.pendingValidationPath = null;
-    if (!path) return;
-
-    if (target === 'repository') {
-      this.loadFromPath(path);
-    } else if (target === 'folder') {
-      this.router.navigate(['/folder-analysis']);
-    } else {
-      this.router.navigate(['/file-analysis']);
-    }
-  }
-
-  onValidationCancel(): void {
-    this.validationResult = null;
-    this.pendingValidationPath = null;
-  }
-
-  // ── Display helpers ───────────────────────────────────────────────────────
-
-  get hasTree(): boolean {
-    return this.treeRoots.length > 0;
-  }
-
-  get hasWorkspace(): boolean {
-    return this.workspaceProfile !== null;
-  }
-
-  get repoName(): string {
-    return this.workspaceContext?.workspaceName ?? 'Repository';
-  }
-
-  get repoTypeLabel(): string {
-    const structure = this.workspaceProfile?.repositoryStructure;
-    if (!structure) return 'Multi-File';
-    const types = structure.projects.map(p => p.type);
-    const unique = [...new Set(types)];
-    if (unique.length === 0) return 'Repository';
-    if (unique.length === 1) return unique[0];
-    return 'Mixed';
-  }
-
-  get primaryLanguage(): string {
-    return this.workspaceProfile?.languages[0] ?? '—';
-  }
-
-  get frameworks(): string {
-    if (!this.workspaceProfile) return '—';
-    const detected = this.workspaceProfile.detectedTechnologies
-      ?.filter(t => t.category === 'Framework' || t.category === 'Runtime')
-      .map(t => t.technology);
-    if (detected && detected.length > 0) return detected.join(', ');
-    return this.workspaceProfile.technologies.slice(0, 3).join(', ') || '—';
-  }
-
-  get projectCount(): number {
-    return this.workspaceProfile?.repositoryStructure?.projects.length ?? 0;
-  }
-
-  get fileCount(): number {
-    return this.workspaceProfile?.totalFiles ?? 0;
-  }
-
-  get languagesDetected(): string {
-    const langs = this.workspaceProfile?.languages ?? [];
-    return langs.length > 0 ? langs.join(', ') : '—';
-  }
-
-  get estimatedSize(): string {
-    const files = this.workspaceProfile?.files ?? [];
-    const bytes = files.reduce((sum, f) => sum + f.size, 0);
-    if (bytes === 0) return '—';
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  }
-
-  get aiSummary(): string | null {
-    return this.manager.getActive()?.knowledgeModel?.ai?.understanding?.executiveSummary ?? null;
-  }
-
-  get technologyCount(): number {
-    return this.workspaceProfile?.detectedTechnologies?.length
-      ?? this.workspaceProfile?.technologies.length
-      ?? 0;
-  }
-
-  get dependencyCount(): number {
-    return this.manager.getActive()?.knowledgeModel?.relationships.dependencies?.graph?.edges.length ?? 0;
-  }
-
-  get displayRisks(): { severity: string; description: string }[] {
-    const recs = this.manager.getActive()?.knowledgeModel?.ai?.recommendations?.recommendations ?? [];
-    return recs
-      .filter(r => r.priority === 'critical' || r.priority === 'high')
-      .slice(0, 8)
-      .map(r => ({ severity: r.riskLevel, description: r.issueDescription }));
-  }
-
-  get displayModernizations(): { description: string }[] {
-    const recs = this.manager.getActive()?.knowledgeModel?.ai?.recommendations?.recommendations ?? [];
-    return recs
-      .filter(r => r.category === 'modernization')
-      .slice(0, 6)
-      .map(r => ({ description: r.recommendedImprovement }));
-  }
-
-  get subsystems(): { name: string; fileCount: number }[] {
-    const structure = this.workspaceProfile?.repositoryStructure;
-    if (!structure) return [];
-    return structure.root.children
-      .slice(0, 10)
-      .map(folder => ({ name: folder.name, fileCount: folder.totalFileCount }))
-      .filter(s => s.fileCount > 0);
-  }
-
-  // ── Analysis History ──────────────────────────────────────────────────────
-
-  private async loadAnalysisHistory(repositoryId: string): Promise<void> {
-    if (!this.electronService.isElectron) return;
-    this.analysisHistory = await this.electronService.getAnalysisHistory(repositoryId);
-  }
-
-  restoreAnalysis(analysis: ElectronAnalysis): void {
-    const id = this.manager.activeId;
-    if (!id || !analysis.aiResult) return;
-    // Restoration via saved KnowledgeModel is handled by tryRestoreFromCache.
-    // Individual field restore is no longer supported — AI results live in knowledgeModel.ai.
-  }
-
-  formatHistoryDate(iso: string): string {
-    const date = new Date(iso);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / 86400000);
-    if (diffDays === 0) return `Today ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    if (diffDays === 1) return `Yesterday ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    return date.toLocaleDateString();
   }
 
   private buildFileMetadata(files: File[]): FileMetadata[] {
@@ -498,11 +205,283 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       rb: 'Ruby', php: 'PHP', cpp: 'C++', c: 'C', h: 'C/C++ Header', hpp: 'C++ Header',
     };
     return files.map(f => {
-      const name = f.name;
-      const path = (f as any).webkitRelativePath || name;
-      const parts = name.toLowerCase().split('.');
+      const name      = f.name;
+      const path      = (f as any).webkitRelativePath || name;
+      const parts     = name.toLowerCase().split('.');
       const extension = parts.length > 1 ? parts[parts.length - 1] : '';
       return { name, path, extension, language: EXT_TO_LANGUAGE[extension] ?? 'Unknown', size: f.size };
     });
+  }
+
+  // ── Validation dialog ──────────────────────────────────────────────────────
+
+  onValidationProceed(target: AnalysisTarget): void {
+    const path = this.pendingValidationPath;
+    this.validationResult       = null;
+    this.pendingValidationPath  = null;
+    if (!path) return;
+
+    if (target === 'repository') {
+      this.loadFromPath(path);
+    } else if (target === 'folder') {
+      this.router.navigate(['/folder-analysis']);
+    } else {
+      this.router.navigate(['/file-analysis']);
+    }
+  }
+
+  onValidationCancel(): void {
+    this.validationResult      = null;
+    this.pendingValidationPath = null;
+  }
+
+  // ── Animations ─────────────────────────────────────────────────────────────
+
+  private runAnimations(): void {
+    if (this.animTimer) clearTimeout(this.animTimer);
+    this.showIdentity    = false;
+    this.showInfoCards   = false;
+    this.showMetricCards = false;
+    this.showSuggested   = false;
+
+    setTimeout(() => { this.showIdentity    = true; },  80);
+    setTimeout(() => { this.showInfoCards   = true; }, 220);
+    setTimeout(() => { this.showMetricCards = true; }, 380);
+    this.animTimer = setTimeout(() => { this.showSuggested = true; }, 560);
+  }
+
+  // ── Workspace actions ──────────────────────────────────────────────────────
+
+  reanalyze(): void {
+    const obs = this.knowledge.reanalyze(this.workspace!.id);
+    if (obs) obs.subscribe({ error: () => {} });
+  }
+
+  newWorkspace(): void {
+    if (!this.manager.canCreate()) { this.openSwitcher(); return; }
+    this.manager.create('repository');
+  }
+
+  deleteWorkspace(): void {
+    if (this.workspace) this.manager.delete(this.workspace.id);
+  }
+
+  goToHome(): void {
+    this.router.navigate(['/']);
+  }
+
+  openSwitcher(): void {
+    this.switcherLimitReached = !this.manager.canCreate();
+    this.showSwitcher = true;
+  }
+
+  closeSwitcher(): void {
+    this.showSwitcher = false;
+    this.switcherLimitReached = false;
+  }
+
+  navigate(route: string): void {
+    this.router.navigate([route]);
+  }
+
+  // ── Status helpers ─────────────────────────────────────────────────────────
+
+  get isEmpty(): boolean {
+    const s = this.workspace?.status;
+    return !s || s === 'empty' || s === 'failed';
+  }
+
+  get isAnalyzing(): boolean {
+    return this.workspace?.status === 'processing';
+  }
+
+  get hasModel(): boolean {
+    return !!this.model;
+  }
+
+  get repoName(): string {
+    return this.workspace?.name ?? 'Repository';
+  }
+
+  get lastAnalyzed(): string {
+    if (!this.model?.metadata.builtAt) return '';
+    return new Date(this.model.metadata.builtAt).toLocaleString([], {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+  }
+
+  get statusLabel(): string {
+    const map: Record<WorkspaceStatus, string> = {
+      empty: 'Empty', processing: 'Analyzing', ready: 'Ready', failed: 'Incomplete', error: 'Error',
+    };
+    return map[this.workspace?.status ?? 'empty'];
+  }
+
+  get canReanalyze(): boolean {
+    return this.knowledge.canReanalyze(this.workspace?.id ?? '') && !this.isAnalyzing;
+  }
+
+  get workspaceList(): Workspace[] {
+    return this.manager.workspaces;
+  }
+
+  // ── Repo metrics ───────────────────────────────────────────────────────────
+
+  get fileCount(): number {
+    return this.model?.structure.totalFiles ?? 0;
+  }
+
+  get languageList(): string {
+    const langs = this.model?.structure.languages ?? [];
+    return langs.length ? langs.slice(0, 3).join(', ') : '—';
+  }
+
+  get primaryFrameworks(): string {
+    const fw = this.model?.structure.frameworks ?? [];
+    return fw.length ? fw.slice(0, 3).join(', ') : '—';
+  }
+
+  get technologyCount(): number {
+    return this.model?.structure.technologies.length ?? 0;
+  }
+
+  get dependencyCount(): number {
+    return this.model?.relationships.dependencies?.graph?.edges.length ?? 0;
+  }
+
+  get architecturePatterns(): string[] {
+    return this.model?.relationships.architecture?.patterns.map(p => p.name) ?? [];
+  }
+
+  get projectCount(): number {
+    return this.model?.structure.projects?.length ?? 0;
+  }
+
+  get topSubsystems(): { name: string; fileCount: number }[] {
+    const tree = this.model?.structure.folderTree;
+    if (!tree) return [];
+    return tree.children
+      .slice(0, 6)
+      .map(f => ({ name: f.name, fileCount: f.totalFileCount }))
+      .filter(s => s.fileCount > 0);
+  }
+
+  // ── Code Health ────────────────────────────────────────────────────────────
+
+  get healthTier(): HealthTier {
+    if (!this.model) return 'unknown';
+    const c    = this.model.insights.complexity;
+    const m    = this.model.insights.maintainability;
+    const crit = this.model.ai?.security?.findings?.filter(f => f.severity === 'critical' || f.severity === 'high').length ?? 0;
+
+    if (c === 'High' || m === 'Low' || crit >= 3) return 'critical';
+    if (c === 'Low' && m === 'High' && crit === 0) return 'healthy';
+    if (c === 'Medium' || m === 'Medium') return 'fair';
+    return 'needs-attention';
+  }
+
+  get healthLabel(): string {
+    const map: Record<HealthTier, string> = {
+      healthy: 'Healthy', fair: 'Fair', 'needs-attention': 'Needs Attention', critical: 'Critical', unknown: 'Pending',
+    };
+    return map[this.healthTier];
+  }
+
+  get complexityLabel(): string      { return this.model?.insights.complexity      ?? '—'; }
+  get maintainabilityLabel(): string { return this.model?.insights.maintainability ?? '—'; }
+
+  get securityRiskCount(): number {
+    return this.model?.ai?.security?.findings?.filter(f => f.severity === 'critical' || f.severity === 'high').length ?? 0;
+  }
+
+  // ── Pipeline stages ────────────────────────────────────────────────────────
+
+  get pipelineStages(): { label: string; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
+    const ai      = this.model?.ai;
+    const running = this.manager.getActiveStages(this.workspace?.id ?? '');
+    const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath', 'documentation'];
+
+    const scanState  = this.model ? 'complete' : (this.isAnalyzing || this.isScanning ? 'running' : 'pending');
+    const parseState = this.model ? 'complete' : (this.isAnalyzing ? 'running' : 'pending');
+
+    return [
+      { label: this.isScanning ? `Scanning (${this.scanFileCount})` : 'Scan', state: scanState as 'complete' | 'failed' | 'running' | 'pending' },
+      { label: 'Parse', state: parseState as 'complete' | 'failed' | 'running' | 'pending' },
+      ...stages.map(s => {
+        if (!this.model)                      return { label: STAGE_LABELS[s], state: 'pending'  as const };
+        if (running.has(s))                   return { label: STAGE_LABELS[s], state: 'running'  as const };
+        if (ai?.completedStages?.includes(s)) return { label: STAGE_LABELS[s], state: 'complete' as const };
+        if (ai?.failedStages?.includes(s))    return { label: STAGE_LABELS[s], state: 'failed'   as const };
+        return { label: STAGE_LABELS[s], state: 'pending' as const };
+      }),
+    ];
+  }
+
+  // ── Metric cards ───────────────────────────────────────────────────────────
+
+  get metricCards(): HubMetricCard[] {
+    const ai       = this.model?.ai;
+    const base     = '/repository-analysis';
+    const suggested = this.suggestedRoute;
+
+    return [
+      {
+        id:        'understanding',
+        icon:      'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 16v-4 M12 8h.01',
+        count:     null,
+        label:     'Understanding',
+        route:     `${base}/system-understanding`,
+        suggested: suggested === 'understanding',
+        pending:   !ai?.completedStages?.includes('understanding'),
+      },
+      {
+        id:        'security',
+        icon:      'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+        count:     ai?.security?.findings?.length ?? null,
+        label:     'Security Issues',
+        route:     `${base}/security`,
+        suggested: suggested === 'security',
+        pending:   !ai?.completedStages?.includes('security'),
+      },
+      {
+        id:        'recommendations',
+        icon:      'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
+        count:     ai?.recommendations?.recommendations?.length ?? null,
+        label:     'Recommendations',
+        route:     `${base}/code-recommendations`,
+        suggested: suggested === 'recommendations',
+        pending:   !ai?.completedStages?.includes('recommendations'),
+      },
+      {
+        id:        'architecture',
+        icon:      'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
+        count:     this.model?.relationships.architecture?.patterns.length ?? null,
+        label:     'Arch Patterns',
+        route:     `${base}/architecture`,
+        suggested: false,
+        pending:   !this.model?.capabilities.includes('architectureDiscovery'),
+      },
+      {
+        id:        'dependencies',
+        icon:      'M22 12H18L15 21 9 3 6 12 2 12',
+        count:     this.dependencyCount > 0 ? this.dependencyCount : null,
+        label:     'Dependencies',
+        route:     `${base}/data-flow`,
+        suggested: false,
+        pending:   !this.model?.capabilities.includes('dependencyResolution'),
+      },
+    ];
+  }
+
+  private get suggestedRoute(): string {
+    const findings = this.model?.ai?.security?.findings ?? [];
+    const critical = findings.filter(f => f.severity === 'critical' || f.severity === 'high').length;
+    const recCount = this.model?.ai?.recommendations?.recommendations?.length ?? 0;
+
+    if (critical > 0)        return 'security';
+    if (findings.length > 0) return 'security';
+    if (recCount > 3)        return 'recommendations';
+    return 'understanding';
   }
 }

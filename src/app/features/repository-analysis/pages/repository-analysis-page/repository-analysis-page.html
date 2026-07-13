@@ -1,3 +1,4 @@
+<!-- Validation dialog — shown when repo path doesn't match target type -->
 <app-validation-dialog
   *ngIf="validationResult"
   [result]="validationResult"
@@ -5,248 +6,304 @@
   (cancel)="onValidationCancel()">
 </app-validation-dialog>
 
-<div class="tri-layout">
+<div class="hub-page" [class.hub-page--has-model]="hasModel">
 
-  <!-- ── Left: File Tree ───────────────────────────────────────────────────── -->
-  <div class="tri-left" [style.width.px]="panelWidths[0]">
-    <div class="tri-panel-header">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
-        <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
-        <line x1="12" y1="12" x2="12" y2="15"/>
-      </svg>
-      <span>Repository</span>
+  <!-- ══════════════════════════════════════════════════════
+       SCANNING STATE — IPC directory read in progress
+  ═══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="isScanning && !hasModel">
+    <div class="analyzing-zone">
+      <div class="analyzing-card analyzing-card--animate">
+        <div class="analyzing-spinner"></div>
+        <h2 class="analyzing-title">Scanning Repository</h2>
+        <p class="analyzing-desc">Reading directory… {{ scanFileCount }} files found</p>
+        <div class="scan-progress-bar">
+          <div class="scan-progress-fill"></div>
+        </div>
+      </div>
     </div>
-
-    <div class="scan-progress" *ngIf="isScanning">
-      <div class="scan-progress-bar"></div>
-      <span class="scan-progress-label">Scanning… {{ scanFileCount }} files</span>
-    </div>
-
-    <div class="tri-tree-scroll">
-      <ng-container *ngIf="hasTree; else noTree">
-        <ng-container *ngFor="let item of treeRoots">
-          <ng-container *ngTemplateOutlet="treeItemTpl; context: { $implicit: item, depth: 0 }"></ng-container>
-        </ng-container>
-      </ng-container>
-      <ng-template #noTree>
-        <div class="tri-tree-empty">
-          <ng-container *ngIf="!isScanning">Upload a repository folder to explore</ng-container>
-        </div>
-      </ng-template>
-    </div>
-  </div>
-
-  <app-resize-divider [minLeft]="160" [minRight]="320" (leftWidthChange)="onPanelResize(0, $event)"></app-resize-divider>
-
-  <!-- ── Center: Code Editor ───────────────────────────────────────────────── -->
-  <div class="tri-center" [style.width.px]="panelWidths[1]">
-    <app-code-editor
-      [readOnly]="true"
-      [restoredFileName]="restoredFileName"
-      [restoredSourceCode]="restoredSourceCode"
-      (analyze)="onSessionCreated($event)"
-      (workspaceReady)="onWorkspaceReady($event)"
-      (filesUploaded)="onFilesUploaded($event)">
-    </app-code-editor>
-  </div>
-
-  <app-resize-divider [minLeft]="320" [minRight]="200" (leftWidthChange)="onPanelResize(1, $event)"></app-resize-divider>
-
-  <!-- ── Right: Intelligence Panel ───────────────────────────────────────── -->
-  <div class="tri-right">
-    <div class="tri-panel-header">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-      </svg>
-      <span>Intelligence</span>
-    </div>
-
-    <div class="tri-right-scroll">
-
-      <app-workspace-panel (switchRequested)="openSwitcher()"></app-workspace-panel>
-
-      <ng-container *ngIf="hasWorkspace">
-
-        <!-- Plain English Summary (AI) -->
-        <div class="intel-card" *ngIf="aiSummary">
-          <div class="intel-card-title">Plain English Summary</div>
-          <p class="intel-summary-text" [class.summary-collapsed]="!summaryExpanded">{{ aiSummary }}</p>
-          <button class="show-more-btn" (click)="summaryExpanded = !summaryExpanded">
-            {{ summaryExpanded ? 'Show less' : 'Show more' }}
-          </button>
-        </div>
-
-        <!-- Metrics -->
-        <div class="intel-card">
-          <div class="intel-card-title">Metrics</div>
-          <div class="intel-metrics-grid">
-            <div class="intel-metric">
-              <span class="intel-metric-label">Files</span>
-              <span class="intel-metric-value">{{ fileCount }}</span>
-            </div>
-            <div class="intel-metric">
-              <span class="intel-metric-label">Projects</span>
-              <span class="intel-metric-value">{{ projectCount }}</span>
-            </div>
-            <div class="intel-metric">
-              <span class="intel-metric-label">Technologies</span>
-              <span class="intel-metric-value">{{ technologyCount }}</span>
-            </div>
-            <div class="intel-metric">
-              <span class="intel-metric-label">Dependencies</span>
-              <span class="intel-metric-value">{{ dependencyCount }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Major Subsystems -->
-        <div class="intel-card" *ngIf="subsystems.length">
-          <div class="intel-card-title">Major Subsystems</div>
-          <div class="intel-subsystem-list">
-            <div class="intel-subsystem-item" *ngFor="let s of subsystems">
-              <span class="intel-subsystem-name">{{ s.name }}</span>
-              <span class="intel-subsystem-count">{{ s.fileCount }} files</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Risks / Issues -->
-        <div class="intel-card" (click)="navigateTo('repository-analysis/code-recommendations')">
-          <div class="intel-card-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;display:inline;margin-right:6px">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-            Risks / Issues ({{ displayRisks.length }})
-          </div>
-          <div *ngIf="!displayRisks.length" class="intel-empty-state">No high-priority risks detected.</div>
-          <div class="intel-findings-list" *ngIf="displayRisks.length">
-            <div class="intel-finding-item" *ngFor="let r of (risksExpanded ? displayRisks : (displayRisks | slice:0:4))">
-              <span class="sev-dot" [ngClass]="'dot-' + r.severity"></span>
-              <span class="intel-finding-text">{{ r.description }}</span>
-            </div>
-          </div>
-          <button class="show-more-btn" *ngIf="displayRisks.length > 4" (click)="$event.stopPropagation(); risksExpanded = !risksExpanded">
-            {{ risksExpanded ? 'Show less' : 'Show more' }}
-          </button>
-        </div>
-
-        <!-- Modernization Opportunities -->
-        <div class="intel-card" (click)="navigateTo('repository-analysis/code-recommendations')">
-          <div class="intel-card-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;display:inline;margin-right:6px">
-              <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-              <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
-            </svg>
-            Modernization ({{ displayModernizations.length }})
-          </div>
-          <div *ngIf="!displayModernizations.length" class="intel-empty-state">No modernization opportunities detected.</div>
-          <div class="intel-findings-list" *ngIf="displayModernizations.length">
-            <div class="intel-finding-item mod" *ngFor="let m of (modernizationExpanded ? displayModernizations : (displayModernizations | slice:0:3))">
-              <svg style="width:10px;height:10px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              <span class="intel-finding-text">{{ m.description }}</span>
-            </div>
-          </div>
-          <button class="show-more-btn" *ngIf="displayModernizations.length > 3" (click)="$event.stopPropagation(); modernizationExpanded = !modernizationExpanded">
-            {{ modernizationExpanded ? 'Show less' : 'Show more' }}
-          </button>
-        </div>
-
-        <!-- Explore Deeper -->
-        <div class="intel-card">
-          <div class="intel-card-title">Explore Deeper</div>
-          <div class="intel-nav-list">
-            <button class="intel-nav-btn" (click)="navigateTo('repository-analysis/architecture')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-              </svg>
-              Architecture
-            </button>
-            <button class="intel-nav-btn" (click)="navigateTo('repository-analysis/data-flow')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-              </svg>
-              Data Flow
-            </button>
-            <button class="intel-nav-btn" (click)="navigateTo('repository-analysis/code-recommendations')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-              </svg>
-              Code Recommendations
-            </button>
-            <button class="intel-nav-btn" (click)="navigateTo('repository-analysis/documentation')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-                <polyline points="10 9 9 9 8 9"/>
-              </svg>
-              Documentation
-            </button>
-          </div>
-        </div>
-
-        <!-- Analysis History -->
-        <div class="intel-card" *ngIf="analysisHistory.length > 0">
-          <div class="intel-card-title" style="cursor:pointer" (click)="historyExpanded = !historyExpanded">
-            History ({{ analysisHistory.length }})
-            <span style="float:right;opacity:0.5;font-size:10px">{{ historyExpanded ? '▲' : '▼' }}</span>
-          </div>
-          <div *ngIf="historyExpanded" class="intel-history-list">
-            <div class="intel-history-item"
-                 *ngFor="let a of analysisHistory"
-                 (click)="restoreAnalysis(a)">
-              <span class="intel-history-scope">{{ a.scope }}</span>
-              <span class="intel-history-date">{{ formatHistoryDate(a.createdAt) }}</span>
-            </div>
-          </div>
-        </div>
-
-      </ng-container>
-    </div>
-  </div>
-
-</div>
-
-<!-- ── Tree item template ─────────────────────────────────────────────────── -->
-<ng-template #treeItemTpl let-item let-depth="depth">
-
-  <!-- Folder -->
-  <div *ngIf="item.kind === 'folder'"
-       class="tree-folder"
-       [style.padding-left.px]="depth * 14 + 8"
-       (click)="toggleFolder(item)">
-    <svg class="tree-caret" [class.tree-caret-open]="item.expanded"
-         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="9 18 15 12 9 6"/>
-    </svg>
-    <svg class="tree-folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-    </svg>
-    <span class="tree-name">{{ item.name }}</span>
-    <span class="tree-count">{{ item.fileCount }}</span>
-  </div>
-  <ng-container *ngIf="item.kind === 'folder' && item.expanded">
-    <ng-container *ngFor="let child of item.children">
-      <ng-container *ngTemplateOutlet="treeItemTpl; context: { $implicit: child, depth: depth + 1 }"></ng-container>
-    </ng-container>
   </ng-container>
 
-  <!-- File -->
-  <div *ngIf="item.kind === 'file'"
-       class="tree-file"
-       [class.tree-file-active]="isFileSelected(item)"
-       [style.padding-left.px]="depth * 14 + 22"
-       (click)="selectFile(item)">
-    <span class="tree-file-icon">{{ fileIcon(item.extension) }}</span>
-    <span class="tree-name">{{ item.name }}</span>
-  </div>
+  <!-- ══════════════════════════════════════════════════════
+       EMPTY STATE — no repo loaded, show prompt
+  ═══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="isEmpty && !isAnalyzing && !isScanning">
+    <div class="upload-zone">
+      <div class="upload-card" [class.upload-card--animate]="showIdentity">
 
-</ng-template>
+        <div class="upload-icon-ring">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+            <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+            <line x1="12" y1="12" x2="12" y2="15"/>
+          </svg>
+        </div>
+
+        <h2 class="upload-title">Repository Analysis</h2>
+        <p class="upload-desc">
+          Select a repository from the library on the Home page.
+          LegacyLens will scan all files, resolve dependencies, detect
+          architecture patterns, and run a full AI analysis.
+        </p>
+
+        <button class="upload-browse-btn" (click)="goToHome()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          Open Repository Library
+        </button>
+
+        <div class="upload-hint">Repositories are opened via the Home page library</div>
+
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ══════════════════════════════════════════════════════
+       ANALYZING STATE — pipeline running
+  ═══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="isAnalyzing && !isScanning">
+    <div class="analyzing-zone">
+      <div class="analyzing-card" [class.analyzing-card--animate]="showIdentity">
+
+        <div class="analyzing-spinner"></div>
+        <h2 class="analyzing-title">Analyzing {{ repoName }}</h2>
+        <p class="analyzing-desc">Processing files, resolving dependencies, and running AI pipeline…</p>
+
+        <div class="stage-dots">
+          <div
+            class="stage-dot"
+            *ngFor="let stage of pipelineStages"
+            [class.stage-dot--complete]="stage.state === 'complete'"
+            [class.stage-dot--running]="stage.state === 'running'"
+            [class.stage-dot--failed]="stage.state === 'failed'"
+            [title]="stage.label">
+          </div>
+        </div>
+
+        <div class="stage-labels">
+          <span
+            class="stage-label"
+            *ngFor="let stage of pipelineStages"
+            [class.stage-label--active]="stage.state === 'running'"
+            [class.stage-label--complete]="stage.state === 'complete'">
+            {{ stage.label }}
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ══════════════════════════════════════════════════════
+       READY STATE — hub dashboard
+  ═══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="hasModel">
+
+    <!-- Top bar -->
+    <div class="hub-topbar" [class.hub-topbar--animate]="showIdentity">
+      <div class="hub-breadcrumb">
+        <span class="hub-breadcrumb-root">Repository Analysis</span>
+        <svg class="hub-breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+        <span class="hub-breadcrumb-current">{{ repoName }}</span>
+        <span class="hub-breadcrumb-badge" *ngIf="fileCount">{{ fileCount }} files</span>
+        <span class="hub-breadcrumb-badge hub-breadcrumb-badge--green" *ngIf="projectCount > 1">{{ projectCount }} projects</span>
+      </div>
+      <div class="hub-topbar-actions">
+        <span class="hub-last-analyzed" *ngIf="lastAnalyzed">{{ lastAnalyzed }}</span>
+        <button class="hub-action-btn" (click)="reanalyze()" [disabled]="!canReanalyze">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          Re-analyze
+        </button>
+        <button class="hub-action-btn hub-action-btn--ghost" (click)="openSwitcher()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/>
+          </svg>
+          {{ repoName }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="hub-body">
+
+      <!-- ── Row 1: Identity ────────────────────────────── -->
+      <div class="hub-identity-card" [class.hub-section--animate]="showIdentity">
+        <div class="identity-lang-badge">{{ languageList }}</div>
+        <div class="identity-content">
+          <h1 class="identity-filename">{{ repoName }}</h1>
+          <p class="identity-summary" *ngIf="model?.ai?.understanding?.executiveSummary">
+            {{ model!.ai!.understanding!.executiveSummary }}
+          </p>
+          <p class="identity-summary identity-summary--muted" *ngIf="!model?.ai?.understanding?.executiveSummary">
+            AI analysis is running in the background. Summary will appear shortly.
+          </p>
+          <div class="identity-patterns" *ngIf="architecturePatterns.length">
+            <span class="identity-pattern-pill" *ngFor="let p of architecturePatterns.slice(0, 4)">{{ p }}</span>
+          </div>
+        </div>
+        <div class="identity-meta">
+          <div class="identity-meta-item">
+            <span class="identity-meta-label">Files</span>
+            <span class="identity-meta-val">{{ fileCount }}</span>
+          </div>
+          <div class="identity-meta-item">
+            <span class="identity-meta-label">Frameworks</span>
+            <span class="identity-meta-val">{{ primaryFrameworks }}</span>
+          </div>
+          <div class="identity-meta-item" *ngIf="projectCount > 1">
+            <span class="identity-meta-label">Projects</span>
+            <span class="identity-meta-val">{{ projectCount }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Row 1b: Subsystems (repo-only) ─────────────── -->
+      <div class="hub-subsystems-row" [class.hub-section--animate]="showIdentity" *ngIf="topSubsystems.length">
+        <div class="subsystem-chip" *ngFor="let s of topSubsystems">
+          <span class="subsystem-chip-name">{{ s.name }}</span>
+          <span class="subsystem-chip-count">{{ s.fileCount }}</span>
+        </div>
+      </div>
+
+      <!-- ── Row 2: Info cards ────────────────────────── -->
+      <div class="hub-info-row" [class.hub-section--animate]="showInfoCards">
+
+        <!-- Code health -->
+        <div class="info-card info-card--health" [class]="'health-' + healthTier">
+          <div class="info-card-label">Code Health</div>
+          <div class="health-arc-wrap">
+            <svg class="health-arc" viewBox="0 0 80 50">
+              <path d="M 8 46 A 34 34 0 0 1 72 46" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6" stroke-linecap="round"/>
+              <path class="health-arc-fill"
+                [class.health-arc-fill--healthy]="healthTier === 'healthy'"
+                [class.health-arc-fill--fair]="healthTier === 'fair'"
+                [class.health-arc-fill--needs-attention]="healthTier === 'needs-attention'"
+                [class.health-arc-fill--critical]="healthTier === 'critical'"
+                d="M 8 46 A 34 34 0 0 1 72 46" fill="none" stroke-width="6" stroke-linecap="round"/>
+            </svg>
+            <span class="health-tier-label">{{ healthLabel }}</span>
+          </div>
+          <div class="health-stats">
+            <div class="health-stat">
+              <span class="health-stat-label">Complexity</span>
+              <span class="health-stat-val"
+                [class.complexity-Low]="complexityLabel === 'Low'"
+                [class.complexity-Medium]="complexityLabel === 'Medium'"
+                [class.complexity-High]="complexityLabel === 'High'">{{ complexityLabel }}</span>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-label">Maintainability</span>
+              <span class="health-stat-val"
+                [class.maint-High]="maintainabilityLabel === 'High'"
+                [class.maint-Medium]="maintainabilityLabel === 'Medium'"
+                [class.maint-Low]="maintainabilityLabel === 'Low'">{{ maintainabilityLabel }}</span>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-label">High-Risk Issues</span>
+              <span class="health-stat-val" [class.stat-error]="securityRiskCount > 0">{{ securityRiskCount }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pipeline -->
+        <div class="info-card info-card--pipeline">
+          <div class="info-card-label">Analysis Pipeline</div>
+          <div class="pipeline-dots-row">
+            <div
+              class="pipeline-dot"
+              *ngFor="let s of pipelineStages"
+              [class.pipeline-dot--complete]="s.state === 'complete'"
+              [class.pipeline-dot--running]="s.state === 'running'"
+              [class.pipeline-dot--failed]="s.state === 'failed'"
+              [title]="s.label">
+            </div>
+          </div>
+          <div class="pipeline-stage-list">
+            <div class="pipeline-stage-row" *ngFor="let s of pipelineStages">
+              <span class="pipeline-stage-dot-sm"
+                [class.dot-sm--complete]="s.state === 'complete'"
+                [class.dot-sm--running]="s.state === 'running'"
+                [class.dot-sm--failed]="s.state === 'failed'"
+                [class.dot-sm--pending]="s.state === 'pending'">
+              </span>
+              <span class="pipeline-stage-name" [class.pipeline-stage-name--active]="s.state === 'running'">{{ s.label }}</span>
+              <span class="pipeline-stage-status">
+                <ng-container [ngSwitch]="s.state">
+                  <ng-container *ngSwitchCase="'complete'">✓</ng-container>
+                  <ng-container *ngSwitchCase="'running'">…</ng-container>
+                  <ng-container *ngSwitchCase="'failed'">✗</ng-container>
+                </ng-container>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Workspace -->
+        <div class="info-card info-card--workspace">
+          <div class="info-card-label">Workspace</div>
+          <div class="workspace-name-row">
+            <span class="workspace-name">{{ repoName }}</span>
+            <span class="workspace-status-chip">{{ statusLabel }}</span>
+          </div>
+          <div class="workspace-actions">
+            <button class="ws-btn ws-btn--reanalyze" (click)="reanalyze()" [disabled]="!canReanalyze">Re-analyze</button>
+            <button class="ws-btn ws-btn--switch" (click)="openSwitcher()">Switch</button>
+            <button class="ws-btn ws-btn--new" (click)="newWorkspace()">New</button>
+            <button class="ws-btn ws-btn--delete" (click)="deleteWorkspace()">Delete</button>
+          </div>
+          <div class="workspace-slot-row">
+            <span class="workspace-slot-dot"
+              *ngFor="let ws of workspaceList"
+              [class.workspace-slot-dot--active]="ws.id === workspace?.id"
+              [title]="ws.name">
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── Row 3: Metric / nav cards ──────────────────── -->
+      <div class="hub-metric-row" [class.hub-section--animate]="showMetricCards">
+        <button
+          class="metric-card"
+          *ngFor="let card of metricCards"
+          [class.metric-card--suggested]="card.suggested && showSuggested"
+          [class.metric-card--pending]="card.pending"
+          (click)="navigate(card.route)">
+
+          <span class="metric-suggested-pill" *ngIf="card.suggested && showSuggested">Start Here</span>
+
+          <div class="metric-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path [attr.d]="card.icon"/>
+            </svg>
+          </div>
+
+          <div class="metric-card-body">
+            <span class="metric-card-count" *ngIf="card.count !== null">{{ card.count }}</span>
+            <span class="metric-card-count metric-card-count--ai" *ngIf="card.count === null && !card.pending">AI</span>
+            <span class="metric-card-count metric-card-count--pending" *ngIf="card.pending">…</span>
+            <span class="metric-card-label">{{ card.label }}</span>
+          </div>
+
+          <svg class="metric-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+
+        </button>
+      </div>
+
+    </div>
+
+  </ng-container>
+
+</div>
 
 <app-workspace-switcher-modal
   *ngIf="showSwitcher"
