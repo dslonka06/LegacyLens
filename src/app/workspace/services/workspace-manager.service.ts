@@ -1,16 +1,32 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, Subject, map, distinctUntilChanged, switchMap, of } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  Subject,
+  map,
+  distinctUntilChanged,
+  switchMap,
+  of,
+} from 'rxjs';
 import { Router } from '@angular/router';
-import { Workspace, WorkspaceType, WorkspaceStatus, MAX_WORKSPACES } from '../models/workspace-entity.model';
-import type { KnowledgeModel, KnowledgeAIResults, AIStage } from '@app/knowledge/models/knowledge-model.contract';
+import {
+  Workspace,
+  WorkspaceType,
+  WorkspaceStatus,
+  MAX_WORKSPACES,
+} from '../models/workspace-entity.model';
+import type {
+  KnowledgeModel,
+  KnowledgeAIResults,
+  AIStage,
+} from '@app/knowledge/models/knowledge-model.contract';
 import { ElectronService } from '@app/core/services/electron.service';
 import type { PersistedWorkspace } from '../../../electron';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceManagerService {
-
   private readonly _workspaces$ = new BehaviorSubject<Workspace[]>([]);
-  private readonly _activeId$   = new BehaviorSubject<string | null>(null);
+  private readonly _activeId$ = new BehaviorSubject<string | null>(null);
 
   // Raw File[] objects keyed by workspace ID — not serializable so kept separate
   // from the Workspace entity. Survives multi-workspace navigation.
@@ -28,7 +44,7 @@ export class WorkspaceManagerService {
   private readonly _generations = new Map<string, number>();
 
   readonly workspaces$ = this._workspaces$.asObservable();
-  readonly activeId$   = this._activeId$.asObservable();
+  readonly activeId$ = this._activeId$.asObservable();
 
   // Emits when auto-create is blocked by the workspace limit — subscribers
   // (analysis pages) can open the switcher modal in response.
@@ -36,9 +52,8 @@ export class WorkspaceManagerService {
   readonly limitReached$ = this._limitReached$.asObservable();
 
   readonly activeWorkspace$: Observable<Workspace | null> = this._activeId$.pipe(
-    switchMap(id => id
-      ? this._workspaces$.pipe(map(ws => ws.find(w => w.id === id) ?? null))
-      : of(null)
+    switchMap((id) =>
+      id ? this._workspaces$.pipe(map((ws) => ws.find((w) => w.id === id) ?? null)) : of(null),
     ),
     distinctUntilChanged(),
   );
@@ -52,20 +67,24 @@ export class WorkspaceManagerService {
 
   // ── Queries ───────────────────────────────────────────────────────────────
 
-  get workspaces(): Workspace[] { return this._workspaces$.value; }
-  get activeId(): string | null { return this._activeId$.value; }
+  get workspaces(): Workspace[] {
+    return this._workspaces$.value;
+  }
+  get activeId(): string | null {
+    return this._activeId$.value;
+  }
 
   getActive(): Workspace | null {
     const id = this._activeId$.value;
-    return id ? (this._workspaces$.value.find(w => w.id === id) ?? null) : null;
+    return id ? (this._workspaces$.value.find((w) => w.id === id) ?? null) : null;
   }
 
   getById(id: string): Workspace | null {
-    return this._workspaces$.value.find(w => w.id === id) ?? null;
+    return this._workspaces$.value.find((w) => w.id === id) ?? null;
   }
 
   getByType(type: WorkspaceType): Workspace[] {
-    return this._workspaces$.value.filter(w => w.type === type);
+    return this._workspaces$.value.filter((w) => w.type === type);
   }
 
   canCreate(): boolean {
@@ -74,7 +93,7 @@ export class WorkspaceManagerService {
 
   workspace$(id: string): Observable<Workspace | null> {
     return this._workspaces$.pipe(
-      map(ws => ws.find(w => w.id === id) ?? null),
+      map((ws) => ws.find((w) => w.id === id) ?? null),
       distinctUntilChanged(),
     );
   }
@@ -82,20 +101,23 @@ export class WorkspaceManagerService {
   // ── Creation ──────────────────────────────────────────────────────────────
 
   create(type: WorkspaceType, name?: string): Workspace {
-    const id  = this.generateId();
+    const id = this.generateId();
     const now = new Date().toISOString();
-    const defaultName = type === 'file'   ? 'File Workspace'
-                      : type === 'folder' ? 'Folder Workspace'
-                      : 'Repository Workspace';
+    const defaultName =
+      type === 'file'
+        ? 'File Workspace'
+        : type === 'folder'
+          ? 'Folder Workspace'
+          : 'Repository Workspace';
 
     const ws: Workspace = {
       id,
       name: name ?? defaultName,
       type,
-      status:         'empty',
-      createdAt:      now,
+      status: 'empty',
+      createdAt: now,
       lastModifiedAt: now,
-      repositoryId:   null,
+      repositoryId: null,
       knowledgeModel: null,
     };
 
@@ -120,7 +142,7 @@ export class WorkspaceManagerService {
     const existing = this.getByType(type);
     if (existing.length > 0) {
       const current = this.getActive();
-      const target  = (current?.type === type) ? current : existing[0];
+      const target = current?.type === type ? current : existing[0];
       this._activeId$.next(target.id);
       return target;
     }
@@ -143,9 +165,12 @@ export class WorkspaceManagerService {
     this._rawFiles.delete(id);
 
     const timer = this._saveTimers.get(id);
-    if (timer) { clearTimeout(timer); this._saveTimers.delete(id); }
+    if (timer) {
+      clearTimeout(timer);
+      this._saveTimers.delete(id);
+    }
 
-    const remaining = this._workspaces$.value.filter(w => w.id !== id);
+    const remaining = this._workspaces$.value.filter((w) => w.id !== id);
     this._workspaces$.next(remaining);
     this.electronService.deleteWorkspace(id);
 
@@ -174,9 +199,9 @@ export class WorkspaceManagerService {
   /** Set the structural KnowledgeModel after the Code Intelligence Engine completes. */
   setKnowledgeModel(id: string, model: KnowledgeModel): void {
     this.patch(id, {
-      knowledgeModel:  model,
-      status:          'ready',
-      lastModifiedAt:  new Date().toISOString(),
+      knowledgeModel: model,
+      status: 'ready',
+      lastModifiedAt: new Date().toISOString(),
     });
   }
 
@@ -234,7 +259,7 @@ export class WorkspaceManagerService {
   clearKnowledgeModel(id: string): void {
     this.patch(id, {
       knowledgeModel: null,
-      status:         'empty',
+      status: 'empty',
       lastModifiedAt: new Date().toISOString(),
     });
   }
@@ -288,9 +313,15 @@ export class WorkspaceManagerService {
   // ── Raw file storage ──────────────────────────────────────────────────────
   // Kept separate from the Workspace entity — File objects are not serializable.
 
-  setRawFiles(id: string, files: File[]): void { this._rawFiles.set(id, files); }
-  getRawFiles(id: string): File[]              { return this._rawFiles.get(id) ?? []; }
-  clearRawFiles(id: string): void              { this._rawFiles.delete(id); }
+  setRawFiles(id: string, files: File[]): void {
+    this._rawFiles.set(id, files);
+  }
+  getRawFiles(id: string): File[] {
+    return this._rawFiles.get(id) ?? [];
+  }
+  clearRawFiles(id: string): void {
+    this._rawFiles.delete(id);
+  }
 
   // ── Persistence ───────────────────────────────────────────────────────────
 
@@ -300,22 +331,23 @@ export class WorkspaceManagerService {
       const persisted = await this.electronService.getPersistedWorkspaces();
       if (persisted.length === 0) return;
 
-      const restored: Workspace[] = persisted.map(p => {
+      const restored: Workspace[] = persisted.map((p) => {
         // processing means the app closed mid-analysis — mark as failed so the
         // UI can show a recovery prompt rather than pretending nothing happened.
-        const status: WorkspaceStatus =
-          p.knowledgeModel    ? 'ready'
-          : p.status === 'processing' ? 'failed'
-          : 'empty';
+        const status: WorkspaceStatus = p.knowledgeModel
+          ? 'ready'
+          : p.status === 'processing'
+            ? 'failed'
+            : 'empty';
 
         return {
-          id:             p.id,
-          name:           p.name,
-          type:           p.type,
+          id: p.id,
+          name: p.name,
+          type: p.type,
           status,
-          createdAt:      p.createdAt,
+          createdAt: p.createdAt,
           lastModifiedAt: p.lastModifiedAt,
-          repositoryId:   p.repositoryId,
+          repositoryId: p.repositoryId,
           knowledgeModel: p.knowledgeModel,
         };
       });
@@ -340,13 +372,13 @@ export class WorkspaceManagerService {
       const current = this.getById(ws.id);
       if (current) {
         const payload: PersistedWorkspace = {
-          id:             current.id,
-          name:           current.name,
-          type:           current.type,
-          status:         current.status,
-          createdAt:      current.createdAt,
+          id: current.id,
+          name: current.name,
+          type: current.type,
+          status: current.status,
+          createdAt: current.createdAt,
           lastModifiedAt: current.lastModifiedAt,
-          repositoryId:   current.repositoryId,
+          repositoryId: current.repositoryId,
           knowledgeModel: current.knowledgeModel,
         };
         this.electronService.saveWorkspace(payload);
@@ -359,17 +391,15 @@ export class WorkspaceManagerService {
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   private patch(id: string, delta: Partial<Workspace>): void {
-    const updated = this._workspaces$.value.map(w =>
-      w.id === id ? { ...w, ...delta } : w
-    );
+    const updated = this._workspaces$.value.map((w) => (w.id === id ? { ...w, ...delta } : w));
     this._workspaces$.next(updated);
 
-    const patched = updated.find(w => w.id === id);
+    const patched = updated.find((w) => w.id === id);
     if (patched) this.scheduleSave(patched);
   }
 
   private routeForType(type: WorkspaceType): string {
-    if (type === 'file')   return '/file-analysis';
+    if (type === 'file') return '/file-analysis';
     if (type === 'folder') return '/folder-analysis';
     return '/repository-analysis';
   }

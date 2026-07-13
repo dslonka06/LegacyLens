@@ -19,4 +19,3 @@ export interface TechnologyDetectionResult {
   // Source file that triggered the detection — useful for UI and Stage 3 tracing
   sourceFile: string;
 }
-

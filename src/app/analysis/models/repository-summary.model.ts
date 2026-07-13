@@ -20,14 +20,14 @@ export type DocumentationSectionId =
 export interface DocumentationSection {
   id: DocumentationSectionId;
   title: string;
-  description: string;   // One-sentence description for the selection UI
+  description: string; // One-sentence description for the selection UI
   available: boolean;
 }
 
 export interface KeyFile {
   name: string;
   path: string;
-  reason: string;   // Why this file is considered key
+  reason: string; // Why this file is considered key
   connectionCount?: number;
 }
 

@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
-import type { ElectronRepository, AddRepositoryRequest, UpdateRepositoryRequest } from '../../../electron';
+import type {
+  ElectronRepository,
+  AddRepositoryRequest,
+  UpdateRepositoryRequest,
+} from '../../../electron';
 
 // Re-export for components that imported from this file
 export type { ElectronRepository as Repository, AddRepositoryRequest, UpdateRepositoryRequest };
 
 @Injectable({ providedIn: 'root' })
 export class RepositoryLibraryService {
-
   private get api() {
     return (window as any).electronAPI?.repositories ?? null;
   }

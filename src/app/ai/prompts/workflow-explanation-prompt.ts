@@ -3,7 +3,6 @@ import { WorkflowExplanationContext } from '@app/analysis/models/ai-explanation-
 
 @Injectable({ providedIn: 'root' })
 export class WorkflowExplanationPromptBuilder {
-
   build(ctx: WorkflowExplanationContext): string {
     const parts: string[] = [];
     const wf = ctx.workflow;

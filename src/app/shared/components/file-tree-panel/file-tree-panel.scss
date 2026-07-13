@@ -43,7 +43,9 @@
   color: var(--text-primary);
   font-family: inherit;
 
-  &::placeholder { color: var(--text-muted); }
+  &::placeholder {
+    color: var(--text-muted);
+  }
 }
 
 // ── Scrollable rows ───────────────────────────────────────────
@@ -52,8 +54,13 @@
   overflow-y: auto;
   padding: 6px 0;
 
-  &::-webkit-scrollbar { width: 4px; }
-  &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 2px;
+  }
 }
 
 // ── Generic row ───────────────────────────────────────────────
@@ -69,7 +76,9 @@
   margin: 0 4px;
   transition: background 0.1s;
 
-  &:hover { background: rgba(255,255,255,0.04); }
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
 }
 
 .tree-caret {
@@ -91,7 +100,7 @@
 }
 
 .tree-icon--folder {
-  color: var(--warning, #F5A623);
+  color: var(--warning, #f5a623);
   opacity: 0.8;
 }
 
@@ -130,7 +139,7 @@
 
 // ── Selected file ─────────────────────────────────────────────
 .tree-row--selected {
-  background: rgba(141,99,255,0.12) !important;
+  background: rgba(141, 99, 255, 0.12) !important;
 
   .tree-name {
     color: var(--accent);

@@ -3,23 +3,26 @@ import { Observable, Subject } from 'rxjs';
 import { ElectronService } from '@app/core/services/electron.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { AIAnalysisService } from '@app/analysis/services/ai-analysis.service';
-import type { KnowledgeModel, AnalysisTargetType } from '@app/knowledge/models/knowledge-model.contract';
+import type {
+  KnowledgeModel,
+  AnalysisTargetType,
+} from '@app/knowledge/models/knowledge-model.contract';
 import type { ProcessWorkspaceRequest, ElectronDirectoryEntry } from '../../../electron';
 
 export interface ProcessWorkspaceOptions {
-  workspaceId:    string;           // required — used to update WorkspaceManagerService
-  repositoryId?:  string;           // for SQLite persistence and incremental updates
-  repositoryPath?: string;          // for git metadata (repository targets)
+  workspaceId: string; // required — used to update WorkspaceManagerService
+  repositoryId?: string; // for SQLite persistence and incremental updates
+  repositoryPath?: string; // for git metadata (repository targets)
   workspaceName?: string;
-  persist?:       boolean;
-  incremental?:   boolean;
+  persist?: boolean;
+  incremental?: boolean;
 }
 
 // Last-known inputs per workspace — needed to re-run the pipeline without re-uploading files.
 interface WorkspaceInputCache {
   targetType: AnalysisTargetType;
-  files:      ElectronDirectoryEntry[];
-  options:    ProcessWorkspaceOptions;
+  files: ElectronDirectoryEntry[];
+  options: ProcessWorkspaceOptions;
 }
 
 /**
@@ -34,14 +37,13 @@ interface WorkspaceInputCache {
  */
 @Injectable({ providedIn: 'root' })
 export class WorkspaceKnowledgeService {
-
   // Cached inputs per workspace — kept so re-analyze can replay without re-uploading.
   private readonly _inputCache = new Map<string, WorkspaceInputCache>();
 
   constructor(
-    private readonly electron:    ElectronService,
-    private readonly manager:     WorkspaceManagerService,
-    private readonly aiAnalysis:  AIAnalysisService,
+    private readonly electron: ElectronService,
+    private readonly manager: WorkspaceManagerService,
+    private readonly aiAnalysis: AIAnalysisService,
   ) {}
 
   /**
@@ -55,9 +57,9 @@ export class WorkspaceKnowledgeService {
    * This method's observable completes after the structural model is emitted and AI is kicked off.
    */
   process(
-    targetType:  AnalysisTargetType,
-    files:       ElectronDirectoryEntry[],
-    options:     ProcessWorkspaceOptions,
+    targetType: AnalysisTargetType,
+    files: ElectronDirectoryEntry[],
+    options: ProcessWorkspaceOptions,
   ): Observable<KnowledgeModel> {
     this._inputCache.set(options.workspaceId, { targetType, files, options });
     return this.runPipeline(targetType, files, options);
@@ -109,9 +111,9 @@ export class WorkspaceKnowledgeService {
   // ── Private pipeline ──────────────────────────────────────────────────────
 
   private runPipeline(
-    targetType:  AnalysisTargetType,
-    files:       ElectronDirectoryEntry[],
-    options:     ProcessWorkspaceOptions,
+    targetType: AnalysisTargetType,
+    files: ElectronDirectoryEntry[],
+    options: ProcessWorkspaceOptions,
   ): Observable<KnowledgeModel> {
     const subject = new Subject<KnowledgeModel>();
     const generation = this.manager.nextGeneration(options.workspaceId);
@@ -119,18 +121,18 @@ export class WorkspaceKnowledgeService {
 
     const request: ProcessWorkspaceRequest = {
       targetType,
-      files: files.map(f => ({
-        name:      f.name,
-        path:      f.relativePath,
-        extension: f.relativePath.includes('.') ? f.relativePath.split('.').pop() ?? '' : '',
-        content:   f.content,
+      files: files.map((f) => ({
+        name: f.name,
+        path: f.relativePath,
+        extension: f.relativePath.includes('.') ? (f.relativePath.split('.').pop() ?? '') : '',
+        content: f.content,
       })),
       options: {
-        repositoryId:   options.repositoryId,
+        repositoryId: options.repositoryId,
         repositoryPath: options.repositoryPath,
-        workspaceName:  options.workspaceName,
-        persist:        options.persist,
-        incremental:    options.incremental,
+        workspaceName: options.workspaceName,
+        persist: options.persist,
+        incremental: options.incremental,
       },
     };
 
@@ -139,9 +141,9 @@ export class WorkspaceKnowledgeService {
   }
 
   private async runStructuralPhase(
-    request:    ProcessWorkspaceRequest,
-    options:    ProcessWorkspaceOptions,
-    subject:    Subject<KnowledgeModel>,
+    request: ProcessWorkspaceRequest,
+    options: ProcessWorkspaceOptions,
+    subject: Subject<KnowledgeModel>,
     generation: number,
   ): Promise<void> {
     try {
@@ -175,7 +177,6 @@ export class WorkspaceKnowledgeService {
         // Individual stage failures are handled inside runAll — this catch is
         // only for unexpected errors in the orchestration itself.
       });
-
     } catch (err) {
       this.manager.setError(options.workspaceId);
       subject.error(err);
@@ -189,7 +190,7 @@ export class WorkspaceKnowledgeService {
     let hash = 2166136261;
     for (let i = 0; i < content.length; i++) {
       hash ^= content.charCodeAt(i);
-      hash  = (hash * 16777619) >>> 0;
+      hash = (hash * 16777619) >>> 0;
     }
     return hash.toString(16);
   }

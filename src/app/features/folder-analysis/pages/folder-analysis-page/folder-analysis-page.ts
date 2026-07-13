@@ -12,21 +12,21 @@ import type { ElectronDirectoryEntry } from '../../../../../electron';
 export type HealthTier = 'healthy' | 'fair' | 'needs-attention' | 'critical' | 'unknown';
 
 export interface HubMetricCard {
-  id:        string;
-  icon:      string;
-  count:     number | null;
-  label:     string;
-  route:     string;
+  id: string;
+  icon: string;
+  count: number | null;
+  label: string;
+  route: string;
   suggested: boolean;
-  pending:   boolean;
+  pending: boolean;
 }
 
 const STAGE_LABELS: Record<AIStage, string> = {
-  understanding:   'Understanding',
-  security:        'Security',
+  understanding: 'Understanding',
+  security: 'Security',
   recommendations: 'Recommendations',
-  learningPath:    'Learning Path',
-  documentation:   'Documentation',
+  learningPath: 'Learning Path',
+  documentation: 'Documentation',
 };
 
 @Component({
@@ -34,41 +34,40 @@ const STAGE_LABELS: Record<AIStage, string> = {
   standalone: true,
   imports: [CommonModule, WorkspaceSwitcherModal],
   templateUrl: './folder-analysis-page.html',
-  styleUrl:    './folder-analysis-page.scss',
+  styleUrl: './folder-analysis-page.scss',
 })
 export class FolderAnalysisPage implements OnInit, OnDestroy {
-
-  workspace:           Workspace | null      = null;
-  model:               KnowledgeModel | null = null;
-  showSwitcher         = false;
+  workspace: Workspace | null = null;
+  model: KnowledgeModel | null = null;
+  showSwitcher = false;
   switcherLimitReached = false;
 
-  showIdentity    = false;
-  showInfoCards   = false;
+  showIdentity = false;
+  showInfoCards = false;
   showMetricCards = false;
-  showSuggested   = false;
+  showSuggested = false;
 
   uploadError: string | null = null;
-  isDragging  = false;
+  isDragging = false;
 
-  private sub:       Subscription | null = null;
-  private limitSub:  Subscription | null = null;
+  private sub: Subscription | null = null;
+  private limitSub: Subscription | null = null;
   private animTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
-    private readonly manager:   WorkspaceManagerService,
+    private readonly manager: WorkspaceManagerService,
     private readonly knowledge: WorkspaceKnowledgeService,
-    private readonly router:    Router,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
-    this.sub = this.manager.activeWorkspace$.subscribe(ws => {
-      const prevId    = this.workspace?.id;
+    this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
+      const prevId = this.workspace?.id;
       const prevModel = this.workspace?.knowledgeModel;
-      this.workspace  = ws;
-      this.model      = ws?.knowledgeModel ?? null;
+      this.workspace = ws;
+      this.model = ws?.knowledgeModel ?? null;
 
-      const switched     = prevId !== ws?.id;
+      const switched = prevId !== ws?.id;
       const modelArrived = !prevModel && !!ws?.knowledgeModel;
       if (switched || modelArrived) this.runAnimations();
     });
@@ -87,15 +86,23 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
   private runAnimations(): void {
     if (this.animTimer) clearTimeout(this.animTimer);
-    this.showIdentity    = false;
-    this.showInfoCards   = false;
+    this.showIdentity = false;
+    this.showInfoCards = false;
     this.showMetricCards = false;
-    this.showSuggested   = false;
+    this.showSuggested = false;
 
-    setTimeout(() => { this.showIdentity    = true; },  80);
-    setTimeout(() => { this.showInfoCards   = true; }, 220);
-    setTimeout(() => { this.showMetricCards = true; }, 380);
-    this.animTimer = setTimeout(() => { this.showSuggested = true; }, 560);
+    setTimeout(() => {
+      this.showIdentity = true;
+    }, 80);
+    setTimeout(() => {
+      this.showInfoCards = true;
+    }, 220);
+    setTimeout(() => {
+      this.showMetricCards = true;
+    }, 380);
+    this.animTimer = setTimeout(() => {
+      this.showSuggested = true;
+    }, 560);
   }
 
   // ── Upload ─────────────────────────────────────────────────────────────────
@@ -104,7 +111,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     const input = document.createElement('input');
     input.type = 'file';
     (input as any).webkitdirectory = true;
-    (input as any).mozdirectory    = true;
+    (input as any).mozdirectory = true;
     input.multiple = true;
     input.onchange = () => {
       if (input.files?.length) this.processFiles(Array.from(input.files));
@@ -139,29 +146,49 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     const id = this.manager.activeId;
     if (!id) return;
 
-    const folderName = (files[0] as any).webkitRelativePath?.split('/')[0]
-      ?? files[0].name.replace(/\.[^.]+$/, '')
-      ?? 'folder';
+    const folderName =
+      (files[0] as any).webkitRelativePath?.split('/')[0] ??
+      files[0].name.replace(/\.[^.]+$/, '') ??
+      'folder';
 
     this.manager.rename(id, folderName);
 
-    this.filesToEntries(files).then(entries => {
-      this.knowledge.process('folder', entries, {
-        workspaceId:   id,
-        workspaceName: folderName,
-        persist:       false,
-      }).subscribe({ error: () => {} });
+    this.filesToEntries(files).then((entries) => {
+      this.knowledge
+        .process('folder', entries, {
+          workspaceId: id,
+          workspaceName: folderName,
+          persist: false,
+        })
+        .subscribe({ error: () => {} });
     });
   }
 
   private filesToEntries(files: File[]): Promise<ElectronDirectoryEntry[]> {
     return Promise.all(
-      files.map(f => new Promise<ElectronDirectoryEntry>(resolve => {
-        const reader = new FileReader();
-        reader.onload  = () => resolve({ name: f.name, relativePath: (f as any).webkitRelativePath || f.name, content: reader.result as string, size: f.size, modifiedAt: new Date(f.lastModified).toISOString() });
-        reader.onerror = () => resolve({ name: f.name, relativePath: (f as any).webkitRelativePath || f.name, content: null, size: f.size, modifiedAt: new Date(f.lastModified).toISOString() });
-        reader.readAsText(f);
-      }))
+      files.map(
+        (f) =>
+          new Promise<ElectronDirectoryEntry>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () =>
+              resolve({
+                name: f.name,
+                relativePath: (f as any).webkitRelativePath || f.name,
+                content: reader.result as string,
+                size: f.size,
+                modifiedAt: new Date(f.lastModified).toISOString(),
+              });
+            reader.onerror = () =>
+              resolve({
+                name: f.name,
+                relativePath: (f as any).webkitRelativePath || f.name,
+                content: null,
+                size: f.size,
+                modifiedAt: new Date(f.lastModified).toISOString(),
+              });
+            reader.readAsText(f);
+          }),
+      ),
     );
   }
 
@@ -173,7 +200,10 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   }
 
   newWorkspace(): void {
-    if (!this.manager.canCreate()) { this.openSwitcher(); return; }
+    if (!this.manager.canCreate()) {
+      this.openSwitcher();
+      return;
+    }
     this.manager.create('folder');
   }
 
@@ -217,14 +247,21 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   get lastAnalyzed(): string {
     if (!this.model?.metadata.builtAt) return '';
     return new Date(this.model.metadata.builtAt).toLocaleString([], {
-      month: 'short', day: 'numeric', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   }
 
   get statusLabel(): string {
     const map: Record<WorkspaceStatus, string> = {
-      empty: 'Empty', processing: 'Analyzing', ready: 'Ready', failed: 'Incomplete', error: 'Error',
+      empty: 'Empty',
+      processing: 'Analyzing',
+      ready: 'Ready',
+      failed: 'Incomplete',
+      error: 'Error',
     };
     return map[this.workspace?.status ?? 'empty'];
   }
@@ -261,7 +298,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   }
 
   get architecturePatterns(): string[] {
-    return this.model?.relationships.architecture?.patterns.map(p => p.name) ?? [];
+    return this.model?.relationships.architecture?.patterns.map((p) => p.name) ?? [];
   }
 
   get primaryFrameworks(): string {
@@ -273,9 +310,12 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
   get healthTier(): HealthTier {
     if (!this.model) return 'unknown';
-    const c    = this.model.insights.complexity;
-    const m    = this.model.insights.maintainability;
-    const crit = this.model.ai?.security?.findings?.filter(f => f.severity === 'critical' || f.severity === 'high').length ?? 0;
+    const c = this.model.insights.complexity;
+    const m = this.model.insights.maintainability;
+    const crit =
+      this.model.ai?.security?.findings?.filter(
+        (f) => f.severity === 'critical' || f.severity === 'high',
+      ).length ?? 0;
 
     if (c === 'High' || m === 'Low' || crit >= 3) return 'critical';
     if (c === 'Low' && m === 'High' && crit === 0) return 'healthy';
@@ -285,36 +325,56 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
   get healthLabel(): string {
     const map: Record<HealthTier, string> = {
-      healthy: 'Healthy', fair: 'Fair', 'needs-attention': 'Needs Attention', critical: 'Critical', unknown: 'Pending',
+      healthy: 'Healthy',
+      fair: 'Fair',
+      'needs-attention': 'Needs Attention',
+      critical: 'Critical',
+      unknown: 'Pending',
     };
     return map[this.healthTier];
   }
 
-  get complexityLabel(): string      { return this.model?.insights.complexity      ?? '—'; }
-  get maintainabilityLabel(): string { return this.model?.insights.maintainability ?? '—'; }
+  get complexityLabel(): string {
+    return this.model?.insights.complexity ?? '—';
+  }
+  get maintainabilityLabel(): string {
+    return this.model?.insights.maintainability ?? '—';
+  }
 
   get securityRiskCount(): number {
-    return this.model?.ai?.security?.findings?.filter(f => f.severity === 'critical' || f.severity === 'high').length ?? 0;
+    return (
+      this.model?.ai?.security?.findings?.filter(
+        (f) => f.severity === 'critical' || f.severity === 'high',
+      ).length ?? 0
+    );
   }
 
   // ── Pipeline stage dots ────────────────────────────────────────────────────
 
   get pipelineStages(): { label: string; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
-    const ai      = this.model?.ai;
+    const ai = this.model?.ai;
     const running = this.manager.getActiveStages(this.workspace?.id ?? '');
-    const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath', 'documentation'];
+    const stages: AIStage[] = [
+      'understanding',
+      'security',
+      'recommendations',
+      'learningPath',
+      'documentation',
+    ];
 
-    const scanState  = this.model ? 'complete' : (this.isAnalyzing ? 'running' : 'pending');
-    const parseState = this.model ? 'complete' : (this.isAnalyzing ? 'running' : 'pending');
+    const scanState = this.model ? 'complete' : this.isAnalyzing ? 'running' : 'pending';
+    const parseState = this.model ? 'complete' : this.isAnalyzing ? 'running' : 'pending';
 
     return [
-      { label: 'Scan',  state: scanState  as 'complete' | 'failed' | 'running' | 'pending' },
+      { label: 'Scan', state: scanState as 'complete' | 'failed' | 'running' | 'pending' },
       { label: 'Parse', state: parseState as 'complete' | 'failed' | 'running' | 'pending' },
-      ...stages.map(s => {
-        if (!this.model)                      return { label: STAGE_LABELS[s], state: 'pending'  as const };
-        if (running.has(s))                   return { label: STAGE_LABELS[s], state: 'running'  as const };
-        if (ai?.completedStages?.includes(s)) return { label: STAGE_LABELS[s], state: 'complete' as const };
-        if (ai?.failedStages?.includes(s))    return { label: STAGE_LABELS[s], state: 'failed'   as const };
+      ...stages.map((s) => {
+        if (!this.model) return { label: STAGE_LABELS[s], state: 'pending' as const };
+        if (running.has(s)) return { label: STAGE_LABELS[s], state: 'running' as const };
+        if (ai?.completedStages?.includes(s))
+          return { label: STAGE_LABELS[s], state: 'complete' as const };
+        if (ai?.failedStages?.includes(s))
+          return { label: STAGE_LABELS[s], state: 'failed' as const };
         return { label: STAGE_LABELS[s], state: 'pending' as const };
       }),
     ];
@@ -323,67 +383,69 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   // ── Metric cards ───────────────────────────────────────────────────────────
 
   get metricCards(): HubMetricCard[] {
-    const ai       = this.model?.ai;
-    const base     = '/folder-analysis';
+    const ai = this.model?.ai;
+    const base = '/folder-analysis';
     const suggested = this.suggestedRoute;
 
     return [
       {
-        id:        'understanding',
-        icon:      'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 16v-4 M12 8h.01',
-        count:     null,
-        label:     'Understanding',
-        route:     `${base}/system-understanding`,
+        id: 'understanding',
+        icon: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 16v-4 M12 8h.01',
+        count: null,
+        label: 'Understanding',
+        route: `${base}/system-understanding`,
         suggested: suggested === 'understanding',
-        pending:   !ai?.completedStages?.includes('understanding'),
+        pending: !ai?.completedStages?.includes('understanding'),
       },
       {
-        id:        'security',
-        icon:      'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
-        count:     ai?.security?.findings?.length ?? null,
-        label:     'Security Issues',
-        route:     `${base}/security`,
+        id: 'security',
+        icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+        count: ai?.security?.findings?.length ?? null,
+        label: 'Security Issues',
+        route: `${base}/security`,
         suggested: suggested === 'security',
-        pending:   !ai?.completedStages?.includes('security'),
+        pending: !ai?.completedStages?.includes('security'),
       },
       {
-        id:        'recommendations',
-        icon:      'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
-        count:     ai?.recommendations?.recommendations?.length ?? null,
-        label:     'Recommendations',
-        route:     `${base}/code-recommendations`,
+        id: 'recommendations',
+        icon: 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
+        count: ai?.recommendations?.recommendations?.length ?? null,
+        label: 'Recommendations',
+        route: `${base}/code-recommendations`,
         suggested: suggested === 'recommendations',
-        pending:   !ai?.completedStages?.includes('recommendations'),
+        pending: !ai?.completedStages?.includes('recommendations'),
       },
       {
-        id:        'architecture',
-        icon:      'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
-        count:     this.model?.relationships.architecture?.patterns.length ?? null,
-        label:     'Arch Patterns',
-        route:     `${base}/architecture`,
+        id: 'architecture',
+        icon: 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
+        count: this.model?.relationships.architecture?.patterns.length ?? null,
+        label: 'Arch Patterns',
+        route: `${base}/architecture`,
         suggested: false,
-        pending:   !this.model?.capabilities.includes('architectureDiscovery'),
+        pending: !this.model?.capabilities.includes('architectureDiscovery'),
       },
       {
-        id:        'dependencies',
-        icon:      'M22 12H18L15 21 9 3 6 12 2 12',
-        count:     this.dependencyCount > 0 ? this.dependencyCount : null,
-        label:     'Dependencies',
-        route:     `${base}/data-flow`,
+        id: 'dependencies',
+        icon: 'M22 12H18L15 21 9 3 6 12 2 12',
+        count: this.dependencyCount > 0 ? this.dependencyCount : null,
+        label: 'Dependencies',
+        route: `${base}/data-flow`,
         suggested: false,
-        pending:   !this.model?.capabilities.includes('dependencyResolution'),
+        pending: !this.model?.capabilities.includes('dependencyResolution'),
       },
     ];
   }
 
   private get suggestedRoute(): string {
     const findings = this.model?.ai?.security?.findings ?? [];
-    const critical = findings.filter(f => f.severity === 'critical' || f.severity === 'high').length;
+    const critical = findings.filter(
+      (f) => f.severity === 'critical' || f.severity === 'high',
+    ).length;
     const recCount = this.model?.ai?.recommendations?.recommendations?.length ?? 0;
 
-    if (critical > 0)        return 'security';
+    if (critical > 0) return 'security';
     if (findings.length > 0) return 'security';
-    if (recCount > 3)        return 'recommendations';
+    if (recCount > 3) return 'recommendations';
     return 'understanding';
   }
 }

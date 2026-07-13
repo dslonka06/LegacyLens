@@ -1,8 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { DocumentationSection, DocumentationSectionId } from '@app/analysis/models/repository-summary.model';
+import {
+  DocumentationSection,
+  DocumentationSectionId,
+} from '@app/analysis/models/repository-summary.model';
 import { DocumentationBuilderService } from '@app/analysis/services/documentation-builder.service';
 import { PdfExportService } from '@app/analysis/services/pdf-export.service';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
@@ -14,12 +16,11 @@ import type { KnowledgeModel } from '@app/knowledge/models/knowledge-model.contr
 @Component({
   selector: 'app-documentation-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ResizeDividerComponent, CodeEditor],
+  imports: [CommonModule, ResizeDividerComponent, CodeEditor],
   templateUrl: './documentation-page.html',
   styleUrl: './documentation-page.scss',
 })
 export class DocumentationPage implements OnInit, OnDestroy {
-
   model: KnowledgeModel | null = null;
   sections: DocumentationSection[] = [];
   selectedIds = new Set<DocumentationSectionId>();
@@ -31,9 +32,9 @@ export class DocumentationPage implements OnInit, OnDestroy {
   private sub: Subscription | null = null;
 
   constructor(
-    private readonly manager:     WorkspaceManagerService,
-    private readonly builder:     DocumentationBuilderService,
-    private readonly pdfExport:   PdfExportService,
+    private readonly manager: WorkspaceManagerService,
+    private readonly builder: DocumentationBuilderService,
+    private readonly pdfExport: PdfExportService,
     private readonly layoutService: PanelLayoutService,
   ) {}
 
@@ -41,7 +42,7 @@ export class DocumentationPage implements OnInit, OnDestroy {
     this.panelWidths = this.layoutService.load('documentation') ?? [320];
     this.codeEditorWidth = this.layoutService.load('documentation-code')?.[0] ?? 420;
 
-    this.sub = this.manager.activeWorkspace$.subscribe(ws => {
+    this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       const prev = this.model;
       this.model = ws?.knowledgeModel ?? null;
 
@@ -53,32 +54,35 @@ export class DocumentationPage implements OnInit, OnDestroy {
           this.selectedIds = new Set(this.builder.defaultSelections(this.model));
         } else {
           // Subsequent update (AI stage arrived) — keep selections, drop unavailable
-          const available = new Set(this.sections.filter(s => s.available).map(s => s.id));
-          this.selectedIds = new Set([...this.selectedIds].filter(id => available.has(id)));
+          const available = new Set(this.sections.filter((s) => s.available).map((s) => s.id));
+          this.selectedIds = new Set([...this.selectedIds].filter((id) => available.has(id)));
         }
 
         this.refreshPreview();
       } else {
-        this.sections    = [];
+        this.sections = [];
         this.selectedIds = new Set();
         this.previewText = '';
       }
     });
   }
 
-  ngOnDestroy(): void { this.sub?.unsubscribe(); }
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
 
   // ── Section selection ─────────────────────────────────────────────────────────
 
   toggleSection(id: DocumentationSectionId): void {
     const next = new Set(this.selectedIds);
-    if (next.has(id)) next.delete(id); else next.add(id);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     this.selectedIds = next;
     this.refreshPreview();
   }
 
   selectAll(): void {
-    this.selectedIds = new Set(this.sections.filter(s => s.available).map(s => s.id));
+    this.selectedIds = new Set(this.sections.filter((s) => s.available).map((s) => s.id));
     this.refreshPreview();
   }
 
@@ -88,7 +92,10 @@ export class DocumentationPage implements OnInit, OnDestroy {
   }
 
   private refreshPreview(): void {
-    if (!this.model) { this.previewText = ''; return; }
+    if (!this.model) {
+      this.previewText = '';
+      return;
+    }
     this.previewText = this.builder.renderPreview(this.model, Array.from(this.selectedIds));
   }
 
@@ -107,7 +114,7 @@ export class DocumentationPage implements OnInit, OnDestroy {
   // ── Panel ─────────────────────────────────────────────────────────────────────
 
   onPanelResize(index: number, width: number): void {
-    this.panelWidths = this.panelWidths.map((w, i) => i === index ? width : w);
+    this.panelWidths = this.panelWidths.map((w, i) => (i === index ? width : w));
     this.layoutService.save('documentation', this.panelWidths);
   }
 
@@ -126,9 +133,15 @@ export class DocumentationPage implements OnInit, OnDestroy {
 
   // ── Display helpers ───────────────────────────────────────────────────────────
 
-  get hasContent(): boolean    { return this.model != null; }
-  get selectedCount(): number  { return this.selectedIds.size; }
-  get availableCount(): number { return this.sections.filter(s => s.available).length; }
+  get hasContent(): boolean {
+    return this.model != null;
+  }
+  get selectedCount(): number {
+    return this.selectedIds.size;
+  }
+  get availableCount(): number {
+    return this.sections.filter((s) => s.available).length;
+  }
 
   get workspaceName(): string {
     return this.model?.workspaceName ?? 'Workspace';
@@ -136,9 +149,12 @@ export class DocumentationPage implements OnInit, OnDestroy {
 
   get previewSections(): Array<{ title: string; content: string }> {
     if (!this.previewText) return [];
-    return this.previewText.split('\n\n').filter(Boolean).map(block => {
-      const lines = block.split('\n');
-      return { title: lines[0].replace(/^\d+\.\s*/, ''), content: lines.slice(2).join('\n') };
-    });
+    return this.previewText
+      .split('\n\n')
+      .filter(Boolean)
+      .map((block) => {
+        const lines = block.split('\n');
+        return { title: lines[0].replace(/^\d+\.\s*/, ''), content: lines.slice(2).join('\n') };
+      });
   }
 }

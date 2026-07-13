@@ -26,11 +26,7 @@ const SUGGESTED_PROMPTS: Record<string, string[]> = {
     'Where should I start as a new developer?',
     'What are the main components?',
   ],
-  default: [
-    'What did the analysis find?',
-    'Where should I start?',
-    'Are there any issues to fix?',
-  ],
+  default: ['What did the analysis find?', 'Where should I start?', 'Are there any issues to fix?'],
 };
 
 @Component({
@@ -41,12 +37,11 @@ const SUGGESTED_PROMPTS: Record<string, string[]> = {
   styleUrl: './ai-chat-panel.scss',
 })
 export class AiChatPanel implements OnInit, OnDestroy {
-
   @Output() closeRequested = new EventEmitter<void>();
 
   messages: ChatMessage[] = [];
   inputValue = '';
-  isLoading  = false;
+  isLoading = false;
 
   private workspaceId: string | null = null;
   private sub: Subscription | null = null;
@@ -54,7 +49,7 @@ export class AiChatPanel implements OnInit, OnDestroy {
   constructor(private readonly manager: WorkspaceManagerService) {}
 
   ngOnInit(): void {
-    this.sub = this.manager.activeWorkspace$.subscribe(ws => {
+    this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       if (ws?.id !== this.workspaceId) {
         this.messages = [];
         this.workspaceId = ws?.id ?? null;
@@ -69,7 +64,9 @@ export class AiChatPanel implements OnInit, OnDestroy {
   get suggestedPrompts(): string[] {
     const ws = this.manager.getActive();
     const key = ws?.type ?? 'default';
-    return this.messages.length === 0 ? (SUGGESTED_PROMPTS[key] ?? SUGGESTED_PROMPTS['default']) : [];
+    return this.messages.length === 0
+      ? (SUGGESTED_PROMPTS[key] ?? SUGGESTED_PROMPTS['default'])
+      : [];
   }
 
   get hasMessages(): boolean {
@@ -85,15 +82,19 @@ export class AiChatPanel implements OnInit, OnDestroy {
     const text = this.inputValue.trim();
     if (!text || this.isLoading) return;
 
-    this.messages.push({ role: 'user', content: text, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+    this.messages.push({
+      role: 'user',
+      content: text,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    });
     this.inputValue = '';
-    this.isLoading  = true;
+    this.isLoading = true;
 
     // Placeholder until AiKnowledgeService is wired in Phase B
     setTimeout(() => {
       this.messages.push({
-        role:      'assistant',
-        content:   'AI chat will be fully wired to the knowledge model in the next phase.',
+        role: 'assistant',
+        content: 'AI chat will be fully wired to the knowledge model in the next phase.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       });
       this.isLoading = false;

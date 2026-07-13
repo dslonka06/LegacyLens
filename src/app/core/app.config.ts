@@ -1,4 +1,8 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, APP_INITIALIZER } from '@angular/core';
+import {
+  ApplicationConfig,
+  provideBrowserGlobalErrorListeners,
+  APP_INITIALIZER,
+} from '@angular/core';
 import { provideRouter, withHashLocation } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { AnalysisPersistenceService } from '@app/analysis/services/analysis-persistence.service';
@@ -18,5 +22,5 @@ export const appConfig: ApplicationConfig = {
       deps: [AnalysisPersistenceService],
       multi: true,
     },
-  ]
+  ],
 };

@@ -44,8 +44,12 @@
 
   .su-prose-section {
     padding: 14px 16px;
-    & + .su-prose-section { border-top: 1px solid var(--border); }
-    &.su-prose-accent { border-left: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); }
+    & + .su-prose-section {
+      border-top: 1px solid var(--border);
+    }
+    &.su-prose-accent {
+      border-left: 3px solid color-mix(in srgb, var(--accent) 60%, transparent);
+    }
   }
 }
 
@@ -59,7 +63,12 @@
   letter-spacing: 0.06em;
   color: var(--text-muted);
   margin-bottom: 10px;
-  svg { width: 13px; height: 13px; flex-shrink: 0; opacity: 0.7; }
+  svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
 }
 
 .su-body-text {
@@ -69,7 +78,9 @@
   margin: 0;
 }
 
-.su-body-text-spaced { margin-bottom: 6px; }
+.su-body-text-spaced {
+  margin-bottom: 6px;
+}
 
 .su-columns {
   display: grid;
@@ -79,9 +90,17 @@
 }
 
 .su-col-left,
-.su-col-right { display: flex; flex-direction: column; gap: 16px; }
+.su-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
-.su-item-list { display: flex; flex-direction: column; gap: 1px; }
+.su-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
 
 .su-item {
   display: flex;
@@ -89,7 +108,9 @@
   gap: 8px;
   padding: 6px 0;
   border-bottom: 1px solid var(--border);
-  &:last-child { border-bottom: none; }
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 .su-item-name {
@@ -108,7 +129,11 @@
   min-width: 0;
 }
 
-.su-workflow-list { display: flex; flex-direction: column; gap: 1px; }
+.su-workflow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
 
 .su-workflow-item {
   display: flex;
@@ -116,7 +141,9 @@
   gap: 8px;
   padding: 6px 0;
   border-bottom: 1px solid var(--border);
-  &:last-child { border-bottom: none; }
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 .su-workflow-name {
@@ -134,7 +161,8 @@
   min-width: 0;
 }
 
-.su-dep-bar { }
+.su-dep-bar {
+}
 
 .su-dep-grid {
   display: grid;
@@ -148,7 +176,9 @@
   gap: 4px;
   padding: 10px 14px;
   border-right: 1px solid var(--border);
-  &:last-child { border-right: none; }
+  &:last-child {
+    border-right: none;
+  }
 }
 
 .su-dep-header {

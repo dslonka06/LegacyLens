@@ -10,23 +10,23 @@ import type { KnowledgeModel, AIStage } from '@app/knowledge/models/knowledge-mo
 import type { ElectronDirectoryEntry } from '../../../../../electron';
 
 export interface HubMetricCard {
-  id:        string;
-  icon:      string;
-  count:     number | null;
-  label:     string;
-  route:     string;
+  id: string;
+  icon: string;
+  count: number | null;
+  label: string;
+  route: string;
   suggested: boolean;
-  pending:   boolean;
+  pending: boolean;
 }
 
 export type HealthTier = 'healthy' | 'fair' | 'needs-attention' | 'critical' | 'unknown';
 
 const STAGE_LABELS: Record<AIStage, string> = {
-  understanding:   'Understanding',
-  security:        'Security',
+  understanding: 'Understanding',
+  security: 'Security',
   recommendations: 'Recommendations',
-  learningPath:    'Learning Path',
-  documentation:   'Documentation',
+  learningPath: 'Learning Path',
+  documentation: 'Documentation',
 };
 
 @Component({
@@ -34,42 +34,41 @@ const STAGE_LABELS: Record<AIStage, string> = {
   standalone: true,
   imports: [CommonModule, WorkspaceSwitcherModal],
   templateUrl: './file-analysis-page.html',
-  styleUrl:    './file-analysis-page.scss',
+  styleUrl: './file-analysis-page.scss',
 })
 export class FileAnalysisPage implements OnInit, OnDestroy {
-
-  workspace:           Workspace | null      = null;
-  model:               KnowledgeModel | null = null;
-  showSwitcher         = false;
+  workspace: Workspace | null = null;
+  model: KnowledgeModel | null = null;
+  showSwitcher = false;
   switcherLimitReached = false;
 
-  showIdentity    = false;
-  showInfoCards   = false;
+  showIdentity = false;
+  showInfoCards = false;
   showMetricCards = false;
-  showSuggested   = false;
+  showSuggested = false;
 
   uploadError: string | null = null;
-  isDragging  = false;
+  isDragging = false;
 
-  private sub:       Subscription | null = null;
-  private limitSub:  Subscription | null = null;
+  private sub: Subscription | null = null;
+  private limitSub: Subscription | null = null;
   private animTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
-    private readonly manager:   WorkspaceManagerService,
+    private readonly manager: WorkspaceManagerService,
     private readonly knowledge: WorkspaceKnowledgeService,
-    private readonly router:    Router,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
-    this.sub = this.manager.activeWorkspace$.subscribe(ws => {
-      const prevId    = this.workspace?.id;
+    this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
+      const prevId = this.workspace?.id;
       const prevModel = this.workspace?.knowledgeModel;
-      this.workspace  = ws;
-      this.model      = ws?.knowledgeModel ?? null;
+      this.workspace = ws;
+      this.model = ws?.knowledgeModel ?? null;
 
-      const switched      = prevId !== ws?.id;
-      const modelArrived  = !prevModel && !!ws?.knowledgeModel;
+      const switched = prevId !== ws?.id;
+      const modelArrived = !prevModel && !!ws?.knowledgeModel;
       if (switched || modelArrived) this.runAnimations();
     });
 
@@ -87,23 +86,32 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   private runAnimations(): void {
     if (this.animTimer) clearTimeout(this.animTimer);
-    this.showIdentity    = false;
-    this.showInfoCards   = false;
+    this.showIdentity = false;
+    this.showInfoCards = false;
     this.showMetricCards = false;
-    this.showSuggested   = false;
+    this.showSuggested = false;
 
-    setTimeout(() => { this.showIdentity    = true; },  80);
-    setTimeout(() => { this.showInfoCards   = true; }, 220);
-    setTimeout(() => { this.showMetricCards = true; }, 380);
-    this.animTimer = setTimeout(() => { this.showSuggested = true; }, 560);
+    setTimeout(() => {
+      this.showIdentity = true;
+    }, 80);
+    setTimeout(() => {
+      this.showInfoCards = true;
+    }, 220);
+    setTimeout(() => {
+      this.showMetricCards = true;
+    }, 380);
+    this.animTimer = setTimeout(() => {
+      this.showSuggested = true;
+    }, 560);
   }
 
   // ── Upload ────────────────────────────────────────────────────
 
   browse(): void {
     const input = document.createElement('input');
-    input.type   = 'file';
-    input.accept = '.ts,.js,.tsx,.jsx,.py,.java,.cs,.go,.rs,.cpp,.c,.h,.rb,.php,.swift,.kt,.html,.css,.scss,.json,.yaml,.yml,.xml,.md';
+    input.type = 'file';
+    input.accept =
+      '.ts,.js,.tsx,.jsx,.py,.java,.cs,.go,.rs,.cpp,.c,.h,.rb,.php,.swift,.kt,.html,.css,.scss,.json,.yaml,.yml,.xml,.md';
     input.onchange = () => {
       if (input.files?.length) this.processFiles(Array.from(input.files));
     };
@@ -130,13 +138,15 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     this.uploadError = null;
 
     if (files.length > 1) {
-      this.uploadError = 'File analysis supports one file at a time. For multiple files, try Folder Analysis.';
+      this.uploadError =
+        'File analysis supports one file at a time. For multiple files, try Folder Analysis.';
       return;
     }
 
     const file = files[0];
     if (file.size === 0 && !file.type) {
-      this.uploadError = 'That looks like a folder. Use Folder Analysis to analyze a whole directory.';
+      this.uploadError =
+        'That looks like a folder. Use Folder Analysis to analyze a whole directory.';
       return;
     }
 
@@ -144,20 +154,36 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     if (!id) return;
 
     this.manager.rename(id, file.name);
-    this.fileToEntry(file).then(entry => {
-      this.knowledge.process('file', [entry], {
-        workspaceId:   id,
-        workspaceName: file.name,
-        persist:       false,
-      }).subscribe({ error: () => {} });
+    this.fileToEntry(file).then((entry) => {
+      this.knowledge
+        .process('file', [entry], {
+          workspaceId: id,
+          workspaceName: file.name,
+          persist: false,
+        })
+        .subscribe({ error: () => {} });
     });
   }
 
   private fileToEntry(file: File): Promise<ElectronDirectoryEntry> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onload  = () => resolve({ name: file.name, relativePath: file.name, content: reader.result as string, size: file.size, modifiedAt: new Date(file.lastModified).toISOString() });
-      reader.onerror = () => resolve({ name: file.name, relativePath: file.name, content: null, size: file.size, modifiedAt: new Date(file.lastModified).toISOString() });
+      reader.onload = () =>
+        resolve({
+          name: file.name,
+          relativePath: file.name,
+          content: reader.result as string,
+          size: file.size,
+          modifiedAt: new Date(file.lastModified).toISOString(),
+        });
+      reader.onerror = () =>
+        resolve({
+          name: file.name,
+          relativePath: file.name,
+          content: null,
+          size: file.size,
+          modifiedAt: new Date(file.lastModified).toISOString(),
+        });
       reader.readAsText(file);
     });
   }
@@ -170,7 +196,10 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   }
 
   newWorkspace(): void {
-    if (!this.manager.canCreate()) { this.openSwitcher(); return; }
+    if (!this.manager.canCreate()) {
+      this.openSwitcher();
+      return;
+    }
     this.manager.create('file');
   }
 
@@ -214,13 +243,13 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   get detectedKind(): string {
     if (!this.model) return '';
     const symbols = Object.values(this.model.structure.symbols)[0];
-    const lang    = (this.model.structure.fileLanguage ?? '').toLowerCase();
+    const lang = (this.model.structure.fileLanguage ?? '').toLowerCase();
     if (!symbols?.type || symbols.type === '') {
       if (lang === 'typescript' || lang === 'javascript') {
-        if (symbols?.classes.some(c => c.toLowerCase().includes('service')))   return 'Service';
-        if (symbols?.classes.some(c => c.toLowerCase().includes('component'))) return 'Component';
-        if (symbols?.classes.some(c => c.toLowerCase().includes('guard')))     return 'Guard';
-        if (symbols?.classes.some(c => c.toLowerCase().includes('pipe')))      return 'Pipe';
+        if (symbols?.classes.some((c) => c.toLowerCase().includes('service'))) return 'Service';
+        if (symbols?.classes.some((c) => c.toLowerCase().includes('component'))) return 'Component';
+        if (symbols?.classes.some((c) => c.toLowerCase().includes('guard'))) return 'Guard';
+        if (symbols?.classes.some((c) => c.toLowerCase().includes('pipe'))) return 'Pipe';
       }
       if (symbols?.exports.length && !symbols?.classes.length) return 'Utility';
       return 'Source File';
@@ -235,14 +264,21 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   get lastAnalyzed(): string {
     if (!this.model?.metadata.builtAt) return '';
     return new Date(this.model.metadata.builtAt).toLocaleString([], {
-      month: 'short', day: 'numeric', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   }
 
   get statusLabel(): string {
     const map: Record<WorkspaceStatus, string> = {
-      empty: 'Empty', processing: 'Analyzing', ready: 'Ready', failed: 'Incomplete', error: 'Error',
+      empty: 'Empty',
+      processing: 'Analyzing',
+      ready: 'Ready',
+      failed: 'Incomplete',
+      error: 'Error',
     };
     return map[this.workspace?.status ?? 'empty'];
   }
@@ -259,9 +295,12 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   get healthTier(): HealthTier {
     if (!this.model) return 'unknown';
-    const c   = this.model.insights.complexity;
-    const m   = this.model.insights.maintainability;
-    const crit = this.model.ai?.security?.findings?.filter(f => f.severity === 'critical' || f.severity === 'high').length ?? 0;
+    const c = this.model.insights.complexity;
+    const m = this.model.insights.maintainability;
+    const crit =
+      this.model.ai?.security?.findings?.filter(
+        (f) => f.severity === 'critical' || f.severity === 'high',
+      ).length ?? 0;
 
     if (c === 'High' || m === 'Low' || crit >= 3) return 'critical';
     if (c === 'Low' && m === 'High' && crit === 0) return 'healthy';
@@ -271,39 +310,55 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   get healthLabel(): string {
     const map: Record<HealthTier, string> = {
-      healthy: 'Healthy', fair: 'Fair', 'needs-attention': 'Needs Attention', critical: 'Critical', unknown: 'Pending',
+      healthy: 'Healthy',
+      fair: 'Fair',
+      'needs-attention': 'Needs Attention',
+      critical: 'Critical',
+      unknown: 'Pending',
     };
     return map[this.healthTier];
   }
 
-  get complexityLabel(): string      { return this.model?.insights.complexity      ?? '—'; }
-  get maintainabilityLabel(): string { return this.model?.insights.maintainability ?? '—'; }
+  get complexityLabel(): string {
+    return this.model?.insights.complexity ?? '—';
+  }
+  get maintainabilityLabel(): string {
+    return this.model?.insights.maintainability ?? '—';
+  }
 
   get securityHealthLabel(): string {
     const findings = this.model?.ai?.security?.findings ?? [];
-    if (findings.some(f => f.severity === 'critical')) return 'Critical';
-    if (findings.some(f => f.severity === 'high'))     return 'High Risk';
+    if (findings.some((f) => f.severity === 'critical')) return 'Critical';
+    if (findings.some((f) => f.severity === 'high')) return 'High Risk';
     return 'Good';
   }
 
   // ── Pipeline stage dots ────────────────────────────────────────
 
   get pipelineStages(): { label: string; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
-    const ai      = this.model?.ai;
+    const ai = this.model?.ai;
     const running = this.manager.getActiveStages(this.workspace?.id ?? '');
-    const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath', 'documentation'];
+    const stages: AIStage[] = [
+      'understanding',
+      'security',
+      'recommendations',
+      'learningPath',
+      'documentation',
+    ];
 
-    const scanState  = this.model ? 'complete' : (this.isAnalyzing ? 'running' : 'pending');
-    const parseState = this.model ? 'complete' : (this.isAnalyzing ? 'running' : 'pending');
+    const scanState = this.model ? 'complete' : this.isAnalyzing ? 'running' : 'pending';
+    const parseState = this.model ? 'complete' : this.isAnalyzing ? 'running' : 'pending';
 
     return [
-      { label: 'Scan',  state: scanState  as 'complete' | 'failed' | 'running' | 'pending' },
+      { label: 'Scan', state: scanState as 'complete' | 'failed' | 'running' | 'pending' },
       { label: 'Parse', state: parseState as 'complete' | 'failed' | 'running' | 'pending' },
-      ...stages.map(s => {
-        if (!this.model)                           return { label: STAGE_LABELS[s], state: 'pending'  as const };
-        if (running.has(s))                        return { label: STAGE_LABELS[s], state: 'running'  as const };
-        if (ai?.completedStages?.includes(s))      return { label: STAGE_LABELS[s], state: 'complete' as const };
-        if (ai?.failedStages?.includes(s))         return { label: STAGE_LABELS[s], state: 'failed'   as const };
+      ...stages.map((s) => {
+        if (!this.model) return { label: STAGE_LABELS[s], state: 'pending' as const };
+        if (running.has(s)) return { label: STAGE_LABELS[s], state: 'running' as const };
+        if (ai?.completedStages?.includes(s))
+          return { label: STAGE_LABELS[s], state: 'complete' as const };
+        if (ai?.failedStages?.includes(s))
+          return { label: STAGE_LABELS[s], state: 'failed' as const };
         return { label: STAGE_LABELS[s], state: 'pending' as const };
       }),
     ];
@@ -312,67 +367,69 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   // ── Metric cards ───────────────────────────────────────────────
 
   get metricCards(): HubMetricCard[] {
-    const ai       = this.model?.ai;
-    const base     = '/file-analysis';
+    const ai = this.model?.ai;
+    const base = '/file-analysis';
     const suggested = this.suggestedRoute;
 
     return [
       {
-        id:        'understanding',
-        icon:      'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 16v-4 M12 8h.01',
-        count:     null,
-        label:     'Understanding',
-        route:     `${base}/system-understanding`,
+        id: 'understanding',
+        icon: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 16v-4 M12 8h.01',
+        count: null,
+        label: 'Understanding',
+        route: `${base}/system-understanding`,
         suggested: suggested === 'understanding',
-        pending:   !ai?.completedStages?.includes('understanding'),
+        pending: !ai?.completedStages?.includes('understanding'),
       },
       {
-        id:        'security',
-        icon:      'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
-        count:     ai?.security?.findings?.length ?? null,
-        label:     'Security Issues',
-        route:     `${base}/security`,
+        id: 'security',
+        icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+        count: ai?.security?.findings?.length ?? null,
+        label: 'Security Issues',
+        route: `${base}/security`,
         suggested: suggested === 'security',
-        pending:   !ai?.completedStages?.includes('security'),
+        pending: !ai?.completedStages?.includes('security'),
       },
       {
-        id:        'recommendations',
-        icon:      'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
-        count:     ai?.recommendations?.recommendations?.length ?? null,
-        label:     'Recommendations',
-        route:     `${base}/code-recommendations`,
+        id: 'recommendations',
+        icon: 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
+        count: ai?.recommendations?.recommendations?.length ?? null,
+        label: 'Recommendations',
+        route: `${base}/code-recommendations`,
         suggested: suggested === 'recommendations',
-        pending:   !ai?.completedStages?.includes('recommendations'),
+        pending: !ai?.completedStages?.includes('recommendations'),
       },
       {
-        id:        'dataflow',
-        icon:      'M22 12H18L15 21 9 3 6 12 2 12',
-        count:     this.model?.insights.dataFlow?.steps?.length ?? null,
-        label:     'Flow Steps',
-        route:     `${base}/data-flow`,
+        id: 'dataflow',
+        icon: 'M22 12H18L15 21 9 3 6 12 2 12',
+        count: this.model?.insights.dataFlow?.steps?.length ?? null,
+        label: 'Flow Steps',
+        route: `${base}/data-flow`,
         suggested: false,
-        pending:   !this.model?.capabilities.includes('insightExtraction'),
+        pending: !this.model?.capabilities.includes('insightExtraction'),
       },
       {
-        id:        'symbols',
-        icon:      'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
-        count:     this.symbolCount,
-        label:     'Key Symbols',
-        route:     `${base}/architecture`,
+        id: 'symbols',
+        icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
+        count: this.symbolCount,
+        label: 'Key Symbols',
+        route: `${base}/architecture`,
         suggested: false,
-        pending:   !this.model?.capabilities.includes('symbolExtraction'),
+        pending: !this.model?.capabilities.includes('symbolExtraction'),
       },
     ];
   }
 
   private get suggestedRoute(): string {
-    const findings  = this.model?.ai?.security?.findings ?? [];
-    const critical  = findings.filter(f => f.severity === 'critical' || f.severity === 'high').length;
-    const recCount  = this.model?.ai?.recommendations?.recommendations?.length ?? 0;
+    const findings = this.model?.ai?.security?.findings ?? [];
+    const critical = findings.filter(
+      (f) => f.severity === 'critical' || f.severity === 'high',
+    ).length;
+    const recCount = this.model?.ai?.recommendations?.recommendations?.length ?? 0;
 
-    if (critical > 0)   return 'security';
+    if (critical > 0) return 'security';
     if (findings.length > 0) return 'security';
-    if (recCount > 3)   return 'recommendations';
+    if (recCount > 3) return 'recommendations';
     return 'understanding';
   }
 

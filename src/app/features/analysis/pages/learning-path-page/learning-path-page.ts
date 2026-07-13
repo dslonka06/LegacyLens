@@ -14,12 +14,15 @@ import { Workspace } from '@app/workspace/models/workspace-entity.model';
   styleUrl: './learning-path-page.scss',
 })
 export class LearningPathPage implements OnInit, OnDestroy {
-
   workspace: Workspace | null = null;
-  get lp(): LearningPathAnalysis | null { return this.workspace?.knowledgeModel?.ai?.learningPath ?? null; }
-  get hasWorkspace(): boolean { return this.workspace?.knowledgeModel != null; }
+  get lp(): LearningPathAnalysis | null {
+    return this.workspace?.knowledgeModel?.ai?.learningPath ?? null;
+  }
+  get hasWorkspace(): boolean {
+    return this.workspace?.knowledgeModel != null;
+  }
 
-  expandedSteps    = new Set<number>();
+  expandedSteps = new Set<number>();
   expandedConcepts = new Set<number>();
 
   private sub: Subscription | null = null;
@@ -28,17 +31,23 @@ export class LearningPathPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.workspace = this.manager.getActive();
-    this.sub = this.manager.activeWorkspace$.subscribe(ws => { this.workspace = ws; });
+    this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
+      this.workspace = ws;
+    });
   }
 
-  ngOnDestroy(): void { this.sub?.unsubscribe(); }
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
 
   toggleStep(n: number): void {
     if (this.expandedSteps.has(n)) this.expandedSteps.delete(n);
     else this.expandedSteps.add(n);
   }
 
-  isStepExpanded(n: number): boolean { return this.expandedSteps.has(n); }
+  isStepExpanded(n: number): boolean {
+    return this.expandedSteps.has(n);
+  }
 
   toggleConcept(i: number, event: Event): void {
     event.stopPropagation();
@@ -46,5 +55,7 @@ export class LearningPathPage implements OnInit, OnDestroy {
     else this.expandedConcepts.add(i);
   }
 
-  isConceptExpanded(i: number): boolean { return this.expandedConcepts.has(i); }
+  isConceptExpanded(i: number): boolean {
+    return this.expandedConcepts.has(i);
+  }
 }

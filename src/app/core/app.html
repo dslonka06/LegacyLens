@@ -8,7 +8,6 @@
 
 <!-- All other pages: sidebar + content + chat overlay -->
 <div *ngIf="!isHome" class="app-layout">
-
   <app-sidebar></app-sidebar>
 
   <div class="app-body">
@@ -16,12 +15,32 @@
   </div>
 
   <!-- Chat toggle button — fixed to right edge, always visible -->
-  <button class="chat-toggle-btn" (click)="toggleChat()" [title]="chatOpen ? 'Close AI chat' : 'Ask AI'">
-    <svg *ngIf="!chatOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  <button
+    class="chat-toggle-btn"
+    (click)="toggleChat()"
+    [title]="chatOpen ? 'Close AI chat' : 'Ask AI'"
+  >
+    <svg
+      *ngIf="!chatOpen"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
-    <svg *ngIf="chatOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="15 18 9 12 15 6"/>
+    <svg
+      *ngIf="chatOpen"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <polyline points="15 18 9 12 15 6" />
     </svg>
   </button>
 
@@ -29,5 +48,4 @@
   <div class="chat-overlay" [class.chat-overlay--open]="chatOpen">
     <app-ai-chat-panel (closeRequested)="closeChat()"></app-ai-chat-panel>
   </div>
-
 </div>

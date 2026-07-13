@@ -11,17 +11,17 @@ import { UpdatePrompt } from '@app/shell/update-prompt/update-prompt';
   standalone: true,
   imports: [RouterOutlet, Sidebar, AiChatPanel, UpdatePrompt, CommonModule],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
 })
 export class App implements OnInit {
-  isHome  = false;
+  isHome = false;
   chatOpen = false;
 
   constructor(private readonly router: Router) {}
 
   ngOnInit(): void {
     this.router.events
-      .pipe(filter(e => e instanceof NavigationEnd))
+      .pipe(filter((e) => e instanceof NavigationEnd))
       .subscribe((e: NavigationEnd) => {
         this.isHome = e.urlAfterRedirects === '/';
       });
@@ -29,6 +29,10 @@ export class App implements OnInit {
     this.isHome = this.router.url === '/';
   }
 
-  toggleChat(): void  { this.chatOpen = !this.chatOpen; }
-  closeChat(): void   { this.chatOpen = false; }
+  toggleChat(): void {
+    this.chatOpen = !this.chatOpen;
+  }
+  closeChat(): void {
+    this.chatOpen = false;
+  }
 }

@@ -183,9 +183,15 @@ interface ElectronAnalysisAPI {
 }
 
 interface ElectronFilesAPI {
-  sync(repositoryId: string, files: SyncFileEntry[]): Promise<{ upserted: number; unchanged: number }>;
+  sync(
+    repositoryId: string,
+    files: SyncFileEntry[],
+  ): Promise<{ upserted: number; unchanged: number }>;
   getAll(repositoryId: string): Promise<ElectronFileMetadata[]>;
-  getChanged(repositoryId: string, currentFiles: Array<{ relativePath: string; hash: string }>): Promise<string[]>;
+  getChanged(
+    repositoryId: string,
+    currentFiles: Array<{ relativePath: string; hash: string }>,
+  ): Promise<string[]>;
   clearRepository(repositoryId: string): Promise<void>;
 }
 
@@ -223,7 +229,9 @@ interface ElectronIntelligenceAPI {
   // ── Individual capabilities (used by legacy pages; being phased out) ─────────
   detectArchitecture(structure: unknown, graph: unknown): Promise<unknown>;
   buildDependencyGraph(sourceFiles: unknown[]): Promise<unknown>;
-  exploreDependencies(graph: unknown): Promise<{ hubs: unknown[]; orphans: unknown[]; ranked: unknown[] }>;
+  exploreDependencies(
+    graph: unknown,
+  ): Promise<{ hubs: unknown[]; orphans: unknown[]; ranked: unknown[] }>;
   detectTechnologies(files: unknown[]): Promise<unknown[]>;
   discoverProjects(files: unknown[]): Promise<unknown[]>;
   scanRepository(files: unknown[]): Promise<unknown>;
@@ -244,33 +252,47 @@ interface ElectronIntelligenceAPI {
   capabilitiesFor(targetType: _AT): Promise<string[]>;
 
   // ── D4 model build ────────────────────────────────────────────────────────────
-  buildKnowledgeModel(targetType: _AT, files: unknown[], options?: BuildKnowledgeModelOptions): Promise<_KM>;
+  buildKnowledgeModel(
+    targetType: _AT,
+    files: unknown[],
+    options?: BuildKnowledgeModelOptions,
+  ): Promise<_KM>;
   getKnowledgeModel(repositoryId: string): Promise<_KM | null>;
 
   // ── D5 context generation ─────────────────────────────────────────────────────
-  buildContext(contextType: 'repository' | 'workflow' | 'security' | 'analysis', knowledgeModel: _KM, extras?: unknown): Promise<unknown>;
+  buildContext(
+    contextType: 'repository' | 'workflow' | 'security' | 'analysis',
+    knowledgeModel: _KM,
+    extras?: unknown,
+  ): Promise<unknown>;
 
   // ── D6 incremental check ──────────────────────────────────────────────────────
-  checkIncremental(repositoryId: string, currentFiles: Array<{ relativePath: string; hash: string }>, targetType: _AT): Promise<IncrementalCheckResult>;
+  checkIncremental(
+    repositoryId: string,
+    currentFiles: Array<{ relativePath: string; hash: string }>,
+    targetType: _AT,
+  ): Promise<IncrementalCheckResult>;
 
   // ── D7 unified workspace processing ──────────────────────────────────────────
   processWorkspace(request: ProcessWorkspaceRequest): Promise<_KM>;
 }
 
 interface ElectronValidationAPI {
-  detectTarget(targetPath: string): Promise<{ path: string; detected: 'file' | 'folder' | 'repository' | 'unknown' | 'invalid' }>;
+  detectTarget(
+    targetPath: string,
+  ): Promise<{ path: string; detected: 'file' | 'folder' | 'repository' | 'unknown' | 'invalid' }>;
 }
 
 // ── Workspace persistence ──────────────────────────────────────────────────────
 
 export interface PersistedWorkspace {
-  id:             string;
-  name:           string;
-  type:           'file' | 'folder' | 'repository';
-  status:         'empty' | 'processing' | 'ready' | 'failed' | 'error';
-  createdAt:      string;
+  id: string;
+  name: string;
+  type: 'file' | 'folder' | 'repository';
+  status: 'empty' | 'processing' | 'ready' | 'failed' | 'error';
+  createdAt: string;
   lastModifiedAt: string;
-  repositoryId:   string | null;
+  repositoryId: string | null;
   knowledgeModel: import('@app/knowledge/models/knowledge-model.contract').KnowledgeModel | null;
 }
 
@@ -283,14 +305,14 @@ interface ElectronWorkspacesAPI {
 // ── Auto-updater ───────────────────────────────────────────────────────────────
 
 export interface UpdateAvailablePayload {
-  version:       string;
-  releaseNotes:  string | null;
+  version: string;
+  releaseNotes: string | null;
 }
 
 export interface DownloadProgressPayload {
-  percent:        number;
-  transferred:    number;
-  total:          number;
+  percent: number;
+  transferred: number;
+  total: number;
   bytesPerSecond: number;
 }
 
@@ -299,26 +321,26 @@ export interface UpdateDownloadedPayload {
 }
 
 interface ElectronUpdaterAPI {
-  checkForUpdates():   Promise<void>;
-  downloadUpdate():    Promise<void>;
+  checkForUpdates(): Promise<void>;
+  downloadUpdate(): Promise<void>;
   installAndRestart(): Promise<void>;
-  onUpdateAvailable(cb: (payload: UpdateAvailablePayload) => void):      () => void;
-  onUpdateNotAvailable(cb: (payload: Record<string, never>) => void):    () => void;
-  onDownloadProgress(cb: (payload: DownloadProgressPayload) => void):    () => void;
-  onUpdateDownloaded(cb: (payload: UpdateDownloadedPayload) => void):    () => void;
+  onUpdateAvailable(cb: (payload: UpdateAvailablePayload) => void): () => void;
+  onUpdateNotAvailable(cb: (payload: Record<string, never>) => void): () => void;
+  onDownloadProgress(cb: (payload: DownloadProgressPayload) => void): () => void;
+  onUpdateDownloaded(cb: (payload: UpdateDownloadedPayload) => void): () => void;
 }
 
 interface ElectronAPI {
   repositories: ElectronRepositoriesAPI;
-  analysis:     ElectronAnalysisAPI;
-  files:        ElectronFilesAPI;
-  filesystem:   ElectronFilesystemAPI;
-  settings:     ElectronSettingsAPI;
-  ai:           ElectronAiAPI;
+  analysis: ElectronAnalysisAPI;
+  files: ElectronFilesAPI;
+  filesystem: ElectronFilesystemAPI;
+  settings: ElectronSettingsAPI;
+  ai: ElectronAiAPI;
   intelligence: ElectronIntelligenceAPI;
-  validation:   ElectronValidationAPI;
-  workspaces:   ElectronWorkspacesAPI;
-  updater:      ElectronUpdaterAPI;
+  validation: ElectronValidationAPI;
+  workspaces: ElectronWorkspacesAPI;
+  updater: ElectronUpdaterAPI;
 }
 
 declare global {

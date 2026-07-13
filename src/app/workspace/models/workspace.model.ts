@@ -27,4 +27,3 @@ export interface WorkspaceProfile {
   // Stage 2: full folder/project structure — metadata only, no file contents
   repositoryStructure?: RepositoryStructure;
 }
-

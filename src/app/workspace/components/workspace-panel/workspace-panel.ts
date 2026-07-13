@@ -3,18 +3,22 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Workspace, WorkspaceStatus, WorkspaceType } from '@app/workspace/models/workspace-entity.model';
+import {
+  Workspace,
+  WorkspaceStatus,
+  WorkspaceType,
+} from '@app/workspace/models/workspace-entity.model';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { WorkspaceKnowledgeService } from '@app/knowledge/services/workspace-knowledge.service';
 import { ExportService } from '@app/analysis/services/export.service';
 import type { AIStage } from '@app/knowledge/models/knowledge-model.contract';
 
 const STAGE_LABELS: Record<AIStage, string> = {
-  understanding:   'Understanding',
-  security:        'Security',
+  understanding: 'Understanding',
+  security: 'Security',
   recommendations: 'Recommendations',
-  learningPath:    'Learning Path',
-  documentation:   'Documentation',
+  learningPath: 'Learning Path',
+  documentation: 'Documentation',
 };
 
 @Component({
@@ -25,7 +29,6 @@ const STAGE_LABELS: Record<AIStage, string> = {
   styleUrl: './workspace-panel.scss',
 })
 export class WorkspacePanel implements OnInit, OnDestroy {
-
   @Output() switchRequested = new EventEmitter<void>();
 
   workspace: Workspace | null = null;
@@ -38,29 +41,28 @@ export class WorkspacePanel implements OnInit, OnDestroy {
   isExporting = false;
 
   constructor(
-    private readonly manager:    WorkspaceManagerService,
-    private readonly knowledge:  WorkspaceKnowledgeService,
-    private readonly exportSvc:  ExportService,
+    private readonly manager: WorkspaceManagerService,
+    private readonly knowledge: WorkspaceKnowledgeService,
+    private readonly exportSvc: ExportService,
   ) {}
 
   ngOnInit(): void {
-    this.sub = combineLatest([
-      this.manager.activeWorkspace$,
-      this.manager.activeStages$,
-    ]).pipe(
-      map(([ws, stages]) => ({ ws, stages })),
-    ).subscribe(({ ws, stages }) => {
-      this.workspace = ws;
-      if (ws) {
-        const running = stages.get(ws.id) ?? new Set();
-        this.activeStageLabels = [...running].map(s => STAGE_LABELS[s] ?? s);
-      } else {
-        this.activeStageLabels = [];
-      }
-    });
+    this.sub = combineLatest([this.manager.activeWorkspace$, this.manager.activeStages$])
+      .pipe(map(([ws, stages]) => ({ ws, stages })))
+      .subscribe(({ ws, stages }) => {
+        this.workspace = ws;
+        if (ws) {
+          const running = stages.get(ws.id) ?? new Set();
+          this.activeStageLabels = [...running].map((s) => STAGE_LABELS[s] ?? s);
+        } else {
+          this.activeStageLabels = [];
+        }
+      });
   }
 
-  ngOnDestroy(): void { this.sub?.unsubscribe(); }
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
@@ -105,7 +107,10 @@ export class WorkspacePanel implements OnInit, OnDestroy {
   }
 
   commitRename(): void {
-    if (!this.workspace) { this.renaming = false; return; }
+    if (!this.workspace) {
+      this.renaming = false;
+      return;
+    }
     const trimmed = this.renameValue.trim();
     if (trimmed && trimmed !== this.workspace.name) {
       this.manager.rename(this.workspace.id, trimmed);
@@ -151,8 +156,8 @@ export class WorkspacePanel implements OnInit, OnDestroy {
   get typeLabel(): string {
     if (!this.workspace) return '';
     const map: Record<WorkspaceType, string> = {
-      file:       'File Analysis',
-      folder:     'Folder Analysis',
+      file: 'File Analysis',
+      folder: 'Folder Analysis',
       repository: 'Repository Analysis',
     };
     return map[this.workspace.type];
@@ -161,11 +166,11 @@ export class WorkspacePanel implements OnInit, OnDestroy {
   get statusLabel(): string {
     if (!this.workspace) return '';
     const map: Record<WorkspaceStatus, string> = {
-      'empty':      'Empty',
-      'processing': 'Loading',
-      'ready':      'Ready',
-      'failed':     'Incomplete',
-      'error':      'Error',
+      empty: 'Empty',
+      processing: 'Loading',
+      ready: 'Ready',
+      failed: 'Incomplete',
+      error: 'Error',
     };
     return map[this.workspace.status];
   }
@@ -173,18 +178,18 @@ export class WorkspacePanel implements OnInit, OnDestroy {
   get statusClass(): string {
     if (!this.workspace) return '';
     const map: Record<WorkspaceStatus, string> = {
-      'empty':      'status-empty',
-      'processing': 'status-analyzing',
-      'ready':      'status-loaded',
-      'failed':     'status-failed',
-      'error':      'status-error',
+      empty: 'status-empty',
+      processing: 'status-analyzing',
+      ready: 'status-loaded',
+      failed: 'status-failed',
+      error: 'status-error',
     };
     return map[this.workspace.status];
   }
 
   get failedStageLabels(): string[] {
     const stages = this.workspace?.knowledgeModel?.ai?.failedStages ?? [];
-    return stages.map(s => STAGE_LABELS[s] ?? s);
+    return stages.map((s) => STAGE_LABELS[s] ?? s);
   }
 
   get hasPartialFailure(): boolean {
@@ -208,8 +213,7 @@ export class WorkspacePanel implements OnInit, OnDestroy {
 
   get canReanalyze(): boolean {
     if (!this.workspace) return false;
-    return this.knowledge.canReanalyze(this.workspace.id)
-      && this.workspace.status !== 'processing';
+    return this.knowledge.canReanalyze(this.workspace.id) && this.workspace.status !== 'processing';
   }
 
   get isAnalyzing(): boolean {

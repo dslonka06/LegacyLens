@@ -15,10 +15,12 @@ export class TechnologyDetectorService {
   constructor(private readonly electron: ElectronService) {}
 
   async detect(files: FileMetadata[]): Promise<TechnologyDetectionResult[]> {
-    return this.electron.intelligenceDetectTechnologies(files) as Promise<TechnologyDetectionResult[]>;
+    return this.electron.intelligenceDetectTechnologies(files) as Promise<
+      TechnologyDetectionResult[]
+    >;
   }
 
   frameworks(results: TechnologyDetectionResult[]): string[] {
-    return results.filter(r => r.category === 'framework').map(r => r.name);
+    return results.filter((r) => r.category === 'framework').map((r) => r.name);
   }
 }

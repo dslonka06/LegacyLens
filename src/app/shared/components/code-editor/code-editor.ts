@@ -1,4 +1,15 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges, OnDestroy, SimpleChanges, ChangeDetectorRef, NgZone } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  OnInit,
+  OnChanges,
+  OnDestroy,
+  SimpleChanges,
+  ChangeDetectorRef,
+  NgZone,
+} from '@angular/core';
 import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -16,47 +27,47 @@ import { WorkspaceType } from '@app/workspace/models/workspace-entity.model';
 
 // Extension → Shiki language ID
 const EXT_LANGUAGE_MAP: Record<string, string> = {
-  cs:     'csharp',
-  ts:     'typescript',
-  tsx:    'typescript',
-  js:     'javascript',
-  jsx:    'javascript',
-  html:   'html',
-  htm:    'html',
-  css:    'css',
-  scss:   'scss',
-  less:   'less',
-  sql:    'sql',
-  py:     'python',
-  json:   'json',
-  xml:    'xml',
+  cs: 'csharp',
+  ts: 'typescript',
+  tsx: 'typescript',
+  js: 'javascript',
+  jsx: 'javascript',
+  html: 'html',
+  htm: 'html',
+  css: 'css',
+  scss: 'scss',
+  less: 'less',
+  sql: 'sql',
+  py: 'python',
+  json: 'json',
+  xml: 'xml',
   csproj: 'xml',
-  props:  'xml',
+  props: 'xml',
   config: 'xml',
-  md:     'markdown',
-  txt:    'plaintext',
-  sh:     'shellscript',
-  bash:   'shellscript',
-  yml:    'yaml',
-  yaml:   'yaml',
+  md: 'markdown',
+  txt: 'plaintext',
+  sh: 'shellscript',
+  bash: 'shellscript',
+  yml: 'yaml',
+  yaml: 'yaml',
 };
 
 const LANGUAGE_LABEL: Record<string, string> = {
-  csharp:     'C#',
+  csharp: 'C#',
   typescript: 'TypeScript',
   javascript: 'JavaScript',
-  html:       'HTML',
-  css:        'CSS',
-  scss:       'SCSS',
-  less:       'Less',
-  sql:        'SQL',
-  python:     'Python',
-  json:       'JSON',
-  xml:        'XML',
-  markdown:   'Markdown',
-  plaintext:  'Plain Text',
+  html: 'HTML',
+  css: 'CSS',
+  scss: 'SCSS',
+  less: 'Less',
+  sql: 'SQL',
+  python: 'Python',
+  json: 'JSON',
+  xml: 'XML',
+  markdown: 'Markdown',
+  plaintext: 'Plain Text',
   shellscript: 'Shell',
-  yaml:       'YAML',
+  yaml: 'YAML',
 };
 
 @Component({
@@ -64,10 +75,9 @@ const LANGUAGE_LABEL: Record<string, string> = {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './code-editor.html',
-  styleUrl: './code-editor.scss'
+  styleUrl: './code-editor.scss',
 })
 export class CodeEditor implements OnInit, OnChanges, OnDestroy {
-
   @Input() restoredFileName: string | null = null;
   @Input() restoredSourceCode: string | null = null;
   @Input() readOnly = false;
@@ -102,7 +112,7 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
     private readonly zone: NgZone,
     private readonly highlighter: SyntaxHighlightService,
     private readonly sanitizer: DomSanitizer,
-    readonly electronService: ElectronService
+    readonly electronService: ElectronService,
   ) {}
 
   ngOnInit(): void {
@@ -138,7 +148,7 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
       this.highlightedHtml = null;
       return;
     }
-    this.highlighter.highlight(this.code, this.currentLanguage).then(html => {
+    this.highlighter.highlight(this.code, this.currentLanguage).then((html) => {
       this.zone.run(() => {
         this.highlightedHtml = this.sanitizer.bypassSecurityTrustHtml(html);
         this.cdr.detectChanges();
@@ -152,30 +162,30 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
 
   get langBadgeClass(): string {
     const map: Record<string, string> = {
-      csharp:     'lang-csharp',
+      csharp: 'lang-csharp',
       typescript: 'lang-typescript',
       javascript: 'lang-javascript',
-      sql:        'lang-sql',
-      python:     'lang-python',
-      html:       'lang-html',
-      css:        'lang-css',
-      scss:       'lang-css',
-      json:       'lang-json',
-      xml:        'lang-xml',
-      markdown:   'lang-markdown',
+      sql: 'lang-sql',
+      python: 'lang-python',
+      html: 'lang-html',
+      css: 'lang-css',
+      scss: 'lang-css',
+      json: 'lang-json',
+      xml: 'lang-xml',
+      markdown: 'lang-markdown',
     };
     return map[this.currentLanguage] ?? 'lang-default';
   }
 
   get langIconType(): string {
     const map: Record<string, string> = {
-      csharp:     'csharp',
+      csharp: 'csharp',
       typescript: 'typescript',
       javascript: 'javascript',
-      sql:        'database',
-      python:     'python',
-      html:       'html',
-      json:       'json',
+      sql: 'database',
+      python: 'python',
+      html: 'html',
+      json: 'json',
     };
     return map[this.currentLanguage] ?? 'file';
   }
@@ -231,7 +241,7 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
   onFolderSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
-    const files = Array.from(input.files).filter(f => !this.isIgnoredPath(f));
+    const files = Array.from(input.files).filter((f) => !this.isIgnoredPath(f));
     this.processFiles(files);
     input.value = '';
   }
@@ -240,7 +250,7 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
     const result = await this.electronService.pickAndReadFolder('Select Project Folder');
     if (!result) return;
 
-    const files = result.files.map(entry => {
+    const files = result.files.map((entry) => {
       // content is null for non-source/oversized files — empty blob preserves workspace
       // structure (file count, extension distribution) without loading unnecessary bytes
       const blob = new Blob([entry.content ?? ''], { type: 'text/plain' });
@@ -276,8 +286,8 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
       this.code = content;
       this.isLoadingFile = false;
       this.lastAnalyzedLabel = null;
-      this.currentLanguage = this.languageFromFileName(primaryFile.name)
-        ?? this.languageFromContent(content);
+      this.currentLanguage =
+        this.languageFromFileName(primaryFile.name) ?? this.languageFromContent(content);
       this.renderHighlight();
       this.cdr.detectChanges();
       this.analyzeCode();
@@ -286,8 +296,20 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
   }
 
   private selectPrimaryFile(files: File[]): File {
-    const sourceExtensions = new Set(['cs', 'ts', 'js', 'py', 'java', 'go', 'rs', 'rb', 'php', 'cpp', 'c']);
-    const sourceFile = files.find(f => {
+    const sourceExtensions = new Set([
+      'cs',
+      'ts',
+      'js',
+      'py',
+      'java',
+      'go',
+      'rs',
+      'rb',
+      'php',
+      'cpp',
+      'c',
+    ]);
+    const sourceFile = files.find((f) => {
       const ext = f.name.split('.').pop()?.toLowerCase() ?? '';
       return sourceExtensions.has(ext);
     });
@@ -297,7 +319,16 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
   private isIgnoredPath(file: File): boolean {
     const path = (file as any).webkitRelativePath || file.name;
     const segments = path.split('/');
-    const ignoredDirs = new Set(['node_modules', '.git', 'bin', 'obj', 'dist', '.angular', 'coverage', '.nyc_output']);
+    const ignoredDirs = new Set([
+      'node_modules',
+      '.git',
+      'bin',
+      'obj',
+      'dist',
+      '.angular',
+      'coverage',
+      '.nyc_output',
+    ]);
     return segments.some((seg: string) => ignoredDirs.has(seg));
   }
 
@@ -322,7 +353,7 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
 
     try {
       const aiResult = await firstValueFrom(
-        this.aiAnalysisService.analyze(this.fileName, this.code)
+        this.aiAnalysisService.analyze(this.fileName, this.code),
       );
       const enrichedSession: AnalysisSession = { ...session, aiAnalysis: aiResult };
       this.analyze.emit(enrichedSession);
@@ -338,7 +369,7 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
 
   private get activeScope(): WorkspaceType {
     const ws = this.activeWorkspace.workspace;
-    if (ws === 'folder')     return 'folder';
+    if (ws === 'folder') return 'folder';
     if (ws === 'repository') return 'repository';
     return 'file';
   }
@@ -353,48 +384,105 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
   private languageFromContent(code: string): string {
     if (!code?.trim()) return 'plaintext';
 
-    if (code.includes('using System') || code.includes('namespace ') ||
-        (code.includes('public class') && code.includes('{'))) return 'csharp';
+    if (
+      code.includes('using System') ||
+      code.includes('namespace ') ||
+      (code.includes('public class') && code.includes('{'))
+    )
+      return 'csharp';
 
-    if (code.includes('@Component') || code.includes('@NgModule') ||
-        code.includes('@Injectable') || code.includes('import {')) return 'typescript';
+    if (
+      code.includes('@Component') ||
+      code.includes('@NgModule') ||
+      code.includes('@Injectable') ||
+      code.includes('import {')
+    )
+      return 'typescript';
 
-    if (code.includes('export class') || code.includes('export default') ||
-        code.includes('export const') || code.includes('export function')) return 'typescript';
+    if (
+      code.includes('export class') ||
+      code.includes('export default') ||
+      code.includes('export const') ||
+      code.includes('export function')
+    )
+      return 'typescript';
 
-    if (code.trimStart().startsWith('<!DOCTYPE') ||
-        code.trimStart().startsWith('<html') ||
-        (code.includes('<div') && code.includes('</div>'))) return 'html';
+    if (
+      code.trimStart().startsWith('<!DOCTYPE') ||
+      code.trimStart().startsWith('<html') ||
+      (code.includes('<div') && code.includes('</div>'))
+    )
+      return 'html';
 
     const upper = code.toUpperCase();
-    if (upper.includes('SELECT ') && (upper.includes(' FROM ') || upper.includes('\nFROM '))) return 'sql';
+    if (upper.includes('SELECT ') && (upper.includes(' FROM ') || upper.includes('\nFROM ')))
+      return 'sql';
     if (upper.includes('INSERT INTO') || upper.includes('CREATE TABLE')) return 'sql';
 
-    if ((code.trimStart().startsWith('{') || code.trimStart().startsWith('[')) &&
-        (code.trimEnd().endsWith('}') || code.trimEnd().endsWith(']'))) {
-      try { JSON.parse(code); return 'json'; } catch { /* not valid JSON */ }
+    if (
+      (code.trimStart().startsWith('{') || code.trimStart().startsWith('[')) &&
+      (code.trimEnd().endsWith('}') || code.trimEnd().endsWith(']'))
+    ) {
+      try {
+        JSON.parse(code);
+        return 'json';
+      } catch {
+        /* not valid JSON */
+      }
     }
 
-    if (code.trimStart().startsWith('<?xml') || code.trimStart().startsWith('<Project')) return 'xml';
+    if (code.trimStart().startsWith('<?xml') || code.trimStart().startsWith('<Project'))
+      return 'xml';
 
     return 'plaintext';
   }
 
   private buildFileMetadata(files: File[]): FileMetadata[] {
     const EXT_TO_LANGUAGE: Record<string, string> = {
-      cs: 'C#', ts: 'TypeScript', tsx: 'TypeScript', js: 'JavaScript', jsx: 'JavaScript',
-      html: 'HTML', htm: 'HTML', css: 'CSS', scss: 'SCSS', less: 'Less', sql: 'SQL',
-      py: 'Python', json: 'JSON', xml: 'XML', md: 'Markdown', txt: 'Plain Text',
-      sh: 'Shell', bash: 'Shell', yml: 'YAML', yaml: 'YAML',
-      rs: 'Rust', go: 'Go', java: 'Java', kt: 'Kotlin', swift: 'Swift',
-      rb: 'Ruby', php: 'PHP', cpp: 'C++', c: 'C', h: 'C/C++ Header', hpp: 'C++ Header',
+      cs: 'C#',
+      ts: 'TypeScript',
+      tsx: 'TypeScript',
+      js: 'JavaScript',
+      jsx: 'JavaScript',
+      html: 'HTML',
+      htm: 'HTML',
+      css: 'CSS',
+      scss: 'SCSS',
+      less: 'Less',
+      sql: 'SQL',
+      py: 'Python',
+      json: 'JSON',
+      xml: 'XML',
+      md: 'Markdown',
+      txt: 'Plain Text',
+      sh: 'Shell',
+      bash: 'Shell',
+      yml: 'YAML',
+      yaml: 'YAML',
+      rs: 'Rust',
+      go: 'Go',
+      java: 'Java',
+      kt: 'Kotlin',
+      swift: 'Swift',
+      rb: 'Ruby',
+      php: 'PHP',
+      cpp: 'C++',
+      c: 'C',
+      h: 'C/C++ Header',
+      hpp: 'C++ Header',
     };
-    return files.map(f => {
+    return files.map((f) => {
       const name = f.name;
       const path = (f as any).webkitRelativePath || name;
       const parts = name.toLowerCase().split('.');
       const extension = parts.length > 1 ? parts[parts.length - 1] : '';
-      return { name, path, extension, language: EXT_TO_LANGUAGE[extension] ?? 'Unknown', size: f.size };
+      return {
+        name,
+        path,
+        extension,
+        language: EXT_TO_LANGUAGE[extension] ?? 'Unknown',
+        size: f.size,
+      };
     });
   }
 }

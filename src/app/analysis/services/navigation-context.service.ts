@@ -9,28 +9,27 @@ const MAX_HISTORY_DEPTH = 50;
 
 @Injectable({ providedIn: 'root' })
 export class NavigationContextService {
-
   // ── Core state ────────────────────────────────────────────────────────────
 
-  private readonly _selectedNode$    = new BehaviorSubject<DependencyNode | null>(null);
+  private readonly _selectedNode$ = new BehaviorSubject<DependencyNode | null>(null);
   private readonly _selectedWorkflow$ = new BehaviorSubject<WorkflowSummary | null>(null);
-  private readonly _breadcrumbs$     = new BehaviorSubject<Breadcrumb[]>([]);
-  private readonly _canGoBack$       = new BehaviorSubject<boolean>(false);
-  private readonly _canGoForward$    = new BehaviorSubject<boolean>(false);
+  private readonly _breadcrumbs$ = new BehaviorSubject<Breadcrumb[]>([]);
+  private readonly _canGoBack$ = new BehaviorSubject<boolean>(false);
+  private readonly _canGoForward$ = new BehaviorSubject<boolean>(false);
   private readonly _navigationReset$ = new Subject<void>();
-  private readonly _history$         = new BehaviorSubject<NavigationEntry[]>([]);
+  private readonly _history$ = new BehaviorSubject<NavigationEntry[]>([]);
 
-  readonly selectedNode$     = this._selectedNode$.asObservable();
+  readonly selectedNode$ = this._selectedNode$.asObservable();
   readonly selectedWorkflow$ = this._selectedWorkflow$.asObservable();
-  readonly breadcrumbs$      = this._breadcrumbs$.asObservable();
-  readonly canGoBack$        = this._canGoBack$.asObservable();
-  readonly canGoForward$     = this._canGoForward$.asObservable();
+  readonly breadcrumbs$ = this._breadcrumbs$.asObservable();
+  readonly canGoBack$ = this._canGoBack$.asObservable();
+  readonly canGoForward$ = this._canGoForward$.asObservable();
   // Emits when clear() is called — components use this for teardown.
-  readonly navigationReset$  = this._navigationReset$.asObservable();
+  readonly navigationReset$ = this._navigationReset$.asObservable();
   // Ordered most-recent first; does NOT include the current node.
-  readonly history$          = this._history$.asObservable();
+  readonly history$ = this._history$.asObservable();
 
-  private backStack:    NavigationEntry[] = [];
+  private backStack: NavigationEntry[] = [];
   private forwardStack: NavigationEntry[] = [];
 
   constructor(private readonly currentWorkspace: CurrentWorkspaceService) {}
@@ -42,10 +41,10 @@ export class NavigationContextService {
 
     // Push current node onto back stack before changing selection
     if (previous) {
-      this.backStack = [
-        this.toEntry(previous, source),
-        ...this.backStack,
-      ].slice(0, MAX_HISTORY_DEPTH);
+      this.backStack = [this.toEntry(previous, source), ...this.backStack].slice(
+        0,
+        MAX_HISTORY_DEPTH,
+      );
     }
 
     // Any direct selection invalidates the forward stack
@@ -72,10 +71,10 @@ export class NavigationContextService {
     const current = this._selectedNode$.value;
     if (current) {
       // Current node goes to forward stack
-      this.forwardStack = [
-        this.toEntry(current, 'direct'),
-        ...this.forwardStack,
-      ].slice(0, MAX_HISTORY_DEPTH);
+      this.forwardStack = [this.toEntry(current, 'direct'), ...this.forwardStack].slice(
+        0,
+        MAX_HISTORY_DEPTH,
+      );
     }
 
     this.backStack = this.backStack.slice(1);
@@ -92,10 +91,10 @@ export class NavigationContextService {
 
     const current = this._selectedNode$.value;
     if (current) {
-      this.backStack = [
-        this.toEntry(current, 'direct'),
-        ...this.backStack,
-      ].slice(0, MAX_HISTORY_DEPTH);
+      this.backStack = [this.toEntry(current, 'direct'), ...this.backStack].slice(
+        0,
+        MAX_HISTORY_DEPTH,
+      );
     }
 
     this.forwardStack = this.forwardStack.slice(1);
@@ -108,7 +107,7 @@ export class NavigationContextService {
 
   // Called when a new workspace is loaded — resets all navigation state.
   clear(): void {
-    this.backStack    = [];
+    this.backStack = [];
     this.forwardStack = [];
     this._selectedNode$.next(null);
     this._selectedWorkflow$.next(null);
@@ -120,13 +119,23 @@ export class NavigationContextService {
 
   // ── Synchronous snapshots ─────────────────────────────────────────────────
 
-  get selectedNode(): DependencyNode | null { return this._selectedNode$.value; }
-  get breadcrumbs(): Breadcrumb[] { return this._breadcrumbs$.value; }
-  get canGoBack(): boolean { return this._canGoBack$.value; }
-  get canGoForward(): boolean { return this._canGoForward$.value; }
+  get selectedNode(): DependencyNode | null {
+    return this._selectedNode$.value;
+  }
+  get breadcrumbs(): Breadcrumb[] {
+    return this._breadcrumbs$.value;
+  }
+  get canGoBack(): boolean {
+    return this._canGoBack$.value;
+  }
+  get canGoForward(): boolean {
+    return this._canGoForward$.value;
+  }
 
   // Ordered from most-recent to oldest; does NOT include the current node.
-  get navigationHistory(): NavigationEntry[] { return this._history$.value; }
+  get navigationHistory(): NavigationEntry[] {
+    return this._history$.value;
+  }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -137,9 +146,9 @@ export class NavigationContextService {
 
   private toEntry(node: DependencyNode, source: NavigationSource): NavigationEntry {
     return {
-      nodeId:    node.id,
-      nodeName:  node.name,
-      nodePath:  node.path,
+      nodeId: node.id,
+      nodeName: node.name,
+      nodePath: node.path,
       visitedAt: new Date().toISOString(),
       source,
     };
@@ -149,7 +158,7 @@ export class NavigationContextService {
   // and forward() produce a usable node without re-querying the knowledge service.
   private entryToNode(entry: NavigationEntry): DependencyNode {
     return {
-      id:   entry.nodeId,
+      id: entry.nodeId,
       name: entry.nodeName,
       path: entry.nodePath,
       type: 'module', // type is metadata; the full node can be resolved by callers if needed
@@ -158,9 +167,7 @@ export class NavigationContextService {
 
   private deriveBreadcrumbs(node: DependencyNode): Breadcrumb[] {
     const workspaceName = this.currentWorkspace.context?.workspaceName ?? 'Workspace';
-    const crumbs: Breadcrumb[] = [
-      { label: workspaceName, nodeId: null, type: 'workspace' },
-    ];
+    const crumbs: Breadcrumb[] = [{ label: workspaceName, nodeId: null, type: 'workspace' }];
 
     if (!node.path) {
       crumbs.push({ label: node.name, nodeId: node.id, type: 'file' });
@@ -169,8 +176,8 @@ export class NavigationContextService {
 
     // Split path into folder segments + file name
     const segments = node.path.replace(/\\/g, '/').split('/').filter(Boolean);
-    const fileName  = segments[segments.length - 1] ?? node.name;
-    const folders   = segments.slice(0, -1);
+    const fileName = segments[segments.length - 1] ?? node.name;
+    const folders = segments.slice(0, -1);
 
     for (const folder of folders) {
       crumbs.push({ label: folder, nodeId: null, type: 'folder' });

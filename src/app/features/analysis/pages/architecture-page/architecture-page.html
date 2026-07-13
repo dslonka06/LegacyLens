@@ -1,34 +1,40 @@
 <div class="insight-page">
-
   <div class="page-header">
     <div class="page-title">
       <div class="page-icon violet">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
         </svg>
       </div>
       <div>
         <h1>Architecture</h1>
         <p class="page-subtitle" *ngIf="workspaceName">{{ workspaceName }}</p>
-        <p class="page-subtitle" *ngIf="!workspaceName">Structural patterns and dependency topology</p>
+        <p class="page-subtitle" *ngIf="!workspaceName">
+          Structural patterns and dependency topology
+        </p>
       </div>
     </div>
   </div>
 
   <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
     <div class="arch-cols" [class.arch-cols--has-tree]="folderTree">
-
       <!-- File tree (folder/repo workspaces only) -->
       <div class="arch-col-tree" *ngIf="folderTree">
-        <app-file-tree-panel
-          [folderTree]="folderTree"
-          (fileSelected)="onFileSelected($event)">
+        <app-file-tree-panel [folderTree]="folderTree" (fileSelected)="onFileSelected($event)">
         </app-file-tree-panel>
       </div>
 
       <div class="arch-col-main">
-
         <div class="doc-block" *ngIf="architectureNarrative">
           <div class="doc-block-label">Architecture Summary</div>
           <p class="arch-narrative">{{ architectureNarrative }}</p>
@@ -36,7 +42,9 @@
 
         <div class="doc-block">
           <div class="doc-block-label">Architectural Layers</div>
-          <div class="arch-empty-state" *ngIf="!patterns.length">No architectural patterns detected. Upload a repository to begin analysis.</div>
+          <div class="arch-empty-state" *ngIf="!patterns.length">
+            No architectural patterns detected. Upload a repository to begin analysis.
+          </div>
           <div class="arch-pattern-grid" *ngIf="patterns.length">
             <div class="arch-pattern-card" *ngFor="let p of patterns">
               <div class="arch-pattern-info">
@@ -48,16 +56,16 @@
               </div>
               <p class="arch-pattern-summary">{{ architectureDescription(p.name) }}</p>
               <div class="arch-indicators" *ngIf="p.indicators.length">
-                <span class="arch-indicator-tag" *ngFor="let ind of p.indicators.slice(0, 5)">{{ ind }}</span>
+                <span class="arch-indicator-tag" *ngFor="let ind of p.indicators.slice(0, 5)">{{
+                  ind
+                }}</span>
               </div>
             </div>
           </div>
         </div>
-
       </div>
 
       <div class="arch-col-side">
-
         <div class="doc-block">
           <div class="doc-block-label">Architecture Summary</div>
           <div class="metrics-strip">
@@ -75,7 +83,9 @@
             </div>
             <div class="strip-item">
               <span class="strip-label">Hubs</span>
-              <span class="strip-val" [class.strip-val-warn]="hubs.length > 5">{{ hubs.length }}</span>
+              <span class="strip-val" [class.strip-val-warn]="hubs.length > 5">{{
+                hubs.length
+              }}</span>
             </div>
           </div>
         </div>
@@ -84,8 +94,16 @@
           <div class="doc-block-label">Major Components</div>
           <div class="arch-component-list">
             <div class="arch-component-item" *ngFor="let hub of hubs">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
               </svg>
               <span>{{ hub.name }}</span>
               <span class="hub-dep-count">{{ hub.inboundCount }} connections</span>
@@ -97,24 +115,38 @@
           <div class="doc-block-label">Top Referenced Modules</div>
           <div class="arch-responsibility-list">
             <div class="arch-responsibility-item" *ngFor="let d of topDependencies">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
               </svg>
               <span>{{ d }}</span>
             </div>
           </div>
         </div>
-
       </div>
-
     </div>
   </div>
 
   <ng-template #noWorkspace>
     <div class="no-session">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="3" y="3" width="7" height="7" />
+        <rect x="14" y="3" width="7" height="7" />
+        <rect x="14" y="14" width="7" height="7" />
+        <rect x="3" y="14" width="7" height="7" />
       </svg>
       <h3>No workspace active</h3>
       <p>Upload a file, folder, or repository to see architecture details.</p>

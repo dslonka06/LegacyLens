@@ -8,6 +8,9 @@ export class RecommendationAnalysisService {
   constructor(private readonly electron: ElectronService) {}
 
   async analyze(model: KnowledgeModel): Promise<RecommendationAnalysis> {
-    return this.electron.intelligenceRecommendations(model, null) as Promise<RecommendationAnalysis>;
+    return this.electron.intelligenceRecommendations(
+      model,
+      null,
+    ) as Promise<RecommendationAnalysis>;
   }
 }

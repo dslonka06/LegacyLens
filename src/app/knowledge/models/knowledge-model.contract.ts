@@ -16,12 +16,12 @@
  */
 
 import type { TechnologyDetectionResult } from './technology.model';
-import type { FolderNode, ProjectNode }    from './repository.model';
-import type { DependencyGraph }            from './knowledge.model';
-import type { SecurityAnalysis }           from '@app/analysis/models/security-analysis.model';
-import type { SystemUnderstanding }        from '@app/analysis/models/system-understanding.model';
-import type { RecommendationAnalysis }     from '@app/analysis/models/recommendation-analysis.model';
-import type { LearningPathAnalysis }       from '@app/analysis/models/learning-path-analysis.model';
+import type { FolderNode, ProjectNode } from './repository.model';
+import type { DependencyGraph } from './knowledge.model';
+import type { SecurityAnalysis } from '@app/analysis/models/security-analysis.model';
+import type { SystemUnderstanding } from '@app/analysis/models/system-understanding.model';
+import type { RecommendationAnalysis } from '@app/analysis/models/recommendation-analysis.model';
+import type { LearningPathAnalysis } from '@app/analysis/models/learning-path-analysis.model';
 
 // ── Target type ────────────────────────────────────────────────────────────────
 
@@ -40,7 +40,7 @@ export type KnowledgeCapability =
   | 'multiProject'
   | 'gitAnalysis'
   | 'architectureDiscovery'
-  | 'insightExtraction';   // deterministic insights available (complexity, risks, data flow)
+  | 'insightExtraction'; // deterministic insights available (complexity, risks, data flow)
 
 // ── AI pipeline stages ─────────────────────────────────────────────────────────
 
@@ -54,33 +54,33 @@ export type AIStage =
 // ── Structure sub-types ────────────────────────────────────────────────────────
 
 export interface SymbolSummary {
-  classes:  string[];
-  methods:  string[];
-  imports:  string[];
-  exports:  string[];
+  classes: string[];
+  methods: string[];
+  imports: string[];
+  exports: string[];
   language: string;
-  type:     string;
+  type: string;
 }
 
 export interface KnowledgeStructure {
   /** Total file count across the analyzed target. */
-  totalFiles:   number;
+  totalFiles: number;
   /** All detected languages, most prevalent first. */
-  languages:    string[];
+  languages: string[];
   /** Detected frameworks (e.g. Angular, React, ASP.NET). */
-  frameworks:   string[];
+  frameworks: string[];
   /** Full technology detection results including category and confidence. */
   technologies: TechnologyDetectionResult[];
   /** Symbol index keyed by file path. Present when 'symbolExtraction' capability ran. */
-  symbols:      Record<string, SymbolSummary>;
+  symbols: Record<string, SymbolSummary>;
   /** Folder hierarchy. Present when 'folderStructure' capability ran. */
-  folderTree?:  FolderNode;
+  folderTree?: FolderNode;
   /** Discovered sub-projects. Present when 'multiProject' capability ran. */
-  projects?:    ProjectNode[];
+  projects?: ProjectNode[];
   /** File-scope only: the analyzed source code (persisted — file targets are small). */
-  sourceCode?:  string;
+  sourceCode?: string;
   /** File-scope only: absolute path to the analyzed file. */
-  filePath?:    string;
+  filePath?: string;
   /** File-scope only: detected language of the file. */
   fileLanguage?: string;
 }
@@ -88,21 +88,21 @@ export interface KnowledgeStructure {
 // ── Relationships sub-types ────────────────────────────────────────────────────
 
 export interface ArchitecturePattern {
-  name:        string;
-  confidence:  number;
-  indicators:  string[];  // folder names or dependency patterns that triggered detection
+  name: string;
+  confidence: number;
+  indicators: string[]; // folder names or dependency patterns that triggered detection
 }
 
 export interface DependencyHub {
-  nodeId:       string;
-  name:         string;
+  nodeId: string;
+  name: string;
   inboundCount: number;
-  isHub:        boolean;
+  isHub: boolean;
 }
 
 export interface FileRanking {
   nodeId: string;
-  name:   string;
+  name: string;
   degree: number;
 }
 
@@ -111,7 +111,7 @@ export interface KnowledgeRelationships {
   dependencies?: {
     graph: DependencyGraph;
     /** Most-connected nodes — derived from graph, never stored separately. */
-    hubs:  DependencyHub[];
+    hubs: DependencyHub[];
     /** Files ranked by total connection degree. */
     ranks: FileRanking[];
   };
@@ -122,7 +122,7 @@ export interface KnowledgeRelationships {
   /** Git metadata. Present when 'gitAnalysis' capability ran. */
   git?: {
     available: boolean;
-    branch:    string | null;
+    branch: string | null;
     originUrl: string | null;
   };
 }
@@ -132,28 +132,28 @@ export interface KnowledgeRelationships {
 
 export interface DataFlowInsight {
   /** Ordered processing steps, e.g. ['parseRequest', 'validateInput', 'persist']. */
-  steps:   string[];
-  inputs:  string[];
+  steps: string[];
+  inputs: string[];
   outputs: string[];
 }
 
 export interface RiskInsight {
-  severity:    'critical' | 'high' | 'medium' | 'low';
+  severity: 'critical' | 'high' | 'medium' | 'low';
   description: string;
-  location?:   string;
+  location?: string;
 }
 
 export interface KnowledgeInsights {
   /** Deterministic data flow. Present for file targets when 'insightExtraction' ran. */
-  dataFlow?:     DataFlowInsight;
+  dataFlow?: DataFlowInsight;
   /** Complexity level derived from cyclomatic / structural analysis. */
-  complexity?:   'Low' | 'Medium' | 'High';
+  complexity?: 'Low' | 'Medium' | 'High';
   /** Maintainability level derived from structural metrics. */
   maintainability?: 'Low' | 'Medium' | 'High';
   /** Deterministic risks derived from code patterns (not AI). */
-  risks?:        RiskInsight[];
+  risks?: RiskInsight[];
   /** Files/areas flagged as hotspots by structural analysis. */
-  hotspots?:     string[];
+  hotspots?: string[];
 }
 
 // ── AI results ─────────────────────────────────────────────────────────────────
@@ -163,34 +163,34 @@ export interface KnowledgeInsights {
 
 export interface KnowledgeAIResults {
   /** Full AI understanding: executive summary, business purpose, health, key areas. */
-  understanding?:   SystemUnderstanding;
+  understanding?: SystemUnderstanding;
   /** Security findings and overview narrative produced by AI. */
-  security?:        SecurityAnalysis;
+  security?: SecurityAnalysis;
   /** AI-generated security narrative (populated after security findings). */
   securityOverview?: string;
   /** Actionable improvement recommendations from AI. */
   recommendations?: RecommendationAnalysis;
   /** Guided onboarding learning path from AI. */
-  learningPath?:    LearningPathAnalysis;
+  learningPath?: LearningPathAnalysis;
   /** AI stages that completed successfully. */
-  completedStages:  AIStage[];
+  completedStages: AIStage[];
   /** AI stages that failed — partial results remain usable. */
-  failedStages:     AIStage[];
+  failedStages: AIStage[];
   /** Error messages keyed by stage — present only for failed stages. */
-  stageErrors?:     Partial<Record<AIStage, string>>;
+  stageErrors?: Partial<Record<AIStage, string>>;
 }
 
 // ── Metadata ───────────────────────────────────────────────────────────────────
 
 export interface KnowledgeMetadata {
   /** ISO timestamp of last full or partial structural build. */
-  builtAt:         string;
+  builtAt: string;
   /** Schema version — increment when shape changes incompatibly. */
-  schemaVersion:   '2';
+  schemaVersion: '2';
   /** Opaque ID linking this model to its SQLite persistence row. */
-  buildId?:        string;
+  buildId?: string;
   /** True when this model was restored from cache without a fresh scan. */
-  fromCache?:      boolean;
+  fromCache?: boolean;
   /** True when only changed files were re-processed (incremental update). */
   partialRebuild?: boolean;
 }
@@ -198,23 +198,22 @@ export interface KnowledgeMetadata {
 // ── Root contract ──────────────────────────────────────────────────────────────
 
 export interface KnowledgeModel {
-
   // ── Identity ─────────────────────────────────────────────────────────────────
-  targetType:    AnalysisTargetType;
+  targetType: AnalysisTargetType;
   workspaceName: string | null;
 
   // ── Capabilities ─────────────────────────────────────────────────────────────
   // Gate UI sections on this. Never branch on targetType.
-  capabilities:     KnowledgeCapability[];
+  capabilities: KnowledgeCapability[];
   capabilityErrors: Record<string, string>;
 
   // ── Metadata ──────────────────────────────────────────────────────────────────
   metadata: KnowledgeMetadata;
 
   // ── Knowledge layers ──────────────────────────────────────────────────────────
-  structure:     KnowledgeStructure;
+  structure: KnowledgeStructure;
   relationships: KnowledgeRelationships;
-  insights:      KnowledgeInsights;
+  insights: KnowledgeInsights;
 
   // ── AI results ────────────────────────────────────────────────────────────────
   // Populated asynchronously by AIAnalysisService after structural build completes.

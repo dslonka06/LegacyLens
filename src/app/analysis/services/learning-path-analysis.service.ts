@@ -8,6 +8,11 @@ export class LearningPathAnalysisService {
   constructor(private readonly electron: ElectronService) {}
 
   async analyze(model: KnowledgeModel): Promise<LearningPathAnalysis> {
-    return this.electron.intelligenceLearningPath(model, null, null, model.targetType) as Promise<LearningPathAnalysis>;
+    return this.electron.intelligenceLearningPath(
+      model,
+      null,
+      null,
+      model.targetType,
+    ) as Promise<LearningPathAnalysis>;
   }
 }

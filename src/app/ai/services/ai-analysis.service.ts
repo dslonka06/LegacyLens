@@ -11,7 +11,6 @@ interface AiAnalysisRequest {
 
 @Injectable({ providedIn: 'root' })
 export class AiAnalysisService {
-
   private readonly apiUrl = 'http://localhost:5000/api/ai/analyze';
   private readonly timeoutMs = 300_000; // 5 min — matches backend CTS
 
@@ -23,7 +22,7 @@ export class AiAnalysisService {
   analyze(fileName: string, sourceCode: string): Observable<AiAnalysisResult> {
     if (this.electron.isElectron) {
       return from(this.electron.aiAnalyze(fileName, sourceCode)).pipe(
-        map(result => result as AiAnalysisResult),
+        map((result) => result as AiAnalysisResult),
         catchError((err: Error) => throwError(() => err)),
       );
     }

@@ -1,61 +1,101 @@
 <div class="tree-panel" *ngIf="hasTree; else noTree">
-
   <!-- Search -->
   <div class="tree-search">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+    >
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
     <input
       class="tree-search-input"
       type="text"
       placeholder="Filter files…"
       [(ngModel)]="searchQuery"
-      autocomplete="off"/>
+      autocomplete="off"
+    />
   </div>
 
   <!-- Tree rows -->
   <div class="tree-scroll">
     <ng-container *ngFor="let row of filteredRows; trackBy: trackRow">
-
       <!-- Folder row -->
-      <div *ngIf="row.kind === 'folder'"
-           class="tree-row tree-row--folder"
-           [class.tree-row--expanded]="isExpanded(row.node.path)"
-           [style.padding-left.px]="12 + row.depth * 14"
-           (click)="toggleFolder(row.node.path)">
-        <svg class="tree-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-          <polyline points="9 18 15 12 9 6"/>
+      <div
+        *ngIf="row.kind === 'folder'"
+        class="tree-row tree-row--folder"
+        [class.tree-row--expanded]="isExpanded(row.node.path)"
+        [style.padding-left.px]="12 + row.depth * 14"
+        (click)="toggleFolder(row.node.path)"
+      >
+        <svg
+          class="tree-caret"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+        >
+          <polyline points="9 18 15 12 9 6" />
         </svg>
-        <svg class="tree-icon tree-icon--folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        <svg
+          class="tree-icon tree-icon--folder"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
         </svg>
         <span class="tree-name">{{ row.node.name }}</span>
-        <span class="tree-count" *ngIf="row.node.totalFileCount">{{ row.node.totalFileCount }}</span>
+        <span class="tree-count" *ngIf="row.node.totalFileCount">{{
+          row.node.totalFileCount
+        }}</span>
       </div>
 
       <!-- File row -->
-      <div *ngIf="row.kind === 'file'"
-           class="tree-row tree-row--file"
-           [class.tree-row--selected]="row.node.path === selectedPath"
-           [style.padding-left.px]="12 + row.depth * 14"
-           (click)="selectFile(row.node)">
-        <svg class="tree-icon tree-icon--file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
+      <div
+        *ngIf="row.kind === 'file'"
+        class="tree-row tree-row--file"
+        [class.tree-row--selected]="row.node.path === selectedPath"
+        [style.padding-left.px]="12 + row.depth * 14"
+        (click)="selectFile(row.node)"
+      >
+        <svg
+          class="tree-icon tree-icon--file"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
         </svg>
         <span class="tree-name">{{ row.node.name }}</span>
         <span class="tree-ext" *ngIf="row.node.extension">{{ row.node.extension }}</span>
       </div>
-
     </ng-container>
   </div>
-
 </div>
 
 <ng-template #noTree>
   <div class="tree-empty">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
     </svg>
     <span>No file tree available</span>
   </div>

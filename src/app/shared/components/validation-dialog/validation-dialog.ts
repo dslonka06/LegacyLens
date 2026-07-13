@@ -1,6 +1,9 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import type { ValidationResult, AnalysisTarget } from '@app/core/services/target-validation.service';
+import type {
+  ValidationResult,
+  AnalysisTarget,
+} from '@app/core/services/target-validation.service';
 
 @Component({
   selector: 'app-validation-dialog',
@@ -14,8 +17,12 @@ export class ValidationDialog {
   @Output() proceed = new EventEmitter<AnalysisTarget>();
   @Output() cancel = new EventEmitter<void>();
 
-  get intendedLabel(): string { return this.analysisLabel(this.result.intended); }
-  get suggestedLabel(): string { return this.analysisLabel(this.result.suggestion ?? this.result.intended); }
+  get intendedLabel(): string {
+    return this.analysisLabel(this.result.intended);
+  }
+  get suggestedLabel(): string {
+    return this.analysisLabel(this.result.suggestion ?? this.result.intended);
+  }
 
   private analysisLabel(t: AnalysisTarget): string {
     if (t === 'file') return 'File Analysis';

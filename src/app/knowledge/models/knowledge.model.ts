@@ -14,14 +14,14 @@ export interface SourceFile {
 export interface DependencyNode {
   id: string;
   name: string;
-  type: string;   // e.g. 'module', 'class', 'namespace', 'table'
+  type: string; // e.g. 'module', 'class', 'namespace', 'table'
   path: string;
 }
 
 export interface DependencyEdge {
-  source: string;  // DependencyNode.id
-  target: string;  // DependencyNode.id
-  relationshipType: string;  // e.g. 'import', 'using', 'references'
+  source: string; // DependencyNode.id
+  target: string; // DependencyNode.id
+  relationshipType: string; // e.g. 'import', 'using', 'references'
 }
 
 export interface DependencyGraph {
@@ -34,7 +34,7 @@ export interface DependencyGraph {
 export interface ArchitecturePattern {
   name: string;
   confidence: number;
-  indicators: string[];  // folder names or dependency patterns that triggered detection
+  indicators: string[]; // folder names or dependency patterns that triggered detection
 }
 
 // Named RepositoryArchitectureAnalysis to avoid collision with the existing
@@ -46,12 +46,12 @@ export interface RepositoryArchitectureAnalysis {
 // ── Knowledge State ───────────────────────────────────────────────────────────
 
 export enum KnowledgeState {
-  NotStarted        = 'NotStarted',
-  ReadingFiles      = 'ReadingFiles',
+  NotStarted = 'NotStarted',
+  ReadingFiles = 'ReadingFiles',
   BuildingDependencies = 'BuildingDependencies',
   DetectingArchitecture = 'DetectingArchitecture',
-  Complete          = 'Complete',
-  Failed            = 'Failed',
+  Complete = 'Complete',
+  Failed = 'Failed',
 }
 
 // ── Root Knowledge Model ──────────────────────────────────────────────────────

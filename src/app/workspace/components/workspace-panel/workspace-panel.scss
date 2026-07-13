@@ -42,7 +42,9 @@
   margin: -1px -3px;
   transition: background 0.15s;
 
-  &:hover { background: rgba(124, 92, 255, 0.08); }
+  &:hover {
+    background: rgba(124, 92, 255, 0.08);
+  }
 }
 
 .ws-panel-name-input {
@@ -76,13 +78,41 @@
   border-radius: 20px;
   flex-shrink: 0;
 
-  &.status-empty      { background: rgba(100,116,139,0.12); color: var(--text-secondary); border: 1px solid rgba(100,116,139,0.2); }
-  &.status-loaded     { background: rgba(34,197,94,0.12);   color: var(--success);        border: 1px solid rgba(34,197,94,0.2); }
-  &.status-analyzing  { background: rgba(245,158,11,0.12);  color: var(--warning);        border: 1px solid rgba(245,158,11,0.2); }
-  &.status-modified   { background: rgba(56,189,248,0.12);  color: var(--info);           border: 1px solid rgba(56,189,248,0.2); }
-  &.status-changes    { background: rgba(124,92,255,0.12);  color: var(--accent);         border: 1px solid rgba(124,92,255,0.2); }
-  &.status-failed     { background: rgba(245,158,11,0.12);  color: var(--warning);        border: 1px solid rgba(245,158,11,0.2); }
-  &.status-error      { background: rgba(239,68,68,0.12);   color: var(--error, #ef4444); border: 1px solid rgba(239,68,68,0.2); }
+  &.status-empty {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-secondary);
+    border: 1px solid rgba(100, 116, 139, 0.2);
+  }
+  &.status-loaded {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  }
+  &.status-analyzing {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+  }
+  &.status-modified {
+    background: rgba(56, 189, 248, 0.12);
+    color: var(--info);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+  }
+  &.status-changes {
+    background: rgba(124, 92, 255, 0.12);
+    color: var(--accent);
+    border: 1px solid rgba(124, 92, 255, 0.2);
+  }
+  &.status-failed {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+  }
+  &.status-error {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--error, #ef4444);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
 }
 
 // ─── Stats row ──────────────────────────────────────────
@@ -169,7 +199,10 @@
   border-radius: 6px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 
   svg {
     width: 13px;
@@ -185,7 +218,9 @@
   color: var(--accent);
   border-color: rgba(124, 92, 255, 0.25);
 
-  &:hover { background: rgba(124, 92, 255, 0.18); }
+  &:hover {
+    background: rgba(124, 92, 255, 0.18);
+  }
 }
 
 .wp-btn-new {
@@ -193,7 +228,9 @@
   color: var(--success);
   border-color: rgba(34, 197, 94, 0.2);
 
-  &:hover { background: rgba(34, 197, 94, 0.15); }
+  &:hover {
+    background: rgba(34, 197, 94, 0.15);
+  }
 }
 
 .wp-btn-delete {
@@ -201,7 +238,9 @@
   color: var(--error, #ef4444);
   border-color: rgba(239, 68, 68, 0.2);
 
-  &:hover { background: rgba(239, 68, 68, 0.15); }
+  &:hover {
+    background: rgba(239, 68, 68, 0.15);
+  }
 }
 
 .wp-btn-reanalyze {
@@ -209,7 +248,9 @@
   color: var(--info);
   border-color: rgba(56, 189, 248, 0.2);
 
-  &:hover { background: rgba(56, 189, 248, 0.15); }
+  &:hover {
+    background: rgba(56, 189, 248, 0.15);
+  }
 }
 
 .wp-btn-cancel {
@@ -217,7 +258,9 @@
   color: var(--warning);
   border-color: rgba(245, 158, 11, 0.2);
 
-  &:hover { background: rgba(245, 158, 11, 0.15); }
+  &:hover {
+    background: rgba(245, 158, 11, 0.15);
+  }
 }
 
 // ─── Recovery / partial failure notices ──────────────────────────────────────
@@ -276,8 +319,13 @@
 }
 
 @keyframes wp-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.35; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 
 .wp-btn-export {
@@ -285,8 +333,14 @@
   color: var(--text-secondary);
   border-color: var(--border);
 
-  &:hover:not(:disabled) { background: rgba(100, 116, 139, 0.15); color: var(--text-primary); }
-  &:disabled { opacity: 0.5; cursor: default; }
+  &:hover:not(:disabled) {
+    background: rgba(100, 116, 139, 0.15);
+    color: var(--text-primary);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
 }
 
 .wp-exports {

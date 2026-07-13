@@ -2,7 +2,10 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { ActiveWorkspaceService, ActiveWorkspace } from '@app/core/services/active-workspace.service';
+import {
+  ActiveWorkspaceService,
+  ActiveWorkspace,
+} from '@app/core/services/active-workspace.service';
 import { ThemeService } from '@app/core/services/theme.service';
 
 @Component({
@@ -10,10 +13,9 @@ import { ThemeService } from '@app/core/services/theme.service';
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.html',
-  styleUrl: './sidebar.scss'
+  styleUrl: './sidebar.scss',
 })
 export class Sidebar implements OnInit, OnDestroy {
-
   activeWorkspace: ActiveWorkspace = null;
   private sub: Subscription | null = null;
 
@@ -24,7 +26,7 @@ export class Sidebar implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.activeWorkspace = this.activeWorkspaceService.workspace;
-    this.sub = this.activeWorkspaceService.workspace$.subscribe(w => {
+    this.sub = this.activeWorkspaceService.workspace$.subscribe((w) => {
       this.activeWorkspace = w;
     });
   }

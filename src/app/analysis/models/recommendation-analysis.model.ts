@@ -19,11 +19,11 @@ export interface CodeReference {
 export interface Recommendation {
   id: string;
   title: string;
-  priorityScore: number;    // 0–100 composite score; higher = act sooner
-  priorityRank: number;     // 1-based rank across all recommendations
+  priorityScore: number; // 0–100 composite score; higher = act sooner
+  priorityRank: number; // 1-based rank across all recommendations
   priority: RecommendationPriority;
   category: RecommendationCategory;
-  affectedArea: string;     // human-readable label, e.g. "Dependency Management"
+  affectedArea: string; // human-readable label, e.g. "Dependency Management"
   affectedFiles: string[];
   codeReference: CodeReference;
   issueDescription: string;

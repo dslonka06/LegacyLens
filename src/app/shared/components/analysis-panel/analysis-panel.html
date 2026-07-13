@@ -1,10 +1,17 @@
 <div class="results-panel">
-
   <!-- Empty state -->
   <div class="empty-state" *ngIf="!analysis">
     <div class="empty-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.35-4.35" />
       </svg>
     </div>
     <h3>No analysis yet</h3>
@@ -12,33 +19,53 @@
   </div>
 
   <div class="panel-body" *ngIf="analysis">
-
     <!-- 1. Plain English Summary -->
     <div class="summary-card">
       <div class="summary-card-header">
         <div class="summary-title-row">
           <div class="summary-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
           </div>
           <span class="summary-label">Plain English Summary</span>
         </div>
         <button class="explain-simpler-btn" (click)="toggleSimpler()">
           Explain Simpler
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline [attr.points]="simplerOpen ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline [attr.points]="simplerOpen ? '18 15 12 9 6 15' : '6 9 12 15 18 9'" />
           </svg>
         </button>
       </div>
       <!-- AI provider badge -->
       <div class="ai-provider-badge" *ngIf="aiProviderLabel">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
-          <path d="M12 8v4l3 3"/>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
+          <path d="M12 8v4l3 3" />
         </svg>
         {{ aiProviderLabel }}
       </div>
@@ -48,10 +75,17 @@
       <!-- 2. Simple Explanation (expandable) -->
       <div class="simpler-section" *ngIf="simplerOpen">
         <div class="simpler-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
           Simple Explanation
         </div>
@@ -61,7 +95,6 @@
 
     <!-- 3. Metrics Row -->
     <div class="metrics-row">
-
       <!-- Language — purple accent value -->
       <div class="metric-card">
         <span class="metric-label">Language</span>
@@ -78,10 +111,17 @@
         <span class="metric-label">Complexity</span>
         <div class="metric-indicator-wrap">
           <div class="seg-bar">
-            <div *ngFor="let s of SEGMENTS; let i = index"
-                 class="seg-pip" [ngClass]="complexitySegmentClass(i)"></div>
+            <div
+              *ngFor="let s of SEGMENTS; let i = index"
+              class="seg-pip"
+              [ngClass]="complexitySegmentClass(i)"
+            ></div>
           </div>
-          <span class="metric-value" [ngClass]="'complexity-' + analysis.complexity.toLowerCase()">{{ analysis.complexity }}</span>
+          <span
+            class="metric-value"
+            [ngClass]="'complexity-' + analysis.complexity.toLowerCase()"
+            >{{ analysis.complexity }}</span
+          >
         </div>
       </div>
 
@@ -90,47 +130,74 @@
         <span class="metric-label">Maintainability</span>
         <div class="metric-indicator-wrap">
           <div class="seg-bar">
-            <div *ngFor="let s of SEGMENTS; let i = index"
-                 class="seg-pip" [ngClass]="maintainabilitySegmentClass(i)"></div>
+            <div
+              *ngFor="let s of SEGMENTS; let i = index"
+              class="seg-pip"
+              [ngClass]="maintainabilitySegmentClass(i)"
+            ></div>
           </div>
-          <span class="metric-value" [ngClass]="'maint-' + analysis.maintainability.toLowerCase()">{{ analysis.maintainability }}</span>
+          <span
+            class="metric-value"
+            [ngClass]="'maint-' + analysis.maintainability.toLowerCase()"
+            >{{ analysis.maintainability }}</span
+          >
         </div>
       </div>
-
     </div>
 
     <!-- 4. Risks & Issues + Modernization -->
     <div class="findings-summary-row">
-
       <div class="findings-summary-card" (click)="navigateTo(routeBase + '/code-recommendations')">
         <div class="findings-summary-header">
           <div class="findings-icon amber">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+              />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
           </div>
-          <span class="findings-summary-title">Risks / Issues Detected ({{ displayRisks.length }})</span>
+          <span class="findings-summary-title"
+            >Risks / Issues Detected ({{ displayRisks.length }})</span
+          >
         </div>
 
         <!-- Empty state -->
         <div class="findings-empty-state" *ngIf="!displayRisks.length">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
           No significant risks detected.
         </div>
 
         <div class="findings-preview-list" *ngIf="displayRisks.length">
-          <div class="findings-preview-item" *ngFor="let r of displayRisks | slice:0:4">
+          <div class="findings-preview-item" *ngFor="let r of displayRisks | slice: 0 : 4">
             <span class="sev-dot" [ngClass]="'dot-' + r.severity"></span>
             <span class="findings-preview-text">{{ r.description }}</span>
           </div>
         </div>
 
-        <a class="view-all-link" *ngIf="displayRisks.length"
-           (click)="navigateTo(routeBase + '/code-recommendations'); $event.stopPropagation()">
+        <a
+          class="view-all-link"
+          *ngIf="displayRisks.length"
+          (click)="navigateTo(routeBase + '/code-recommendations'); $event.stopPropagation()"
+        >
           View all {{ displayRisks.length }} issues →
         </a>
       </div>
@@ -138,102 +205,167 @@
       <div class="findings-summary-card" (click)="navigateTo(routeBase + '/code-recommendations')">
         <div class="findings-summary-header">
           <div class="findings-icon green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-              <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="17 1 21 5 17 9" />
+              <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+              <polyline points="7 23 3 19 7 15" />
+              <path d="M21 13v2a4 4 0 0 1-4 4H3" />
             </svg>
           </div>
-          <span class="findings-summary-title">Modernization Opportunities ({{ displayModernizations.length }})</span>
+          <span class="findings-summary-title"
+            >Modernization Opportunities ({{ displayModernizations.length }})</span
+          >
         </div>
 
         <!-- Empty state -->
         <div class="findings-empty-state" *ngIf="!displayModernizations.length">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
           No modernization opportunities detected.
         </div>
 
         <div class="findings-preview-list" *ngIf="displayModernizations.length">
-          <div class="findings-preview-item mod" *ngFor="let m of displayModernizations | slice:0:3">
-            <svg class="check-dot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
+          <div
+            class="findings-preview-item mod"
+            *ngFor="let m of displayModernizations | slice: 0 : 3"
+          >
+            <svg
+              class="check-dot"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
             </svg>
             <span class="findings-preview-text">{{ m.description }}</span>
           </div>
         </div>
 
-        <a class="view-all-link" *ngIf="displayModernizations.length"
-           (click)="navigateTo(routeBase + '/code-recommendations'); $event.stopPropagation()">
+        <a
+          class="view-all-link"
+          *ngIf="displayModernizations.length"
+          (click)="navigateTo(routeBase + '/code-recommendations'); $event.stopPropagation()"
+        >
           View all {{ displayModernizations.length }} opportunities →
         </a>
       </div>
-
     </div>
 
     <!-- 5. Explore Deeper -->
     <div class="explore-section">
       <span class="explore-label">Explore Deeper</span>
       <div class="explore-grid">
-
         <button class="explore-card" (click)="navigateTo(routeBase + '/data-flow')">
           <div class="explore-card-header">
             <div class="explore-card-icon cyan">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
               </svg>
             </div>
             <span class="explore-card-title">Data Flow</span>
           </div>
-          <span class="explore-card-desc">Need to understand how information moves through the system?</span>
+          <span class="explore-card-desc"
+            >Need to understand how information moves through the system?</span
+          >
           <span class="explore-card-arrow">→</span>
         </button>
 
         <button class="explore-card" (click)="navigateTo(routeBase + '/architecture')">
           <div class="explore-card-header">
             <div class="explore-card-icon violet">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
               </svg>
             </div>
             <span class="explore-card-title">Architecture</span>
           </div>
-          <span class="explore-card-desc">Trying to understand how this application is organized?</span>
+          <span class="explore-card-desc"
+            >Trying to understand how this application is organized?</span
+          >
           <span class="explore-card-arrow">→</span>
         </button>
 
         <button class="explore-card" (click)="navigateTo(routeBase + '/documentation')">
           <div class="explore-card-header">
             <div class="explore-card-icon amber">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
               </svg>
             </div>
             <span class="explore-card-title">Documentation</span>
           </div>
-          <span class="explore-card-desc">Need to onboard a teammate or document a legacy system?</span>
+          <span class="explore-card-desc"
+            >Need to onboard a teammate or document a legacy system?</span
+          >
           <span class="explore-card-arrow">→</span>
         </button>
 
         <button class="explore-card" (click)="navigateTo(routeBase + '/code-recommendations')">
           <div class="explore-card-header">
             <div class="explore-card-icon green">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>
             <span class="explore-card-title">Security</span>
           </div>
-          <span class="explore-card-desc">Looking for security risks or vulnerabilities in this code?</span>
+          <span class="explore-card-desc"
+            >Looking for security risks or vulnerabilities in this code?</span
+          >
           <span class="explore-card-arrow">→</span>
         </button>
-
       </div>
     </div>
-
   </div>
-
 </div>

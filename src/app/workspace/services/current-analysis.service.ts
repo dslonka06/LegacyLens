@@ -10,7 +10,6 @@ import { WorkspaceManagerService } from './workspace-manager.service';
  */
 @Injectable({ providedIn: 'root' })
 export class CurrentAnalysisService {
-
   private readonly manager = inject(WorkspaceManagerService);
 
   private readonly _session$ = new BehaviorSubject<AnalysisSession | null>(null);

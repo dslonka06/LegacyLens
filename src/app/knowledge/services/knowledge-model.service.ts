@@ -11,7 +11,6 @@ export interface KnowledgeModelBuildOptions {
 
 @Injectable({ providedIn: 'root' })
 export class KnowledgeModelService {
-
   constructor(private readonly electron: ElectronService) {}
 
   /**
@@ -29,7 +28,11 @@ export class KnowledgeModelService {
     options: KnowledgeModelBuildOptions = {},
   ): Promise<KnowledgeModel | null> {
     if (!this.electron.isElectron) return null;
-    return this.electron.buildKnowledgeModel(targetType, files, options) as Promise<KnowledgeModel | null>;
+    return this.electron.buildKnowledgeModel(
+      targetType,
+      files,
+      options,
+    ) as Promise<KnowledgeModel | null>;
   }
 
   /**
@@ -50,8 +53,8 @@ export class KnowledgeModelService {
   toRepositoryKnowledge(model: KnowledgeModel) {
     return {
       dependencyGraph: model.relationships.dependencies?.graph ?? undefined,
-      architecture:    model.relationships.architecture ?? undefined,
-      builtAt:         model.metadata.builtAt,
+      architecture: model.relationships.architecture ?? undefined,
+      builtAt: model.metadata.builtAt,
     };
   }
 }

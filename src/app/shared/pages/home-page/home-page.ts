@@ -7,7 +7,11 @@ import { ThemeService } from '@app/core/services/theme.service';
 import { ElectronService } from '@app/core/services/electron.service';
 import { RepositoryLibraryService } from '@app/core/services/repository-library.service';
 import { PendingRepositoryService } from '@app/core/services/pending-repository.service';
-import { TargetValidationService, ValidationResult, AnalysisTarget } from '@app/core/services/target-validation.service';
+import {
+  TargetValidationService,
+  ValidationResult,
+  AnalysisTarget,
+} from '@app/core/services/target-validation.service';
 import { ValidationDialog } from '@app/shared/components/validation-dialog/validation-dialog';
 import type { ElectronRepository } from '../../../../electron';
 
@@ -22,10 +26,9 @@ const ANALYSIS_ROUTES: Record<AnalysisTarget, string> = {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, ValidationDialog],
   templateUrl: './home-page.html',
-  styleUrl: './home-page.scss'
+  styleUrl: './home-page.scss',
 })
 export class HomePage implements OnInit {
-
   aiProviderStatus: 'checking' | 'configured' | 'not-configured' = 'checking';
   aiProviderLabel = 'Claude Sonnet';
 
@@ -76,14 +79,16 @@ export class HomePage implements OnInit {
     }
     this.cdr.detectChanges();
 
-    await Promise.all(this.repositories.map(async repo => {
-      try {
-        const result = await this.electronService.detectTarget(repo.path);
-        this.repoPathStatus.set(repo.id, result.detected === 'invalid' ? 'missing' : 'ok');
-      } catch {
-        this.repoPathStatus.set(repo.id, 'missing');
-      }
-    }));
+    await Promise.all(
+      this.repositories.map(async (repo) => {
+        try {
+          const result = await this.electronService.detectTarget(repo.path);
+          this.repoPathStatus.set(repo.id, result.detected === 'invalid' ? 'missing' : 'ok');
+        } catch {
+          this.repoPathStatus.set(repo.id, 'missing');
+        }
+      }),
+    );
     this.cdr.detectChanges();
   }
 
@@ -171,7 +176,7 @@ export class HomePage implements OnInit {
     event.stopPropagation();
     await this.repoLibrary.remove(id);
     this.repoPathStatus.delete(id);
-    this.repositories = this.repositories.filter(r => r.id !== id);
+    this.repositories = this.repositories.filter((r) => r.id !== id);
     this.cdr.detectChanges();
   }
 
@@ -238,15 +243,16 @@ export class HomePage implements OnInit {
   }
 
   private checkAiProvider(): void {
-    this.http.get<{ available: boolean; model?: string }>('http://localhost:5000/api/ai/status', {})
+    this.http
+      .get<{ available: boolean; model?: string }>('http://localhost:5000/api/ai/status', {})
       .subscribe({
-        next: res => {
+        next: (res) => {
           this.aiProviderStatus = res.available ? 'configured' : 'not-configured';
           if (res.model) this.aiProviderLabel = res.model;
         },
         error: () => {
           this.aiProviderStatus = 'not-configured';
-        }
+        },
       });
   }
 }

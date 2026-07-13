@@ -13,9 +13,8 @@ export type ExportFormat = 'pdf' | 'json';
  */
 @Injectable({ providedIn: 'root' })
 export class ExportService {
-
   constructor(
-    private readonly pdf:     PdfExportService,
+    private readonly pdf: PdfExportService,
     private readonly builder: DocumentationBuilderService,
   ) {}
 
@@ -39,9 +38,9 @@ export class ExportService {
     const name = model.workspaceName ?? 'knowledge-model';
     const fileName = `${name.replace(/[^a-zA-Z0-9_-]/g, '_')}-knowledge.json`;
     const blob = new Blob([JSON.stringify(model, null, 2)], { type: 'application/json' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
     a.download = fileName;
     a.click();
     URL.revokeObjectURL(url);

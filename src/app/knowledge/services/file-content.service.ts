@@ -6,37 +6,79 @@ const MAX_FILE_SIZE_BYTES = 500_000; // 500 KB
 
 // Extensions treated as source code worth reading
 const READABLE_EXTENSIONS = new Set([
-  'ts', 'tsx', 'js', 'jsx', 'mjs',
-  'cs', 'fs', 'vb',
-  'java', 'kt', 'scala',
-  'py', 'rb', 'php', 'go', 'rs', 'swift', 'cpp', 'c', 'h', 'hpp',
-  'html', 'htm', 'vue', 'svelte',
-  'css', 'scss', 'less',
+  'ts',
+  'tsx',
+  'js',
+  'jsx',
+  'mjs',
+  'cs',
+  'fs',
+  'vb',
+  'java',
+  'kt',
+  'scala',
+  'py',
+  'rb',
+  'php',
+  'go',
+  'rs',
+  'swift',
+  'cpp',
+  'c',
+  'h',
+  'hpp',
+  'html',
+  'htm',
+  'vue',
+  'svelte',
+  'css',
+  'scss',
+  'less',
   'sql',
-  'json', 'xml', 'yaml', 'yml', 'toml',
-  'md', 'txt', 'sh', 'bash', 'ps1',
+  'json',
+  'xml',
+  'yaml',
+  'yml',
+  'toml',
+  'md',
+  'txt',
+  'sh',
+  'bash',
+  'ps1',
 ]);
 
 // Path segments that signal generated or non-source content
 const IGNORED_PATH_SEGMENTS = new Set([
-  'node_modules', '.git', 'bin', 'obj', 'dist', '.angular',
-  'coverage', '.nyc_output', 'out', 'build', 'publish',
-  '__pycache__', '.venv', 'venv', '.tox', 'target',
+  'node_modules',
+  '.git',
+  'bin',
+  'obj',
+  'dist',
+  '.angular',
+  'coverage',
+  '.nyc_output',
+  'out',
+  'build',
+  'publish',
+  '__pycache__',
+  '.venv',
+  'venv',
+  '.tox',
+  'target',
 ]);
 
 @Injectable({ providedIn: 'root' })
 export class FileContentService {
-
   // Reads all readable files concurrently and returns their contents.
   // Files that fail to read are silently skipped — a single unreadable file
   // must not abort the entire knowledge build.
   async readFiles(files: File[]): Promise<SourceFile[]> {
-    const readable = files.filter(f => this.isReadable(f));
-    const results = await Promise.allSettled(readable.map(f => this.readOne(f)));
+    const readable = files.filter((f) => this.isReadable(f));
+    const results = await Promise.allSettled(readable.map((f) => this.readOne(f)));
 
     return results
       .filter((r): r is PromiseFulfilledResult<SourceFile> => r.status === 'fulfilled')
-      .map(r => r.value);
+      .map((r) => r.value);
   }
 
   private isReadable(file: File): boolean {

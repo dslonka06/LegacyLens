@@ -1,11 +1,11 @@
 <div class="workspace-panel" *ngIf="workspace">
-
   <!-- Header: name + type -->
   <div class="wp-header">
-
     <div class="wp-title-row">
       <ng-container *ngIf="!renaming">
-        <span class="wp-name" (click)="startRename()" title="Click to rename">{{ workspace.name }}</span>
+        <span class="wp-name" (click)="startRename()" title="Click to rename">{{
+          workspace.name
+        }}</span>
       </ng-container>
       <ng-container *ngIf="renaming">
         <input
@@ -19,7 +19,6 @@
     </div>
 
     <span class="wp-type-label">{{ typeLabel }}</span>
-
   </div>
 
   <!-- Recovery notice: app closed mid-analysis -->
@@ -44,7 +43,6 @@
 
   <!-- Stats (shown once workspace has a profile) -->
   <div class="wp-stats" *ngIf="profile">
-
     <div class="wp-stat">
       <span class="wp-stat-value">{{ profile.structure.totalFiles }}</span>
       <span class="wp-stat-label">{{ profile.structure.totalFiles === 1 ? 'File' : 'Files' }}</span>
@@ -54,39 +52,72 @@
 
     <div class="wp-stat">
       <span class="wp-stat-value">{{ profile.structure.languages.length }}</span>
-      <span class="wp-stat-label">{{ profile.structure.languages.length === 1 ? 'Language' : 'Languages' }}</span>
+      <span class="wp-stat-label">{{
+        profile.structure.languages.length === 1 ? 'Language' : 'Languages'
+      }}</span>
     </div>
 
     <ng-container *ngIf="profile.structure.technologies.length">
       <div class="wp-stat-divider"></div>
       <div class="wp-stat">
         <span class="wp-stat-value">{{ profile.structure.technologies.length }}</span>
-        <span class="wp-stat-label">{{ profile.structure.technologies.length === 1 ? 'Technology' : 'Technologies' }}</span>
+        <span class="wp-stat-label">{{
+          profile.structure.technologies.length === 1 ? 'Technology' : 'Technologies'
+        }}</span>
       </div>
     </ng-container>
-
   </div>
 
   <!-- Tags -->
-  <div class="wp-tags" *ngIf="profile && (profile.structure.languages.length || profile.structure.technologies.length)">
+  <div
+    class="wp-tags"
+    *ngIf="profile && (profile.structure.languages.length || profile.structure.technologies.length)"
+  >
     <span class="wp-tag lang-tag" *ngFor="let lang of profile.structure.languages">{{ lang }}</span>
-    <span class="wp-tag tech-tag" *ngFor="let tech of profile.structure.technologies">{{ tech }}</span>
+    <span class="wp-tag tech-tag" *ngFor="let tech of profile.structure.technologies">{{
+      tech
+    }}</span>
   </div>
 
   <!-- Actions -->
   <div class="wp-actions">
-
-    <button class="wp-btn wp-btn-switch" (click)="openSwitcher()" title="Switch or manage workspaces">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-        <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+    <button
+      class="wp-btn wp-btn-switch"
+      (click)="openSwitcher()"
+      title="Switch or manage workspaces"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="17 1 21 5 17 9" />
+        <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+        <polyline points="7 23 3 19 7 15" />
+        <path d="M21 13v2a4 4 0 0 1-4 4H3" />
       </svg>
       Switch ({{ workspaceCount }}/3)
     </button>
 
-    <button class="wp-btn wp-btn-new" (click)="newWorkspace()" [title]="canCreateNew ? 'New workspace' : 'Workspace limit reached'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+    <button
+      class="wp-btn wp-btn-new"
+      (click)="newWorkspace()"
+      [title]="canCreateNew ? 'New workspace' : 'Workspace limit reached'"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="16" />
+        <line x1="8" y1="12" x2="16" y2="12" />
       </svg>
       New
     </button>
@@ -95,10 +126,18 @@
       *ngIf="canReanalyze"
       class="wp-btn wp-btn-reanalyze"
       (click)="reanalyze()"
-      title="Re-run analysis with current files">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="23 4 23 10 17 10"/>
-        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      title="Re-run analysis with current files"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="23 4 23 10 17 10" />
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
       </svg>
       Re-analyze
     </button>
@@ -107,21 +146,40 @@
       *ngIf="isAnalyzing"
       class="wp-btn wp-btn-cancel"
       (click)="cancelAnalysis()"
-      title="Cancel current analysis">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+      title="Cancel current analysis"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <line x1="15" y1="9" x2="9" y2="15" />
+        <line x1="9" y1="9" x2="15" y2="15" />
       </svg>
       Cancel
     </button>
 
     <button class="wp-btn wp-btn-delete" (click)="deleteWorkspace()" title="Delete this workspace">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-        <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+        <path d="M10 11v6" />
+        <path d="M14 11v6" />
+        <path d="M9 6V4h6v2" />
       </svg>
       Delete
     </button>
-
   </div>
 
   <!-- Export actions — only when a model is ready -->
@@ -130,10 +188,19 @@
       class="wp-btn wp-btn-export"
       (click)="exportJson()"
       [disabled]="isExporting"
-      title="Download KnowledgeModel as JSON">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      title="Download KnowledgeModel as JSON"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
       </svg>
       JSON
     </button>
@@ -141,15 +208,22 @@
       class="wp-btn wp-btn-export"
       (click)="exportPdf()"
       [disabled]="isExporting"
-      title="Export documentation as PDF">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
+      title="Export documentation as PDF"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
       </svg>
       PDF
     </button>
   </div>
-
 </div>
 
 <!-- Empty state when no workspace is active -->

@@ -3,11 +3,11 @@
   *ngIf="validationResult"
   [result]="validationResult"
   (proceed)="onValidationProceed($event)"
-  (cancel)="onValidationCancel()">
+  (cancel)="onValidationCancel()"
+>
 </app-validation-dialog>
 
 <div class="hub-page" [class.hub-page--has-model]="hasModel">
-
   <!-- ══════════════════════════════════════════════════════
        SCANNING STATE — IPC directory read in progress
   ═══════════════════════════════════════════════════════ -->
@@ -30,31 +30,45 @@
   <ng-container *ngIf="isEmpty && !isAnalyzing && !isScanning">
     <div class="upload-zone">
       <div class="upload-card" [class.upload-card--animate]="showIdentity">
-
         <div class="upload-icon-ring">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
-            <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
-            <line x1="12" y1="12" x2="12" y2="15"/>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="18" r="3" />
+            <circle cx="6" cy="6" r="3" />
+            <circle cx="18" cy="6" r="3" />
+            <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" />
+            <line x1="12" y1="12" x2="12" y2="15" />
           </svg>
         </div>
 
         <h2 class="upload-title">Repository Analysis</h2>
         <p class="upload-desc">
-          Select a repository from the library on the Home page.
-          SystemLens will scan all files, resolve dependencies, detect
-          architecture patterns, and run a full AI analysis.
+          Select a repository from the library on the Home page. SystemLens will scan all files,
+          resolve dependencies, detect architecture patterns, and run a full AI analysis.
         </p>
 
         <button class="upload-browse-btn" (click)="goToHome()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
           Open Repository Library
         </button>
 
         <div class="upload-hint">Repositories are opened via the Home page library</div>
-
       </div>
     </div>
   </ng-container>
@@ -65,10 +79,11 @@
   <ng-container *ngIf="isAnalyzing && !isScanning">
     <div class="analyzing-zone">
       <div class="analyzing-card" [class.analyzing-card--animate]="showIdentity">
-
         <div class="analyzing-spinner"></div>
         <h2 class="analyzing-title">Analyzing {{ repoName }}</h2>
-        <p class="analyzing-desc">Processing files, resolving dependencies, and running AI pipeline…</p>
+        <p class="analyzing-desc">
+          Processing files, resolving dependencies, and running AI pipeline…
+        </p>
 
         <div class="stage-dots">
           <div
@@ -77,8 +92,8 @@
             [class.stage-dot--complete]="stage.state === 'complete'"
             [class.stage-dot--running]="stage.state === 'running'"
             [class.stage-dot--failed]="stage.state === 'failed'"
-            [title]="stage.label">
-          </div>
+            [title]="stage.label"
+          ></div>
         </div>
 
         <div class="stage-labels">
@@ -86,11 +101,11 @@
             class="stage-label"
             *ngFor="let stage of pipelineStages"
             [class.stage-label--active]="stage.state === 'running'"
-            [class.stage-label--complete]="stage.state === 'complete'">
+            [class.stage-label--complete]="stage.state === 'complete'"
+          >
             {{ stage.label }}
           </span>
         </div>
-
       </div>
     </div>
   </ng-container>
@@ -99,30 +114,53 @@
        READY STATE — hub dashboard
   ═══════════════════════════════════════════════════════ -->
   <ng-container *ngIf="hasModel">
-
     <!-- Top bar -->
     <div class="hub-topbar" [class.hub-topbar--animate]="showIdentity">
       <div class="hub-breadcrumb">
         <span class="hub-breadcrumb-root">Repository Analysis</span>
-        <svg class="hub-breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="9 18 15 12 9 6"/>
+        <svg
+          class="hub-breadcrumb-sep"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <polyline points="9 18 15 12 9 6" />
         </svg>
         <span class="hub-breadcrumb-current">{{ repoName }}</span>
         <span class="hub-breadcrumb-badge" *ngIf="fileCount">{{ fileCount }} files</span>
-        <span class="hub-breadcrumb-badge hub-breadcrumb-badge--green" *ngIf="projectCount > 1">{{ projectCount }} projects</span>
+        <span class="hub-breadcrumb-badge hub-breadcrumb-badge--green" *ngIf="projectCount > 1"
+          >{{ projectCount }} projects</span
+        >
       </div>
       <div class="hub-topbar-actions">
         <span class="hub-last-analyzed" *ngIf="lastAnalyzed">{{ lastAnalyzed }}</span>
         <button class="hub-action-btn" (click)="reanalyze()" [disabled]="!canReanalyze">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="23 4 23 10 17 10" />
+            <polyline points="1 20 1 14 7 14" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
           </svg>
           Re-analyze
         </button>
         <button class="hub-action-btn hub-action-btn--ghost" (click)="openSwitcher()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="2" y="3" width="20" height="14" rx="2" />
+            <polyline points="8 21 12 17 16 21" />
           </svg>
           {{ repoName }}
         </button>
@@ -131,7 +169,6 @@
 
     <!-- Body -->
     <div class="hub-body">
-
       <!-- ── Row 1: Identity ────────────────────────────── -->
       <div class="hub-identity-card" [class.hub-section--animate]="showIdentity">
         <div class="identity-lang-badge">{{ languageList }}</div>
@@ -140,11 +177,18 @@
           <p class="identity-summary" *ngIf="model?.ai?.understanding?.executiveSummary">
             {{ model!.ai!.understanding!.executiveSummary }}
           </p>
-          <p class="identity-summary identity-summary--muted" *ngIf="!model?.ai?.understanding?.executiveSummary">
+          <p
+            class="identity-summary identity-summary--muted"
+            *ngIf="!model?.ai?.understanding?.executiveSummary"
+          >
             AI analysis is running in the background. Summary will appear shortly.
           </p>
           <div class="identity-patterns" *ngIf="architecturePatterns.length">
-            <span class="identity-pattern-pill" *ngFor="let p of architecturePatterns.slice(0, 4)">{{ p }}</span>
+            <span
+              class="identity-pattern-pill"
+              *ngFor="let p of architecturePatterns.slice(0, 4)"
+              >{{ p }}</span
+            >
           </div>
         </div>
         <div class="identity-meta">
@@ -164,7 +208,11 @@
       </div>
 
       <!-- ── Row 1b: Subsystems (repo-only) ─────────────── -->
-      <div class="hub-subsystems-row" [class.hub-section--animate]="showIdentity" *ngIf="topSubsystems.length">
+      <div
+        class="hub-subsystems-row"
+        [class.hub-section--animate]="showIdentity"
+        *ngIf="topSubsystems.length"
+      >
         <div class="subsystem-chip" *ngFor="let s of topSubsystems">
           <span class="subsystem-chip-name">{{ s.name }}</span>
           <span class="subsystem-chip-count">{{ s.fileCount }}</span>
@@ -173,40 +221,58 @@
 
       <!-- ── Row 2: Info cards ────────────────────────── -->
       <div class="hub-info-row" [class.hub-section--animate]="showInfoCards">
-
         <!-- Code health -->
         <div class="info-card info-card--health" [class]="'health-' + healthTier">
           <div class="info-card-label">Code Health</div>
           <div class="health-arc-wrap">
             <svg class="health-arc" viewBox="0 0 80 50">
-              <path d="M 8 46 A 34 34 0 0 1 72 46" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6" stroke-linecap="round"/>
-              <path class="health-arc-fill"
+              <path
+                d="M 8 46 A 34 34 0 0 1 72 46"
+                fill="none"
+                stroke="rgba(255,255,255,0.08)"
+                stroke-width="6"
+                stroke-linecap="round"
+              />
+              <path
+                class="health-arc-fill"
                 [class.health-arc-fill--healthy]="healthTier === 'healthy'"
                 [class.health-arc-fill--fair]="healthTier === 'fair'"
                 [class.health-arc-fill--needs-attention]="healthTier === 'needs-attention'"
                 [class.health-arc-fill--critical]="healthTier === 'critical'"
-                d="M 8 46 A 34 34 0 0 1 72 46" fill="none" stroke-width="6" stroke-linecap="round"/>
+                d="M 8 46 A 34 34 0 0 1 72 46"
+                fill="none"
+                stroke-width="6"
+                stroke-linecap="round"
+              />
             </svg>
             <span class="health-tier-label">{{ healthLabel }}</span>
           </div>
           <div class="health-stats">
             <div class="health-stat">
               <span class="health-stat-label">Complexity</span>
-              <span class="health-stat-val"
+              <span
+                class="health-stat-val"
                 [class.complexity-Low]="complexityLabel === 'Low'"
                 [class.complexity-Medium]="complexityLabel === 'Medium'"
-                [class.complexity-High]="complexityLabel === 'High'">{{ complexityLabel }}</span>
+                [class.complexity-High]="complexityLabel === 'High'"
+                >{{ complexityLabel }}</span
+              >
             </div>
             <div class="health-stat">
               <span class="health-stat-label">Maintainability</span>
-              <span class="health-stat-val"
+              <span
+                class="health-stat-val"
                 [class.maint-High]="maintainabilityLabel === 'High'"
                 [class.maint-Medium]="maintainabilityLabel === 'Medium'"
-                [class.maint-Low]="maintainabilityLabel === 'Low'">{{ maintainabilityLabel }}</span>
+                [class.maint-Low]="maintainabilityLabel === 'Low'"
+                >{{ maintainabilityLabel }}</span
+              >
             </div>
             <div class="health-stat">
               <span class="health-stat-label">High-Risk Issues</span>
-              <span class="health-stat-val" [class.stat-error]="securityRiskCount > 0">{{ securityRiskCount }}</span>
+              <span class="health-stat-val" [class.stat-error]="securityRiskCount > 0">{{
+                securityRiskCount
+              }}</span>
             </div>
           </div>
         </div>
@@ -221,18 +287,24 @@
               [class.pipeline-dot--complete]="s.state === 'complete'"
               [class.pipeline-dot--running]="s.state === 'running'"
               [class.pipeline-dot--failed]="s.state === 'failed'"
-              [title]="s.label">
-            </div>
+              [title]="s.label"
+            ></div>
           </div>
           <div class="pipeline-stage-list">
             <div class="pipeline-stage-row" *ngFor="let s of pipelineStages">
-              <span class="pipeline-stage-dot-sm"
+              <span
+                class="pipeline-stage-dot-sm"
                 [class.dot-sm--complete]="s.state === 'complete'"
                 [class.dot-sm--running]="s.state === 'running'"
                 [class.dot-sm--failed]="s.state === 'failed'"
-                [class.dot-sm--pending]="s.state === 'pending'">
+                [class.dot-sm--pending]="s.state === 'pending'"
+              >
               </span>
-              <span class="pipeline-stage-name" [class.pipeline-stage-name--active]="s.state === 'running'">{{ s.label }}</span>
+              <span
+                class="pipeline-stage-name"
+                [class.pipeline-stage-name--active]="s.state === 'running'"
+                >{{ s.label }}</span
+              >
               <span class="pipeline-stage-status">
                 <ng-container [ngSwitch]="s.state">
                   <ng-container *ngSwitchCase="'complete'">✓</ng-container>
@@ -252,20 +324,27 @@
             <span class="workspace-status-chip">{{ statusLabel }}</span>
           </div>
           <div class="workspace-actions">
-            <button class="ws-btn ws-btn--reanalyze" (click)="reanalyze()" [disabled]="!canReanalyze">Re-analyze</button>
+            <button
+              class="ws-btn ws-btn--reanalyze"
+              (click)="reanalyze()"
+              [disabled]="!canReanalyze"
+            >
+              Re-analyze
+            </button>
             <button class="ws-btn ws-btn--switch" (click)="openSwitcher()">Switch</button>
             <button class="ws-btn ws-btn--new" (click)="newWorkspace()">New</button>
             <button class="ws-btn ws-btn--delete" (click)="deleteWorkspace()">Delete</button>
           </div>
           <div class="workspace-slot-row">
-            <span class="workspace-slot-dot"
+            <span
+              class="workspace-slot-dot"
               *ngFor="let ws of workspaceList"
               [class.workspace-slot-dot--active]="ws.id === workspace?.id"
-              [title]="ws.name">
+              [title]="ws.name"
+            >
             </span>
           </div>
         </div>
-
       </div>
 
       <!-- ── Row 3: Metric / nav cards ──────────────────── -->
@@ -275,38 +354,55 @@
           *ngFor="let card of metricCards"
           [class.metric-card--suggested]="card.suggested && showSuggested"
           [class.metric-card--pending]="card.pending"
-          (click)="navigate(card.route)">
-
-          <span class="metric-suggested-pill" *ngIf="card.suggested && showSuggested">Start Here</span>
+          (click)="navigate(card.route)"
+        >
+          <span class="metric-suggested-pill" *ngIf="card.suggested && showSuggested"
+            >Start Here</span
+          >
 
           <div class="metric-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path [attr.d]="card.icon"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path [attr.d]="card.icon" />
             </svg>
           </div>
 
           <div class="metric-card-body">
             <span class="metric-card-count" *ngIf="card.count !== null">{{ card.count }}</span>
-            <span class="metric-card-count metric-card-count--ai" *ngIf="card.count === null && !card.pending">AI</span>
+            <span
+              class="metric-card-count metric-card-count--ai"
+              *ngIf="card.count === null && !card.pending"
+              >AI</span
+            >
             <span class="metric-card-count metric-card-count--pending" *ngIf="card.pending">…</span>
             <span class="metric-card-label">{{ card.label }}</span>
           </div>
 
-          <svg class="metric-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <polyline points="9 18 15 12 9 6"/>
+          <svg
+            class="metric-card-arrow"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <polyline points="9 18 15 12 9 6" />
           </svg>
-
         </button>
       </div>
-
     </div>
-
   </ng-container>
-
 </div>
 
 <app-workspace-switcher-modal
   *ngIf="showSwitcher"
   [limitReached]="switcherLimitReached"
-  (close)="closeSwitcher()">
+  (close)="closeSwitcher()"
+>
 </app-workspace-switcher-modal>

@@ -1,26 +1,29 @@
 import { Injectable, NgZone, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
-import type { UpdateAvailablePayload, DownloadProgressPayload, UpdateDownloadedPayload } from '../../../../electron';
+import type {
+  UpdateAvailablePayload,
+  DownloadProgressPayload,
+  UpdateDownloadedPayload,
+} from '../../../electron';
 
 export type UpdateState = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error';
 
 export interface UpdateInfo {
-  version:      string;
+  version: string;
   releaseNotes: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
 export class UpdateService implements OnDestroy {
-
-  private readonly _state$    = new BehaviorSubject<UpdateState>('idle');
-  private readonly _info$     = new BehaviorSubject<UpdateInfo | null>(null);
+  private readonly _state$ = new BehaviorSubject<UpdateState>('idle');
+  private readonly _info$ = new BehaviorSubject<UpdateInfo | null>(null);
   private readonly _progress$ = new BehaviorSubject<number>(0);
-  private readonly _error$    = new Subject<string>();
+  private readonly _error$ = new Subject<string>();
 
-  readonly state$    = this._state$.asObservable();
-  readonly info$     = this._info$.asObservable();
+  readonly state$ = this._state$.asObservable();
+  readonly info$ = this._info$.asObservable();
   readonly progress$ = this._progress$.asObservable();
-  readonly error$    = this._error$.asObservable();
+  readonly error$ = this._error$.asObservable();
 
   private unsubs: Array<() => void> = [];
 
@@ -29,7 +32,7 @@ export class UpdateService implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.unsubs.forEach(fn => fn());
+    this.unsubs.forEach((fn) => fn());
   }
 
   get isElectron(): boolean {
@@ -71,7 +74,9 @@ export class UpdateService implements OnDestroy {
       }),
 
       api.onUpdateNotAvailable(() => {
-        this.zone.run(() => { if (this._state$.value === 'checking') this._state$.next('idle'); });
+        this.zone.run(() => {
+          if (this._state$.value === 'checking') this._state$.next('idle');
+        });
       }),
 
       api.onDownloadProgress((payload: DownloadProgressPayload) => {
@@ -83,7 +88,10 @@ export class UpdateService implements OnDestroy {
 
       api.onUpdateDownloaded((payload: UpdateDownloadedPayload) => {
         this.zone.run(() => {
-          this._info$.next({ version: payload.version, releaseNotes: this._info$.value?.releaseNotes ?? null });
+          this._info$.next({
+            version: payload.version,
+            releaseNotes: this._info$.value?.releaseNotes ?? null,
+          });
           this._state$.next('ready');
         });
       }),

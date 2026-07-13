@@ -7,32 +7,31 @@ import type { KnowledgeModel } from '@app/knowledge/models/knowledge-model.contr
 type JsPDF = import('jspdf').jsPDF;
 
 // ─── Page geometry ───────────────────────────────────────
-const PAGE_W    = 210;
-const PAGE_H    = 297;
-const MARGIN    = 20;
+const PAGE_W = 210;
+const PAGE_H = 297;
+const MARGIN = 20;
 const CONTENT_W = PAGE_W - MARGIN * 2;
-const FOOTER_H  = 16;   // reserved at bottom of every page
-const BODY_LH   = 5.8;  // body line height (mm)
-const SMALL_LH  = 5.2;
+const FOOTER_H = 16; // reserved at bottom of every page
+const BODY_LH = 5.8; // body line height (mm)
+const SMALL_LH = 5.2;
 
 // ─── Colour palette ──────────────────────────────────────
 const C = {
-  brand:     [108,  76, 255] as const,
-  brandDark: [ 80,  55, 200] as const,
-  text:      [ 17,  24,  39] as const,
-  muted:     [ 75,  85,  99] as const,
-  subtle:    [156, 163, 175] as const,
-  border:    [226, 232, 240] as const,
-  pageBg:    [248, 250, 252] as const,
-  high:      [220,  38,  38] as const,
-  medium:    [217, 119,   6] as const,
-  lowGreen:  [ 22, 163,  74] as const,
-  white:     [255, 255, 255] as const,
+  brand: [108, 76, 255] as const,
+  brandDark: [80, 55, 200] as const,
+  text: [17, 24, 39] as const,
+  muted: [75, 85, 99] as const,
+  subtle: [156, 163, 175] as const,
+  border: [226, 232, 240] as const,
+  pageBg: [248, 250, 252] as const,
+  high: [220, 38, 38] as const,
+  medium: [217, 119, 6] as const,
+  lowGreen: [22, 163, 74] as const,
+  white: [255, 255, 255] as const,
 };
 
 @Injectable({ providedIn: 'root' })
 export class PdfExportService {
-
   constructor(private readonly builder: DocumentationBuilderService) {}
 
   async exportFromModel(
@@ -51,21 +50,26 @@ export class PdfExportService {
     for (const block of sections) {
       const lines = block.split('\n');
       const headerLine = lines[0];
-      const bodyLines  = lines.slice(2);
+      const bodyLines = lines.slice(2);
 
       if (!/^\d+\.\s/.test(headerLine)) continue;
 
       ctx.sectionHeader(headerLine.replace(/^\d+\.\s*/, ''));
       for (const line of bodyLines) {
-        if (!line.trim()) { ctx.spacer(3); continue; }
+        if (!line.trim()) {
+          ctx.spacer(3);
+          continue;
+        }
         if (line.startsWith('•')) {
           ctx.bulletList([line.replace(/^•\s*/, '')]);
         } else if (/^\[(\w+)\]/.test(line)) {
           const sev = (line.match(/^\[(\w+)\]/) ?? [])[1]?.toLowerCase() ?? 'low';
           const sevColor: [number, number, number] =
-            sev === 'critical' || sev === 'high' ? [C.high[0],     C.high[1],     C.high[2]] :
-            sev === 'medium'                      ? [C.medium[0],   C.medium[1],   C.medium[2]] :
-                                                   [C.lowGreen[0], C.lowGreen[1], C.lowGreen[2]];
+            sev === 'critical' || sev === 'high'
+              ? [C.high[0], C.high[1], C.high[2]]
+              : sev === 'medium'
+                ? [C.medium[0], C.medium[1], C.medium[2]]
+                : [C.lowGreen[0], C.lowGreen[1], C.lowGreen[2]];
           ctx.coloredLabel(line.replace(/^\[\w+\]\s*/, ''), sevColor);
         } else if (line.startsWith('  ')) {
           ctx.body(line.trim(), 9);
@@ -85,14 +89,16 @@ export class PdfExportService {
 
   private renderDocumentationCover(ctx: RenderContext, model: KnowledgeModel): void {
     const doc = ctx.doc;
-    const cx  = PAGE_W / 2;
+    const cx = PAGE_W / 2;
 
     const t = model.targetType;
-    const scopeLabel = t === 'file' ? 'FILE ANALYSIS' : t === 'folder' ? 'FOLDER ANALYSIS' : 'REPOSITORY ANALYSIS';
+    const scopeLabel =
+      t === 'file' ? 'FILE ANALYSIS' : t === 'folder' ? 'FOLDER ANALYSIS' : 'REPOSITORY ANALYSIS';
     const primaryLang = model.structure.languages[0] ?? model.targetType;
-    const subtitleLine = t === 'file'
-      ? `${primaryLang} · 1 file`
-      : `${model.targetType} · ${model.structure.totalFiles} files`;
+    const subtitleLine =
+      t === 'file'
+        ? `${primaryLang} · 1 file`
+        : `${model.targetType} · ${model.structure.totalFiles} files`;
 
     const HEADER_H = 72;
     doc.setFillColor(...C.brand);
@@ -112,14 +118,19 @@ export class PdfExportService {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(230, 225, 255);
-    const nameLines = doc.splitTextToSize(model.workspaceName ?? 'Workspace', CONTENT_W - 10) as string[];
+    const nameLines = doc.splitTextToSize(
+      model.workspaceName ?? 'Workspace',
+      CONTENT_W - 10,
+    ) as string[];
     doc.text(nameLines[0], cx, 38, { align: 'center' });
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(190, 185, 235);
     const date = new Date(model.metadata.builtAt).toLocaleDateString('en-GB', {
-      day: 'numeric', month: 'long', year: 'numeric',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
     });
     doc.text(date, cx, 49, { align: 'center' });
     doc.text(subtitleLine, cx, 57, { align: 'center' });
@@ -143,10 +154,18 @@ export class PdfExportService {
     ctx.body(model.targetType);
     ctx.spacer(4);
     ctx.fieldLabel('Generated');
-    ctx.body(new Date(model.metadata.builtAt).toLocaleString('en-GB', {
-      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-    }));
-    const techs = model.structure.technologies.map(t2 => t2.technology ?? String(t2)).filter(Boolean);
+    ctx.body(
+      new Date(model.metadata.builtAt).toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    );
+    const techs = model.structure.technologies
+      .map((t2) => t2.technology ?? String(t2))
+      .filter(Boolean);
     if (techs.length) {
       ctx.spacer(4);
       ctx.fieldLabel('Technologies');
@@ -177,9 +196,9 @@ export class PdfExportService {
   // ─── Cover / header ──────────────────────────────────────
   // Occupies ~25% of page 1. Centered, consulting-style.
   private renderCover(ctx: RenderContext, session: AnalysisSession): void {
-    const doc   = ctx.doc;
-    const cx    = PAGE_W / 2;   // horizontal center
-    const ai    = session.aiAnalysis;
+    const doc = ctx.doc;
+    const cx = PAGE_W / 2; // horizontal center
+    const ai = session.aiAnalysis;
 
     // ── Purple background block (~25% of page height) ──
     const HEADER_H = 72;
@@ -223,7 +242,9 @@ export class PdfExportService {
 
     // ── Generated date ──
     const date = new Date(session.createdAt).toLocaleDateString('en-GB', {
-      day: 'numeric', month: 'long', year: 'numeric'
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
     });
     doc.setFontSize(9);
     doc.setTextColor(190, 185, 235);
@@ -239,24 +260,27 @@ export class PdfExportService {
     // ── File metadata box ──
     const analysis = session.analysis;
     const metaDate = new Date(session.createdAt).toLocaleString('en-GB', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
 
     const rows: [string, string][] = [
-      ['File',            session.fileName],
-      ['Language',        analysis.language],
-      ['Type',            analysis.type],
-      ['Complexity',      analysis.complexity],
+      ['File', session.fileName],
+      ['Language', analysis.language],
+      ['Type', analysis.type],
+      ['Complexity', analysis.complexity],
       ['Maintainability', analysis.maintainability],
-      ['Generated',       metaDate],
+      ['Generated', metaDate],
     ];
     if (ai) rows.push(['AI Model', `${ai.provider} / ${ai.model}`]);
 
-    const rowH    = 7.5;
-    const boxH    = rows.length * rowH + 8;
-    const labelX  = MARGIN + 5;
-    const valueX  = MARGIN + 52;
+    const rowH = 7.5;
+    const boxH = rows.length * rowH + 8;
+    const labelX = MARGIN + 5;
+    const valueX = MARGIN + 52;
 
     doc.setFillColor(...C.pageBg);
     doc.setDrawColor(...C.border);
@@ -273,7 +297,7 @@ export class PdfExportService {
       doc.setFontSize(9);
       doc.setTextColor(...C.text);
       // Truncate long values to fit the box
-      const maxW  = CONTENT_W - (valueX - MARGIN) - 5;
+      const maxW = CONTENT_W - (valueX - MARGIN) - 5;
       const lines = doc.splitTextToSize(value, maxW) as string[];
       doc.text(lines[0], valueX, ctx.y);
 
@@ -284,12 +308,12 @@ export class PdfExportService {
 
   // ─── Summary ─────────────────────────────────────────────
   private renderSummary(ctx: RenderContext, session: AnalysisSession): void {
-    const ai  = session.aiAnalysis;
+    const ai = session.aiAnalysis;
     const ana = session.analysis;
 
-    const summary  = ai?.summary          || ana.summary                  || '';
-    const business = ai?.businessPurpose  || ana.businessPurpose          || '';
-    const simpler  = ai?.explainSimpler   || ana.simplifiedExplanation    || '';
+    const summary = ai?.summary || ana.summary || '';
+    const business = ai?.businessPurpose || ana.businessPurpose || '';
+    const simpler = ai?.explainSimpler || ana.simplifiedExplanation || '';
 
     ctx.sectionHeader('Summary');
     ctx.fieldLabel('Plain English Summary');
@@ -306,19 +330,30 @@ export class PdfExportService {
 
   // ─── Architecture ─────────────────────────────────────────
   private renderArchitecture(ctx: RenderContext, session: AnalysisSession): void {
-    const ai  = session.aiAnalysis;
+    const ai = session.aiAnalysis;
     const ana = session.analysis;
 
-    const patterns  = ai?.architecture?.patterns         ?? ana.patterns        ?? [];
-    const resps     = ai?.architecture?.responsibilities ?? ana.responsibilities ?? [];
-    const deps      = ai?.architecture?.dependencies     ?? ana.dependencies     ?? [];
+    const patterns = ai?.architecture?.patterns ?? ana.patterns ?? [];
+    const resps = ai?.architecture?.responsibilities ?? ana.responsibilities ?? [];
+    const deps = ai?.architecture?.dependencies ?? ana.dependencies ?? [];
 
     if (!patterns.length && !resps.length && !deps.length) return;
 
     ctx.sectionHeader('Architecture');
-    if (patterns.length) { ctx.fieldLabel('Patterns');         ctx.bulletList(patterns); ctx.spacer(4); }
-    if (resps.length)    { ctx.fieldLabel('Responsibilities');  ctx.bulletList(resps);    ctx.spacer(4); }
-    if (deps.length)     { ctx.fieldLabel('Dependencies');      ctx.bulletList(deps); }
+    if (patterns.length) {
+      ctx.fieldLabel('Patterns');
+      ctx.bulletList(patterns);
+      ctx.spacer(4);
+    }
+    if (resps.length) {
+      ctx.fieldLabel('Responsibilities');
+      ctx.bulletList(resps);
+      ctx.spacer(4);
+    }
+    if (deps.length) {
+      ctx.fieldLabel('Dependencies');
+      ctx.bulletList(deps);
+    }
   }
 
   // ─── Risks ────────────────────────────────────────────────
@@ -326,9 +361,11 @@ export class PdfExportService {
     const ai = session.aiAnalysis;
 
     const risks = ai?.risks?.length
-      ? ai.risks.map(r => ({ title: r.title, severity: r.severity, description: r.description }))
-      : (session.analysis.risks ?? []).map(r => ({
-          title: r.description, severity: r.severity, description: r.description
+      ? ai.risks.map((r) => ({ title: r.title, severity: r.severity, description: r.description }))
+      : (session.analysis.risks ?? []).map((r) => ({
+          title: r.description,
+          severity: r.severity,
+          description: r.description,
         }));
 
     if (!risks.length) return;
@@ -340,7 +377,7 @@ export class PdfExportService {
       const pillW = 16;
       const pillH = 6;
       const titleAvailW = CONTENT_W - pillW - 6;
-      const descAvailW  = CONTENT_W - pillW - 6;
+      const descAvailW = CONTENT_W - pillW - 6;
 
       // Measure title and description before touching ctx.y
       ctx.doc.setFontSize(9.5);
@@ -349,21 +386,23 @@ export class PdfExportService {
       const hasDesc = !!(risk.description && risk.description !== risk.title);
       ctx.doc.setFontSize(9);
       const descLines: string[] = hasDesc
-        ? ctx.doc.splitTextToSize(risk.description, descAvailW) as string[]
+        ? (ctx.doc.splitTextToSize(risk.description, descAvailW) as string[])
         : [];
 
       // Total height = badge/title row + optional description + bottom gap
       const titleRowH = Math.max(pillH, titleLines.length * SMALL_LH + 2);
-      const descH     = hasDesc ? descLines.length * BODY_LH + 2 : 0;
-      const totalH    = titleRowH + descH + 6;
+      const descH = hasDesc ? descLines.length * BODY_LH + 2 : 0;
+      const totalH = titleRowH + descH + 6;
 
       ctx.checkPage(totalH);
 
       const sev = risk.severity.toLowerCase();
       const sevColor: [number, number, number] =
-        sev === 'high'   ? [C.high[0],     C.high[1],     C.high[2]]   :
-        sev === 'medium' ? [C.medium[0],   C.medium[1],   C.medium[2]] :
-                           [C.lowGreen[0], C.lowGreen[1], C.lowGreen[2]];
+        sev === 'high'
+          ? [C.high[0], C.high[1], C.high[2]]
+          : sev === 'medium'
+            ? [C.medium[0], C.medium[1], C.medium[2]]
+            : [C.lowGreen[0], C.lowGreen[1], C.lowGreen[2]];
 
       // ── Draw severity pill ──
       ctx.doc.setFillColor(sevColor[0], sevColor[1], sevColor[2]);
@@ -371,16 +410,13 @@ export class PdfExportService {
       ctx.doc.setFont('helvetica', 'bold');
       ctx.doc.setFontSize(6.5);
       ctx.doc.setTextColor(...C.white);
-      ctx.doc.text(
-        risk.severity.toUpperCase(),
-        MARGIN + pillW / 2,
-        ctx.y + pillH / 2 + 1.2,
-        { align: 'center' }
-      );
+      ctx.doc.text(risk.severity.toUpperCase(), MARGIN + pillW / 2, ctx.y + pillH / 2 + 1.2, {
+        align: 'center',
+      });
 
       // ── Draw title — vertically centered with the pill ──
-      const titleX    = MARGIN + pillW + 4;
-      const titleBaseY = ctx.y + pillH / 2 + 1.5;  // baseline of first line, aligned to pill center
+      const titleX = MARGIN + pillW + 4;
+      const titleBaseY = ctx.y + pillH / 2 + 1.5; // baseline of first line, aligned to pill center
       ctx.doc.setFont('helvetica', 'bold');
       ctx.doc.setFontSize(9.5);
       ctx.doc.setTextColor(...C.text);
@@ -401,7 +437,7 @@ export class PdfExportService {
         }
       }
 
-      ctx.y += 6;  // gap between risk entries
+      ctx.y += 6; // gap between risk entries
     }
   }
 
@@ -411,8 +447,9 @@ export class PdfExportService {
 
     const items = ai?.modernizations?.length
       ? ai.modernizations
-      : (session.analysis.modernizationSuggestions ?? []).map(m => ({
-          title: m.description, description: m.description
+      : (session.analysis.modernizationSuggestions ?? []).map((m) => ({
+          title: m.description,
+          description: m.description,
         }));
 
     if (!items.length) return;
@@ -450,24 +487,43 @@ export class PdfExportService {
 
   // ─── Documentation ────────────────────────────────────────
   private renderDocumentation(ctx: RenderContext, session: AnalysisSession): void {
-    const ai  = session.aiAnalysis;
+    const ai = session.aiAnalysis;
     const ana = session.analysis;
-    const d   = ai?.documentation;
+    const d = ai?.documentation;
 
-    const overview  = d?.overview        || ana.summary                  || '';
-    const resps     = d?.responsibilities || ana.responsibilities?.join('. ') || '';
-    const workflow  = d?.workflow         || ana.dataFlow                 || '';
-    const deps      = d?.keyDependencies  || ana.dependencies?.join(', ') || '';
-    const notes     = d?.technicalNotes   || ana.developerNotes           || '';
+    const overview = d?.overview || ana.summary || '';
+    const resps = d?.responsibilities || ana.responsibilities?.join('. ') || '';
+    const workflow = d?.workflow || ana.dataFlow || '';
+    const deps = d?.keyDependencies || ana.dependencies?.join(', ') || '';
+    const notes = d?.technicalNotes || ana.developerNotes || '';
 
     if (!overview && !resps && !workflow && !deps && !notes) return;
 
     ctx.sectionHeader('Documentation');
-    if (overview) { ctx.fieldLabel('Overview');          ctx.body(overview); ctx.spacer(5); }
-    if (resps)    { ctx.fieldLabel('Responsibilities');  ctx.body(resps);    ctx.spacer(5); }
-    if (workflow) { ctx.fieldLabel('Workflow');          ctx.body(workflow); ctx.spacer(5); }
-    if (deps)     { ctx.fieldLabel('Key Dependencies');  ctx.body(deps);     ctx.spacer(5); }
-    if (notes)    { ctx.fieldLabel('Technical Notes');   ctx.body(notes); }
+    if (overview) {
+      ctx.fieldLabel('Overview');
+      ctx.body(overview);
+      ctx.spacer(5);
+    }
+    if (resps) {
+      ctx.fieldLabel('Responsibilities');
+      ctx.body(resps);
+      ctx.spacer(5);
+    }
+    if (workflow) {
+      ctx.fieldLabel('Workflow');
+      ctx.body(workflow);
+      ctx.spacer(5);
+    }
+    if (deps) {
+      ctx.fieldLabel('Key Dependencies');
+      ctx.body(deps);
+      ctx.spacer(5);
+    }
+    if (notes) {
+      ctx.fieldLabel('Technical Notes');
+      ctx.body(notes);
+    }
   }
 
   // ─── Page footers (written last so page count is correct) ─
@@ -486,17 +542,10 @@ export class PdfExportService {
       ctx.doc.setTextColor(...C.subtle);
 
       // Left: brand text
-      ctx.doc.text(
-        'SystemLens  |  AI-Powered Codebase Intelligence',
-        MARGIN, PAGE_H - 9
-      );
+      ctx.doc.text('SystemLens  |  AI-Powered Codebase Intelligence', MARGIN, PAGE_H - 9);
 
       // Right: page number
-      ctx.doc.text(
-        `Page ${i} of ${total}`,
-        PAGE_W - MARGIN, PAGE_H - 9,
-        { align: 'right' }
-      );
+      ctx.doc.text(`Page ${i} of ${total}`, PAGE_W - MARGIN, PAGE_H - 9, { align: 'right' });
     }
   }
 }

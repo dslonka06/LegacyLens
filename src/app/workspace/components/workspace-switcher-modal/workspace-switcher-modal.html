@@ -1,26 +1,30 @@
 <div class="ws-switcher-overlay" (click)="dismiss()">
   <div class="ws-switcher-modal" (click)="$event.stopPropagation()">
-
     <div class="wsm-header">
       <div class="wsm-title-group">
         <h2 class="wsm-title">{{ limitReached ? 'Workspace Limit Reached' : 'Workspaces' }}</h2>
         <p class="wsm-subtitle" *ngIf="limitReached">
           You have 3 workspaces open. Delete one to create a new workspace.
         </p>
-        <p class="wsm-subtitle" *ngIf="!limitReached">
-          {{ workspaces.length }}/3 workspaces open
-        </p>
+        <p class="wsm-subtitle" *ngIf="!limitReached">{{ workspaces.length }}/3 workspaces open</p>
       </div>
       <button class="wsm-close-btn" (click)="dismiss()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
     </div>
 
     <!-- Workspace list -->
     <div class="wsm-list">
-
       <div
         *ngFor="let ws of workspaces"
         class="wsm-item"
@@ -33,28 +37,31 @@
         </div>
 
         <div class="wsm-item-right">
-          <span class="wsm-status-badge" [ngClass]="statusClass(ws.status)">{{ statusLabel(ws.status) }}</span>
+          <span class="wsm-status-badge" [ngClass]="statusClass(ws.status)">{{
+            statusLabel(ws.status)
+          }}</span>
 
-          <button
-            class="wsm-delete-btn"
-            (click)="delete(ws, $event)"
-            title="Delete workspace"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-              <path d="M9 6V4h6v2"/>
+          <button class="wsm-delete-btn" (click)="delete(ws, $event)" title="Delete workspace">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              <path d="M9 6V4h6v2" />
             </svg>
           </button>
         </div>
-
       </div>
 
       <!-- Empty state -->
       <div class="wsm-empty" *ngIf="workspaces.length === 0">
         <p>No workspaces open.</p>
       </div>
-
     </div>
-
   </div>
 </div>

@@ -2,8 +2,18 @@
   <div class="page-header">
     <div class="page-title">
       <div class="page-icon slate">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="3" />
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+          />
         </svg>
       </div>
       <div>
@@ -14,7 +24,6 @@
   </div>
 
   <div class="page-content">
-
     <div class="settings-group">
       <div class="settings-group-label">Appearance</div>
       <div class="settings-row">
@@ -23,8 +32,12 @@
           <span class="settings-desc">Application color scheme</span>
         </div>
         <div class="settings-control">
-          <button class="select-pill" [class.active]="theme.isDark" (click)="theme.toggle()">Dark</button>
-          <button class="select-pill" [class.active]="!theme.isDark" (click)="theme.toggle()">Light</button>
+          <button class="select-pill" [class.active]="theme.isDark" (click)="theme.toggle()">
+            Dark
+          </button>
+          <button class="select-pill" [class.active]="!theme.isDark" (click)="theme.toggle()">
+            Light
+          </button>
         </div>
       </div>
     </div>
@@ -37,7 +50,12 @@
           <span class="settings-desc">AI service used for analysis (e.g. openai, anthropic)</span>
         </div>
         <div class="settings-control">
-          <input class="settings-input" type="text" [(ngModel)]="aiProvider" placeholder="e.g. anthropic" />
+          <input
+            class="settings-input"
+            type="text"
+            [(ngModel)]="aiProvider"
+            placeholder="e.g. anthropic"
+          />
         </div>
       </div>
       <div class="settings-row">
@@ -46,16 +64,28 @@
           <span class="settings-desc">Model identifier for AI requests</span>
         </div>
         <div class="settings-control">
-          <input class="settings-input" type="text" [(ngModel)]="aiModel" placeholder="e.g. claude-sonnet-4-6" />
+          <input
+            class="settings-input"
+            type="text"
+            [(ngModel)]="aiModel"
+            placeholder="e.g. claude-sonnet-4-6"
+          />
         </div>
       </div>
       <div class="settings-row">
         <div class="settings-info">
           <span class="settings-name">Provider URL</span>
-          <span class="settings-desc">Base URL for the AI backend (e.g. http://localhost:5000)</span>
+          <span class="settings-desc"
+            >Base URL for the AI backend (e.g. http://localhost:5000)</span
+          >
         </div>
         <div class="settings-control">
-          <input class="settings-input" type="text" [(ngModel)]="aiProviderUrl" placeholder="http://localhost:5000" />
+          <input
+            class="settings-input"
+            type="text"
+            [(ngModel)]="aiProviderUrl"
+            placeholder="http://localhost:5000"
+          />
         </div>
       </div>
       <div class="settings-row settings-row--action">
@@ -69,10 +99,14 @@
       <div class="settings-group-label">Application Information</div>
       <div class="settings-about">
         <div class="about-row"><span>Version</span><span>1.0.0</span></div>
-        <div class="about-row"><span>Storage</span><span>{{ electron.isElectron ? 'SQLite' : 'Browser localStorage' }}</span></div>
-        <div class="about-row"><span>Framework</span><span>Angular 21 · Standalone Components</span></div>
+        <div class="about-row">
+          <span>Storage</span
+          ><span>{{ electron.isElectron ? 'SQLite' : 'Browser localStorage' }}</span>
+        </div>
+        <div class="about-row">
+          <span>Framework</span><span>Angular 21 · Standalone Components</span>
+        </div>
       </div>
     </div>
-
   </div>
 </div>

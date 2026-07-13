@@ -37,14 +37,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
 
-  img { border-radius: 6px; }
+  img {
+    border-radius: 6px;
+  }
 
   &:hover {
     background: var(--bg-hover);
-    border-color: rgba(141,99,255,0.3);
-    box-shadow: 0 0 0 1px rgba(141,99,255,0.15);
+    border-color: rgba(141, 99, 255, 0.3);
+    box-shadow: 0 0 0 1px rgba(141, 99, 255, 0.15);
   }
 }
 
@@ -58,7 +63,9 @@
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 // ─── Bottom ──────────────────────────────────────────────
@@ -95,7 +102,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.1s;
   color: var(--text-secondary);
 
   svg {
@@ -112,14 +123,19 @@
   border-color: var(--border);
   color: var(--text-primary);
 
-  svg { transform: scale(1.05); }
+  svg {
+    transform: scale(1.05);
+  }
 }
 
 .sidebar-btn.active .sidebar-btn-card {
   background: var(--accent);
   border-color: var(--accent);
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(141,99,255,0.35);
+  box-shadow: 0 4px 14px rgba(141, 99, 255, 0.35);
 
-  svg { color: #ffffff; transform: none; }
+  svg {
+    color: #ffffff;
+    transform: none;
+  }
 }

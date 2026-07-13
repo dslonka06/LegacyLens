@@ -2,30 +2,67 @@
   *ngIf="validationResult"
   [result]="validationResult"
   (proceed)="onValidationProceed($event)"
-  (cancel)="onValidationCancel()">
+  (cancel)="onValidationCancel()"
+>
 </app-validation-dialog>
 
 <div class="home-page">
-
   <!-- ── Header ───────────────────────────────────────────────────────────── -->
   <header class="home-header">
     <div class="home-header-actions">
-      <button class="home-header-btn" (click)="theme.toggle()" [title]="theme.isDark ? 'Light mode' : 'Dark mode'">
-        <svg *ngIf="theme.isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
-          <circle cx="12" cy="12" r="5"/>
-          <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      <button
+        class="home-header-btn"
+        (click)="theme.toggle()"
+        [title]="theme.isDark ? 'Light mode' : 'Dark mode'"
+      >
+        <svg
+          *ngIf="theme.isDark"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          width="15"
+          height="15"
+        >
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
         </svg>
-        <svg *ngIf="!theme.isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        <svg
+          *ngIf="!theme.isDark"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          width="15"
+          height="15"
+        >
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
         </svg>
       </button>
       <a routerLink="/settings" class="home-header-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          width="15"
+          height="15"
+        >
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
         </svg>
         Settings
       </a>
@@ -34,14 +71,23 @@
 
   <!-- ── Body ─────────────────────────────────────────────────────────────── -->
   <main class="home-main">
-
     <!-- Hero -->
     <section class="home-hero">
       <div class="home-hero-brand">
         <div class="home-hero-logo">
-          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            <path d="M11 8v6M8 11h6"/>
+          <svg
+            width="52"
+            height="52"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+            <path d="M11 8v6M8 11h6" />
           </svg>
         </div>
         <span class="home-hero-brand-name">SystemLens</span>
@@ -51,10 +97,12 @@
         <span class="home-hero-dot"></span>
         AI-Powered Code Intelligence
       </div>
-      <h1 class="home-hero-title">Understand any codebase,<br><span class="home-hero-gradient">instantly.</span></h1>
+      <h1 class="home-hero-title">
+        Understand any codebase,<br /><span class="home-hero-gradient">instantly.</span>
+      </h1>
       <p class="home-hero-subtitle">
-        Upload a file, folder, or full repository. SystemLens reveals architecture,
-        data flows, dependencies, risks, and generates documentation — powered by AI.
+        Upload a file, folder, or full repository. SystemLens reveals architecture, data flows,
+        dependencies, risks, and generates documentation — powered by AI.
       </p>
     </section>
 
@@ -64,8 +112,18 @@
         <span class="home-section-label">Your Repositories</span>
         <div class="home-section-line"></div>
         <button class="home-header-btn lib-add-btn" (click)="addRepository()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            width="13"
+            height="13"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
           Add Repository
         </button>
@@ -73,10 +131,19 @@
 
       <!-- Empty state -->
       <div class="lib-empty" *ngIf="repositories.length === 0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
-          <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
-          <line x1="12" y1="12" x2="12" y2="15"/>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="18" r="3" />
+          <circle cx="6" cy="6" r="3" />
+          <circle cx="18" cy="6" r="3" />
+          <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" />
+          <line x1="12" y1="12" x2="12" y2="15" />
         </svg>
         <span>No repositories yet. Add one to get started.</span>
       </div>
@@ -88,14 +155,23 @@
           *ngFor="let repo of repositories"
           (click)="openRepository(repo)"
           [class.lib-card-loading]="isLoadingRepo === repo.id"
-          [class.lib-card-missing]="isPathMissing(repo.id)">
-
+          [class.lib-card-missing]="isPathMissing(repo.id)"
+        >
           <div class="lib-card-main">
             <div class="lib-card-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
-                <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
-                <line x1="12" y1="12" x2="12" y2="15"/>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="18" r="3" />
+                <circle cx="6" cy="6" r="3" />
+                <circle cx="18" cy="6" r="3" />
+                <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" />
+                <line x1="12" y1="12" x2="12" y2="15" />
               </svg>
             </div>
             <div class="lib-card-info">
@@ -107,7 +183,8 @@
                 (keydown.enter)="commitRename(repo)"
                 (keydown.escape)="cancelRename()"
                 (blur)="commitRename(repo)"
-                autofocus />
+                autofocus
+              />
               <div class="lib-card-name" *ngIf="editingRepoId !== repo.id">
                 {{ repo.name }}
                 <span class="lib-badge-missing" *ngIf="isPathMissing(repo.id)">Path missing</span>
@@ -119,35 +196,62 @@
           <div class="lib-card-meta">
             <div class="lib-card-tags">
               <span class="lib-tag lib-tag-lang" *ngIf="repo.language">{{ repo.language }}</span>
-              <span class="lib-tag lib-tag-framework" *ngIf="repo.framework">{{ repo.framework }}</span>
+              <span class="lib-tag lib-tag-framework" *ngIf="repo.framework">{{
+                repo.framework
+              }}</span>
             </div>
             <div class="lib-card-actions">
               <span class="lib-card-date">{{ formatLastOpened(repo.lastOpened) }}</span>
               <button
                 class="lib-card-action-btn"
                 (click)="startRename($event, repo)"
-                title="Rename">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                title="Rename"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
               </button>
               <button
                 class="lib-card-action-btn"
                 [class.lib-card-action-btn-spinning]="refreshingRepoId === repo.id"
                 (click)="refreshRepo($event, repo)"
-                title="Refresh">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="23 4 23 10 17 10"/>
-                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                title="Refresh"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="23 4 23 10 17 10" />
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                 </svg>
               </button>
               <button
                 class="lib-card-remove"
                 (click)="removeRepository($event, repo.id)"
-                title="Remove from library">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                title="Remove from library"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
             </div>
@@ -165,29 +269,47 @@
         <div class="home-section-line"></div>
       </div>
       <div class="home-workspace-grid">
-
         <a routerLink="/file-analysis" class="hwc hwc-file">
           <div class="hwc-body">
             <div class="hwc-top">
               <div class="hwc-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
                 </svg>
               </div>
               <span class="hwc-scope">Single file</span>
             </div>
             <div class="hwc-title">File Analysis</div>
-            <div class="hwc-desc">Language detection, complexity, architecture patterns, data flow, and AI documentation for a single source file.</div>
+            <div class="hwc-desc">
+              Language detection, complexity, architecture patterns, data flow, and AI documentation
+              for a single source file.
+            </div>
             <div class="hwc-footer">
               <div class="hwc-tags">
                 <span class="hwc-tag">Instant</span>
                 <span class="hwc-tag">Deep dive</span>
               </div>
               <div class="hwc-arrow">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
                 </svg>
               </div>
             </div>
@@ -198,22 +320,42 @@
           <div class="hwc-body">
             <div class="hwc-top">
               <div class="hwc-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                  />
                 </svg>
               </div>
               <span class="hwc-scope">Feature scope</span>
             </div>
             <div class="hwc-title">Folder Analysis</div>
-            <div class="hwc-desc">Explore file relationships, dependency graphs, workflows, and folder-level architecture across a feature or module.</div>
+            <div class="hwc-desc">
+              Explore file relationships, dependency graphs, workflows, and folder-level
+              architecture across a feature or module.
+            </div>
             <div class="hwc-footer">
               <div class="hwc-tags">
                 <span class="hwc-tag">Dependencies</span>
                 <span class="hwc-tag">Workflows</span>
               </div>
               <div class="hwc-arrow">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
                 </svg>
               </div>
             </div>
@@ -224,30 +366,49 @@
           <div class="hwc-body">
             <div class="hwc-top">
               <div class="hwc-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
-                  <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
-                  <line x1="12" y1="12" x2="12" y2="15"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="18" r="3" />
+                  <circle cx="6" cy="6" r="3" />
+                  <circle cx="18" cy="6" r="3" />
+                  <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" />
+                  <line x1="12" y1="12" x2="12" y2="15" />
                 </svg>
               </div>
               <span class="hwc-scope">Full repository</span>
             </div>
             <div class="hwc-title">Repository Analysis</div>
-            <div class="hwc-desc">Navigate the full file tree, inspect system-wide architecture, discover business workflows, and generate complete documentation.</div>
+            <div class="hwc-desc">
+              Navigate the full file tree, inspect system-wide architecture, discover business
+              workflows, and generate complete documentation.
+            </div>
             <div class="hwc-footer">
               <div class="hwc-tags">
                 <span class="hwc-tag">System-wide</span>
                 <span class="hwc-tag">Docs</span>
               </div>
               <div class="hwc-arrow">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
                 </svg>
               </div>
             </div>
           </div>
         </a>
-
       </div>
     </section>
 
@@ -258,12 +419,20 @@
         <div class="home-section-line"></div>
       </div>
       <div class="home-cap-grid">
-
         <div class="home-cap-item home-cap-arch">
           <div class="home-cap-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-              <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
             </svg>
           </div>
           <div class="home-cap-label">Architecture</div>
@@ -272,8 +441,15 @@
 
         <div class="home-cap-item home-cap-flow">
           <div class="home-cap-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
           </div>
           <div class="home-cap-label">Data Flow</div>
@@ -282,8 +458,15 @@
 
         <div class="home-cap-item home-cap-security">
           <div class="home-cap-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
           </div>
           <div class="home-cap-label">Security</div>
@@ -292,9 +475,16 @@
 
         <div class="home-cap-item home-cap-recs">
           <div class="home-cap-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 11 12 14 22 4"/>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="9 11 12 14 22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
           </div>
           <div class="home-cap-label">Recommendations</div>
@@ -303,9 +493,17 @@
 
         <div class="home-cap-item home-cap-deps">
           <div class="home-cap-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/>
-              <path d="M6 21V9a9 9 0 0 0 9 9"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="18" cy="18" r="3" />
+              <circle cx="6" cy="6" r="3" />
+              <path d="M6 21V9a9 9 0 0 0 9 9" />
             </svg>
           </div>
           <div class="home-cap-label">Dependencies</div>
@@ -314,19 +512,24 @@
 
         <div class="home-cap-item home-cap-docs">
           <div class="home-cap-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
           </div>
           <div class="home-cap-label">Documentation</div>
           <div class="home-cap-desc">AI-generated docs and export to PDF</div>
         </div>
-
       </div>
     </section>
-
   </main>
-
 </div>

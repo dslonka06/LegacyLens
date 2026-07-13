@@ -5,15 +5,15 @@ import { WorkspaceType } from '@app/workspace/models/workspace-entity.model';
 
 function typeFromSegments(segments: string[]): WorkspaceType | null {
   const first = segments[0];
-  if (first === 'file-analysis')       return 'file';
-  if (first === 'folder-analysis')     return 'folder';
+  if (first === 'file-analysis') return 'file';
+  if (first === 'folder-analysis') return 'folder';
   if (first === 'repository-analysis') return 'repository';
   return null;
 }
 
 export const workspaceInitGuard: CanActivateFn = (route, state) => {
   const manager = inject(WorkspaceManagerService);
-  const router  = inject(Router);
+  const router = inject(Router);
 
   const segments = state.url.split('/').filter(Boolean);
   const type = typeFromSegments(segments);
@@ -25,9 +25,12 @@ export const workspaceInitGuard: CanActivateFn = (route, state) => {
     // route (or home if no workspace is active) so the page can open the modal.
     const active = manager.getActive();
     if (active) {
-      const activeBase = active.type === 'file' ? 'file-analysis'
-                       : active.type === 'folder' ? 'folder-analysis'
-                       : 'repository-analysis';
+      const activeBase =
+        active.type === 'file'
+          ? 'file-analysis'
+          : active.type === 'folder'
+            ? 'folder-analysis'
+            : 'repository-analysis';
       return router.createUrlTree([activeBase]);
     }
     return router.createUrlTree(['/']);

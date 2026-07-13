@@ -4,17 +4,28 @@ import { createHighlighter, type Highlighter } from 'shiki';
 import { ThemeService } from './theme.service';
 
 const SUPPORTED_LANGUAGES = [
-  'typescript', 'javascript', 'csharp', 'html', 'css', 'scss',
-  'less', 'sql', 'python', 'json', 'xml', 'markdown', 'yaml', 'shellscript',
+  'typescript',
+  'javascript',
+  'csharp',
+  'html',
+  'css',
+  'scss',
+  'less',
+  'sql',
+  'python',
+  'json',
+  'xml',
+  'markdown',
+  'yaml',
+  'shellscript',
   'plaintext',
 ] as const;
 
-const DARK_THEME  = 'github-dark-dimmed';
+const DARK_THEME = 'github-dark-dimmed';
 const LIGHT_THEME = 'github-light';
 
 @Injectable({ providedIn: 'root' })
 export class SyntaxHighlightService {
-
   /** Emits whenever the active theme changes — subscribers should re-highlight. */
   readonly themeChange$: Observable<boolean>;
 
@@ -31,7 +42,7 @@ export class SyntaxHighlightService {
     this.initPromise = createHighlighter({
       themes: [DARK_THEME, LIGHT_THEME],
       langs: [...SUPPORTED_LANGUAGES],
-    }).then(h => {
+    }).then((h) => {
       this.highlighter = h;
     });
 
@@ -53,10 +64,7 @@ export class SyntaxHighlightService {
   }
 
   private fallback(code: string): string {
-    const escaped = code
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+    const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return `<pre class="shiki-fallback"><code>${escaped}</code></pre>`;
   }
 }

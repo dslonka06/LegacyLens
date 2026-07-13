@@ -1,7 +1,11 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { Workspace, WorkspaceStatus, WorkspaceType } from '@app/workspace/models/workspace-entity.model';
+import {
+  Workspace,
+  WorkspaceStatus,
+  WorkspaceType,
+} from '@app/workspace/models/workspace-entity.model';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 
 @Component({
@@ -12,7 +16,6 @@ import { WorkspaceManagerService } from '@app/workspace/services/workspace-manag
   styleUrl: './workspace-switcher-modal.scss',
 })
 export class WorkspaceSwitcherModal implements OnInit, OnDestroy {
-
   // When true the modal was opened because the workspace limit was reached
   @Input() limitReached = false;
   @Output() close = new EventEmitter<void>();
@@ -25,13 +28,15 @@ export class WorkspaceSwitcherModal implements OnInit, OnDestroy {
   constructor(private readonly manager: WorkspaceManagerService) {}
 
   ngOnInit(): void {
-    this.sub = this.manager.workspaces$.subscribe(ws => {
+    this.sub = this.manager.workspaces$.subscribe((ws) => {
       this.workspaces = ws;
     });
     this.activeId = this.manager.activeId;
   }
 
-  ngOnDestroy(): void { this.sub?.unsubscribe(); }
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
 
   open(ws: Workspace): void {
     this.manager.activate(ws.id);
@@ -50,8 +55,8 @@ export class WorkspaceSwitcherModal implements OnInit, OnDestroy {
 
   typeLabel(type: WorkspaceType): string {
     const map: Record<WorkspaceType, string> = {
-      file:       'File Analysis',
-      folder:     'Folder Analysis',
+      file: 'File Analysis',
+      folder: 'Folder Analysis',
       repository: 'Repository Analysis',
     };
     return map[type];
@@ -59,22 +64,22 @@ export class WorkspaceSwitcherModal implements OnInit, OnDestroy {
 
   statusLabel(status: WorkspaceStatus): string {
     const map: Record<WorkspaceStatus, string> = {
-      'empty':      'Empty',
-      'processing': 'Analyzing',
-      'ready':      'Ready',
-      'failed':     'Incomplete',
-      'error':      'Error',
+      empty: 'Empty',
+      processing: 'Analyzing',
+      ready: 'Ready',
+      failed: 'Incomplete',
+      error: 'Error',
     };
     return map[status];
   }
 
   statusClass(status: WorkspaceStatus): string {
     const map: Record<WorkspaceStatus, string> = {
-      'empty':      'status-empty',
-      'processing': 'status-analyzing',
-      'ready':      'status-loaded',
-      'failed':     'status-failed',
-      'error':      'status-error',
+      empty: 'status-empty',
+      processing: 'status-analyzing',
+      ready: 'status-loaded',
+      failed: 'status-failed',
+      error: 'status-error',
     };
     return map[status];
   }

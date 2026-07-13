@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { SystemUnderstanding } from '@app/analysis/models/system-understanding.model';
@@ -12,12 +11,11 @@ import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 @Component({
   selector: 'app-system-understanding-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ExplanationCard, CodeEditor, ResizeDividerComponent],
+  imports: [CommonModule, ExplanationCard, CodeEditor, ResizeDividerComponent],
   templateUrl: './system-understanding-page.html',
   styleUrl: './system-understanding-page.scss',
 })
 export class SystemUnderstandingPage implements OnInit, OnDestroy {
-
   understanding: SystemUnderstanding | null = null;
   hasWorkspace = false;
   codeEditorWidth = 420;
@@ -31,13 +29,15 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.codeEditorWidth = this.layoutService.load('understanding-code')?.[0] ?? 420;
-    this.sub = this.manager.activeWorkspace$.subscribe(ws => {
-      this.hasWorkspace  = ws !== null;
+    this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
+      this.hasWorkspace = ws !== null;
       this.understanding = ws?.knowledgeModel?.ai?.understanding ?? null;
     });
   }
 
-  ngOnDestroy(): void { this.sub?.unsubscribe(); }
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
 
   onCodePanelResize(width: number): void {
     this.codeEditorWidth = width;
@@ -49,9 +49,11 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
   }
 
   get sourceFileName(): string | undefined {
-    return this.manager.getActive()?.knowledgeModel?.structure.filePath
-      ?? this.manager.getActive()?.knowledgeModel?.workspaceName
-      ?? undefined;
+    return (
+      this.manager.getActive()?.knowledgeModel?.structure.filePath ??
+      this.manager.getActive()?.knowledgeModel?.workspaceName ??
+      undefined
+    );
   }
 
   get showExplanationCard(): boolean {
@@ -60,8 +62,12 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
 
   depTypeLabel(type: string): string {
     const map: Record<string, string> = {
-      framework: 'Framework', database: 'Database', queue: 'Queue',
-      storage: 'Storage',     external: 'External',  internal: 'Internal',
+      framework: 'Framework',
+      database: 'Database',
+      queue: 'Queue',
+      storage: 'Storage',
+      external: 'External',
+      internal: 'Internal',
     };
     return map[type] ?? type;
   }

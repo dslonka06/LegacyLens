@@ -38,7 +38,10 @@
   border-radius: 20px;
   padding: 2px 7px;
   flex-shrink: 0;
-  svg { width: 10px; height: 10px; }
+  svg {
+    width: 10px;
+    height: 10px;
+  }
 }
 
 .ec-title {
@@ -64,7 +67,10 @@
   border-radius: 5px;
   color: var(--text-muted);
   transition: all 0.12s;
-  svg { width: 13px; height: 13px; }
+  svg {
+    width: 13px;
+    height: 13px;
+  }
 
   &:hover {
     background: var(--bg-secondary);
@@ -103,7 +109,11 @@
   flex-shrink: 0;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .ec-skeleton {
   display: flex;
@@ -123,14 +133,24 @@
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 
-  &.long   { width: 92%; }
-  &.medium { width: 70%; }
-  &.short  { width: 50%; }
+  &.long {
+    width: 92%;
+  }
+  &.medium {
+    width: 70%;
+  }
+  &.short {
+    width: 50%;
+  }
 }
 
 @keyframes shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 // ─── Error ───────────────────────────────────────────────
@@ -203,7 +223,9 @@
   padding-bottom: 6px;
   border-bottom: 1px solid rgba(124, 92, 255, 0.15);
 
-  &:first-child { margin-top: 0; }
+  &:first-child {
+    margin-top: 0;
+  }
 }
 
 .ec-para {

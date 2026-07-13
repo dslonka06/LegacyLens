@@ -26,7 +26,6 @@ export interface OpenDialogOptions {
 
 @Injectable({ providedIn: 'root' })
 export class ElectronService {
-
   get isElectron(): boolean {
     return !!(window as any).electronAPI;
   }
@@ -47,7 +46,10 @@ export class ElectronService {
     return this.api.repositories.add(request);
   }
 
-  async updateRepository(id: string, updates: UpdateRepositoryRequest): Promise<ElectronRepository | null> {
+  async updateRepository(
+    id: string,
+    updates: UpdateRepositoryRequest,
+  ): Promise<ElectronRepository | null> {
     if (!this.api) return null;
     return this.api.repositories.update(id, updates);
   }
@@ -86,7 +88,10 @@ export class ElectronService {
 
   // ── File Metadata ─────────────────────────────────────────────────────────
 
-  async syncFileMetadata(repositoryId: string, files: SyncFileEntry[]): Promise<{ upserted: number; unchanged: number } | null> {
+  async syncFileMetadata(
+    repositoryId: string,
+    files: SyncFileEntry[],
+  ): Promise<{ upserted: number; unchanged: number } | null> {
     if (!this.api) return null;
     return this.api.files.sync(repositoryId, files);
   }
@@ -96,7 +101,10 @@ export class ElectronService {
     return this.api.files.getAll(repositoryId);
   }
 
-  async getChangedFiles(repositoryId: string, currentFiles: Array<{ relativePath: string; hash: string }>): Promise<string[]> {
+  async getChangedFiles(
+    repositoryId: string,
+    currentFiles: Array<{ relativePath: string; hash: string }>,
+  ): Promise<string[]> {
     if (!this.api) return [];
     return this.api.files.getChanged(repositoryId, currentFiles);
   }
@@ -113,7 +121,10 @@ export class ElectronService {
     return paths?.[0] ?? null;
   }
 
-  async pickFile(title = 'Select File', filters?: OpenDialogOptions['filters']): Promise<string | null> {
+  async pickFile(
+    title = 'Select File',
+    filters?: OpenDialogOptions['filters'],
+  ): Promise<string | null> {
     const paths = await this.openDialog({ title, properties: ['openFile'], filters });
     return paths?.[0] ?? null;
   }
@@ -133,7 +144,9 @@ export class ElectronService {
     return this.api.filesystem.onScanProgress(callback);
   }
 
-  async pickAndReadFolder(title = 'Select Folder'): Promise<{ folderPath: string; files: ElectronDirectoryEntry[] } | null> {
+  async pickAndReadFolder(
+    title = 'Select Folder',
+  ): Promise<{ folderPath: string; files: ElectronDirectoryEntry[] } | null> {
     const folderPath = await this.pickFolder(title);
     if (!folderPath) return null;
     const files = await this.readDirectory(folderPath);
@@ -197,7 +210,9 @@ export class ElectronService {
     return this.api.intelligence.buildDependencyGraph(sourceFiles);
   }
 
-  async intelligenceExploreDependencies(graph: unknown): Promise<{ hubs: unknown[]; orphans: unknown[]; ranked: unknown[] } | null> {
+  async intelligenceExploreDependencies(
+    graph: unknown,
+  ): Promise<{ hubs: unknown[]; orphans: unknown[]; ranked: unknown[] } | null> {
     if (!this.api) return null;
     return this.api.intelligence.exploreDependencies(graph);
   }
@@ -232,7 +247,12 @@ export class ElectronService {
     return this.api.intelligence.exploreWorkflows(flows);
   }
 
-  async intelligenceLearningPath(model: KnowledgeModel, _ignored: null, understanding: unknown, scope: string): Promise<unknown> {
+  async intelligenceLearningPath(
+    model: KnowledgeModel,
+    _ignored: null,
+    understanding: unknown,
+    scope: string,
+  ): Promise<unknown> {
     if (!this.api) return null;
     return this.api.intelligence.learningPath(model);
   }
@@ -257,7 +277,11 @@ export class ElectronService {
     return this.api.intelligence.insights(knowledge);
   }
 
-  async intelligenceBuildSummary(workspaceContext: unknown, knowledge: unknown, session: unknown): Promise<unknown> {
+  async intelligenceBuildSummary(
+    workspaceContext: unknown,
+    knowledge: unknown,
+    session: unknown,
+  ): Promise<unknown> {
     if (!this.api) return null;
     return this.api.intelligence.buildSummary(workspaceContext, knowledge, session);
   }
@@ -271,7 +295,10 @@ export class ElectronService {
 
   // ── Capability Pipeline (D2/D3) ───────────────────────────────────────────
 
-  async runPipeline(targetType: 'file' | 'folder' | 'repository', files: unknown[]): Promise<unknown> {
+  async runPipeline(
+    targetType: 'file' | 'folder' | 'repository',
+    files: unknown[],
+  ): Promise<unknown> {
     if (!this.api) return null;
     return this.api.intelligence.runPipeline(targetType, files);
   }
@@ -284,7 +311,12 @@ export class ElectronService {
   async buildKnowledgeModel(
     targetType: 'file' | 'folder' | 'repository',
     files: unknown[],
-    options?: { repositoryPath?: string; workspaceName?: string; repositoryId?: string; persist?: boolean },
+    options?: {
+      repositoryPath?: string;
+      workspaceName?: string;
+      repositoryId?: string;
+      persist?: boolean;
+    },
   ): Promise<unknown> {
     if (!this.api) return null;
     return this.api.intelligence.buildKnowledgeModel(targetType, files, options);

@@ -13,7 +13,9 @@
     "build": "ng build",
     "electron": "electron .",
     "dist:dir": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder",
+    "format": "prettier --write \"src/**/*.{ts,html,scss}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,html,scss}\""
   },
   "build": {
     "appId": "com.dominicslonka.systemlens",

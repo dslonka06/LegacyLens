@@ -32,7 +32,11 @@
   flex-wrap: wrap;
 }
 
-.settings-info { display: flex; flex-direction: column; gap: 2px; }
+.settings-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 
 .settings-name {
   font-size: 13px;
@@ -60,8 +64,15 @@
   color: var(--text-muted);
   cursor: pointer;
   background: transparent;
-  &.active   { background: rgba(124,92,255,0.12); border-color: rgba(124,92,255,0.3); color: #a5b4fc; }
-  &.disabled { opacity: 0.35; cursor: default; }
+  &.active {
+    background: rgba(124, 92, 255, 0.12);
+    border-color: rgba(124, 92, 255, 0.3);
+    color: #a5b4fc;
+  }
+  &.disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
 }
 
 .settings-input {
@@ -73,7 +84,9 @@
   color: var(--text-primary);
   width: 220px;
   outline: none;
-  &:focus { border-color: rgba(124,92,255,0.5); }
+  &:focus {
+    border-color: rgba(124, 92, 255, 0.5);
+  }
 }
 
 .settings-row--action {
@@ -86,11 +99,13 @@
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
-  border: 1px solid rgba(124,92,255,0.4);
-  background: rgba(124,92,255,0.12);
+  border: 1px solid rgba(124, 92, 255, 0.4);
+  background: rgba(124, 92, 255, 0.12);
   color: #a5b4fc;
   cursor: pointer;
-  &:hover { background: rgba(124,92,255,0.2); }
+  &:hover {
+    background: rgba(124, 92, 255, 0.2);
+  }
 }
 
 // ─── About table ──────────────────────────────────────────
@@ -107,7 +122,14 @@
   padding: 10px 16px;
   font-size: 12px;
   border-bottom: 1px solid var(--border);
-  &:last-child { border-bottom: none; }
-  span:first-child { color: var(--text-muted); }
-  span:last-child  { color: var(--text-secondary); font-weight: 500; }
+  &:last-child {
+    border-bottom: none;
+  }
+  span:first-child {
+    color: var(--text-muted);
+  }
+  span:last-child {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
 }

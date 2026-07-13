@@ -4,14 +4,13 @@ const PREFIX = 'll-layout:';
 
 @Injectable({ providedIn: 'root' })
 export class PanelLayoutService {
-
   /** Returns persisted widths for a panel group, or null if none saved. */
   load(groupId: string): number[] | null {
     try {
       const raw = localStorage.getItem(PREFIX + groupId);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.every(v => typeof v === 'number')) {
+      if (Array.isArray(parsed) && parsed.every((v) => typeof v === 'number')) {
         return parsed;
       }
     } catch {
@@ -33,6 +32,8 @@ export class PanelLayoutService {
   reset(groupId: string): void {
     try {
       localStorage.removeItem(PREFIX + groupId);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 }

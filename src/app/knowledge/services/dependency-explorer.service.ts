@@ -20,13 +20,13 @@ export class DependencyExplorerService {
   constructor(private readonly electron: ElectronService) {}
 
   incomingDependencies(nodeId: string, graph: DependencyGraph): DependencyNode[] {
-    const sourceIds = new Set(graph.edges.filter(e => e.target === nodeId).map(e => e.source));
-    return graph.nodes.filter(n => sourceIds.has(n.id));
+    const sourceIds = new Set(graph.edges.filter((e) => e.target === nodeId).map((e) => e.source));
+    return graph.nodes.filter((n) => sourceIds.has(n.id));
   }
 
   outgoingDependencies(nodeId: string, graph: DependencyGraph): DependencyNode[] {
-    const targetIds = new Set(graph.edges.filter(e => e.source === nodeId).map(e => e.target));
-    return graph.nodes.filter(n => targetIds.has(n.id));
+    const targetIds = new Set(graph.edges.filter((e) => e.source === nodeId).map((e) => e.target));
+    return graph.nodes.filter((n) => targetIds.has(n.id));
   }
 
   async rankByConnectivity(graph: DependencyGraph, limit = 10): Promise<FileRanking[]> {

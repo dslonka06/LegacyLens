@@ -6,13 +6,12 @@ export type ActiveWorkspace = 'file' | 'folder' | 'repository' | 'settings' | nu
 
 @Injectable({ providedIn: 'root' })
 export class ActiveWorkspaceService {
-
   private readonly _workspace$ = new BehaviorSubject<ActiveWorkspace>(null);
   readonly workspace$ = this._workspace$.asObservable();
 
   constructor(private readonly router: Router) {
     this.router.events
-      .pipe(filter(e => e instanceof NavigationEnd))
+      .pipe(filter((e) => e instanceof NavigationEnd))
       .subscribe((e: NavigationEnd) => {
         this._workspace$.next(this.detectWorkspace(e.urlAfterRedirects));
       });
@@ -26,10 +25,10 @@ export class ActiveWorkspaceService {
   }
 
   private detectWorkspace(url: string): ActiveWorkspace {
-    if (url.startsWith('/file-analysis'))       return 'file';
-    if (url.startsWith('/folder-analysis'))     return 'folder';
+    if (url.startsWith('/file-analysis')) return 'file';
+    if (url.startsWith('/folder-analysis')) return 'folder';
     if (url.startsWith('/repository-analysis')) return 'repository';
-    if (url.startsWith('/settings'))            return 'settings';
+    if (url.startsWith('/settings')) return 'settings';
     return null;
   }
 }

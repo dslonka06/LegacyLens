@@ -25,7 +25,6 @@ export interface AnalysisContext {
 
 @Injectable({ providedIn: 'root' })
 export class ContextService {
-
   constructor(private readonly electron: ElectronService) {}
 
   /**
@@ -37,7 +36,9 @@ export class ContextService {
     workspaceName?: string,
   ): Promise<RepositoryExplanationContext | null> {
     if (!this.electron.isElectron) return null;
-    return this.electron.buildContext('repository', model, { workspaceName }) as Promise<RepositoryExplanationContext | null>;
+    return this.electron.buildContext('repository', model, {
+      workspaceName,
+    }) as Promise<RepositoryExplanationContext | null>;
   }
 
   /**
@@ -49,7 +50,10 @@ export class ContextService {
     workspaceName?: string,
   ): Promise<WorkflowExplanationContext | null> {
     if (!this.electron.isElectron) return null;
-    return this.electron.buildContext('workflow', model, { workflow, workspaceName }) as Promise<WorkflowExplanationContext | null>;
+    return this.electron.buildContext('workflow', model, {
+      workflow,
+      workspaceName,
+    }) as Promise<WorkflowExplanationContext | null>;
   }
 
   /**
@@ -62,7 +66,11 @@ export class ContextService {
     workspaceName?: string,
   ): Promise<SecurityOverviewContext | null> {
     if (!this.electron.isElectron) return null;
-    return this.electron.buildContext('security', model, { securityAnalysis, scope, workspaceName }) as Promise<SecurityOverviewContext | null>;
+    return this.electron.buildContext('security', model, {
+      securityAnalysis,
+      scope,
+      workspaceName,
+    }) as Promise<SecurityOverviewContext | null>;
   }
 
   /**

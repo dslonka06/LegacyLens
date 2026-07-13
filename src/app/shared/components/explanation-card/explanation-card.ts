@@ -20,8 +20,8 @@ export class ExplanationCard {
     // Split on double newline or markdown heading to produce readable paragraphs
     return this.content
       .split(/\n{2,}/)
-      .map(p => p.trim())
-      .filter(p => p.length > 0);
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
   }
 
   isHeading(para: string): boolean {

@@ -20,22 +20,54 @@ export class TargetValidationService {
 
   async validate(path: string, intended: AnalysisTarget): Promise<ValidationResult> {
     if (!this.electron.isElectron) {
-      return { intended, detected: intended, path, valid: true, mismatch: false, suggestion: null, message: null };
+      return {
+        intended,
+        detected: intended,
+        path,
+        valid: true,
+        mismatch: false,
+        suggestion: null,
+        message: null,
+      };
     }
 
     const result = await this.electron.detectTarget(path);
     const detected = result.detected as DetectedTarget;
 
     if (detected === 'invalid') {
-      return { intended, detected, path, valid: false, mismatch: false, suggestion: null, message: 'The selected path does not exist or cannot be accessed.' };
+      return {
+        intended,
+        detected,
+        path,
+        valid: false,
+        mismatch: false,
+        suggestion: null,
+        message: 'The selected path does not exist or cannot be accessed.',
+      };
     }
 
     if (detected === 'unknown') {
-      return { intended, detected, path, valid: false, mismatch: false, suggestion: null, message: 'The selected path could not be identified.' };
+      return {
+        intended,
+        detected,
+        path,
+        valid: false,
+        mismatch: false,
+        suggestion: null,
+        message: 'The selected path could not be identified.',
+      };
     }
 
     if (detected === intended) {
-      return { intended, detected, path, valid: true, mismatch: false, suggestion: null, message: null };
+      return {
+        intended,
+        detected,
+        path,
+        valid: true,
+        mismatch: false,
+        suggestion: null,
+        message: null,
+      };
     }
 
     const suggestion = detected as AnalysisTarget;

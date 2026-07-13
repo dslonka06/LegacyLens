@@ -1,8 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { SecurityAnalysis, SecurityFinding, SecuritySeverity } from '@app/analysis/models/security-analysis.model';
+import {
+  SecurityAnalysis,
+  SecurityFinding,
+  SecuritySeverity,
+} from '@app/analysis/models/security-analysis.model';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
 import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
@@ -13,12 +16,11 @@ import type { FolderNode, FileNode } from '@app/knowledge/models/repository.mode
 @Component({
   selector: 'app-security-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, FileTreePanel, CodeEditor, ResizeDividerComponent],
+  imports: [CommonModule, FileTreePanel, CodeEditor, ResizeDividerComponent],
   templateUrl: './security-page.html',
   styleUrl: './security-page.scss',
 })
 export class SecurityPage implements OnInit, OnDestroy {
-
   security: SecurityAnalysis | null = null;
   securityOverview: string | null = null;
   overviewLoading = false;
@@ -40,20 +42,22 @@ export class SecurityPage implements OnInit, OnDestroy {
     this.codeEditorWidth = this.layoutService.load('security-code')?.[0] ?? 420;
 
     const active = this.manager.getActive();
-    this.security         = active?.knowledgeModel?.ai?.security ?? null;
+    this.security = active?.knowledgeModel?.ai?.security ?? null;
     this.securityOverview = active?.knowledgeModel?.ai?.securityOverview ?? null;
-    this.overviewLoading  = this.security !== null && this.securityOverview === null;
-    this.hasWorkspace     = active?.knowledgeModel != null;
+    this.overviewLoading = this.security !== null && this.securityOverview === null;
+    this.hasWorkspace = active?.knowledgeModel != null;
 
-    this.sub = this.manager.activeWorkspace$.subscribe(ws => {
-      this.security         = ws?.knowledgeModel?.ai?.security ?? null;
+    this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
+      this.security = ws?.knowledgeModel?.ai?.security ?? null;
       this.securityOverview = ws?.knowledgeModel?.ai?.securityOverview ?? null;
-      this.overviewLoading  = this.security !== null && this.securityOverview === null;
-      this.hasWorkspace     = ws?.knowledgeModel != null;
+      this.overviewLoading = this.security !== null && this.securityOverview === null;
+      this.hasWorkspace = ws?.knowledgeModel != null;
     });
   }
 
-  ngOnDestroy(): void { this.sub?.unsubscribe(); }
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
 
   onCodePanelResize(width: number): void {
     this.codeEditorWidth = width;
@@ -65,9 +69,11 @@ export class SecurityPage implements OnInit, OnDestroy {
   }
 
   get sourceFileName(): string | undefined {
-    return this.manager.getActive()?.knowledgeModel?.structure.filePath
-      ?? this.manager.getActive()?.knowledgeModel?.workspaceName
-      ?? undefined;
+    return (
+      this.manager.getActive()?.knowledgeModel?.structure.filePath ??
+      this.manager.getActive()?.knowledgeModel?.workspaceName ??
+      undefined
+    );
   }
 
   toggleFinding(id: string, fileName?: string): void {
@@ -79,7 +85,9 @@ export class SecurityPage implements OnInit, OnDestroy {
     }
   }
 
-  isFindingExpanded(id: string): boolean { return this.expandedFindings.has(id); }
+  isFindingExpanded(id: string): boolean {
+    return this.expandedFindings.has(id);
+  }
 
   get folderTree(): FolderNode | undefined {
     return this.manager.getActive()?.knowledgeModel?.structure.folderTree;
@@ -90,33 +98,43 @@ export class SecurityPage implements OnInit, OnDestroy {
   }
 
   get criticalFindings(): SecurityFinding[] {
-    return this.security?.findings.filter(f => f.severity === 'critical') ?? [];
+    return this.security?.findings.filter((f) => f.severity === 'critical') ?? [];
   }
 
   get highFindings(): SecurityFinding[] {
-    return this.security?.findings.filter(f => f.severity === 'high') ?? [];
+    return this.security?.findings.filter((f) => f.severity === 'high') ?? [];
   }
 
   get findingsBySeverity(): { severity: SecuritySeverity; findings: SecurityFinding[] }[] {
     if (!this.security?.findings.length) return [];
-    return this.SEVERITY_ORDER
-      .map(sev => ({ severity: sev, findings: this.security!.findings.filter(f => f.severity === sev) }))
-      .filter(g => g.findings.length > 0);
+    return this.SEVERITY_ORDER.map((sev) => ({
+      severity: sev,
+      findings: this.security!.findings.filter((f) => f.severity === sev),
+    })).filter((g) => g.findings.length > 0);
   }
 
   severityClass(s: SecuritySeverity): string {
-    return ({ critical: 'sev-critical', high: 'sev-high', medium: 'sev-medium', low: 'sev-low' })[s] ?? 'sev-low';
+    return (
+      { critical: 'sev-critical', high: 'sev-high', medium: 'sev-medium', low: 'sev-low' }[s] ??
+      'sev-low'
+    );
   }
 
   severityLabel(s: SecuritySeverity): string {
-    return ({ critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' })[s] ?? s;
+    return { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' }[s] ?? s;
   }
 
   riskClass(s: SecuritySeverity): string {
-    return ({ critical: 'risk-critical', high: 'risk-high', medium: 'risk-medium', low: 'risk-low' })[s] ?? 'risk-low';
+    return (
+      { critical: 'risk-critical', high: 'risk-high', medium: 'risk-medium', low: 'risk-low' }[s] ??
+      'risk-low'
+    );
   }
 
   maturityClass(m: string): string {
-    return ({ 'Low': 'maturity-low', 'Medium': 'maturity-medium', 'High': 'maturity-high' })[m] ?? 'maturity-medium';
+    return (
+      { Low: 'maturity-low', Medium: 'maturity-medium', High: 'maturity-high' }[m] ??
+      'maturity-medium'
+    );
   }
 }

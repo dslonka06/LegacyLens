@@ -8,6 +8,9 @@ export class SystemUnderstandingService {
   constructor(private readonly electron: ElectronService) {}
 
   async analyze(model: KnowledgeModel): Promise<SystemUnderstanding> {
-    return this.electron.intelligenceSystemUnderstanding(model, null) as Promise<SystemUnderstanding>;
+    return this.electron.intelligenceSystemUnderstanding(
+      model,
+      null,
+    ) as Promise<SystemUnderstanding>;
   }
 }

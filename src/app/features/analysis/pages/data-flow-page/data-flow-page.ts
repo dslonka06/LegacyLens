@@ -1,28 +1,29 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
-import type { KnowledgeModel, DataFlowInsight } from '@app/knowledge/models/knowledge-model.contract';
+import type {
+  KnowledgeModel,
+  DataFlowInsight,
+} from '@app/knowledge/models/knowledge-model.contract';
 import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
 interface FlowNode {
-  name:         string;
-  dependents:   number;
+  name: string;
+  dependents: number;
   dependencies: number;
-  isHub:        boolean;
+  isHub: boolean;
 }
 
 @Component({
   selector: 'app-data-flow-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, FileTreePanel],
+  imports: [CommonModule, FileTreePanel],
   templateUrl: './data-flow-page.html',
   styleUrl: './data-flow-page.scss',
 })
 export class DataFlowPage implements OnInit, OnDestroy {
-
   model: KnowledgeModel | null = null;
   hasWorkspace = false;
   flowNodes: FlowNode[] = [];
@@ -38,32 +39,37 @@ export class DataFlowPage implements OnInit, OnDestroy {
     this.hasWorkspace = this.model != null;
     this.buildFlow(this.model);
 
-    this.sub = this.manager.activeWorkspace$.subscribe(ws => {
-      this.model        = ws?.knowledgeModel ?? null;
+    this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
+      this.model = ws?.knowledgeModel ?? null;
       this.hasWorkspace = this.model != null;
       this.buildFlow(this.model);
     });
   }
 
-  ngOnDestroy(): void { this.sub?.unsubscribe(); }
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
 
   private buildFlow(model: KnowledgeModel | null): void {
     const graph = model?.relationships.dependencies?.graph;
-    if (!graph) { this.flowNodes = []; return; }
+    if (!graph) {
+      this.flowNodes = [];
+      return;
+    }
 
-    const inbound  = new Map<string, number>();
+    const inbound = new Map<string, number>();
     const outbound = new Map<string, number>();
-    graph.edges.forEach(e => {
+    graph.edges.forEach((e) => {
       outbound.set(e.source, (outbound.get(e.source) ?? 0) + 1);
-      inbound.set(e.target,  (inbound.get(e.target)  ?? 0) + 1);
+      inbound.set(e.target, (inbound.get(e.target) ?? 0) + 1);
     });
 
     this.flowNodes = graph.nodes
-      .map(n => ({
-        name:         n.name,
-        dependents:   inbound.get(n.id)  ?? 0,
+      .map((n) => ({
+        name: n.name,
+        dependents: inbound.get(n.id) ?? 0,
         dependencies: outbound.get(n.id) ?? 0,
-        isHub:        (inbound.get(n.id) ?? 0) >= 3,
+        isHub: (inbound.get(n.id) ?? 0) >= 3,
       }))
       .sort((a, b) => b.dependents - a.dependents)
       .slice(0, 30);
@@ -94,15 +100,15 @@ export class DataFlowPage implements OnInit, OnDestroy {
   }
 
   get hubCount(): number {
-    return this.flowNodes.filter(n => n.isHub).length;
+    return this.flowNodes.filter((n) => n.isHub).length;
   }
 
   get topTargets(): string[] {
     const graph = this.model?.relationships.dependencies?.graph;
     if (!graph) return [];
-    const nodeMap = new Map(graph.nodes.map(n => [n.id, n.name]));
-    const counts  = new Map<string, number>();
-    graph.edges.forEach(e => counts.set(e.target, (counts.get(e.target) ?? 0) + 1));
+    const nodeMap = new Map(graph.nodes.map((n) => [n.id, n.name]));
+    const counts = new Map<string, number>();
+    graph.edges.forEach((e) => counts.set(e.target, (counts.get(e.target) ?? 0) + 1));
     return [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
@@ -127,16 +133,17 @@ export class DataFlowPage implements OnInit, OnDestroy {
     if (!this.hasDataFlow) return null;
     if (this.isFileScope) return null; // file view uses structured steps, not narrative
     const nodes = this.flowNodes.length;
-    const hubs  = this.hubCount;
+    const hubs = this.hubCount;
     const conns = this.totalConnections;
-    const hubDesc = hubs > 0
-      ? ` ${hubs} hub module${hubs > 1 ? 's' : ''} act as central integration points.`
-      : '';
+    const hubDesc =
+      hubs > 0
+        ? ` ${hubs} hub module${hubs > 1 ? 's' : ''} act as central integration points.`
+        : '';
     return `${nodes} modules with ${conns} dependency connections.${hubDesc} The most depended-upon modules drive the core data flow.`;
   }
 
   getStepClass(index: number, total: number): string {
-    if (index === 0)         return 'step-first';
+    if (index === 0) return 'step-first';
     if (index === total - 1) return 'step-last';
     return 'step-mid';
   }

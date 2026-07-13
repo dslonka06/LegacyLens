@@ -12,10 +12,9 @@ import { ModernizationItem } from '@app/analysis/models/modernization-item.model
   standalone: true,
   imports: [CommonModule],
   templateUrl: './analysis-panel.html',
-  styleUrl: './analysis-panel.scss'
+  styleUrl: './analysis-panel.scss',
 })
 export class AnalysisPanel {
-
   @Input() session: AnalysisSession | null = null;
   @Input() routeBase: string = '/file-analysis';
 
@@ -53,14 +52,14 @@ export class AnalysisPanel {
     return (this.analysis?.risks ?? []).map((r: RiskItem) => ({
       title: r.description,
       severity: r.severity,
-      description: r.description
+      description: r.description,
     }));
   }
 
   get displayModernizations(): { title: string; description: string }[] {
     return (this.analysis?.modernizationSuggestions ?? []).map((m: ModernizationItem) => ({
       title: m.description,
-      description: m.description
+      description: m.description,
     }));
   }
 

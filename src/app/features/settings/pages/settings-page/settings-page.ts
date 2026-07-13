@@ -9,10 +9,9 @@ import { ElectronService } from '@app/core/services/electron.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './settings-page.html',
-  styleUrl: './settings-page.scss'
+  styleUrl: './settings-page.scss',
 })
 export class SettingsPage implements OnInit {
-
   aiProvider = '';
   aiModel = '';
   aiProviderUrl = '';
@@ -25,14 +24,13 @@ export class SettingsPage implements OnInit {
 
   ngOnInit(): void {
     if (this.electron.isElectron) {
-      Promise.all([
-        this.electron.getAllSettings(),
-        this.electron.getAiProviderUrl(),
-      ]).then(([settings, providerUrl]) => {
-        this.aiProvider = (settings['aiProvider'] as string) ?? '';
-        this.aiModel = (settings['aiModel'] as string) ?? '';
-        this.aiProviderUrl = providerUrl ?? '';
-      });
+      Promise.all([this.electron.getAllSettings(), this.electron.getAiProviderUrl()]).then(
+        ([settings, providerUrl]) => {
+          this.aiProvider = (settings['aiProvider'] as string) ?? '';
+          this.aiModel = (settings['aiModel'] as string) ?? '';
+          this.aiProviderUrl = providerUrl ?? '';
+        },
+      );
     }
   }
 
@@ -44,6 +42,8 @@ export class SettingsPage implements OnInit {
       this.electron.setAiProviderUrl(this.aiProviderUrl || null),
     ]);
     this.saved = true;
-    setTimeout(() => { this.saved = false; }, 2000);
+    setTimeout(() => {
+      this.saved = false;
+    }, 2000);
   }
 }

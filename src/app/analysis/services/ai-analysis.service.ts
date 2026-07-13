@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
 import { ElectronService } from '@app/core/services/electron.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
-import type { KnowledgeModel, AIStage, KnowledgeAIResults } from '@app/knowledge/models/knowledge-model.contract';
-import type { SecurityAnalysis }       from '@app/analysis/models/security-analysis.model';
-import type { SystemUnderstanding }    from '@app/analysis/models/system-understanding.model';
+import type {
+  KnowledgeModel,
+  AIStage,
+  KnowledgeAIResults,
+} from '@app/knowledge/models/knowledge-model.contract';
+import type { SecurityAnalysis } from '@app/analysis/models/security-analysis.model';
+import type { SystemUnderstanding } from '@app/analysis/models/system-understanding.model';
 import type { RecommendationAnalysis } from '@app/analysis/models/recommendation-analysis.model';
-import type { LearningPathAnalysis }   from '@app/analysis/models/learning-path-analysis.model';
+import type { LearningPathAnalysis } from '@app/analysis/models/learning-path-analysis.model';
 
 /**
  * AIAnalysisService — owns the async AI pipeline.
@@ -19,10 +23,9 @@ import type { LearningPathAnalysis }   from '@app/analysis/models/learning-path-
  */
 @Injectable({ providedIn: 'root' })
 export class AIAnalysisService {
-
   constructor(
     private readonly electron: ElectronService,
-    private readonly manager:  WorkspaceManagerService,
+    private readonly manager: WorkspaceManagerService,
   ) {}
 
   /**
@@ -39,10 +42,10 @@ export class AIAnalysisService {
     // learningPath depends on understanding, so it runs after.
     // recommendations and documentation are independent.
     await Promise.all([
-      this.runStage(workspaceId, model, 'security',        generation),
-      this.runStage(workspaceId, model, 'understanding',   generation),
+      this.runStage(workspaceId, model, 'security', generation),
+      this.runStage(workspaceId, model, 'understanding', generation),
       this.runStage(workspaceId, model, 'recommendations', generation),
-      this.runStage(workspaceId, model, 'documentation',   generation),
+      this.runStage(workspaceId, model, 'documentation', generation),
     ]);
 
     // learningPath needs understanding to be present — read it from the workspace
@@ -58,23 +61,29 @@ export class AIAnalysisService {
    * @param generation  If the workspace's current generation differs when the result
    *                    arrives, the result is silently discarded (re-analyze was triggered).
    */
-  async runStage(workspaceId: string, model: KnowledgeModel, stage: AIStage, generation: number): Promise<void> {
+  async runStage(
+    workspaceId: string,
+    model: KnowledgeModel,
+    stage: AIStage,
+    generation: number,
+  ): Promise<void> {
     this.manager.setStageRunning(workspaceId, stage);
     try {
       const result = await this.callStage(model, stage);
 
       // Drop result if re-analyze was triggered while this stage was running
       if (result !== null) {
-        const completed = [
-          ...(model.ai?.completedStages ?? []),
-          stage,
-        ] as AIStage[];
+        const completed = [...(model.ai?.completedStages ?? []), stage] as AIStage[];
 
-        this.manager.mergeAIResults(workspaceId, {
-          ...this.stageResultToPartial(stage, result),
-          completedStages: [...new Set(completed)],
-          failedStages: model.ai?.failedStages ?? [],
-        }, generation);
+        this.manager.mergeAIResults(
+          workspaceId,
+          {
+            ...this.stageResultToPartial(stage, result),
+            completedStages: [...new Set(completed)],
+            failedStages: model.ai?.failedStages ?? [],
+          },
+          generation,
+        );
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -92,14 +101,25 @@ export class AIAnalysisService {
         return this.electron.intelligenceSecurity(model, null) as Promise<SecurityAnalysis>;
 
       case 'understanding':
-        return this.electron.intelligenceSystemUnderstanding(model, null) as Promise<SystemUnderstanding>;
+        return this.electron.intelligenceSystemUnderstanding(
+          model,
+          null,
+        ) as Promise<SystemUnderstanding>;
 
       case 'recommendations':
-        return this.electron.intelligenceRecommendations(model, null) as Promise<RecommendationAnalysis>;
+        return this.electron.intelligenceRecommendations(
+          model,
+          null,
+        ) as Promise<RecommendationAnalysis>;
 
       case 'learningPath': {
         const understanding = model.ai?.understanding ?? null;
-        return this.electron.intelligenceLearningPath(model, null, understanding, model.targetType) as Promise<LearningPathAnalysis>;
+        return this.electron.intelligenceLearningPath(
+          model,
+          null,
+          understanding,
+          model.targetType,
+        ) as Promise<LearningPathAnalysis>;
       }
 
       case 'documentation':
@@ -112,12 +132,18 @@ export class AIAnalysisService {
 
   private stageResultToPartial(stage: AIStage, result: unknown): Partial<KnowledgeAIResults> {
     switch (stage) {
-      case 'security':        return { security:        result as SecurityAnalysis };
-      case 'understanding':   return { understanding:   result as SystemUnderstanding };
-      case 'recommendations': return { recommendations: result as RecommendationAnalysis };
-      case 'learningPath':    return { learningPath:    result as LearningPathAnalysis };
-      case 'documentation':   return {};
-      default:                return {};
+      case 'security':
+        return { security: result as SecurityAnalysis };
+      case 'understanding':
+        return { understanding: result as SystemUnderstanding };
+      case 'recommendations':
+        return { recommendations: result as RecommendationAnalysis };
+      case 'learningPath':
+        return { learningPath: result as LearningPathAnalysis };
+      case 'documentation':
+        return {};
+      default:
+        return {};
     }
   }
 }

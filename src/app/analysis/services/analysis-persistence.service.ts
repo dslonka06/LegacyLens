@@ -15,7 +15,6 @@ import { Workspace } from '@app/workspace/models/workspace-entity.model';
  */
 @Injectable({ providedIn: 'root' })
 export class AnalysisPersistenceService implements OnDestroy {
-
   private readonly manager = inject(WorkspaceManagerService);
   private readonly electron = inject(ElectronService);
   private readonly sub: Subscription;
@@ -25,25 +24,29 @@ export class AnalysisPersistenceService implements OnDestroy {
   private readonly saved = new Set<string>();
 
   constructor() {
-    this.sub = this.manager.activeWorkspace$.pipe(
-      filter(ws =>
-        ws !== null &&
-        ws.repositoryId !== null &&
-        ws.knowledgeModel?.ai?.understanding != null &&
-        ws.knowledgeModel?.ai?.securityOverview != null
-      ),
-      map(ws => ws!),
-      distinctUntilChanged((a, b) =>
-        a.id === b.id &&
-        a.knowledgeModel?.ai?.understanding === b.knowledgeModel?.ai?.understanding &&
-        a.knowledgeModel?.ai?.securityOverview === b.knowledgeModel?.ai?.securityOverview
-      ),
-    ).subscribe(ws => {
-      const saveKey = `${ws.id}:${ws.knowledgeModel!.ai!.understanding!.generatedAt}`;
-      if (this.saved.has(saveKey)) return;
-      this.saved.add(saveKey);
-      this.saveAiResults(ws.repositoryId!, ws);
-    });
+    this.sub = this.manager.activeWorkspace$
+      .pipe(
+        filter(
+          (ws) =>
+            ws !== null &&
+            ws.repositoryId !== null &&
+            ws.knowledgeModel?.ai?.understanding != null &&
+            ws.knowledgeModel?.ai?.securityOverview != null,
+        ),
+        map((ws) => ws!),
+        distinctUntilChanged(
+          (a, b) =>
+            a.id === b.id &&
+            a.knowledgeModel?.ai?.understanding === b.knowledgeModel?.ai?.understanding &&
+            a.knowledgeModel?.ai?.securityOverview === b.knowledgeModel?.ai?.securityOverview,
+        ),
+      )
+      .subscribe((ws) => {
+        const saveKey = `${ws.id}:${ws.knowledgeModel!.ai!.understanding!.generatedAt}`;
+        if (this.saved.has(saveKey)) return;
+        this.saved.add(saveKey);
+        this.saveAiResults(ws.repositoryId!, ws);
+      });
   }
 
   private saveAiResults(repositoryId: string, ws: Workspace): void {
@@ -56,18 +59,19 @@ export class AnalysisPersistenceService implements OnDestroy {
       learningPathAnalysis: ws.knowledgeModel?.ai?.learningPath ?? null,
     };
 
-    Promise.all([
-      this.electron.getSetting('aiProvider'),
-      this.electron.getSetting('aiModel'),
-    ]).then(([aiProvider, aiModel]) => {
-      return this.electron.saveAnalysis({
-        repositoryId,
-        scope: ws.type,
-        aiResult,
-        aiProvider: (aiProvider as string | null) ?? undefined,
-        aiModel: (aiModel as string | null) ?? undefined,
+    Promise.all([this.electron.getSetting('aiProvider'), this.electron.getSetting('aiModel')])
+      .then(([aiProvider, aiModel]) => {
+        return this.electron.saveAnalysis({
+          repositoryId,
+          scope: ws.type,
+          aiResult,
+          aiProvider: (aiProvider as string | null) ?? undefined,
+          aiModel: (aiModel as string | null) ?? undefined,
+        });
+      })
+      .catch(() => {
+        /* non-fatal */
       });
-    }).catch(() => { /* non-fatal */ });
   }
 
   ngOnDestroy(): void {

@@ -3,7 +3,6 @@ import { RepositoryExplanationContext } from '@app/analysis/models/ai-explanatio
 
 @Injectable({ providedIn: 'root' })
 export class RepositoryExplanationPromptBuilder {
-
   build(ctx: RepositoryExplanationContext): string {
     const parts: string[] = [];
 
@@ -33,7 +32,7 @@ export class RepositoryExplanationPromptBuilder {
 
     if (ctx.architecturePatterns.length > 0) {
       const patternNames = ctx.architecturePatterns
-        .map(p => `${p.name} (${Math.round(p.confidence * 100)}%)`)
+        .map((p) => `${p.name} (${Math.round(p.confidence * 100)}%)`)
         .join(', ');
       parts.push(`Architecture: ${patternNames}`);
     }
@@ -60,7 +59,9 @@ export class RepositoryExplanationPromptBuilder {
     }
 
     if (ctx.dependencyStats) {
-      parts.push(`Dependency graph: ${ctx.dependencyStats.nodes} components, ${ctx.dependencyStats.edges} connections`);
+      parts.push(
+        `Dependency graph: ${ctx.dependencyStats.nodes} components, ${ctx.dependencyStats.edges} connections`,
+      );
     }
 
     // ── Task ─────────────────────────────────────────────────────────────────

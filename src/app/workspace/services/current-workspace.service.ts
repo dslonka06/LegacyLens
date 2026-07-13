@@ -11,7 +11,6 @@ import { WorkspaceManagerService } from './workspace-manager.service';
  */
 @Injectable({ providedIn: 'root' })
 export class CurrentWorkspaceService {
-
   private readonly manager = inject(WorkspaceManagerService);
 
   private readonly _context$ = new BehaviorSubject<WorkspaceContext | null>(null);
@@ -55,10 +54,11 @@ export class CurrentWorkspaceService {
         if (rootFolder) return rootFolder;
       }
     }
-    const projectFile = profile.files.find(f =>
-      ['csproj', 'fsproj', 'sln'].includes(f.extension) ||
-      f.name.toLowerCase() === 'package.json' ||
-      f.name.toLowerCase() === 'angular.json'
+    const projectFile = profile.files.find(
+      (f) =>
+        ['csproj', 'fsproj', 'sln'].includes(f.extension) ||
+        f.name.toLowerCase() === 'package.json' ||
+        f.name.toLowerCase() === 'angular.json',
     );
     if (projectFile) return projectFile.name.replace(/\.[^.]+$/, '');
     if (profile.totalFiles === 1 && profile.files[0]) return profile.files[0].name;

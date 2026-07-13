@@ -26,7 +26,9 @@
     width: 1px;
     height: 100%;
     background: var(--border);
-    transition: background 0.12s, width 0.12s;
+    transition:
+      background 0.12s,
+      width 0.12s;
   }
 }
 
