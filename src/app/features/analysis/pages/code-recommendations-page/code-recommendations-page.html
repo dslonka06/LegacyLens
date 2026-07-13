@@ -34,6 +34,17 @@
   </div>
 
   <div class="page-content">
+    <div class="rec-layout" [class.rec-layout--has-tree]="folderTree">
+
+      <!-- File tree rail (folder/repo workspaces only) -->
+      <div class="rec-tree-rail" *ngIf="folderTree">
+        <app-file-tree-panel
+          [folderTree]="folderTree"
+          [highlightPath]="highlightedFilePath"
+          (fileSelected)="onTreeFileSelected($event)">
+        </app-file-tree-panel>
+      </div>
+
     <div class="rec-content">
 
       <div class="rec-card rec-overview">
@@ -82,7 +93,8 @@
         <div class="rec-list">
           <div class="rec-item" *ngFor="let rec of recs!.recommendations"
                [class.expanded]="isExpanded(rec.id)"
-               (click)="toggleRec(rec.id)">
+               [class.rec-item--highlighted]="rec.codeReference.fileName === highlightedFilePath"
+               (click)="toggleRec(rec.id, rec.codeReference.fileName)">
 
             <div class="rec-item-header">
               <span class="rec-rank">{{ rec.priorityRank }}</span>
@@ -158,7 +170,8 @@
         <p class="rec-assessment-text">{{ recs!.modernizationAssessment }}</p>
       </div>
 
-    </div>
+    </div><!-- /rec-content -->
+    </div><!-- /rec-layout -->
   </div>
 
 </div>

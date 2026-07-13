@@ -15,7 +15,18 @@
     </div>
   </div>
 
-  <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
+  <div class="df-layout" [class.df-layout--has-tree]="folderTree && !isFileScope" *ngIf="hasWorkspace; else noWorkspace">
+
+    <!-- File tree rail (folder/repo, non-file-scope only) -->
+    <div class="df-tree-rail" *ngIf="folderTree && !isFileScope">
+      <app-file-tree-panel
+        [folderTree]="folderTree"
+        [highlightPath]="selectedFilePath"
+        (fileSelected)="onTreeFileSelected($event)">
+      </app-file-tree-panel>
+    </div>
+
+  <div class="page-content">
 
     <!-- File scope: structured deterministic data flow -->
     <ng-container *ngIf="isFileScope">
@@ -105,7 +116,8 @@
 
     </ng-container>
 
-  </div>
+  </div><!-- /page-content -->
+  </div><!-- /df-layout -->
 
   <ng-template #noWorkspace>
     <div class="no-session">

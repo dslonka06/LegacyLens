@@ -33,6 +33,17 @@
   </div>
 
   <div class="page-content">
+    <div class="sec-layout" [class.sec-layout--has-tree]="folderTree">
+
+      <!-- File tree rail (folder/repo workspaces only) -->
+      <div class="sec-tree-rail" *ngIf="folderTree">
+        <app-file-tree-panel
+          [folderTree]="folderTree"
+          [highlightPath]="highlightedFilePath"
+          (fileSelected)="onTreeFileSelected($event)">
+        </app-file-tree-panel>
+      </div>
+
     <div class="sec-content">
 
       <div class="sec-card sec-overview">
@@ -100,7 +111,8 @@
 
                 <div class="sec-finding-card" *ngFor="let finding of group.findings"
                      [class.expanded]="isFindingExpanded(finding.id)"
-                     (click)="toggleFinding(finding.id)">
+                     [class.sec-finding-card--highlighted]="finding.fileName === highlightedFilePath"
+                     (click)="toggleFinding(finding.id, finding.fileName)">
                   <div class="sec-finding-header">
                     <span class="sec-sev-badge" [class]="severityClass(finding.severity)">{{ finding.severity | uppercase }}</span>
                     <span class="sec-finding-title">{{ finding.title }}</span>
@@ -176,7 +188,8 @@
 
       </div>
 
-    </div>
+    </div><!-- /sec-content -->
+    </div><!-- /sec-layout -->
   </div>
 
 </div>

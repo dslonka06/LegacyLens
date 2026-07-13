@@ -7,6 +7,32 @@
   height: 100%;
 }
 
+// ── Tree layout ───────────────────────────────────────────────
+.sec-layout {
+  display: contents;
+
+  &--has-tree {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 20px;
+    align-items: start;
+    height: 100%;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+      .sec-tree-rail { display: none; }
+    }
+  }
+}
+
+.sec-tree-rail {
+  height: 100%;
+  min-height: 400px;
+  max-height: calc(100vh - 180px);
+  position: sticky;
+  top: 0;
+}
+
 .sec-content {
   display: flex;
   flex-direction: column;
@@ -164,6 +190,7 @@
   transition: border-color 0.12s;
   &:hover { border-color: var(--text-muted); }
   &.expanded { border-color: var(--accent); }
+  &--highlighted { border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
 }
 
 .sec-finding-header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }

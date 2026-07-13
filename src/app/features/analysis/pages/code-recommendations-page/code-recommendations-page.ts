@@ -5,11 +5,13 @@ import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { RecommendationAnalysis, Recommendation } from '@app/analysis/models/recommendation-analysis.model';
 import { Workspace } from '@app/workspace/models/workspace-entity.model';
+import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
+import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
 @Component({
   selector: 'app-code-recommendations-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FileTreePanel],
   templateUrl: './code-recommendations-page.html',
   styleUrl: './code-recommendations-page.scss',
 })
@@ -20,6 +22,7 @@ export class CodeRecommendationsPage implements OnInit, OnDestroy {
   get hasWorkspace(): boolean { return this.workspace?.knowledgeModel != null; }
 
   expandedRecs = new Set<string>();
+  highlightedFilePath: string | null = null;
 
   private sub: Subscription | null = null;
 
@@ -32,12 +35,24 @@ export class CodeRecommendationsPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void { this.sub?.unsubscribe(); }
 
-  toggleRec(id: string): void {
-    if (this.expandedRecs.has(id)) this.expandedRecs.delete(id);
-    else this.expandedRecs.add(id);
+  toggleRec(id: string, fileName?: string): void {
+    if (this.expandedRecs.has(id)) {
+      this.expandedRecs.delete(id);
+    } else {
+      this.expandedRecs.add(id);
+      if (fileName) this.highlightedFilePath = fileName;
+    }
   }
 
   isExpanded(id: string): boolean { return this.expandedRecs.has(id); }
+
+  get folderTree(): FolderNode | undefined {
+    return this.workspace?.knowledgeModel?.structure.folderTree;
+  }
+
+  onTreeFileSelected(file: FileNode): void {
+    this.highlightedFilePath = file.path;
+  }
 
   priorityClass(rec: Recommendation): string { return `priority-${rec.priority}`; }
 

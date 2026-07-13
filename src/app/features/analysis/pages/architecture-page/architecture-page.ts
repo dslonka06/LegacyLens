@@ -3,12 +3,14 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
 import type { KnowledgeModel, ArchitecturePattern, DependencyHub } from '@app/knowledge/models/knowledge-model.contract';
+import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
 @Component({
   selector: 'app-architecture-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FileTreePanel],
   templateUrl: './architecture-page.html',
   styleUrl: './architecture-page.scss',
 })
@@ -16,6 +18,7 @@ export class ArchitecturePage implements OnInit, OnDestroy {
 
   model: KnowledgeModel | null = null;
   hasWorkspace = false;
+  selectedFile: FileNode | null = null;
 
   private sub: Subscription | null = null;
 
@@ -62,6 +65,14 @@ export class ArchitecturePage implements OnInit, OnDestroy {
 
   get workspaceName(): string {
     return this.model?.workspaceName ?? 'Workspace';
+  }
+
+  get folderTree(): FolderNode | undefined {
+    return this.model?.structure.folderTree;
+  }
+
+  onFileSelected(file: FileNode): void {
+    this.selectedFile = file;
   }
 
   get architectureNarrative(): string {

@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
 import type { KnowledgeModel, DataFlowInsight } from '@app/knowledge/models/knowledge-model.contract';
+import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
 interface FlowNode {
   name:         string;
@@ -15,7 +17,7 @@ interface FlowNode {
 @Component({
   selector: 'app-data-flow-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FileTreePanel],
   templateUrl: './data-flow-page.html',
   styleUrl: './data-flow-page.scss',
 })
@@ -25,6 +27,7 @@ export class DataFlowPage implements OnInit, OnDestroy {
   hasWorkspace = false;
   flowNodes: FlowNode[] = [];
   expandedWorkflowIndex: number | null = null;
+  selectedFilePath: string | null = null;
 
   private sub: Subscription | null = null;
 
@@ -104,6 +107,14 @@ export class DataFlowPage implements OnInit, OnDestroy {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([id]) => nodeMap.get(id) ?? id);
+  }
+
+  get folderTree(): FolderNode | undefined {
+    return this.model?.structure.folderTree;
+  }
+
+  onTreeFileSelected(file: FileNode): void {
+    this.selectedFilePath = file.path;
   }
 
   get hasDataFlow(): boolean {

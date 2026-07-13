@@ -4,11 +4,13 @@ import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SecurityAnalysis, SecurityFinding, SecuritySeverity } from '@app/analysis/models/security-analysis.model';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
+import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
 @Component({
   selector: 'app-security-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FileTreePanel],
   templateUrl: './security-page.html',
   styleUrl: './security-page.scss',
 })
@@ -19,6 +21,7 @@ export class SecurityPage implements OnInit, OnDestroy {
   overviewLoading = false;
   hasWorkspace = false;
   expandedFindings = new Set<string>();
+  highlightedFilePath: string | null = null;
 
   readonly SEVERITY_ORDER: SecuritySeverity[] = ['critical', 'high', 'medium', 'low'];
 
@@ -43,12 +46,24 @@ export class SecurityPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void { this.sub?.unsubscribe(); }
 
-  toggleFinding(id: string): void {
-    if (this.expandedFindings.has(id)) this.expandedFindings.delete(id);
-    else this.expandedFindings.add(id);
+  toggleFinding(id: string, fileName?: string): void {
+    if (this.expandedFindings.has(id)) {
+      this.expandedFindings.delete(id);
+    } else {
+      this.expandedFindings.add(id);
+      if (fileName) this.highlightedFilePath = fileName;
+    }
   }
 
   isFindingExpanded(id: string): boolean { return this.expandedFindings.has(id); }
+
+  get folderTree(): FolderNode | undefined {
+    return this.manager.getActive()?.knowledgeModel?.structure.folderTree;
+  }
+
+  onTreeFileSelected(file: FileNode): void {
+    this.highlightedFilePath = file.path;
+  }
 
   get criticalFindings(): SecurityFinding[] {
     return this.security?.findings.filter(f => f.severity === 'critical') ?? [];

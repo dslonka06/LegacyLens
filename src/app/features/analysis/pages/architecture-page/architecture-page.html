@@ -17,7 +17,15 @@
   </div>
 
   <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
-    <div class="arch-cols">
+    <div class="arch-cols" [class.arch-cols--has-tree]="folderTree">
+
+      <!-- File tree (folder/repo workspaces only) -->
+      <div class="arch-col-tree" *ngIf="folderTree">
+        <app-file-tree-panel
+          [folderTree]="folderTree"
+          (fileSelected)="onFileSelected($event)">
+        </app-file-tree-panel>
+      </div>
 
       <div class="arch-col-main">
 
