@@ -1,8 +1,9 @@
-import { Component, HostBinding, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ActiveWorkspaceService, ActiveWorkspace } from '@app/core/services/active-workspace.service';
+import { ThemeService } from '@app/core/services/theme.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -12,12 +13,14 @@ import { ActiveWorkspaceService, ActiveWorkspace } from '@app/core/services/acti
   styleUrl: './sidebar.scss'
 })
 export class Sidebar implements OnInit, OnDestroy {
-  @HostBinding('class.collapsed') collapsed = false;
 
   activeWorkspace: ActiveWorkspace = null;
   private sub: Subscription | null = null;
 
-  constructor(private readonly activeWorkspaceService: ActiveWorkspaceService) {}
+  constructor(
+    private readonly activeWorkspaceService: ActiveWorkspaceService,
+    private readonly themeService: ThemeService,
+  ) {}
 
   ngOnInit(): void {
     this.activeWorkspace = this.activeWorkspaceService.workspace;
@@ -30,7 +33,11 @@ export class Sidebar implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  toggle(): void {
-    this.collapsed = !this.collapsed;
+  get isDark(): boolean {
+    return this.themeService.isDark;
+  }
+
+  toggleTheme(): void {
+    this.themeService.toggle();
   }
 }

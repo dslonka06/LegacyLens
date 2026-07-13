@@ -5,72 +5,134 @@
 // ════════════════════════════════════════════════════════
 
 :root, [data-theme="dark"] {
-  --bg-primary:    #0A0F1C;
-  --bg-secondary:  #111827;
-  --bg-card:       #162033;
-  --bg-input:      #111827;
-  --border:        #283548;
-  --border-subtle: #1E2D3D;
-  --accent:        #7C5CFF;
-  --accent-hover:  #9376FF;
-  --text-primary:  #F3F4F6;
-  --text-content:  #F3F4F6;
-  --text-secondary:#9CA3AF;
-  --text-readable: #D1D5DB;
-  --text-heading:  #FFFFFF;
-  --text-muted:    #4B5563;
-  --success:       #22C55E;
-  --warning:       #F59E0B;
-  --error:         #EF4444;
-  --info:          #38BDF8;
-  --sidebar-bg:    #0D1321;
-  --editor-bg:     #0D1321;
-  --header-bg:     #0A0F1C;
-  --header-control-bg:     #1A2333;
-  --header-control-border: #334155;
-  --header-control-text:   #FFFFFF;
-  --nav-active-bg:     rgba(124,92,255,0.18);
-  --nav-active-border: rgba(124,92,255,0.4);
-  --nav-active-text:   #C4B5FD;
-  --nav-active-glow:   0 0 0 1px rgba(124,92,255,0.15);
+  // ── Surfaces ──────────────────────────────────────────────
+  --bg-window:     #0F1117;
+  --bg-primary:    #151927;
+  --bg-secondary:  #1B2032;
+  --bg-glass:      rgba(28,33,48,0.72);
+  --bg-card:       #181C2C;
+  --bg-input:      #1B2032;
+  --bg-hover:      rgba(255,255,255,0.05);
+
+  // ── Borders ───────────────────────────────────────────────
+  --border:        rgba(255,255,255,0.08);
+  --border-subtle: rgba(255,255,255,0.05);
+
+  // ── Accent ────────────────────────────────────────────────
+  --accent:        #8D63FF;
+  --accent-hover:  #A07FFF;
+  --accent-blue:   #5C8DFF;
+
+  // ── Text ──────────────────────────────────────────────────
+  --text-primary:   #F4F5F8;
+  --text-content:   #F4F5F8;
+  --text-secondary: #A5B0C2;
+  --text-readable:  #A5B0C2;
+  --text-heading:   #F4F5F8;
+  --text-muted:     rgba(165,176,194,0.45);
+
+  // ── Status ────────────────────────────────────────────────
+  --success:  #54D17A;
+  --warning:  #F4B544;
+  --error:    #EF5B63;
+  --info:     #5C8DFF;
+
+  // ── Sidebar ───────────────────────────────────────────────
+  --sidebar-bg:       #0F1117;
+  --sidebar-width:    72px;
+  --sidebar-btn-size: 48px;
+
+  // ── Shadows ───────────────────────────────────────────────
+  --shadow-card:  0 10px 30px rgba(0,0,0,0.25);
+  --shadow-hover: 0 18px 40px rgba(0,0,0,0.35);
+  --shadow-glow:  0 0 0 1px rgba(141,99,255,0.4), 0 8px 24px rgba(141,99,255,0.15);
+
+  // ── Border radius ─────────────────────────────────────────
+  --radius-btn:    12px;
+  --radius-card:   18px;
+  --radius-metric: 16px;
+  --radius-chat:   20px;
+  --radius-pill:   999px;
+
+  // ── Legacy aliases (keep existing pages compiling) ────────
+  --editor-bg:             #0F1117;
+  --header-bg:             #151927;
+  --header-control-bg:     #1B2032;
+  --header-control-border: rgba(255,255,255,0.08);
+  --header-control-text:   #F4F5F8;
+  --nav-active-bg:         rgba(141,99,255,0.18);
+  --nav-active-border:     rgba(141,99,255,0.4);
+  --nav-active-text:       #C4B5FD;
+  --nav-active-glow:       0 0 0 1px rgba(141,99,255,0.15);
 }
 
 [data-theme="light"] {
-  --bg-primary:    #F8FAFC;
-  --bg-secondary:  #F1F5F9;
+  // ── Surfaces ──────────────────────────────────────────────
+  --bg-window:     #F0F2FA;
+  --bg-primary:    #F5F7FF;
+  --bg-secondary:  #ECEEF8;
+  --bg-glass:      rgba(240,242,250,0.80);
   --bg-card:       #FFFFFF;
   --bg-input:      #FFFFFF;
-  --border:        #E5E7EB;
-  --border-subtle: #E5E7EB;
-  --accent:        #6D4CFF;
-  --accent-hover:  #5B3EF5;
-  --text-primary:  #111827;
-  --text-content:  #111827;
-  --text-secondary:#374151;
-  --text-readable: #374151;
-  --text-heading:  #111827;
-  --text-muted:    #9CA3AF;
-  --success:       #16A34A;
-  --warning:       #D97706;
-  --error:         #DC2626;
-  --info:          #0284C7;
-  --sidebar-bg:    #F1F5F9;
-  --editor-bg:     #FAFAFC;
-  --header-bg:     #FFFFFF;
-  --header-control-bg:     #FFFFFF;
-  --header-control-border: #D1D5DB;
-  --header-control-text:   #111827;
-  --nav-active-bg:     rgba(109,76,255,0.1);
-  --nav-active-border: rgba(109,76,255,0.35);
-  --nav-active-text:   #4F3FBF;
-  --nav-active-glow:   0 0 0 1px rgba(109,76,255,0.12);
+  --bg-hover:      rgba(0,0,0,0.04);
+
+  // ── Borders ───────────────────────────────────────────────
+  --border:        rgba(0,0,0,0.08);
+  --border-subtle: rgba(0,0,0,0.05);
+
+  // ── Accent ────────────────────────────────────────────────
+  --accent:        #7B52F0;
+  --accent-hover:  #6340E0;
+  --accent-blue:   #3B6FE8;
+
+  // ── Text ──────────────────────────────────────────────────
+  --text-primary:   #1A1D2E;
+  --text-content:   #1A1D2E;
+  --text-secondary: #4A5068;
+  --text-readable:  #4A5068;
+  --text-heading:   #0F1117;
+  --text-muted:     rgba(74,80,104,0.5);
+
+  // ── Status ────────────────────────────────────────────────
+  --success:  #22A85A;
+  --warning:  #D4920A;
+  --error:    #D93B44;
+  --info:     #2B6FD4;
+
+  // ── Sidebar ───────────────────────────────────────────────
+  --sidebar-bg:       #ECEEF8;
+  --sidebar-width:    72px;
+  --sidebar-btn-size: 48px;
+
+  // ── Shadows ───────────────────────────────────────────────
+  --shadow-card:  0 10px 30px rgba(0,0,0,0.08);
+  --shadow-hover: 0 18px 40px rgba(0,0,0,0.12);
+  --shadow-glow:  0 0 0 1px rgba(123,82,240,0.35), 0 8px 24px rgba(123,82,240,0.12);
+
+  // ── Border radius (same as dark) ──────────────────────────
+  --radius-btn:    12px;
+  --radius-card:   18px;
+  --radius-metric: 16px;
+  --radius-chat:   20px;
+  --radius-pill:   999px;
+
+  // ── Legacy aliases ────────────────────────────────────────
+  --editor-bg:             #F5F7FF;
+  --header-bg:             #FFFFFF;
+  --header-control-bg:     #ECEEF8;
+  --header-control-border: rgba(0,0,0,0.08);
+  --header-control-text:   #1A1D2E;
+  --nav-active-bg:         rgba(123,82,240,0.1);
+  --nav-active-border:     rgba(123,82,240,0.35);
+  --nav-active-text:       #6340E0;
+  --nav-active-glow:       0 0 0 1px rgba(123,82,240,0.12);
 }
 
 html, body {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   color: var(--text-primary);
@@ -617,7 +679,8 @@ ul, ol { list-style: none; }
 // ─── Print / PDF export ───────────────────────────────────
 @media print {
   app-sidebar,
-  app-root > .app-layout > .app-main > .app-header,
+  .chat-toggle-btn,
+  .chat-overlay,
   .doc-export-btn,
   .page-header .sev-badge {
     display: none !important;
@@ -632,7 +695,6 @@ ul, ol { list-style: none; }
 
   .insight-page,
   .app-layout,
-  .app-main,
   .app-body {
     display: block !important;
     height: auto !important;

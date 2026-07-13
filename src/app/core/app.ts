@@ -3,22 +3,20 @@ import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs';
 import { Sidebar } from '@app/shell/sidebar/sidebar';
-import { ThemeService } from '@app/core/services/theme.service';
+import { AiChatPanel } from '@app/shell/ai-chat-panel/ai-chat-panel';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, Sidebar, CommonModule],
+  imports: [RouterOutlet, Sidebar, AiChatPanel, CommonModule],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
 export class App implements OnInit {
-  isHome = false;
+  isHome  = false;
+  chatOpen = false;
 
-  constructor(
-    readonly theme: ThemeService,
-    private readonly router: Router,
-  ) {}
+  constructor(private readonly router: Router) {}
 
   ngOnInit(): void {
     this.router.events
@@ -29,4 +27,7 @@ export class App implements OnInit {
 
     this.isHome = this.router.url === '/';
   }
+
+  toggleChat(): void  { this.chatOpen = !this.chatOpen; }
+  closeChat(): void   { this.chatOpen = false; }
 }

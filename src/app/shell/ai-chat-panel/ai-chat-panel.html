@@ -1,0 +1,77 @@
+<div class="chat-panel">
+
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="chat-header-identity">
+      <div class="chat-avatar">
+        <img src="assets/logo.png" alt="SystemLens AI" width="20" height="20" />
+      </div>
+      <div class="chat-header-text">
+        <span class="chat-title">Ask AI</span>
+        <span class="chat-subtitle">Ask questions about this analysis.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="chat-messages" #messagesContainer>
+
+    <!-- Empty state with suggested prompts -->
+    <div class="chat-empty" *ngIf="!hasMessages">
+      <div class="chat-empty-icon">
+        <img src="assets/logo.png" alt="SystemLens" width="32" height="32" />
+      </div>
+      <p class="chat-empty-text">Ask anything about the analyzed code.</p>
+      <div class="chat-suggestions">
+        <button
+          class="chat-suggestion-pill"
+          *ngFor="let prompt of suggestedPrompts"
+          (click)="selectPrompt(prompt)">
+          {{ prompt }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Message bubbles -->
+    <ng-container *ngFor="let msg of messages">
+      <div class="chat-message" [class.chat-message--user]="msg.role === 'user'" [class.chat-message--assistant]="msg.role === 'assistant'">
+        <div class="chat-bubble">
+          <span class="chat-bubble-text">{{ msg.content }}</span>
+          <span class="chat-bubble-time">{{ msg.timestamp }}</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Loading indicator -->
+    <div class="chat-message chat-message--assistant" *ngIf="isLoading">
+      <div class="chat-bubble chat-bubble--loading">
+        <span class="chat-dot"></span>
+        <span class="chat-dot"></span>
+        <span class="chat-dot"></span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Input -->
+  <div class="chat-input-row">
+    <textarea
+      class="chat-input"
+      [(ngModel)]="inputValue"
+      (keydown)="onKeydown($event)"
+      placeholder="Ask a question..."
+      rows="1">
+    </textarea>
+    <button
+      class="chat-send-btn"
+      (click)="send()"
+      [disabled]="!inputValue.trim() || isLoading"
+      title="Send">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+
+</div>
