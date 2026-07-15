@@ -8,6 +8,7 @@ import {
 } from '@app/core/services/active-workspace.service';
 import { ThemeService } from '@app/core/services/theme.service';
 import { SidebarService } from '@app/core/services/sidebar.service';
+import { ChatService } from '@app/core/services/chat.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -19,17 +20,20 @@ import { SidebarService } from '@app/core/services/sidebar.service';
 export class Sidebar implements OnInit, OnDestroy {
   activeWorkspace: ActiveWorkspace = null;
   collapsed = false;
+  chatOpen = false;
   private subs: Subscription[] = [];
 
   constructor(
     private readonly activeWorkspaceService: ActiveWorkspaceService,
     private readonly themeService: ThemeService,
     private readonly sidebarService: SidebarService,
+    private readonly chatService: ChatService,
   ) {}
 
   ngOnInit(): void {
     this.activeWorkspace = this.activeWorkspaceService.workspace;
     this.collapsed = this.sidebarService.collapsed;
+    this.chatOpen = this.chatService.open;
 
     this.subs.push(
       this.activeWorkspaceService.workspace$.subscribe((w) => {
@@ -37,6 +41,9 @@ export class Sidebar implements OnInit, OnDestroy {
       }),
       this.sidebarService.collapsed$.subscribe((c) => {
         this.collapsed = c;
+      }),
+      this.chatService.open$.subscribe((o) => {
+        this.chatOpen = o;
       }),
     );
   }
@@ -55,5 +62,9 @@ export class Sidebar implements OnInit, OnDestroy {
 
   toggleCollapse(): void {
     this.sidebarService.toggle();
+  }
+
+  toggleChat(): void {
+    this.chatService.toggle();
   }
 }

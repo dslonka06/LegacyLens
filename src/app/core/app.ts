@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { filter } from 'rxjs';
+import { filter, Subscription } from 'rxjs';
 import { Sidebar } from '@app/shell/sidebar/sidebar';
 import { AiChatPanel } from '@app/shell/ai-chat-panel/ai-chat-panel';
 import { UpdatePrompt } from '@app/shell/update-prompt/update-prompt';
 import { SidebarService } from '@app/core/services/sidebar.service';
+import { ChatService } from '@app/core/services/chat.service';
 
 const HUB_ROUTES = [
   '/file-analysis',
@@ -20,38 +21,49 @@ const HUB_ROUTES = [
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App implements OnInit {
+export class App implements OnInit, OnDestroy {
   isHome = false;
   chatOpen = false;
+
+  private subs: Subscription[] = [];
 
   constructor(
     private readonly router: Router,
     private readonly sidebarService: SidebarService,
+    private readonly chatService: ChatService,
   ) {}
 
   ngOnInit(): void {
-    this.router.events
-      .pipe(filter((e) => e instanceof NavigationEnd))
-      .subscribe((e: NavigationEnd) => {
-        const url = e.urlAfterRedirects;
-        this.isHome = url === '/';
+    this.subs.push(
+      this.chatService.open$.subscribe((open) => {
+        this.chatOpen = open;
+      }),
+      this.router.events
+        .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+        .subscribe((e) => {
+          const url = e.urlAfterRedirects;
+          this.isHome = url === '/';
 
-        // Expand sidebar and close chat when landing on a hub page
-        const isHub = HUB_ROUTES.some((r) => url === r);
-        if (isHub) {
-          this.sidebarService.expand();
-          this.chatOpen = false;
-        }
-      });
+          const isHub = HUB_ROUTES.some((r) => url === r);
+          if (isHub) {
+            this.sidebarService.expand();
+            this.chatService.close();
+          }
+        }),
+    );
 
     this.isHome = this.router.url === '/';
   }
 
+  ngOnDestroy(): void {
+    this.subs.forEach((s) => s.unsubscribe());
+  }
+
   toggleChat(): void {
-    this.chatOpen = !this.chatOpen;
+    this.chatService.toggle();
   }
 
   closeChat(): void {
-    this.chatOpen = false;
+    this.chatService.close();
   }
 }
