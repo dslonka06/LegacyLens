@@ -10,10 +10,47 @@
   padding: 12px 0;
   gap: 4px;
   overflow: hidden;
+  position: relative;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar {
   display: contents;
+}
+
+// ─── Collapse toggle tab — mirrors chat pull-out tab ──────
+.sidebar-collapse-tab {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 14px;
+  height: 56px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-right: none;
+  border-radius: 0 8px 8px 0;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  svg {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: var(--bg-card);
+    color: var(--accent);
+    border-color: rgba(141, 99, 255, 0.3);
+  }
 }
 
 // ─── Logo ────────────────────────────────────────────────
@@ -37,10 +74,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition:
-    background 0.15s,
-    border-color 0.15s,
-    box-shadow 0.15s;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 
   img {
     border-radius: 6px;
@@ -102,11 +136,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition:
-    background 0.15s,
-    border-color 0.15s,
-    box-shadow 0.15s,
-    transform 0.1s;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
   color: var(--text-secondary);
 
   svg {
@@ -137,5 +167,17 @@
   svg {
     color: #ffffff;
     transform: none;
+  }
+}
+
+// ─── Collapsed state ─────────────────────────────────────
+:host(.sidebar--collapsed) {
+  width: 52px;
+  min-width: 52px;
+
+  --sidebar-btn-size: 36px;
+
+  .sidebar-collapse-tab {
+    // flip arrow direction handled by *ngIf in template
   }
 }

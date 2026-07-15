@@ -7,6 +7,7 @@ import {
   ActiveWorkspace,
 } from '@app/core/services/active-workspace.service';
 import { ThemeService } from '@app/core/services/theme.service';
+import { SidebarService } from '@app/core/services/sidebar.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -17,22 +18,31 @@ import { ThemeService } from '@app/core/services/theme.service';
 })
 export class Sidebar implements OnInit, OnDestroy {
   activeWorkspace: ActiveWorkspace = null;
-  private sub: Subscription | null = null;
+  collapsed = false;
+  private subs: Subscription[] = [];
 
   constructor(
     private readonly activeWorkspaceService: ActiveWorkspaceService,
     private readonly themeService: ThemeService,
+    private readonly sidebarService: SidebarService,
   ) {}
 
   ngOnInit(): void {
     this.activeWorkspace = this.activeWorkspaceService.workspace;
-    this.sub = this.activeWorkspaceService.workspace$.subscribe((w) => {
-      this.activeWorkspace = w;
-    });
+    this.collapsed = this.sidebarService.collapsed;
+
+    this.subs.push(
+      this.activeWorkspaceService.workspace$.subscribe((w) => {
+        this.activeWorkspace = w;
+      }),
+      this.sidebarService.collapsed$.subscribe((c) => {
+        this.collapsed = c;
+      }),
+    );
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+    this.subs.forEach((s) => s.unsubscribe());
   }
 
   get isDark(): boolean {
@@ -41,5 +51,9 @@ export class Sidebar implements OnInit, OnDestroy {
 
   toggleTheme(): void {
     this.themeService.toggle();
+  }
+
+  toggleCollapse(): void {
+    this.sidebarService.toggle();
   }
 }
