@@ -116,34 +116,21 @@
   <ng-container *ngIf="hasModel">
     <!-- Top bar -->
     <div class="hub-topbar" [class.hub-topbar--animate]="showIdentity">
-      <div class="hub-breadcrumb">
-        <span class="hub-breadcrumb-root">Repository Analysis</span>
-        <svg
-          class="hub-breadcrumb-sep"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-        <span class="hub-breadcrumb-current">{{ repoName }}</span>
-        <span class="hub-breadcrumb-badge" *ngIf="fileCount">{{ fileCount }} files</span>
-        <span class="hub-breadcrumb-badge hub-breadcrumb-badge--green" *ngIf="projectCount > 1"
-          >{{ projectCount }} projects</span
-        >
+      <div class="hub-topbar-left">
+        <div class="hub-breadcrumb">
+          <span class="hub-breadcrumb-root">Repository Analysis</span>
+          <svg class="hub-breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+          <span class="hub-breadcrumb-root">Hub</span>
+        </div>
+        <h1 class="hub-heading">Repository Hub</h1>
+        <p class="hub-subheading">Overview and entry points for understanding this repository.</p>
       </div>
       <div class="hub-topbar-actions">
         <span class="hub-last-analyzed" *ngIf="lastAnalyzed">{{ lastAnalyzed }}</span>
         <button class="hub-action-btn" (click)="reanalyze()" [disabled]="!canReanalyze">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10" />
             <polyline points="1 20 1 14 7 14" />
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
@@ -310,18 +297,6 @@
             <span class="workspace-name">{{ repoName }}</span>
             <span class="workspace-status-chip">{{ statusLabel }}</span>
           </div>
-          <div class="workspace-actions">
-            <button
-              class="ws-btn ws-btn--reanalyze"
-              (click)="reanalyze()"
-              [disabled]="!canReanalyze"
-            >
-              Re-analyze
-            </button>
-            <button class="ws-btn ws-btn--switch" (click)="openSwitcher()">Switch</button>
-            <button class="ws-btn ws-btn--new" (click)="newWorkspace()">New</button>
-            <button class="ws-btn ws-btn--delete" (click)="deleteWorkspace()">Delete</button>
-          </div>
           <div class="workspace-slot-row">
             <span
               class="workspace-slot-dot"
@@ -331,10 +306,12 @@
             >
             </span>
           </div>
+          <button class="ws-btn ws-btn--manage" (click)="openSwitcher()">Manage</button>
         </div>
       </div>
 
       <!-- ── Row 3: Metric / nav cards ──────────────────── -->
+      <div class="hub-section-label" *ngIf="showMetricCards">Explore This Repository</div>
       <div class="hub-metric-row"
            [class.hub-metric-row--animate]="showMetricCards && !isReturning"
            [class.hub-metric-row--animate-fast]="showMetricCards && isReturning">
