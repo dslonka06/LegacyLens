@@ -17,6 +17,7 @@
   <!-- Chat toggle button — fixed to right edge, always visible -->
   <button
     class="chat-toggle-btn"
+    [class.chat-toggle-btn--open]="chatOpen"
     (click)="toggleChat()"
     [title]="chatOpen ? 'Close AI chat' : 'Ask AI'"
   >

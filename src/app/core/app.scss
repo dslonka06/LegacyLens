@@ -23,7 +23,7 @@
 }
 
 // ─── Chat toggle button ───────────────────────────────────
-// Fixed to the right edge, vertically centered, always visible
+// Sits at the left edge of the chat overlay — shifts with it
 .chat-toggle-btn {
   position: absolute;
   right: 0;
@@ -44,7 +44,8 @@
   transition:
     background 0.15s,
     color 0.15s,
-    border-color 0.15s;
+    border-color 0.15s,
+    right 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
   svg {
     width: 14px;
@@ -54,6 +55,12 @@
 
   &:hover {
     background: var(--bg-card);
+    color: var(--accent);
+    border-color: rgba(141, 99, 255, 0.3);
+  }
+
+  &--open {
+    right: 360px;
     color: var(--accent);
     border-color: rgba(141, 99, 255, 0.3);
   }
