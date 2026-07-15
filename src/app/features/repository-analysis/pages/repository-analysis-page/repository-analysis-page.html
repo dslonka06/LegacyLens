@@ -239,6 +239,7 @@
                 [class.health-arc-fill--fair]="healthTier === 'fair'"
                 [class.health-arc-fill--needs-attention]="healthTier === 'needs-attention'"
                 [class.health-arc-fill--critical]="healthTier === 'critical'"
+                [class.health-arc-fill--draw]="showArcDraw"
                 d="M 8 46 A 34 34 0 0 1 72 46"
                 fill="none"
                 stroke-width="6"
@@ -348,17 +349,16 @@
       </div>
 
       <!-- ── Row 3: Metric / nav cards ──────────────────── -->
-      <div class="hub-metric-row" [class.hub-section--animate]="showMetricCards">
+      <div class="hub-metric-row"
+           [class.hub-metric-row--animate]="showMetricCards && !isReturning"
+           [class.hub-metric-row--animate-fast]="showMetricCards && isReturning">
         <button
           class="metric-card"
           *ngFor="let card of metricCards"
-          [class.metric-card--suggested]="card.suggested && showSuggested"
+          [class.metric-card--pending]="card.pending"
           [class.metric-card--pending]="card.pending"
           (click)="navigate(card.route)"
         >
-          <span class="metric-suggested-pill" *ngIf="card.suggested && showSuggested"
-            >Start Here</span
-          >
 
           <div class="metric-card-icon">
             <svg
@@ -393,6 +393,16 @@
             stroke-linecap="round"
           >
             <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Learning path nudge -->
+      <div class="hub-learning-nudge" *ngIf="showMetricCards">
+        <button class="hub-learning-nudge-link" (click)="navigate('/repository-analysis/learning-path')">
+          Not sure where to start? Try the Learning Path
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
           </svg>
         </button>
       </div>

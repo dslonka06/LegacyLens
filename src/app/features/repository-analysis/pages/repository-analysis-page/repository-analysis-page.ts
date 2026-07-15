@@ -57,8 +57,9 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   showIdentity = false;
   showInfoCards = false;
+  showArcDraw = false;
   showMetricCards = false;
-  showSuggested = false;
+  isReturning = false;
 
   // Electron / repo loading state
   isScanning = false;
@@ -93,7 +94,10 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
       const switched = prevId !== ws?.id;
       const modelArrived = !prevModel && !!ws?.knowledgeModel;
-      if (switched || modelArrived) this.runAnimations();
+      if (switched || modelArrived) {
+        this.isReturning = switched && !!ws?.knowledgeModel;
+        this.runAnimations();
+      }
     });
 
     this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
@@ -282,21 +286,16 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     if (this.animTimer) clearTimeout(this.animTimer);
     this.showIdentity = false;
     this.showInfoCards = false;
+    this.showArcDraw = false;
     this.showMetricCards = false;
-    this.showSuggested = false;
 
-    setTimeout(() => {
-      this.showIdentity = true;
-    }, 80);
-    setTimeout(() => {
-      this.showInfoCards = true;
-    }, 220);
-    setTimeout(() => {
-      this.showMetricCards = true;
-    }, 380);
-    this.animTimer = setTimeout(() => {
-      this.showSuggested = true;
-    }, 560);
+    const fast = this.isReturning;
+    const t = (ms: number) => (fast ? Math.round(ms * 0.4) : ms);
+
+    setTimeout(() => { this.showIdentity = true; }, t(80));
+    setTimeout(() => { this.showInfoCards = true; }, t(220));
+    setTimeout(() => { this.showArcDraw = true; }, t(320));
+    this.animTimer = setTimeout(() => { this.showMetricCards = true; }, t(380));
   }
 
   // ── Workspace actions ──────────────────────────────────────────────────────
