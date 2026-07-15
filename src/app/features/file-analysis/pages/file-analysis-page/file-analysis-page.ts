@@ -13,6 +13,7 @@ export interface HubMetricCard {
   id: string;
   icon: string;
   count: number | null;
+  tags?: string[];
   label: string;
   route: string;
   suggested: boolean;
@@ -375,6 +376,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
         id: 'understanding',
         icon: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 16v-4 M12 8h.01',
         count: null,
+        tags: ai?.understanding?.coreCapabilities?.slice(0, 2).map((c) => c.name),
         label: 'Understanding',
         route: `${base}/system-understanding`,
         suggested: suggested === 'understanding',

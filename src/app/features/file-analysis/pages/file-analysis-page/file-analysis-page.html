@@ -356,13 +356,20 @@
           </div>
 
           <div class="metric-card-body">
-            <span class="metric-card-count" *ngIf="card.count !== null">{{ card.count }}</span>
-            <span
-              class="metric-card-count metric-card-count--ai"
-              *ngIf="card.count === null && !card.pending"
-              >AI</span
-            >
-            <span class="metric-card-count metric-card-count--pending" *ngIf="card.pending">…</span>
+            <ng-container *ngIf="card.tags?.length; else countBlock">
+              <div class="metric-card-tags">
+                <span class="metric-card-tag" *ngFor="let tag of card.tags">{{ tag }}</span>
+              </div>
+            </ng-container>
+            <ng-template #countBlock>
+              <span class="metric-card-count" *ngIf="card.count !== null">{{ card.count }}</span>
+              <span
+                class="metric-card-count metric-card-count--ai"
+                *ngIf="card.count === null && !card.pending"
+                >AI</span
+              >
+              <span class="metric-card-count metric-card-count--pending" *ngIf="card.pending">…</span>
+            </ng-template>
             <span class="metric-card-label">{{ card.label }}</span>
           </div>
 
