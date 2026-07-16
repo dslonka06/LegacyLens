@@ -124,9 +124,9 @@ export class LibraryPage implements OnInit, OnDestroy {
   }
 
   languages(ws: Workspace): string[] {
-    const langs = ws.knowledgeModel?.languages;
+    const langs = ws.knowledgeModel?.structure?.languages;
     if (!langs?.length) return [];
-    return langs.slice(0, 3).map((l: any) => (typeof l === 'string' ? l : l.name ?? ''));
+    return langs.slice(0, 3);
   }
 
   get hasResults(): boolean {
