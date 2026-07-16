@@ -33,6 +33,7 @@ const ANALYSIS_ROUTES: Record<AnalysisTarget, string> = {
 export class HomePage implements OnInit, OnDestroy {
   aiProviderStatus: 'checking' | 'configured' | 'not-configured' = 'checking';
   aiProviderLabel = 'Claude Sonnet';
+  appVersion = '';
 
   recentAnalyses: Workspace[] = [];
   private subs: Subscription[] = [];
@@ -68,6 +69,10 @@ export class HomePage implements OnInit, OnDestroy {
     this.checkAiProvider();
     if (this.electronService.isElectron) {
       this.loadRepositories();
+      this.electronService.getAppVersion().then((v) => {
+        this.appVersion = v ? `v${v}` : '';
+        this.cdr.detectChanges();
+      });
     }
     this.subs.push(
       this.manager.workspaces$.subscribe((ws) => {

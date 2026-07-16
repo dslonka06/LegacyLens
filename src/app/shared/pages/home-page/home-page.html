@@ -21,35 +21,16 @@
         </div>
       </div>
       <div class="hero-bar-actions">
+        <span class="hero-version" *ngIf="appVersion">{{ appVersion }}</span>
         <a routerLink="/settings" class="hero-action-btn">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3" />
-            <path
-              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-            />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
           Settings
         </a>
       </div>
     </header>
-
-    <!-- Headline -->
-    <div class="hero-content">
-      <h1 class="hero-title">
-        Understand any codebase,<br /><span class="hero-gradient">instantly.</span>
-      </h1>
-      <p class="hero-subtitle">
-        Drop in a file, folder, or repository. SystemLens maps your architecture, traces data flows,
-        finds risks, and generates documentation — all powered by AI.
-      </p>
-    </div>
 
     <!-- Two-column panel row -->
     <div class="hero-panels">
@@ -156,24 +137,19 @@
       </div>
 
     </div>
-  </section>
 
-  <!-- ── Body ─────────────────────────────────────────────────────────────── -->
-  <main class="home-body">
-
-    <!-- Recent Analyses -->
-    <section class="home-recent" *ngIf="recentAnalyses.length > 0">
-      <div class="section-header">
-        <span class="section-label">Recent Analyses</span>
-        <div class="section-line"></div>
-        <a routerLink="/library" class="section-view-all">
-          View all
+    <!-- Analysis Library preview — always shown inside hero area -->
+    <div class="hero-library" *ngIf="recentAnalyses.length > 0">
+      <div class="hero-library-header">
+        <span class="hero-library-title">Analysis Library</span>
+        <a routerLink="/library" class="hero-library-viewall">
+          View all analyses
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
           </svg>
         </a>
       </div>
-      <div class="recent-grid">
+      <div class="hero-library-grid">
         <div
           class="recent-card"
           *ngFor="let ws of recentAnalyses"
@@ -203,7 +179,12 @@
           </svg>
         </div>
       </div>
-    </section>
+    </div>
+
+  </section>
+
+  <!-- ── Body ─────────────────────────────────────────────────────────────── -->
+  <main class="home-body">
 
     <!-- Repository Library — Electron only -->
     <section class="home-library panel panel--library" *ngIf="electronService.isElectron">

@@ -20,21 +20,12 @@
 
   <!-- Messages -->
   <div class="chat-messages" #messagesContainer>
-    <!-- Empty state with suggested prompts -->
+    <!-- Empty state -->
     <div class="chat-empty" *ngIf="!hasMessages">
       <div class="chat-empty-icon">
         <img src="assets/logo.png" alt="SystemLens" width="32" height="32" />
       </div>
       <p class="chat-empty-text">Ask anything about the analyzed code.</p>
-      <div class="chat-suggestions">
-        <button
-          class="chat-suggestion-pill"
-          *ngFor="let prompt of suggestedPrompts"
-          (click)="selectPrompt(prompt)"
-        >
-          {{ prompt }}
-        </button>
-      </div>
     </div>
 
     <!-- Message bubbles -->
@@ -59,6 +50,17 @@
         <span class="chat-dot"></span>
       </div>
     </div>
+  </div>
+
+  <!-- Suggested prompts — always above the input -->
+  <div class="chat-suggestions" *ngIf="suggestedPrompts.length">
+    <button
+      class="chat-suggestion-pill"
+      *ngFor="let prompt of suggestedPrompts"
+      (click)="selectPrompt(prompt)"
+    >
+      {{ prompt }}
+    </button>
   </div>
 
   <!-- Input -->

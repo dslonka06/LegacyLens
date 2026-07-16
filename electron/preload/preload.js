@@ -108,6 +108,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     delete: (id)          => invoke('workspaces:delete', id),
   },
 
+  // ── App info ──────────────────────────────────────────────────────────────
+  app: {
+    getVersion: () => invoke('app:getVersion'),
+  },
+
   // ── Auto-updater ──────────────────────────────────────────────────────────
   updater: {
     checkForUpdates:  ()  => invoke('updater:checkForUpdates'),

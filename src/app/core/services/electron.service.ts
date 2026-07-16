@@ -34,6 +34,13 @@ export class ElectronService {
     return (window as any).electronAPI ?? null;
   }
 
+  // ── App info ──────────────────────────────────────────────────────────────
+
+  async getAppVersion(): Promise<string> {
+    if (!this.api) return '';
+    try { return await this.api.app.getVersion(); } catch { return ''; }
+  }
+
   // ── Repositories ──────────────────────────────────────────────────────────
 
   async getRepositories(): Promise<ElectronRepository[]> {
