@@ -1,8 +1,9 @@
-import { Component, OnInit, NgZone, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { Subscription } from 'rxjs';
 import { ThemeService } from '@app/core/services/theme.service';
 import { ElectronService } from '@app/core/services/electron.service';
 import { RepositoryLibraryService } from '@app/core/services/repository-library.service';
@@ -13,6 +14,9 @@ import {
   AnalysisTarget,
 } from '@app/core/services/target-validation.service';
 import { ValidationDialog } from '@app/shared/components/validation-dialog/validation-dialog';
+import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
+import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { Workspace } from '@app/workspace/models/workspace-entity.model';
 import type { ElectronRepository } from '../../../../electron';
 
 const ANALYSIS_ROUTES: Record<AnalysisTarget, string> = {
@@ -24,13 +28,16 @@ const ANALYSIS_ROUTES: Record<AnalysisTarget, string> = {
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ValidationDialog],
+  imports: [CommonModule, FormsModule, RouterLink, ValidationDialog, ThemeToggle],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
 })
-export class HomePage implements OnInit {
+export class HomePage implements OnInit, OnDestroy {
   aiProviderStatus: 'checking' | 'configured' | 'not-configured' = 'checking';
   aiProviderLabel = 'Claude Sonnet';
+
+  recentAnalyses: Workspace[] = [];
+  private subs: Subscription[] = [];
 
   repositories: ElectronRepository[] = [];
   isLoadingRepo: string | null = null;
@@ -57,6 +64,7 @@ export class HomePage implements OnInit {
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
     private readonly http: HttpClient,
+    private readonly manager: WorkspaceManagerService,
   ) {}
 
   ngOnInit(): void {
@@ -64,6 +72,29 @@ export class HomePage implements OnInit {
     if (this.electronService.isElectron) {
       this.loadRepositories();
     }
+    this.subs.push(
+      this.manager.workspaces$.subscribe((ws) => {
+        this.recentAnalyses = ws
+          .filter((w) => w.status !== 'empty')
+          .sort((a, b) => b.lastModifiedAt.localeCompare(a.lastModifiedAt))
+          .slice(0, 3);
+        this.cdr.detectChanges();
+      }),
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subs.forEach((s) => s.unsubscribe());
+  }
+
+  recentTypeLabel(type: string): string {
+    if (type === 'file') return 'File';
+    if (type === 'folder') return 'Folder';
+    return 'Repository';
+  }
+
+  openRecentAnalysis(ws: Workspace): void {
+    this.manager.activate(ws.id);
   }
 
   private async loadRepositories(): Promise<void> {

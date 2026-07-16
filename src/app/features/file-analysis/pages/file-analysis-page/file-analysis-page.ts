@@ -212,6 +212,10 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     this.showSwitcher = true;
   }
 
+  goToLibrary(): void {
+    this.router.navigate(['/library'], { queryParams: { type: 'file' } });
+  }
+
   closeSwitcher(): void {
     this.showSwitcher = false;
     this.switcherLimitReached = false;

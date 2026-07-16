@@ -216,6 +216,10 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     this.showSwitcher = true;
   }
 
+  goToLibrary(): void {
+    this.router.navigate(['/library'], { queryParams: { type: 'folder' } });
+  }
+
   closeSwitcher(): void {
     this.showSwitcher = false;
     this.switcherLimitReached = false;

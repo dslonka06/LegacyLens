@@ -51,6 +51,10 @@ export class WorkspaceManagerService {
   private readonly _limitReached$ = new Subject<void>();
   readonly limitReached$ = this._limitReached$.asObservable();
 
+  // Resolves once restoreFromStorage completes — guards await this before
+  // calling activateOrCreateForType to avoid a race with persisted workspaces.
+  readonly ready: Promise<void>;
+
   readonly activeWorkspace$: Observable<Workspace | null> = this._activeId$.pipe(
     switchMap((id) =>
       id ? this._workspaces$.pipe(map((ws) => ws.find((w) => w.id === id) ?? null)) : of(null),
@@ -62,7 +66,7 @@ export class WorkspaceManagerService {
     private readonly router: Router,
     private readonly electronService: ElectronService,
   ) {
-    this.restoreFromStorage();
+    this.ready = this.restoreFromStorage();
   }
 
   // ── Queries ───────────────────────────────────────────────────────────────
@@ -353,9 +357,6 @@ export class WorkspaceManagerService {
       });
 
       this._workspaces$.next(restored);
-      // Activate the most recently modified workspace
-      const first = restored[0];
-      if (first) this._activeId$.next(first.id);
     } catch {
       // Storage unavailable — start fresh, no user-visible error needed
     }

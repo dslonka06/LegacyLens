@@ -6,14 +6,14 @@ import {
   ActiveWorkspaceService,
   ActiveWorkspace,
 } from '@app/core/services/active-workspace.service';
-import { ThemeService } from '@app/core/services/theme.service';
 import { SidebarService } from '@app/core/services/sidebar.service';
 import { ChatService } from '@app/core/services/chat.service';
+import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, ThemeToggle],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',
 })
@@ -25,7 +25,6 @@ export class Sidebar implements OnInit, OnDestroy {
 
   constructor(
     private readonly activeWorkspaceService: ActiveWorkspaceService,
-    private readonly themeService: ThemeService,
     private readonly sidebarService: SidebarService,
     private readonly chatService: ChatService,
   ) {}
@@ -50,14 +49,6 @@ export class Sidebar implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subs.forEach((s) => s.unsubscribe());
-  }
-
-  get isDark(): boolean {
-    return this.themeService.isDark;
-  }
-
-  toggleTheme(): void {
-    this.themeService.toggle();
   }
 
   toggleCollapse(): void {

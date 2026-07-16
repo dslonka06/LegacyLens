@@ -24,7 +24,7 @@ export type WorkspaceStatus =
   | 'loaded'     // content uploaded, analysis complete
   | 'analyzing'; // knowledge pipeline running
 
-export const MAX_WORKSPACES = 3;
+export const MAX_WORKSPACES = 10;
 
 export interface WorkspaceProfile {
   workspaceType: WorkspaceClassification;

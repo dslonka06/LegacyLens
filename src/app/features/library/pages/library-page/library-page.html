@@ -1,0 +1,172 @@
+<div class="library-page">
+
+  <!-- ── Top bar ─────────────────────────────────────────────────────────── -->
+  <div class="lib-topbar">
+    <div class="lib-topbar-left">
+      <h1 class="lib-heading">Analysis Library</h1>
+      <p class="lib-subheading">All your saved analyses in one place.</p>
+    </div>
+  </div>
+
+  <!-- ── Filter bar ──────────────────────────────────────────────────────── -->
+  <div class="lib-filterbar">
+
+    <!-- Search -->
+    <div class="lib-search">
+      <svg class="lib-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        class="lib-search-input"
+        type="text"
+        placeholder="Search analyses…"
+        [(ngModel)]="search"
+        (ngModelChange)="onSearchChange()"
+      />
+      <button class="lib-search-clear" *ngIf="search" (click)="search = ''; onSearchChange()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="lib-filter-group">
+      <!-- Type pills -->
+      <div class="lib-pill-group">
+        <button class="lib-pill" [class.lib-pill--active]="typeFilter === 'all'" (click)="setType('all')">All</button>
+        <button class="lib-pill lib-pill--file" [class.lib-pill--active]="typeFilter === 'file'" (click)="setType('file')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+          </svg>
+          File
+        </button>
+        <button class="lib-pill lib-pill--folder" [class.lib-pill--active]="typeFilter === 'folder'" (click)="setType('folder')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          </svg>
+          Folder
+        </button>
+        <button class="lib-pill lib-pill--repo" [class.lib-pill--active]="typeFilter === 'repository'" (click)="setType('repository')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><circle cx="18" cy="6" r="3" />
+            <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" /><line x1="12" y1="12" x2="12" y2="15" />
+          </svg>
+          Repository
+        </button>
+      </div>
+
+      <!-- Status filter -->
+      <div class="lib-pill-group">
+        <button class="lib-pill" [class.lib-pill--active]="statusFilter === 'all'" (click)="setStatus('all')">Any status</button>
+        <button class="lib-pill lib-pill--ready" [class.lib-pill--active]="statusFilter === 'ready'" (click)="setStatus('ready')">Ready</button>
+        <button class="lib-pill lib-pill--failed" [class.lib-pill--active]="statusFilter === 'failed'" (click)="setStatus('failed')">Failed</button>
+      </div>
+
+      <!-- Sort -->
+      <select class="lib-sort" [(ngModel)]="sortKey" (ngModelChange)="setSort($event)">
+        <option value="lastModified">Last Modified</option>
+        <option value="name">Name</option>
+        <option value="created">Date Created</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ── Results ──────────────────────────────────────────────────────────── -->
+
+  <!-- No workspaces at all -->
+  <div class="lib-empty" *ngIf="isEmpty">
+    <div class="lib-empty-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      </svg>
+    </div>
+    <p class="lib-empty-title">No analyses yet</p>
+    <p class="lib-empty-desc">Run a file, folder, or repository analysis to see it here.</p>
+  </div>
+
+  <!-- Filters returned nothing -->
+  <div class="lib-empty" *ngIf="!isEmpty && !hasResults">
+    <div class="lib-empty-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+    </div>
+    <p class="lib-empty-title">No results</p>
+    <p class="lib-empty-desc">Try adjusting your search or filters.</p>
+  </div>
+
+  <!-- Card grid -->
+  <div class="lib-grid" *ngIf="hasResults">
+    <div
+      class="lib-card"
+      *ngFor="let ws of filtered"
+      [class.lib-card--file]="ws.type === 'file'"
+      [class.lib-card--folder]="ws.type === 'folder'"
+      [class.lib-card--repo]="ws.type === 'repository'"
+      (click)="openWorkspace(ws)"
+    >
+      <!-- Delete confirmation overlay -->
+      <div class="lib-card-confirm" *ngIf="confirmDeleteId === ws.id" (click)="$event.stopPropagation()">
+        <p class="lib-card-confirm-text">Delete this analysis?</p>
+        <div class="lib-card-confirm-actions">
+          <button class="lib-card-confirm-btn lib-card-confirm-btn--cancel" (click)="cancelDelete()">Cancel</button>
+          <button class="lib-card-confirm-btn lib-card-confirm-btn--delete" (click)="deleteWorkspace(ws.id, $event)">Delete</button>
+        </div>
+      </div>
+
+      <!-- Card header -->
+      <div class="lib-card-header">
+        <div class="lib-card-icon">
+          <!-- File -->
+          <svg *ngIf="ws.type === 'file'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+          <!-- Folder -->
+          <svg *ngIf="ws.type === 'folder'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          </svg>
+          <!-- Repository -->
+          <svg *ngIf="ws.type === 'repository'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><circle cx="18" cy="6" r="3" />
+            <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" /><line x1="12" y1="12" x2="12" y2="15" />
+          </svg>
+        </div>
+
+        <div class="lib-card-meta">
+          <span class="lib-card-type">{{ typeLabel(ws.type) }}</span>
+          <span class="lib-card-status lib-card-status--ready" *ngIf="ws.status === 'ready'">Ready</span>
+          <span class="lib-card-status lib-card-status--failed" *ngIf="ws.status === 'failed' || ws.status === 'error'">Failed</span>
+          <span class="lib-card-status lib-card-status--analyzing" *ngIf="ws.status === 'processing'">Analyzing</span>
+        </div>
+
+        <button class="lib-card-delete" (click)="confirmDelete(ws.id, $event)" title="Delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Card body -->
+      <div class="lib-card-body">
+        <h3 class="lib-card-name">{{ ws.name }}</h3>
+        <p class="lib-card-summary" *ngIf="summary(ws)">{{ summary(ws) }}</p>
+      </div>
+
+      <!-- Card footer -->
+      <div class="lib-card-footer">
+        <div class="lib-card-langs">
+          <span class="lib-card-lang" *ngFor="let lang of languages(ws)">{{ lang }}</span>
+        </div>
+        <span class="lib-card-date">{{ formatDate(ws.lastModifiedAt) }}</span>
+      </div>
+
+      <!-- Open arrow -->
+      <svg class="lib-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+      </svg>
+    </div>
+  </div>
+
+</div>

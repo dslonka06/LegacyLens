@@ -14,76 +14,14 @@
     <!-- Brand bar — sits at top of hero -->
     <header class="hero-bar">
       <div class="hero-brand">
-        <div class="hero-logo">
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-            <path d="M11 8v6M8 11h6" />
-          </svg>
+        <img src="assets/logo.png" alt="SystemLens" class="hero-logo-img" />
+        <div class="hero-brand-text">
+          <span class="hero-brand-name">SystemLens</span>
+          <span class="hero-brand-tag">Understand. Analyze. Modernize.</span>
         </div>
-        <span class="hero-brand-name">SystemLens</span>
-        <span class="hero-brand-tag">Understand. Analyze. Modernize.</span>
       </div>
       <div class="hero-bar-actions">
-        <div
-          class="hero-ai-status"
-          [class.hero-ai-status--ok]="aiProviderStatus === 'configured'"
-          [class.hero-ai-status--err]="aiProviderStatus === 'not-configured'"
-        >
-          <span class="hero-ai-dot"></span>
-          <span class="hero-ai-label" *ngIf="aiProviderStatus === 'configured'">{{
-            aiProviderLabel
-          }}</span>
-          <span class="hero-ai-label" *ngIf="aiProviderStatus === 'not-configured'"
-            >AI not configured</span
-          >
-          <span class="hero-ai-label" *ngIf="aiProviderStatus === 'checking'">Checking…</span>
-        </div>
-        <button
-          class="hero-action-btn"
-          (click)="theme.toggle()"
-          [title]="theme.isDark ? 'Light mode' : 'Dark mode'"
-        >
-          <svg
-            *ngIf="theme.isDark"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="12" cy="12" r="5" />
-            <line x1="12" y1="1" x2="12" y2="3" />
-            <line x1="12" y1="21" x2="12" y2="23" />
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-            <line x1="1" y1="12" x2="3" y2="12" />
-            <line x1="21" y1="12" x2="23" y2="12" />
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-          </svg>
-          <svg
-            *ngIf="!theme.isDark"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-        </button>
+        <app-theme-toggle></app-theme-toggle>
         <a routerLink="/settings" class="hero-action-btn">
           <svg
             viewBox="0 0 24 24"
@@ -103,12 +41,8 @@
       </div>
     </header>
 
-    <!-- Headline content -->
+    <!-- Headline -->
     <div class="hero-content">
-      <div class="hero-eyebrow">
-        <span class="hero-eyebrow-dot"></span>
-        AI-Powered Code Intelligence
-      </div>
       <h1 class="hero-title">
         Understand any codebase,<br /><span class="hero-gradient">instantly.</span>
       </h1>
@@ -118,119 +52,164 @@
       </p>
     </div>
 
-    <!-- Analysis entry cards — frosted, overlaps bottom of hero -->
-    <div class="analysis-cards">
-      <a routerLink="/file-analysis" class="ac ac-file">
-        <div class="ac-icon">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-          </svg>
-        </div>
-        <div class="ac-body">
-          <span class="ac-scope">Single file</span>
-          <span class="ac-title">File Analysis</span>
-          <span class="ac-desc">Language detection, complexity, security, and AI docs.</span>
-        </div>
-        <svg
-          class="ac-arrow"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <line x1="5" y1="12" x2="19" y2="12" />
-          <polyline points="12 5 19 12 12 19" />
-        </svg>
-      </a>
+    <!-- Two-column panel row -->
+    <div class="hero-panels">
 
-      <a routerLink="/folder-analysis" class="ac ac-folder">
-        <div class="ac-icon">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          </svg>
-        </div>
-        <div class="ac-body">
-          <span class="ac-scope">Feature scope</span>
-          <span class="ac-title">Folder Analysis</span>
-          <span class="ac-desc">Dependency graphs, workflows, and architecture patterns.</span>
-        </div>
-        <svg
-          class="ac-arrow"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <line x1="5" y1="12" x2="19" y2="12" />
-          <polyline points="12 5 19 12 12 19" />
-        </svg>
-      </a>
+      <!-- Create a New Analysis -->
+      <div class="panel panel--analysis">
+        <h2 class="panel-title">Create a New Analysis</h2>
+        <div class="panel-cards">
 
-      <a routerLink="/repository-analysis" class="ac ac-repo">
-        <div class="ac-icon">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="12" cy="18" r="3" />
-            <circle cx="6" cy="6" r="3" />
-            <circle cx="18" cy="6" r="3" />
-            <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" />
-            <line x1="12" y1="12" x2="12" y2="15" />
+          <a routerLink="/file-analysis" class="pcard pcard--file">
+            <div class="pcard-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+            </div>
+            <span class="pcard-title">File Analysis</span>
+            <span class="pcard-desc">Analyze a single file in depth</span>
+            <svg class="pcard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
+
+          <a routerLink="/folder-analysis" class="pcard pcard--folder">
+            <div class="pcard-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              </svg>
+            </div>
+            <span class="pcard-title">Folder Analysis</span>
+            <span class="pcard-desc">Analyze a local folder or project</span>
+            <svg class="pcard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
+
+          <a routerLink="/repository-analysis" class="pcard pcard--repo">
+            <div class="pcard-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="18" r="3" />
+                <circle cx="6" cy="6" r="3" />
+                <circle cx="18" cy="6" r="3" />
+                <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" />
+                <line x1="12" y1="12" x2="12" y2="15" />
+              </svg>
+            </div>
+            <span class="pcard-title">Repository Analysis</span>
+            <span class="pcard-desc">Analyze a Git repository and its history</span>
+            <svg class="pcard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- AI Provider Status -->
+      <div class="panel panel--ai">
+        <h2 class="panel-title">AI Provider Status</h2>
+
+        <div class="ai-status-row">
+          <span class="ai-status-dot" [class.ai-status-dot--ok]="aiProviderStatus === 'configured'" [class.ai-status-dot--err]="aiProviderStatus === 'not-configured'"></span>
+          <span class="ai-status-label" *ngIf="aiProviderStatus === 'configured'">Connected</span>
+          <span class="ai-status-label ai-status-label--err" *ngIf="aiProviderStatus === 'not-configured'">Not configured</span>
+          <span class="ai-status-label ai-status-label--muted" *ngIf="aiProviderStatus === 'checking'">Checking…</span>
+        </div>
+
+        <div class="ai-divider"></div>
+
+        <div class="ai-meta-row">
+          <svg class="ai-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
+          <div class="ai-meta-body">
+            <span class="ai-meta-label">URL</span>
+            <span class="ai-meta-val">http://localhost:5000</span>
+          </div>
         </div>
-        <div class="ac-body">
-          <span class="ac-scope">Full repository</span>
-          <span class="ac-title">Repository Analysis</span>
-          <span class="ac-desc">System-wide architecture, risks, and full documentation.</span>
+
+        <div class="ai-meta-row">
+          <svg class="ai-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+            <line x1="6" y1="6" x2="6.01" y2="6" />
+            <line x1="6" y1="18" x2="6.01" y2="18" />
+          </svg>
+          <div class="ai-meta-body">
+            <span class="ai-meta-label">Model</span>
+            <span class="ai-meta-val">{{ aiProviderLabel }}</span>
+          </div>
         </div>
-        <svg
-          class="ac-arrow"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <line x1="5" y1="12" x2="19" y2="12" />
-          <polyline points="12 5 19 12 12 19" />
-        </svg>
-      </a>
+
+        <div class="ai-divider"></div>
+
+        <a routerLink="/settings" class="ai-settings-link">
+          Go to Settings
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
+      </div>
+
     </div>
   </section>
 
   <!-- ── Body ─────────────────────────────────────────────────────────────── -->
   <main class="home-body">
-    <!-- Repository Library — Electron only -->
-    <section class="home-library" *ngIf="electronService.isElectron">
+
+    <!-- Recent Analyses -->
+    <section class="home-recent" *ngIf="recentAnalyses.length > 0">
       <div class="section-header">
-        <span class="section-label">Repository Library</span>
+        <span class="section-label">Recent Analyses</span>
+        <div class="section-line"></div>
+        <a routerLink="/library" class="section-view-all">
+          View all
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
+      </div>
+      <div class="recent-grid">
+        <div
+          class="recent-card"
+          *ngFor="let ws of recentAnalyses"
+          [class.recent-card--file]="ws.type === 'file'"
+          [class.recent-card--folder]="ws.type === 'folder'"
+          [class.recent-card--repo]="ws.type === 'repository'"
+          (click)="openRecentAnalysis(ws)"
+        >
+          <div class="recent-card-icon">
+            <svg *ngIf="ws.type === 'file'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+            </svg>
+            <svg *ngIf="ws.type === 'folder'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+            <svg *ngIf="ws.type === 'repository'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><circle cx="18" cy="6" r="3" />
+              <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" /><line x1="12" y1="12" x2="12" y2="15" />
+            </svg>
+          </div>
+          <div class="recent-card-body">
+            <span class="recent-card-name">{{ ws.name }}</span>
+            <span class="recent-card-type">{{ recentTypeLabel(ws.type) }}</span>
+          </div>
+          <svg class="recent-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Repository Library — Electron only -->
+    <section class="home-library panel panel--library" *ngIf="electronService.isElectron">
+      <div class="section-header">
+        <span class="panel-title" style="margin:0">Repository Library</span>
         <div class="section-line"></div>
         <button class="lib-add-btn" (click)="addRepository()">
           <svg

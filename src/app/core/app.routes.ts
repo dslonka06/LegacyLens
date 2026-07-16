@@ -201,6 +201,11 @@ export const routes: Routes = [
 
   // ── Global ─────────────────────────────────────────────────────────────────
   {
+    path: 'library',
+    loadComponent: () =>
+      import('../features/library/pages/library-page/library-page').then((m) => m.LibraryPage),
+  },
+  {
     path: 'settings',
     loadComponent: () =>
       import('../features/settings/pages/settings-page/settings-page').then((m) => m.SettingsPage),

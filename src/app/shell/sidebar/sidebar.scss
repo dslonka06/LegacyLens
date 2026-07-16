@@ -21,28 +21,29 @@
 
 // ─── Collapse toggle tab — mirrors chat pull-out tab ──────
 .sidebar-collapse-tab {
-  position: absolute;
-  right: 0;
+  position: fixed;
+  left: var(--sidebar-width);
   top: 50%;
   transform: translateY(-50%);
-  z-index: 10;
-  width: 14px;
+  z-index: 200;
+  width: 28px;
   height: 56px;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-right: none;
-  border-radius: 0 8px 8px 0;
+  border-left: none;
+  border-radius: 0 10px 10px 0;
   color: var(--text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   padding: 0;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s,
+              left 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 
   svg {
-    width: 10px;
-    height: 10px;
+    width: 14px;
+    height: 14px;
     flex-shrink: 0;
   }
 
@@ -178,6 +179,6 @@
   --sidebar-btn-size: 36px;
 
   .sidebar-collapse-tab {
-    // flip arrow direction handled by *ngIf in template
+    left: var(--sidebar-width-collapsed);
   }
 }

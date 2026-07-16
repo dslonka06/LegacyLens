@@ -11,13 +11,15 @@ function typeFromSegments(segments: string[]): WorkspaceType | null {
   return null;
 }
 
-export const workspaceInitGuard: CanActivateFn = (route, state) => {
+export const workspaceInitGuard: CanActivateFn = async (route, state) => {
   const manager = inject(WorkspaceManagerService);
   const router = inject(Router);
 
   const segments = state.url.split('/').filter(Boolean);
   const type = typeFromSegments(segments);
   if (!type) return true;
+
+  await manager.ready;
 
   const result = manager.activateOrCreateForType(type);
   if (result === null) {

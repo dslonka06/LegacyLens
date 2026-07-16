@@ -9,7 +9,7 @@ export type WorkspaceStatus =
   | 'failed' // app closed or crashed mid-analysis; previous run did not complete
   | 'error'; // pipeline failed during the current session
 
-export const MAX_WORKSPACES = 3;
+export const MAX_WORKSPACES = 10;
 
 export interface Workspace {
   id: string;
