@@ -1,48 +1,66 @@
 .theme-toggle {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 2px;
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
+  gap: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
   backdrop-filter: blur(8px);
-  padding: 3px;
+  padding: 4px;
+  width: 80px;
+}
+
+// Sliding indicator that moves under the active button
+.theme-toggle-indicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  border-radius: 8px;
+  background: rgba(141, 99, 255, 0.4);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+
+  &--dark {
+    transform: translateX(100%);
+  }
 }
 
 .theme-toggle-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  height: 30px;
+  border-radius: 8px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  flex-shrink: 0;
+  transition: color 0.2s;
 
   svg {
     width: 14px;
     height: 14px;
     flex-shrink: 0;
-  }
-
-  &:hover {
-    color: rgba(255, 255, 255, 0.75);
-    background: rgba(255, 255, 255, 0.07);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   &--active {
-    background: rgba(141, 99, 255, 0.3);
     color: #fff;
     cursor: default;
 
-    &:hover {
-      background: rgba(141, 99, 255, 0.3);
-      color: #fff;
+    svg {
+      transform: scale(1.15);
     }
+  }
+
+  &:not(&--active):hover {
+    color: rgba(255, 255, 255, 0.75);
   }
 }
 
@@ -52,24 +70,22 @@
     background: var(--bg-secondary);
     border-color: var(--border);
     backdrop-filter: none;
+    width: 80px;
+  }
+
+  .theme-toggle-indicator {
+    background: var(--accent);
   }
 
   .theme-toggle-btn {
     color: var(--text-muted);
 
-    &:hover {
-      color: var(--text-primary);
-      background: var(--bg-hover);
+    &--active {
+      color: #fff;
     }
 
-    &--active {
-      background: var(--accent);
-      color: #fff;
-
-      &:hover {
-        background: var(--accent);
-        color: #fff;
-      }
+    &:not(&--active):hover {
+      color: var(--text-primary);
     }
   }
 }

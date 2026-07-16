@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
-import { ThemeService } from '@app/core/services/theme.service';
 import { ElectronService } from '@app/core/services/electron.service';
 import { RepositoryLibraryService } from '@app/core/services/repository-library.service';
 import { PendingRepositoryService } from '@app/core/services/pending-repository.service';
@@ -14,7 +13,6 @@ import {
   AnalysisTarget,
 } from '@app/core/services/target-validation.service';
 import { ValidationDialog } from '@app/shared/components/validation-dialog/validation-dialog';
-import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { Workspace } from '@app/workspace/models/workspace-entity.model';
 import type { ElectronRepository } from '../../../../electron';
@@ -28,7 +26,7 @@ const ANALYSIS_ROUTES: Record<AnalysisTarget, string> = {
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ValidationDialog, ThemeToggle],
+  imports: [CommonModule, FormsModule, RouterLink, ValidationDialog],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
 })
@@ -55,7 +53,6 @@ export class HomePage implements OnInit, OnDestroy {
   private pendingAddRepoId: string | null = null;
 
   constructor(
-    readonly theme: ThemeService,
     readonly electronService: ElectronService,
     private readonly repoLibrary: RepositoryLibraryService,
     private readonly pendingRepo: PendingRepositoryService,

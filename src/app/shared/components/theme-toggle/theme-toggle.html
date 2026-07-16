@@ -1,4 +1,7 @@
 <div class="theme-toggle" role="group" aria-label="Theme">
+  <!-- Sliding indicator -->
+  <div class="theme-toggle-indicator" [class.theme-toggle-indicator--dark]="theme.isDark"></div>
+
   <button
     class="theme-toggle-btn"
     [class.theme-toggle-btn--active]="!theme.isDark"

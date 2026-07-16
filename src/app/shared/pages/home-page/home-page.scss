@@ -34,20 +34,26 @@
   display: flex;
   flex-direction: column;
   min-height: 480px;
-  background: url('/assets/Dark Theme Background.png') top center / cover no-repeat;
+  background: url('/assets/Dark%20Theme%20Background.png') top center / cover no-repeat;
   flex-shrink: 0;
   padding-bottom: 48px;
+
+  // In light mode, swap to the light background image and matching bottom color
+  [data-theme='light'] & {
+    background-image: url('/assets/light%20theme%20background.png');
+  }
 }
 
 .hero-overlay {
   position: absolute;
   inset: 0;
+  // Bottom color must match .home-body background so there's no seam
   background: linear-gradient(
     180deg,
     rgba(8, 10, 20, 0.2) 0%,
     rgba(8, 10, 20, 0.15) 50%,
     rgba(21, 25, 39, 0.7) 80%,
-    #151927 100%
+    var(--bg-primary) 100%
   );
   pointer-events: none;
 }
@@ -65,31 +71,31 @@
 
 .hero-brand {
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .hero-logo-img {
-  width: 52px;
-  height: 52px;
+  width: 64px;
+  height: 64px;
   flex-shrink: 0;
-  border-radius: 12px;
+  border-radius: 16px;
 }
 
 .hero-brand-text {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  height: 52px;
-  padding-bottom: 1px;
+  gap: 3px;
+  padding-top: 2px;
 }
 
 .hero-brand-name {
-  font-size: 20px;
+  font-size: 26px;
   font-weight: 800;
   color: #fff;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.8px;
   line-height: 1;
+  font-family: 'Segoe UI', 'SF Pro Display', -apple-system, system-ui, sans-serif;
 }
 
 .hero-brand-tag {
@@ -97,6 +103,7 @@
   color: rgba(255, 255, 255, 0.45);
   font-weight: 400;
   line-height: 1;
+  letter-spacing: 0.01em;
 }
 
 .hero-bar-actions {
@@ -174,11 +181,11 @@
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: 1fr 280px;
-  gap: 14px;
-  max-width: 960px;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+  max-width: 1040px;
   width: calc(100% - 64px);
-  margin: 32px auto 0;
+  margin: 36px auto 0;
 
   @media (max-width: 800px) {
     grid-template-columns: 1fr;
@@ -188,23 +195,24 @@
 // ── Shared glass panel ────────────────────────────────────────────────────────
 
 .panel {
-  background: rgba(10, 12, 24, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  padding: 22px 22px 20px;
+  background: rgba(8, 10, 22, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 26px 24px 22px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .panel-title {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 700;
-  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.45);
   margin: 0;
-  letter-spacing: -0.2px;
 }
 
 // ── Analysis type cards inside the panel ─────────────────────────────────────
@@ -212,7 +220,7 @@
 .panel-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 12px;
 
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
@@ -223,16 +231,15 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
-  padding: 16px 14px 14px;
-  background: rgba(255, 255, 255, 0.04);
+  gap: 12px;
+  padding: 20px 18px 18px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  border-radius: 16px;
   text-decoration: none;
-  transition: background 0.18s, border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
 
     .pcard-arrow {
       opacity: 1;
@@ -242,19 +249,19 @@
 }
 
 .pcard-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 13px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 
-  svg { width: 22px; height: 22px; }
+  svg { width: 24px; height: 24px; }
 }
 
 .pcard-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: #fff;
   line-height: 1.3;
@@ -263,7 +270,7 @@
 .pcard-desc {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.5);
-  line-height: 1.5;
+  line-height: 1.55;
   flex: 1;
 }
 
@@ -279,38 +286,41 @@
 }
 
 .pcard--file {
+  background: rgba(92, 141, 255, 0.1);
   .pcard-icon {
-    background: linear-gradient(135deg, rgba(92, 141, 255, 0.25), rgba(92, 141, 255, 0.12));
+    background: linear-gradient(135deg, rgba(92, 141, 255, 0.35), rgba(92, 141, 255, 0.18));
     color: #7baeff;
   }
   &:hover {
-    border-color: rgba(92, 141, 255, 0.35);
-    background: rgba(92, 141, 255, 0.08);
-    box-shadow: 0 8px 24px rgba(92, 141, 255, 0.1);
+    border-color: rgba(92, 141, 255, 0.45);
+    background: rgba(92, 141, 255, 0.16);
+    box-shadow: 0 12px 32px rgba(92, 141, 255, 0.15);
   }
 }
 
 .pcard--folder {
+  background: rgba(52, 211, 153, 0.1);
   .pcard-icon {
-    background: linear-gradient(135deg, rgba(52, 211, 153, 0.25), rgba(52, 211, 153, 0.12));
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.35), rgba(52, 211, 153, 0.18));
     color: #34d399;
   }
   &:hover {
-    border-color: rgba(52, 211, 153, 0.35);
-    background: rgba(52, 211, 153, 0.08);
-    box-shadow: 0 8px 24px rgba(52, 211, 153, 0.08);
+    border-color: rgba(52, 211, 153, 0.45);
+    background: rgba(52, 211, 153, 0.16);
+    box-shadow: 0 12px 32px rgba(52, 211, 153, 0.12);
   }
 }
 
 .pcard--repo {
+  background: rgba(167, 139, 250, 0.1);
   .pcard-icon {
-    background: linear-gradient(135deg, rgba(167, 139, 250, 0.25), rgba(167, 139, 250, 0.12));
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.35), rgba(167, 139, 250, 0.18));
     color: #a78bfa;
   }
   &:hover {
-    border-color: rgba(167, 139, 250, 0.35);
-    background: rgba(167, 139, 250, 0.08);
-    box-shadow: 0 8px 24px rgba(167, 139, 250, 0.1);
+    border-color: rgba(167, 139, 250, 0.45);
+    background: rgba(167, 139, 250, 0.16);
+    box-shadow: 0 12px 32px rgba(167, 139, 250, 0.15);
   }
 }
 
@@ -852,7 +862,7 @@
 .caps-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
+  gap: 10px;
 
   @media (max-width: 900px) {
     grid-template-columns: repeat(3, 1fr);
@@ -862,12 +872,12 @@
 .cap {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 14px;
+  gap: 10px;
+  padding: 18px 16px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-left: 3px solid transparent;
-  border-radius: 12px;
+  border-radius: 14px;
   transition:
     transform 0.15s,
     border-color 0.15s;
