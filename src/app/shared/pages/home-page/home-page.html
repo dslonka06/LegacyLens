@@ -42,47 +42,53 @@
 
           <a routerLink="/file-analysis" class="pcard pcard--file">
             <div class="pcard-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
+              <!-- File with code lines -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                <polyline points="13 2 13 9 20 9" />
+                <line x1="8" y1="13" x2="16" y2="13" />
+                <line x1="8" y1="17" x2="13" y2="17" />
+                <line x1="8" y1="9" x2="10" y2="9" />
               </svg>
             </div>
             <span class="pcard-title">File Analysis</span>
             <span class="pcard-desc">Analyze a single file in depth</span>
-            <svg class="pcard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+            <svg class="pcard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="13 6 19 12 13 18" />
             </svg>
           </a>
 
           <a routerLink="/folder-analysis" class="pcard pcard--folder">
             <div class="pcard-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              <!-- Folder with stacked files inside -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7a2 2 0 0 1 2-2h4.17a2 2 0 0 1 1.42.59L12 7h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+                <line x1="8" y1="15.5" x2="13" y2="15.5" />
               </svg>
             </div>
             <span class="pcard-title">Folder Analysis</span>
             <span class="pcard-desc">Analyze a local folder or project</span>
-            <svg class="pcard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+            <svg class="pcard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="13 6 19 12 13 18" />
             </svg>
           </a>
 
           <a routerLink="/repository-analysis" class="pcard pcard--repo">
             <div class="pcard-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="18" r="3" />
-                <circle cx="6" cy="6" r="3" />
-                <circle cx="18" cy="6" r="3" />
-                <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" />
-                <line x1="12" y1="12" x2="12" y2="15" />
+              <!-- Git branch with nodes -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="6" cy="5" r="2" />
+                <circle cx="6" cy="19" r="2" />
+                <circle cx="18" cy="8" r="2" />
+                <line x1="6" y1="7" x2="6" y2="17" />
+                <path d="M6 7c0 4 12 3 12 1" />
               </svg>
             </div>
             <span class="pcard-title">Repository Analysis</span>
             <span class="pcard-desc">Analyze a Git repository and its history</span>
-            <svg class="pcard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+            <svg class="pcard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="13 6 19 12 13 18" />
             </svg>
           </a>
 
@@ -139,7 +145,7 @@
     </div>
 
     <!-- Analysis Library preview — always shown inside hero area -->
-    <div class="hero-library" *ngIf="recentAnalyses.length > 0">
+    <div class="hero-library">
       <div class="hero-library-header">
         <span class="hero-library-title">Analysis Library</span>
         <a routerLink="/library" class="hero-library-viewall">
@@ -149,7 +155,16 @@
           </svg>
         </a>
       </div>
-      <div class="hero-library-grid">
+
+      <!-- Empty state when no analyses exist yet -->
+      <div class="hero-library-empty" *ngIf="recentAnalyses.length === 0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+        </svg>
+        <span>No analyses yet — create one above to get started.</span>
+      </div>
+
+      <div class="hero-library-grid" *ngIf="recentAnalyses.length > 0">
         <div
           class="recent-card"
           *ngFor="let ws of recentAnalyses"

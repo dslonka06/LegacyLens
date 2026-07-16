@@ -34,13 +34,13 @@
   display: flex;
   flex-direction: column;
   min-height: 380px;
-  background: url('/assets/Dark%20Theme%20Background.png') top center / cover no-repeat;
+  background: url('/assets/dark-theme-background.png') top center / cover no-repeat;
   flex-shrink: 0;
   padding-bottom: 40px;
 
   // In light mode, swap to the light background image and matching bottom color
   [data-theme='light'] & {
-    background-image: url('/assets/light%20theme%20background.png');
+    background-image: url('/assets/light-theme-background.png');
   }
 }
 
@@ -154,11 +154,11 @@
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr 240px;
   gap: 16px;
   max-width: 1040px;
   width: calc(100% - 64px);
-  margin: 24px auto 0;
+  margin: 120px auto 0;
 
   @media (max-width: 800px) {
     grid-template-columns: 1fr;
@@ -181,12 +181,16 @@
 }
 
 .panel-title {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0;
+  color: rgba(255, 255, 255, 0.7);
   margin: 0;
+}
+
+// AI panel centers its own content; analysis panel stays left-aligned
+.panel--ai .panel-title {
+  text-align: center;
 }
 
 // ── Analysis type cards inside the panel ─────────────────────────────────────
@@ -264,21 +268,26 @@
   flex: 1;
 }
 
-// Arrow always visible at bottom-right
+// Arrow always visible at bottom-right, colored per analysis type
 .pcard-arrow {
   position: absolute;
   z-index: 1;
-  bottom: 14px;
-  right: 14px;
-  width: 16px;
-  height: 16px;
-  color: rgba(255, 255, 255, 0.35);
+  bottom: 12px;
+  right: 12px;
+  width: 20px;
+  height: 20px;
   transition: color 0.18s, transform 0.18s;
 
+  .pcard--file & { color: rgba(92, 141, 255, 0.55); }
+  .pcard--folder & { color: rgba(52, 211, 153, 0.55); }
+  .pcard--repo & { color: rgba(167, 139, 250, 0.55); }
+
   .pcard:hover & {
-    color: rgba(255, 255, 255, 0.7);
-    transform: translateX(2px);
+    transform: translateX(3px);
   }
+  .pcard--file:hover & { color: #7baeff; }
+  .pcard--folder:hover & { color: #34d399; }
+  .pcard--repo:hover & { color: #a78bfa; }
 }
 
 .pcard--file {
@@ -345,6 +354,15 @@
 }
 
 // ── AI Provider Status panel ──────────────────────────────────────────────────
+
+.panel--ai {
+  align-items: center;
+  text-align: center;
+
+  .panel-title {
+    align-self: stretch;
+  }
+}
 
 .ai-status-row {
   display: flex;
@@ -476,6 +494,20 @@
 
   svg { width: 12px; height: 12px; }
   &:hover { color: #c4b5fd; }
+}
+
+.hero-library-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 13px;
+
+  svg { width: 18px; height: 18px; flex-shrink: 0; }
 }
 
 .hero-library-grid {
