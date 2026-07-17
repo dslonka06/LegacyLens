@@ -1,10 +1,6 @@
 <div class="hub-page" [class.hub-page--has-model]="hasModel">
 
-  <!-- ══════════════════════════════════════════════════════
-       HUB SHELL — always rendered, state switches inside
-  ═══════════════════════════════════════════════════════ -->
-
-  <!-- Top bar — always visible -->
+  <!-- ── Topbar — floats on background, no panel ───────────────── -->
   <div class="hub-topbar" [class.hub-topbar--animate]="showIdentity">
     <div class="hub-topbar-left">
       <div class="hub-breadcrumb">
@@ -18,7 +14,7 @@
       <p class="hub-subheading">Overview and entry points for understanding this file.</p>
     </div>
     <div class="hub-topbar-actions">
-      <span class="hub-last-analyzed" *ngIf="lastAnalyzed">{{ lastAnalyzed }}</span>
+      <span class="hub-last-analyzed" *ngIf="lastAnalyzed">Last analyzed<br>{{ lastAnalyzed }}</span>
       <button class="hub-action-btn" (click)="reanalyze()" [disabled]="!canReanalyze" title="Re-analyze">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="23 4 23 10 17 10" />
@@ -30,10 +26,10 @@
     </div>
   </div>
 
-  <!-- Scrollable hub body -->
+  <!-- ── Hub body ───────────────────────────────────────────────── -->
   <div class="hub-body">
 
-    <!-- ── Row 1: Identity / Upload / Analyzing card + Workspace card ─── -->
+    <!-- ── Row 1: Identity card (full width) + Workspace card ───── -->
     <div class="hub-first-row" [class.hub-section--animate]="showIdentity">
 
       <!-- Identity card — morphs between upload / analyzing / ready -->
@@ -41,7 +37,7 @@
            [class.hub-identity-card--upload]="isEmpty"
            [class.hub-identity-card--analyzing]="isAnalyzing">
 
-        <!-- EMPTY: upload zone embedded in card -->
+        <!-- ── EMPTY: upload zone ── -->
         <ng-container *ngIf="isEmpty">
           <div
             class="upload-zone upload-zone--inline"
@@ -78,58 +74,100 @@
           </div>
         </ng-container>
 
-        <!-- ANALYZING: inline progress inside card -->
-        <ng-container *ngIf="isAnalyzing">
-          <div class="analyzing-inline">
-            <div class="analyzing-spinner"></div>
-            <div class="analyzing-inline-body">
-              <h2 class="analyzing-title">Analyzing {{ fileName }}</h2>
-              <p class="analyzing-desc">Building knowledge model…</p>
-              <div class="stage-dots">
-                <div
-                  class="stage-dot"
-                  *ngFor="let stage of pipelineStages"
-                  [class.stage-dot--complete]="stage.state === 'complete'"
-                  [class.stage-dot--running]="stage.state === 'running'"
-                  [class.stage-dot--failed]="stage.state === 'failed'"
-                  [title]="stage.label"
-                ></div>
-              </div>
+        <!-- ── ANALYZING or READY: shared identity layout ── -->
+        <ng-container *ngIf="isAnalyzing || hasModel">
+
+          <!-- File type icon badge -->
+          <div class="identity-file-icon">
+            <svg class="identity-file-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+            <span class="identity-file-ext">{{ fileExt }}</span>
+          </div>
+
+          <!-- Name + kind + path -->
+          <div class="identity-info">
+            <span class="identity-filename">{{ fileName }}</span>
+            <span class="identity-kind" *ngIf="detectedKind || isAnalyzing">
+              {{ isAnalyzing && !detectedKind ? 'Detecting…' : detectedKind }}
+            </span>
+            <span class="identity-path" *ngIf="filePath">{{ filePath }}</span>
+          </div>
+
+          <div class="identity-spacer"></div>
+
+          <!-- Detected as + Language pills — shown once we have structural data -->
+          <div class="identity-pills" *ngIf="hasModel">
+            <div class="identity-pill-group" *ngIf="detectedKind">
+              <span class="identity-pill-label">Detected as</span>
+              <span class="identity-pill-value">{{ detectedKind }}</span>
+            </div>
+            <div class="identity-pill-group" *ngIf="language">
+              <span class="identity-pill-label">Language</span>
+              <span class="identity-pill-value identity-pill-value--lang">{{ language }}</span>
             </div>
           </div>
+
+          <!-- Animated hex shape — right side -->
+          <div class="identity-hex-wrap">
+            <svg
+              class="identity-hex"
+              [class.identity-hex--analyzing]="isAnalyzing"
+              [class.identity-hex--ready]="hasModel"
+              viewBox="0 0 68 68"
+              fill="none"
+            >
+              <!-- Outer hex ring -->
+              <g class="hex-ring-outer">
+                <polygon
+                  points="34,4 58,18 58,50 34,64 10,50 10,18"
+                  fill="none"
+                  stroke="rgba(141,99,255,0.35)"
+                  stroke-width="1.5"
+                  stroke-dasharray="6 4"
+                />
+              </g>
+              <!-- Inner hex ring -->
+              <g class="hex-ring-inner">
+                <polygon
+                  points="34,12 52,22 52,46 34,56 16,46 16,22"
+                  fill="none"
+                  stroke="rgba(141,99,255,0.55)"
+                  stroke-width="1.5"
+                />
+              </g>
+              <!-- Core hex fill -->
+              <g class="hex-core">
+                <polygon
+                  points="34,20 46,27 46,41 34,48 22,41 22,27"
+                  fill="rgba(141,99,255,0.18)"
+                  stroke="rgba(141,99,255,0.7)"
+                  stroke-width="1"
+                />
+                <!-- Center dot -->
+                <circle cx="34" cy="34" r="4" fill="rgba(141,99,255,0.8)" />
+              </g>
+            </svg>
+          </div>
+
         </ng-container>
 
-        <!-- READY: identity content -->
-        <ng-container *ngIf="hasModel">
-          <div class="identity-lang-badge">{{ language }}</div>
-          <div class="identity-content">
-            <h1 class="identity-filename">{{ fileName }}</h1>
-            <p class="identity-summary" *ngIf="model?.ai?.understanding?.executiveSummary">
-              {{ model!.ai!.understanding!.executiveSummary }}
-            </p>
-            <p class="identity-summary identity-summary--muted" *ngIf="!model?.ai?.understanding?.executiveSummary">
-              AI analysis is running in the background. Summary will appear shortly.
-            </p>
-          </div>
-          <div class="identity-meta">
-            <div class="identity-meta-item" *ngIf="detectedKind">
-              <span class="identity-meta-label">Type</span>
-              <span class="identity-meta-val">{{ detectedKind }}</span>
-            </div>
-            <div class="identity-meta-item" *ngIf="language">
-              <span class="identity-meta-label">Language</span>
-              <span class="identity-meta-val">{{ language }}</span>
-            </div>
-            <div class="identity-meta-item" *ngIf="model?.ai?.understanding?.businessCriticality">
-              <span class="identity-meta-label">Criticality</span>
-              <span class="identity-meta-val">{{ model!.ai!.understanding!.businessCriticality }}</span>
-            </div>
-          </div>
-        </ng-container>
+        <!-- Analyzing stage dots overlay at bottom of card -->
+        <div class="identity-stage-dots" *ngIf="isAnalyzing">
+          <div
+            class="stage-dot"
+            *ngFor="let stage of pipelineStages"
+            [class.stage-dot--complete]="stage.state === 'complete'"
+            [class.stage-dot--running]="stage.state === 'running'"
+            [class.stage-dot--failed]="stage.state === 'failed'"
+            [title]="stage.label"
+          ></div>
+        </div>
 
       </div>
 
-      <!-- Workspace card — always visible in first row -->
+      <!-- Workspace card — always visible -->
       <div class="info-card info-card--workspace">
         <div class="info-card-label">Workspace</div>
         <div class="workspace-name-row">
@@ -235,7 +273,7 @@
 
     </div>
 
-    <!-- ── Row 3: Metric / nav cards — visible once model arrives ── -->
+    <!-- ── Row 3: Metric / nav cards ─────────────────────────────── -->
     <ng-container *ngIf="hasModel">
       <div class="hub-section-label" *ngIf="showMetricCards">Explore This File</div>
       <div class="hub-metric-row"
@@ -271,7 +309,6 @@
         </button>
       </div>
 
-      <!-- Learning path nudge -->
       <div class="hub-learning-nudge" *ngIf="showMetricCards">
         <button class="hub-learning-nudge-link" (click)="navigate('/file-analysis/learning-path')">
           Not sure where to start? Try the Learning Path

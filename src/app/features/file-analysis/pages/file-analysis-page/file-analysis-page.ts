@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -54,6 +54,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   uploadError: string | null = null;
   isDragging = false;
+  filePath: string | null = null;
 
   private sub: Subscription | null = null;
   private limitSub: Subscription | null = null;
@@ -64,6 +65,8 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     private readonly manager: WorkspaceManagerService,
     private readonly knowledge: WorkspaceKnowledgeService,
     private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef,
+    private readonly zone: NgZone,
   ) {}
 
   ngOnInit(): void {
@@ -110,20 +113,27 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     this.showInfoCards = false;
     this.showArcDraw = false;
     this.showMetricCards = false;
+    this.cdr.detectChanges();
 
     const fast = this.isReturning;
     const t = (ms: number) => (fast ? Math.round(ms * 0.4) : ms);
 
-    setTimeout(() => { this.showIdentity = true; }, t(80));
-    setTimeout(() => { this.showInfoCards = true; }, t(220));
-    setTimeout(() => { this.showArcDraw = true; }, t(320));
-    this.animTimer = setTimeout(() => { this.showMetricCards = true; }, t(380));
+    const run = (fn: () => void, delay: number) =>
+      setTimeout(() => this.zone.run(() => { fn(); this.cdr.detectChanges(); }), delay);
+
+    run(() => { this.showIdentity = true; }, t(80));
+    run(() => { this.showInfoCards = true; }, t(220));
+    run(() => { this.showArcDraw = true; }, t(320));
+    this.animTimer = run(() => { this.showMetricCards = true; }, t(380));
   }
 
-  // Animate the info row in when processing begins (before model arrives)
+  // Slide info row in as soon as processing begins, before model arrives
   private runInfoCardAnimation(): void {
-    setTimeout(() => { this.showInfoCards = true; }, 150);
-    setTimeout(() => { this.showArcDraw = true; }, 280);
+    const run = (fn: () => void, delay: number) =>
+      setTimeout(() => this.zone.run(() => { fn(); this.cdr.detectChanges(); }), delay);
+
+    run(() => { this.showInfoCards = true; }, 150);
+    run(() => { this.showArcDraw = true; }, 280);
   }
 
   private animateCountsTo(cards: HubMetricCard[]): void {
@@ -136,13 +146,16 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       const target = card.count;
       const duration = 600;
       const steps = Math.min(target, 30);
-      const interval = duration / steps;
+      const intervalMs = duration / steps;
       let current = 0;
       const timer = setInterval(() => {
-        current = Math.min(current + Math.ceil(target / steps), target);
-        this.displayedCounts[card.id] = current;
-        if (current >= target) clearInterval(timer);
-      }, interval);
+        this.zone.run(() => {
+          current = Math.min(current + Math.ceil(target / steps), target);
+          this.displayedCounts[card.id] = current;
+          this.cdr.detectChanges();
+          if (current >= target) clearInterval(timer);
+        });
+      }, intervalMs);
       this.countTimers.push(timer);
     }
   }
@@ -191,6 +204,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     }
 
     const file = files[0];
+    this.filePath = (file as any).path ?? null;
     if (file.size === 0 && !file.type) {
       this.uploadError =
         'That looks like a folder. Use Folder Analysis to analyze a whole directory.';
@@ -310,6 +324,12 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   get language(): string {
     return this.model?.structure.fileLanguage ?? this.model?.structure.languages[0] ?? '';
+  }
+
+  get fileExt(): string {
+    const name = this.fileName;
+    const dot = name.lastIndexOf('.');
+    return dot >= 0 ? name.slice(dot + 1).toUpperCase() : '';
   }
 
   get lastAnalyzed(): string {

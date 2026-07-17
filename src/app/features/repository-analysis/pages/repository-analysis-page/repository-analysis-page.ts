@@ -1,4 +1,4 @@
-import { Component, NgZone, OnInit, OnDestroy } from '@angular/core';
+import { Component, NgZone, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -84,21 +84,28 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     private readonly layoutService: PanelLayoutService,
     private readonly zone: NgZone,
     private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       const prevId = this.workspace?.id;
+      const prevStatus = this.workspace?.status;
       const prevModel = this.workspace?.knowledgeModel;
       this.workspace = ws;
       this.model = ws?.knowledgeModel ?? null;
 
       const switched = prevId !== ws?.id;
       const modelArrived = !prevModel && !!ws?.knowledgeModel;
+      const processingStarted = prevStatus !== 'processing' && ws?.status === 'processing';
+
       if (switched || modelArrived) {
         this.isReturning = switched && !!ws?.knowledgeModel;
         this.runAnimations();
+      } else if (processingStarted) {
+        this.runInfoCardAnimation();
       }
+      this.cdr.detectChanges();
     });
 
     this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
@@ -289,14 +296,25 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     this.showInfoCards = false;
     this.showArcDraw = false;
     this.showMetricCards = false;
+    this.cdr.detectChanges();
 
     const fast = this.isReturning;
     const t = (ms: number) => (fast ? Math.round(ms * 0.4) : ms);
+    const run = (fn: () => void, delay: number) =>
+      setTimeout(() => this.zone.run(() => { fn(); this.cdr.detectChanges(); }), delay);
 
-    setTimeout(() => { this.showIdentity = true; }, t(80));
-    setTimeout(() => { this.showInfoCards = true; }, t(220));
-    setTimeout(() => { this.showArcDraw = true; }, t(320));
-    this.animTimer = setTimeout(() => { this.showMetricCards = true; }, t(380));
+    run(() => { this.showIdentity = true; }, t(80));
+    run(() => { this.showInfoCards = true; }, t(220));
+    run(() => { this.showArcDraw = true; }, t(320));
+    this.animTimer = run(() => { this.showMetricCards = true; }, t(380));
+  }
+
+  private runInfoCardAnimation(): void {
+    const run = (fn: () => void, delay: number) =>
+      setTimeout(() => this.zone.run(() => { fn(); this.cdr.detectChanges(); }), delay);
+
+    run(() => { this.showInfoCards = true; }, 150);
+    run(() => { this.showArcDraw = true; }, 280);
   }
 
   // ── Workspace actions ──────────────────────────────────────────────────────
