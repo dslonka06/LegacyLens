@@ -67,9 +67,11 @@ export class AIAnalysisService {
     stage: AIStage,
     generation: number,
   ): Promise<void> {
+    console.log(`[AI] Stage starting: ${stage}`);
     this.manager.setStageRunning(workspaceId, stage);
     try {
       const result = await this.callStage(model, stage);
+      console.log(`[AI] Stage result: ${stage}`, result === null ? 'null' : 'ok');
 
       // Drop result if re-analyze was triggered while this stage was running
       if (result !== null) {
@@ -84,9 +86,11 @@ export class AIAnalysisService {
           },
           generation,
         );
+        console.log(`[AI] Stage merged: ${stage}`);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      console.error(`[AI] Stage failed: ${stage}`, message);
       this.manager.markAIStageFailed(workspaceId, stage, generation, message);
     } finally {
       this.manager.clearStageRunning(workspaceId, stage);
