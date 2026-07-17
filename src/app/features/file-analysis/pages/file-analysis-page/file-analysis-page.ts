@@ -478,7 +478,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
         label: 'Flow Steps',
         route: `${base}/data-flow`,
         suggested: false,
-        pending: !this.model?.capabilities.includes('insightExtraction'),
+        pending: !this.model?.capabilities.includes('fileParsing'),
       },
       {
         id: 'symbols',

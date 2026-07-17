@@ -83,7 +83,7 @@ class KnowledgeModelEngine {
 
     if (isFile && pipelineResult.parsedFiles?.[0]) {
       const pf = pipelineResult.parsedFiles[0];
-      const ar = pf.analysisResult ?? {};  // raw PatternParser output
+      const ar = pf._analysisResult ?? {};  // raw PatternParser output (_analysisResult is the field name PatternParser uses)
 
       if (ar.complexity)      insights.complexity      = ar.complexity;
       if (ar.maintainability) insights.maintainability = ar.maintainability;
