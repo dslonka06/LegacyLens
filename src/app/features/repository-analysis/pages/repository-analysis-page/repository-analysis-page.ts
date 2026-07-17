@@ -442,10 +442,10 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   get topSubsystems(): { name: string; fileCount: number }[] {
     const tree = this.model?.structure.folderTree;
     if (!tree) return [];
-    return tree.children
+    return (tree.children ?? [])
       .slice(0, 6)
-      .map((f) => ({ name: f.name, fileCount: f.totalFileCount }))
-      .filter((s) => s.fileCount > 0);
+      .map((f: any) => ({ name: f.name, fileCount: f.totalFileCount ?? f.fileCount ?? 0 }))
+      .filter((s: any) => s.fileCount > 0);
   }
 
   // ── Code Health ────────────────────────────────────────────────────────────

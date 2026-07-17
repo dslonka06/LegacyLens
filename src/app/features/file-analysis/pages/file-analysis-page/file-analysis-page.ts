@@ -81,6 +81,8 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       const modelArrived = !prevModel && !!ws?.knowledgeModel;
       // Also animate when processing begins so info row slides in
       const processingStarted = prevStatus !== 'processing' && ws?.status === 'processing';
+      const aiUpdated = !switched && !modelArrived && !!ws?.knowledgeModel &&
+        ws.knowledgeModel.ai !== prevModel?.ai;
 
       if (switched || modelArrived) {
         this.isReturning = switched && !!ws?.knowledgeModel;
@@ -89,7 +91,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
         this.runInfoCardAnimation();
       }
 
-      if (modelArrived) {
+      if (modelArrived || aiUpdated) {
         this.animateCountsTo(this.metricCards);
       }
     });
