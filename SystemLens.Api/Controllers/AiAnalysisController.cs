@@ -1,6 +1,8 @@
+using SystemLens.Api.Configuration;
 using SystemLens.Api.Models;
 using SystemLens.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace SystemLens.Api.Controllers;
 
@@ -11,15 +13,26 @@ public sealed class AiAnalysisController : ControllerBase
     private readonly IAiAnalysisService _analysisService;
     private readonly IAiExplainService _explainService;
     private readonly ILogger<AiAnalysisController> _logger;
+    private readonly OpenAiOptions _options;
 
     public AiAnalysisController(
         IAiAnalysisService analysisService,
         IAiExplainService explainService,
-        ILogger<AiAnalysisController> logger)
+        ILogger<AiAnalysisController> logger,
+        IOptions<OpenAiOptions> options)
     {
         _analysisService = analysisService;
         _explainService = explainService;
         _logger = logger;
+        _options = options.Value;
+    }
+
+    [HttpGet("status")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult Status()
+    {
+        var available = !string.IsNullOrWhiteSpace(_options.ApiKey);
+        return Ok(new { available, model = _options.Model });
     }
 
     /// <summary>
