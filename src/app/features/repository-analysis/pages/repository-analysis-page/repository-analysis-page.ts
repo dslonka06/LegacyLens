@@ -92,12 +92,22 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       const prevId = this.workspace?.id;
       const prevStatus = this.workspace?.status;
       const prevModel = this.workspace?.knowledgeModel;
+      const prevAi = this.workspace?.knowledgeModel?.ai;
       this.workspace = ws;
       this.model = ws?.knowledgeModel ?? null;
 
       const switched = prevId !== ws?.id;
       const modelArrived = !prevModel && !!ws?.knowledgeModel;
       const processingStarted = prevStatus !== 'processing' && ws?.status === 'processing';
+      const aiUpdated = !switched && !modelArrived && !!ws?.knowledgeModel &&
+        ws.knowledgeModel.ai !== prevAi;
+      console.log('[RepoHub] ws update', {
+        switched,
+        modelArrived,
+        aiUpdated,
+        prevAiSame: prevAi === ws?.knowledgeModel?.ai,
+        completedStages: ws?.knowledgeModel?.ai?.completedStages,
+      });
 
       if (switched || modelArrived) {
         this.isReturning = switched && !!ws?.knowledgeModel;

@@ -67,12 +67,15 @@ export class AIAnalysisService {
     stage: AIStage,
     generation: number,
   ): Promise<void> {
+    console.log(`[AI] stage start: ${stage} gen=${generation}`);
     this.manager.setStageRunning(workspaceId, stage);
     try {
       const result = await this.callStage(model, stage);
+      console.log(`[AI] stage done: ${stage} result=${result === null ? 'NULL' : result === undefined ? 'UNDEFINED' : 'ok'}`);
 
-      // Drop result if re-analyze was triggered while this stage was running
       if (result !== null) {
+        const currentGen = this.manager.getGeneration(workspaceId);
+        console.log(`[AI] stage merge: ${stage} gen=${generation} currentGen=${currentGen} match=${currentGen === generation}`);
         const completed = [...(model.ai?.completedStages ?? []), stage] as AIStage[];
 
         this.manager.mergeAIResults(
@@ -84,9 +87,11 @@ export class AIAnalysisService {
           },
           generation,
         );
+        console.log(`[AI] stage merged: ${stage}`);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      console.error(`[AI] stage FAILED: ${stage}`, message);
       this.manager.markAIStageFailed(workspaceId, stage, generation, message);
     } finally {
       this.manager.clearStageRunning(workspaceId, stage);
@@ -96,6 +101,7 @@ export class AIAnalysisService {
   // ── Private ───────────────────────────────────────────────────────────────
 
   private async callStage(model: KnowledgeModel, stage: AIStage): Promise<unknown> {
+    console.log(`[AI] callStage invoking IPC: ${stage}`);
     switch (stage) {
       case 'security':
         return this.electron.intelligenceSecurity(model, null) as Promise<SecurityAnalysis>;

@@ -176,10 +176,13 @@ function registerIntelligenceHandlers() {
   // intelligence:systemUnderstanding — accepts KnowledgeModel, adapts to engine's expected shape
   ipcMain.handle('intelligence:systemUnderstanding', wrapHandler(async (_event, model) => {
     if (!model) throw new Error('model is required');
+    console.log('[IPC] intelligence:systemUnderstanding targetType=' + model.targetType);
     const { knowledge, session } = adaptModelForEngines(model);
-    return knowledge
+    const result = await (knowledge
       ? systemUnderstanding.analyzeKnowledge(knowledge, session)
-      : systemUnderstanding.analyzeFile(session);
+      : systemUnderstanding.analyzeFile(session));
+    console.log('[IPC] intelligence:systemUnderstanding done result=' + (result ? 'ok' : 'null'));
+    return result;
   }));
 
   // intelligence:exploreWorkflows — build summaries from discovered workflow flows
@@ -206,19 +209,25 @@ function registerIntelligenceHandlers() {
   // intelligence:recommendations — accepts KnowledgeModel, adapts to engine's expected shape
   ipcMain.handle('intelligence:recommendations', wrapHandler(async (_event, model) => {
     if (!model) throw new Error('model is required');
+    console.log('[IPC] intelligence:recommendations targetType=' + model.targetType);
     const { knowledge, session } = adaptModelForEngines(model);
-    return knowledge
+    const result = await (knowledge
       ? recommendations.analyzeKnowledge(knowledge, session)
-      : recommendations.analyzeFile(session);
+      : recommendations.analyzeFile(session));
+    console.log('[IPC] intelligence:recommendations done result=' + (result ? 'ok' : 'null'));
+    return result;
   }));
 
   // intelligence:security — accepts KnowledgeModel, adapts to engine's expected shape
   ipcMain.handle('intelligence:security', wrapHandler(async (_event, model) => {
     if (!model) throw new Error('model is required');
+    console.log('[IPC] intelligence:security targetType=' + model.targetType);
     const { knowledge, session } = adaptModelForEngines(model);
-    return knowledge
+    const result = await (knowledge
       ? securityAnalysis.analyzeKnowledge(knowledge, session)
-      : securityAnalysis.analyzeFile(session);
+      : securityAnalysis.analyzeFile(session));
+    console.log('[IPC] intelligence:security done result=' + (result ? 'ok' : 'null'));
+    return result;
   }));
 
   // intelligence:insights — derive repository-level insights from aggregated knowledge

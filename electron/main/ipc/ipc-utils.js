@@ -13,7 +13,8 @@ function wrapHandler(fn) {
       return { success: true, data: data ?? null };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error('[IPC] Handler error:', message);
+      const stack = err instanceof Error ? err.stack : '';
+      console.error('[IPC] Handler error:', message, '\n', stack);
       return { success: false, error: message };
     }
   };

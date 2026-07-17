@@ -74,6 +74,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       const prevId = this.workspace?.id;
       const prevStatus = this.workspace?.status;
       const prevModel = this.workspace?.knowledgeModel;
+      const prevAi = this.workspace?.knowledgeModel?.ai;
       this.workspace = ws;
       this.model = ws?.knowledgeModel ?? null;
 
@@ -82,7 +83,17 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       // Also animate when processing begins so info row slides in
       const processingStarted = prevStatus !== 'processing' && ws?.status === 'processing';
       const aiUpdated = !switched && !modelArrived && !!ws?.knowledgeModel &&
-        ws.knowledgeModel.ai !== prevModel?.ai;
+        ws.knowledgeModel.ai !== prevAi;
+      console.log('[Hub] ws update', {
+        switched,
+        modelArrived,
+        aiUpdated,
+        prevAiRef: prevAi ? 'has-prev' : 'null',
+        newAiRef: ws?.knowledgeModel?.ai ? 'has-new' : 'null',
+        prevAiSame: prevAi === ws?.knowledgeModel?.ai,
+        completedStages: ws?.knowledgeModel?.ai?.completedStages,
+        willAnimate: modelArrived || aiUpdated,
+      });
 
       if (switched || modelArrived) {
         this.isReturning = switched && !!ws?.knowledgeModel;

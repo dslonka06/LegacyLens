@@ -227,17 +227,26 @@ export class WorkspaceManagerService {
    * @param generation  If provided, the result is dropped if the workspace has moved on.
    */
   mergeAIResults(id: string, aiResults: Partial<KnowledgeAIResults>, generation?: number): void {
-    if (generation !== undefined && this.getGeneration(id) !== generation) return;
+    const currentGen = this.getGeneration(id);
+    if (generation !== undefined && currentGen !== generation) {
+      console.warn(`[Manager] mergeAIResults DROPPED gen=${generation} currentGen=${currentGen}`);
+      return;
+    }
     const ws = this.getById(id);
-    if (!ws?.knowledgeModel) return;
+    if (!ws?.knowledgeModel) {
+      console.warn(`[Manager] mergeAIResults DROPPED — no knowledgeModel for ws=${id}`);
+      return;
+    }
 
     const existing = ws.knowledgeModel.ai ?? { completedStages: [], failedStages: [] };
     const merged: KnowledgeAIResults = { ...existing, ...aiResults };
 
+    console.log(`[Manager] mergeAIResults calling patch ws=${id} completedStages=${JSON.stringify(merged.completedStages)}`);
     this.patch(id, {
       knowledgeModel: { ...ws.knowledgeModel, ai: merged },
       lastModifiedAt: new Date().toISOString(),
     });
+    console.log(`[Manager] mergeAIResults patch done`);
   }
 
   /** Mark an AI stage as failed without losing other AI results. */
@@ -392,11 +401,14 @@ export class WorkspaceManagerService {
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   private patch(id: string, delta: Partial<Workspace>): void {
+    const before = this._workspaces$.value.find((w) => w.id === id);
     const updated = this._workspaces$.value.map((w) => (w.id === id ? { ...w, ...delta } : w));
+    const after = updated.find((w) => w.id === id);
+    const activeId = this._activeId$.value;
+    console.log(`[Manager] patch ws=${id} isActive=${id === activeId} sameRef=${before === after} aiChanged=${before?.knowledgeModel?.ai !== after?.knowledgeModel?.ai}`);
     this._workspaces$.next(updated);
 
-    const patched = updated.find((w) => w.id === id);
-    if (patched) this.scheduleSave(patched);
+    if (after) this.scheduleSave(after);
   }
 
   private routeForType(type: WorkspaceType): string {
