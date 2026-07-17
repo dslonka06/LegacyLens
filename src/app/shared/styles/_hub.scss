@@ -50,11 +50,11 @@
 
   [data-theme='dark'] & ::before,
   &::before {
-    background-image: url('assets/DarkThemeBackground.png');
+    background-image: url('../../../assets/DarkThemeBackground.png');
   }
 
   [data-theme='light'] &::before {
-    background-image: url('assets/LightThemeBackground.png');
+    background-image: url('../../../assets/LightThemeBackground.png');
   }
 }
 
