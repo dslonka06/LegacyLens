@@ -31,9 +31,11 @@ export class SidebarService {
 
   private loadPreference(): boolean {
     try {
-      return localStorage.getItem(this.STORAGE_KEY) === '1';
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      // Default is collapsed (icon-only); stored '0' means user expanded it
+      return stored === null ? true : stored === '1';
     } catch {
-      return false;
+      return true;
     }
   }
 }

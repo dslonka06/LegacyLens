@@ -382,7 +382,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 20px 36px 12px;
+  padding: 20px 36px 6px;
   gap: 16px;
   flex-shrink: 0;
   opacity: 0;
@@ -496,20 +496,20 @@
 .hub-action-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 13px;
+  gap: 7px;
+  padding: 9px 18px;
   background: var(--accent);
   border: none;
-  border-radius: 9px;
+  border-radius: 10px;
   color: #ffffff;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   transition: background 0.15s, box-shadow 0.15s;
   white-space: nowrap;
 
-  svg { width: 13px; height: 13px; }
+  svg { width: 15px; height: 15px; }
 
   &:hover:not(:disabled) {
     background: var(--accent-hover);
@@ -534,10 +534,10 @@
 // Layout: [file-icon] [name+type+path] [spacer] [detected/lang pills] [hex shape]
 
 .hub-identity-card {
-  background: rgba(18, 10, 38, 0.82);
+  background: var(--panel-bg-identity);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(141, 99, 255, 0.28);
+  border: 1px solid var(--panel-border-identity);
   border-radius: var(--radius-card);
   padding: 22px 28px;
   display: flex;
@@ -821,10 +821,10 @@
 }
 
 .info-card {
-  background: rgba(20, 14, 40, 0.68);
+  background: var(--panel-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(141, 99, 255, 0.18);
+  border: 1px solid var(--panel-border);
   border-radius: var(--radius-card);
   padding: 18px 20px;
   display: flex;
@@ -1097,10 +1097,10 @@
   align-items: center;
   gap: 5px;
   padding: 4px 10px;
-  background: rgba(20, 14, 40, 0.68);
+  background: var(--panel-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(141, 99, 255, 0.18);
+  border: 1px solid var(--panel-border);
   border-radius: var(--radius-pill);
   font-size: 11px;
 }
@@ -1130,10 +1130,10 @@
   align-items: flex-start;
   gap: 10px;
   padding: 16px 16px 14px;
-  background: rgba(20, 14, 40, 0.68);
+  background: var(--panel-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(141, 99, 255, 0.18);
+  border: 1px solid var(--panel-border);
   border-radius: var(--radius-metric);
   cursor: pointer;
   transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;

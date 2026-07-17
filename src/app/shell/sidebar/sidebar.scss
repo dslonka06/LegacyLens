@@ -15,11 +15,67 @@
               min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+// Expanded state — pulls out to full width with labels
+:host(.sidebar--expanded) {
+  width: var(--sidebar-width-expanded);
+  min-width: var(--sidebar-width-expanded);
+  align-items: stretch;
+  padding: 12px 10px;
+
+  .sidebar-collapse-tab {
+    left: var(--sidebar-width-expanded);
+    // Flip arrow to point left (collapse)
+  }
+
+  .sidebar-label {
+    opacity: 1;
+    max-width: 140px;
+    transform: translateX(0);
+  }
+
+  .sidebar-logo {
+    width: auto;
+    padding: 0 4px;
+    margin-bottom: 8px;
+  }
+
+  .sidebar-logo-card {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 0 6px;
+    border: none;
+    background: transparent;
+  }
+
+  .sidebar-logo-name {
+    opacity: 1;
+    max-width: 140px;
+  }
+
+  .sidebar-btn {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0 6px;
+  }
+
+  .sidebar-btn-card {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 0 6px;
+  }
+
+  .sidebar-bottom {
+    align-items: stretch;
+  }
+}
+
 .sidebar {
   display: contents;
 }
 
-// ─── Collapse toggle tab — mirrors chat pull-out tab ──────
+// ─── Collapse toggle tab ──────────────────────────────────
 .sidebar-collapse-tab {
   position: fixed;
   left: var(--sidebar-width);
@@ -42,8 +98,8 @@
               left 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 
   svg {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     flex-shrink: 0;
   }
 
@@ -64,6 +120,7 @@
   text-decoration: none;
   flex-shrink: 0;
   margin-bottom: 8px;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-logo-card {
@@ -75,10 +132,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s,
+              width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 
   img {
     border-radius: 6px;
+    flex-shrink: 0;
   }
 
   &:hover {
@@ -88,18 +147,36 @@
   }
 }
 
+// App name shown in expanded state, right of logo
+.sidebar-logo-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-heading);
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 0;
+  max-width: 0;
+  transition: opacity 0.18s 0.06s, max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 // ─── Nav ────────────────────────────────────────────────
 .sidebar-nav {
   display: flex;
   flex-direction: column;
   align-items: center;
   flex: 1;
-  gap: 4px;
+  gap: 2px;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: none;
+  width: 100%;
   &::-webkit-scrollbar {
     display: none;
+  }
+
+  :host(.sidebar--expanded) & {
+    align-items: stretch;
   }
 }
 
@@ -108,9 +185,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   flex-shrink: 0;
   margin-top: 8px;
+  width: 100%;
 }
 
 // ─── Button ──────────────────────────────────────────────
@@ -126,6 +204,7 @@
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-btn-card {
@@ -137,8 +216,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s,
+              width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   color: var(--text-secondary);
+  overflow: hidden;
 
   svg {
     width: 20px;
@@ -171,14 +252,23 @@
   }
 }
 
-// ─── Collapsed state ─────────────────────────────────────
-:host(.sidebar--collapsed) {
-  width: 52px;
-  min-width: 52px;
+// Page name label — hidden in icon-only state, slides in when expanded
+.sidebar-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 0;
+  max-width: 0;
+  transition: opacity 0.18s 0.06s, max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
 
-  --sidebar-btn-size: 36px;
+  .sidebar-btn.active & {
+    color: #ffffff;
+  }
 
-  .sidebar-collapse-tab {
-    left: var(--sidebar-width-collapsed);
+  .sidebar-btn:hover & {
+    color: var(--text-primary);
   }
 }

@@ -21,7 +21,7 @@ export class Sidebar implements OnInit, OnDestroy {
   collapsed = false;
   chatOpen = false;
 
-  @HostBinding('class.sidebar--collapsed') get collapsedClass() { return this.collapsed; }
+  @HostBinding('class.sidebar--expanded') get expandedClass() { return !this.collapsed; }
   private subs: Subscription[] = [];
 
   constructor(
