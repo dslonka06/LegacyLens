@@ -26,18 +26,19 @@ class RecommendationAnalysisEngine {
       });
     } else if (session.analysis.risks?.length) {
       session.analysis.risks.forEach((r, i) => {
-        const sev = r.severity?.toLowerCase() ?? 'medium';
+        const desc = typeof r === 'string' ? r : (r.description ?? String(r));
+        const sev = (typeof r === 'object' ? r.severity?.toLowerCase() : null) ?? 'medium';
         recs.push({
           id: `risk-${i}`,
-          title: r.description,
+          title: desc,
           priorityScore: this.severityToScore(sev),
           priority: this.severityToPriority(sev),
           category: 'maintainability',
           affectedArea: 'Code Quality',
           affectedFiles: [fileName],
           codeReference: { fileName },
-          issueDescription: r.description,
-          whyItMatters: this.deriveWhyItMatters(r.description, r.description),
+          issueDescription: desc,
+          whyItMatters: this.deriveWhyItMatters(desc, desc),
           recommendedImprovement: 'Review and address the identified risk using current best practices.',
           expectedImpact: 'Reduced technical debt and improved maintainability.',
           dependenciesAffected: [],
@@ -342,7 +343,8 @@ class RecommendationAnalysisEngine {
       : highCount > 0
       ? `${highCount} high-priority item${highCount > 1 ? 's' : ''} that should be addressed soon`
       : `${recs.length} improvement${recs.length > 1 ? 's' : ''} identified`;
-    return `Analysis identified ${urgencyPhrase}. The highest-priority finding is "${topPriority.title}" — ${topPriority.issueDescription.split('.')[0]}. ${recs.length > 1 ? `A total of ${recs.length} recommendations are ranked below by priority score.` : ''}`.trim();
+    const issueSummary = topPriority.issueDescription ? topPriority.issueDescription.split('.')[0] : topPriority.title;
+    return `Analysis identified ${urgencyPhrase}. The highest-priority finding is "${topPriority.title}" — ${issueSummary}. ${recs.length > 1 ? `A total of ${recs.length} recommendations are ranked below by priority score.` : ''}`.trim();
   }
 
   buildDebtContext(level, recs) {
