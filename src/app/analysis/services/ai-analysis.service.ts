@@ -71,7 +71,7 @@ export class AIAnalysisService {
     this.manager.setStageRunning(workspaceId, stage);
     try {
       const result = await this.callStage(model, stage);
-      console.log(`[AI] Stage result: ${stage}`, result === null ? 'null' : 'ok');
+      console.log(`[AI] Stage result: ${stage}`, result === null ? 'null' : result === undefined ? 'undefined' : JSON.stringify(result).slice(0, 100));
 
       // Drop result if re-analyze was triggered while this stage was running
       if (result !== null) {
