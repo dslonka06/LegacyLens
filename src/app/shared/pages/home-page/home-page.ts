@@ -36,6 +36,7 @@ export class HomePage implements OnInit, OnDestroy {
   appVersion = '';
 
   recentAnalyses: Workspace[] = [];
+  activeWorkspace: Workspace | null = null;
   private subs: Subscription[] = [];
 
   repositories: ElectronRepository[] = [];
@@ -82,11 +83,44 @@ export class HomePage implements OnInit, OnDestroy {
           .slice(0, 3);
         this.cdr.detectChanges();
       }),
+      this.manager.activeWorkspace$.subscribe((ws) => {
+        this.activeWorkspace = ws ?? null;
+        this.cdr.detectChanges();
+      }),
     );
   }
 
   ngOnDestroy(): void {
     this.subs.forEach((s) => s.unsubscribe());
+  }
+
+  get heroStatusState(): 'analyzing' | 'recent' | 'idle' {
+    if (this.activeWorkspace?.status === 'processing') return 'analyzing';
+    if (this.recentAnalyses.length > 0) return 'recent';
+    return 'idle';
+  }
+
+  get heroStatusName(): string {
+    if (this.heroStatusState === 'analyzing') return this.activeWorkspace?.name ?? '';
+    if (this.heroStatusState === 'recent') return this.recentAnalyses[0].name;
+    return '';
+  }
+
+  get heroStatusTime(): string {
+    const ws = this.recentAnalyses[0];
+    if (!ws?.lastModifiedAt) return '';
+    const diffMs = Date.now() - new Date(ws.lastModifiedAt).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  }
+
+  navigateToRecent(): void {
+    const ws = this.recentAnalyses[0];
+    if (ws) this.manager.activate(ws.id);
   }
 
   recentTypeLabel(type: string): string {

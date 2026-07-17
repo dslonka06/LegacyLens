@@ -1,4 +1,4 @@
-<aside class="sidebar" [class.sidebar--collapsed]="collapsed">
+<aside class="sidebar">
 
   <!-- Collapse toggle tab — mirrors the chat pull-out tab on the right edge -->
   <button class="sidebar-collapse-tab" (click)="toggleCollapse()" [title]="collapsed ? 'Expand sidebar' : 'Collapse sidebar'">
@@ -682,7 +682,6 @@
         </svg>
       </div>
     </button>
-    <app-theme-toggle class="sidebar-variant"></app-theme-toggle>
     <a routerLink="/settings" routerLinkActive="active" class="sidebar-btn" title="Settings">
       <div class="sidebar-btn-card">
         <svg

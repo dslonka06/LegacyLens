@@ -32,6 +32,36 @@
       </div>
     </header>
 
+    <!-- Status-aware hero text -->
+    <div class="hero-status" [class.hero-status--analyzing]="heroStatusState === 'analyzing'">
+
+      <!-- Idle: no recent analyses -->
+      <ng-container *ngIf="heroStatusState === 'idle'">
+        <span class="hero-status-headline">What will you analyze today?</span>
+      </ng-container>
+
+      <!-- Recent: has past analyses, none currently running -->
+      <ng-container *ngIf="heroStatusState === 'recent'">
+        <span class="hero-status-headline">What will you analyze today?</span>
+        <button class="hero-status-sub hero-status-sub--link" (click)="navigateToRecent()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Last analyzed: <strong>{{ heroStatusName }}</strong>&nbsp;&nbsp;·&nbsp;&nbsp;{{ heroStatusTime }}
+        </button>
+      </ng-container>
+
+      <!-- Analyzing: active pipeline running -->
+      <ng-container *ngIf="heroStatusState === 'analyzing'">
+        <span class="hero-status-headline">
+          <span class="hero-status-pulse"></span>
+          Analyzing {{ heroStatusName }}…
+        </span>
+        <span class="hero-status-sub">Building knowledge model and running AI pipeline</span>
+      </ng-container>
+
+    </div>
+
     <!-- Two-column panel row -->
     <div class="hero-panels">
 

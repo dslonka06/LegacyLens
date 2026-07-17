@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -8,12 +8,11 @@ import {
 } from '@app/core/services/active-workspace.service';
 import { SidebarService } from '@app/core/services/sidebar.service';
 import { ChatService } from '@app/core/services/chat.service';
-import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, ThemeToggle],
+  imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',
 })
@@ -21,6 +20,8 @@ export class Sidebar implements OnInit, OnDestroy {
   activeWorkspace: ActiveWorkspace = null;
   collapsed = false;
   chatOpen = false;
+
+  @HostBinding('class.sidebar--collapsed') get collapsedClass() { return this.collapsed; }
   private subs: Subscription[] = [];
 
   constructor(
