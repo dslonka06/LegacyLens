@@ -50,11 +50,11 @@
 
   [data-theme='dark'] & ::before,
   &::before {
-    background-image: url('/assets/Dark theme background.png');
+    background-image: url('assets/DarkThemeBackground.png');
   }
 
   [data-theme='light'] &::before {
-    background-image: url('/assets/light theme background.png');
+    background-image: url('assets/LightThemeBackground.png');
   }
 }
 
@@ -1123,5 +1123,119 @@
   }
   .hub-metric-row {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// ─── Progressive hub shell — first row always rendered ───────
+
+// First row: identity/upload card (flex: 1) + workspace card (fixed width)
+.hub-first-row {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+
+  // Identity card takes remaining space; workspace card is fixed
+  .hub-identity-card {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .info-card--workspace {
+    flex-shrink: 0;
+    width: 220px;
+  }
+}
+
+// Identity card upload state — centers content, no left accent bar
+.hub-identity-card--upload {
+  padding: 0;
+  overflow: visible;
+
+  &::before { display: none; }
+
+  .upload-zone--inline {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 28px 24px;
+    text-align: center;
+    border-radius: var(--radius-card);
+    transition: background 0.2s;
+
+    &.upload-zone--drag {
+      background: rgba(141, 99, 255, 0.06);
+    }
+  }
+
+  .upload-icon-ring {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+  }
+
+  .upload-title {
+    font-size: 17px;
+  }
+
+  .upload-desc {
+    font-size: 13px;
+    max-width: 280px;
+  }
+
+  .upload-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+}
+
+// Identity card analyzing state — horizontal spinner + text layout
+.hub-identity-card--analyzing {
+  align-items: center;
+  justify-content: center;
+
+  .analyzing-inline {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+
+    .analyzing-spinner {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-width: 2.5px;
+    }
+
+    .analyzing-inline-body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .analyzing-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .analyzing-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .stage-dots {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
   }
 }

@@ -34,14 +34,10 @@
   display: flex;
   flex-direction: column;
   min-height: 380px;
-  background: url('/assets/dark-theme-background.png') top center / cover no-repeat;
+  background: url('assets/HomepageBackground.png') top center / cover no-repeat;
   flex-shrink: 0;
   padding-bottom: 40px;
 
-  // In light mode, swap to the light background image and matching bottom color
-  [data-theme='light'] & {
-    background-image: url('/assets/light-theme-background.png');
-  }
 }
 
 .hero-overlay {
@@ -356,18 +352,15 @@
 // ── AI Provider Status panel ──────────────────────────────────────────────────
 
 .panel--ai {
-  align-items: center;
-  text-align: center;
-
-  .panel-title {
-    align-self: stretch;
-  }
+  align-items: stretch;
 }
 
 .ai-status-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  // indent to align with meta content (icon width 16px + gap 10px = 26px)
+  padding-left: 26px;
 }
 
 .ai-status-dot {
@@ -399,9 +392,10 @@
 .ai-divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.08);
-  margin: 0 -4px;
+  margin: 10px 0;
 }
 
+// Icon sits left of the label/value column; both rows share the same left edge
 .ai-meta-row {
   display: flex;
   align-items: flex-start;
@@ -413,7 +407,8 @@
   height: 16px;
   color: rgba(255, 255, 255, 0.3);
   flex-shrink: 0;
-  margin-top: 2px;
+  // Vertically center icon with the label text line
+  margin-top: 1px;
 }
 
 .ai-meta-body {
@@ -441,7 +436,6 @@
 .ai-settings-link {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
@@ -449,7 +443,8 @@
   text-decoration: none;
   transition: color 0.15s;
   margin-top: auto;
-  text-align: center;
+  // Align with the meta text column (same left edge as labels/values)
+  padding-left: 26px;
 
   svg { width: 14px; height: 14px; }
 

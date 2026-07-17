@@ -49,12 +49,16 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   showMetricCards = false;
   isReturning = false;
 
+  // Animated count display — counts up from 0 to actual value when cards appear
+  displayedCounts: Record<string, number> = {};
+
   uploadError: string | null = null;
   isDragging = false;
 
   private sub: Subscription | null = null;
   private limitSub: Subscription | null = null;
   private animTimer: ReturnType<typeof setTimeout> | null = null;
+  private countTimers: ReturnType<typeof setInterval>[] = [];
 
   constructor(
     private readonly manager: WorkspaceManagerService,
@@ -65,15 +69,25 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       const prevId = this.workspace?.id;
+      const prevStatus = this.workspace?.status;
       const prevModel = this.workspace?.knowledgeModel;
       this.workspace = ws;
       this.model = ws?.knowledgeModel ?? null;
 
       const switched = prevId !== ws?.id;
       const modelArrived = !prevModel && !!ws?.knowledgeModel;
+      // Also animate when processing begins so info row slides in
+      const processingStarted = prevStatus !== 'processing' && ws?.status === 'processing';
+
       if (switched || modelArrived) {
         this.isReturning = switched && !!ws?.knowledgeModel;
         this.runAnimations();
+      } else if (processingStarted) {
+        this.runInfoCardAnimation();
+      }
+
+      if (modelArrived) {
+        this.animateCountsTo(this.metricCards);
       }
     });
 
@@ -85,6 +99,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
     this.limitSub?.unsubscribe();
     if (this.animTimer) clearTimeout(this.animTimer);
+    this.clearCountTimers();
   }
 
   // ── Animation sequence ─────────────────────────────────────────
@@ -103,6 +118,38 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     setTimeout(() => { this.showInfoCards = true; }, t(220));
     setTimeout(() => { this.showArcDraw = true; }, t(320));
     this.animTimer = setTimeout(() => { this.showMetricCards = true; }, t(380));
+  }
+
+  // Animate the info row in when processing begins (before model arrives)
+  private runInfoCardAnimation(): void {
+    setTimeout(() => { this.showInfoCards = true; }, 150);
+    setTimeout(() => { this.showArcDraw = true; }, 280);
+  }
+
+  private animateCountsTo(cards: HubMetricCard[]): void {
+    this.clearCountTimers();
+    for (const card of cards) {
+      if (card.count === null || card.count === 0) {
+        this.displayedCounts[card.id] = card.count ?? 0;
+        continue;
+      }
+      const target = card.count;
+      const duration = 600;
+      const steps = Math.min(target, 30);
+      const interval = duration / steps;
+      let current = 0;
+      const timer = setInterval(() => {
+        current = Math.min(current + Math.ceil(target / steps), target);
+        this.displayedCounts[card.id] = current;
+        if (current >= target) clearInterval(timer);
+      }, interval);
+      this.countTimers.push(timer);
+    }
+  }
+
+  private clearCountTimers(): void {
+    this.countTimers.forEach((t) => clearInterval(t));
+    this.countTimers = [];
   }
 
   // ── Upload ────────────────────────────────────────────────────
