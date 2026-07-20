@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { LearningPathAnalysis } from '@app/analysis/models/learning-path-analysis.model';
 import { Workspace } from '@app/workspace/models/workspace-entity.model';
 
 @Component({
   selector: 'app-learning-path-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ThemeToggle],
   templateUrl: './learning-path-page.html',
   styleUrl: './learning-path-page.scss',
 })

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceSwitcherModal } from '@app/workspace/components/workspace-switcher-modal/workspace-switcher-modal';
 import { ValidationDialog } from '@app/shared/components/validation-dialog/validation-dialog';
+import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import {
   TargetValidationService,
   ValidationResult,
@@ -53,7 +54,7 @@ const STAGE_MESSAGES: Record<string, string[]> = {
 @Component({
   selector: 'app-repository-analysis-page',
   standalone: true,
-  imports: [CommonModule, WorkspaceSwitcherModal, ValidationDialog],
+  imports: [CommonModule, WorkspaceSwitcherModal, ValidationDialog, ThemeToggle],
   templateUrl: './repository-analysis-page.html',
   styleUrl: './repository-analysis-page.scss',
 })

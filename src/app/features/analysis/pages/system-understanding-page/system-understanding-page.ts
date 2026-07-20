@@ -6,12 +6,13 @@ import { SystemUnderstanding } from '@app/analysis/models/system-understanding.m
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
 import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
+import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 
 @Component({
   selector: 'app-system-understanding-page',
   standalone: true,
-  imports: [CommonModule, ExplanationCard, CodeEditor, ResizeDividerComponent],
+  imports: [CommonModule, ExplanationCard, CodeEditor, ResizeDividerComponent, ThemeToggle],
   templateUrl: './system-understanding-page.html',
   styleUrl: './system-understanding-page.scss',
 })

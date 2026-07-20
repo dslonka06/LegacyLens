@@ -22,14 +22,6 @@
   overflow: hidden;
 }
 
-// ─── Theme toggle — top-right corner (non-hub pages) ─────
-.app-theme-toggle {
-  position: absolute;
-  top: 20px;
-  right: 168px;
-  z-index: 150;
-}
-
 // ─── Chat toggle button ───────────────────────────────────
 // Sits at the left edge of the chat overlay — shifts with it
 .chat-toggle-btn {

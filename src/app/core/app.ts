@@ -7,8 +7,6 @@ import { AiChatPanel } from '@app/shell/ai-chat-panel/ai-chat-panel';
 import { UpdatePrompt } from '@app/shell/update-prompt/update-prompt';
 import { SidebarService } from '@app/core/services/sidebar.service';
 import { ChatService } from '@app/core/services/chat.service';
-import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
-
 const HUB_ROUTES = [
   '/file-analysis',
   '/folder-analysis',
@@ -18,7 +16,7 @@ const HUB_ROUTES = [
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, Sidebar, AiChatPanel, UpdatePrompt, CommonModule, ThemeToggle],
+  imports: [RouterOutlet, Sidebar, AiChatPanel, UpdatePrompt, CommonModule],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

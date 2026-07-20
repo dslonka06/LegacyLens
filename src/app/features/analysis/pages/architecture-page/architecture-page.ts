@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
+import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import type {
   KnowledgeModel,
   ArchitecturePattern,
@@ -13,7 +14,7 @@ import type { FolderNode, FileNode } from '@app/knowledge/models/repository.mode
 @Component({
   selector: 'app-architecture-page',
   standalone: true,
-  imports: [CommonModule, FileTreePanel],
+  imports: [CommonModule, FileTreePanel, ThemeToggle],
   templateUrl: './architecture-page.html',
   styleUrl: './architecture-page.scss',
 })

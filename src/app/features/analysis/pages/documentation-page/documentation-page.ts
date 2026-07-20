@@ -11,12 +11,13 @@ import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
 import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
+import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import type { KnowledgeModel } from '@app/knowledge/models/knowledge-model.contract';
 
 @Component({
   selector: 'app-documentation-page',
   standalone: true,
-  imports: [CommonModule, ResizeDividerComponent, CodeEditor],
+  imports: [CommonModule, ResizeDividerComponent, CodeEditor, ThemeToggle],
   templateUrl: './documentation-page.html',
   styleUrl: './documentation-page.scss',
 })

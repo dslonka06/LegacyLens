@@ -478,12 +478,10 @@
 
 .hub-topbar-actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
   flex-shrink: 0;
-  // Match workspace card width so re-analyze button right-aligns above it
-  width: 220px;
 }
 
 .hub-last-analyzed {

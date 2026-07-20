@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
+import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import type {
   KnowledgeModel,
   DataFlowInsight,
@@ -19,7 +20,7 @@ interface FlowNode {
 @Component({
   selector: 'app-data-flow-page',
   standalone: true,
-  imports: [CommonModule, FileTreePanel],
+  imports: [CommonModule, FileTreePanel, ThemeToggle],
   templateUrl: './data-flow-page.html',
   styleUrl: './data-flow-page.scss',
 })

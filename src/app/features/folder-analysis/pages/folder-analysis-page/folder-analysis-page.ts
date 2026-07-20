@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { WorkspaceKnowledgeService } from '@app/knowledge/services/workspace-knowledge.service';
 import { WorkspaceSwitcherModal } from '@app/workspace/components/workspace-switcher-modal/workspace-switcher-modal';
+import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { Workspace, WorkspaceStatus } from '@app/workspace/models/workspace-entity.model';
 import type { KnowledgeModel, AIStage } from '@app/knowledge/models/knowledge-model.contract';
 import type { ElectronDirectoryEntry } from '../../../../../electron';
@@ -40,7 +41,7 @@ const STAGE_MESSAGES: Record<string, string[]> = {
 @Component({
   selector: 'app-folder-analysis-page',
   standalone: true,
-  imports: [CommonModule, WorkspaceSwitcherModal],
+  imports: [CommonModule, WorkspaceSwitcherModal, ThemeToggle],
   templateUrl: './folder-analysis-page.html',
   styleUrl: './folder-analysis-page.scss',
 })

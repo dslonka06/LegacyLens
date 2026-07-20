@@ -10,13 +10,14 @@ import { WorkspaceManagerService } from '@app/workspace/services/workspace-manag
 import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
 import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
+import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
 @Component({
   selector: 'app-security-page',
   standalone: true,
-  imports: [CommonModule, FileTreePanel, CodeEditor, ResizeDividerComponent],
+  imports: [CommonModule, FileTreePanel, CodeEditor, ResizeDividerComponent, ThemeToggle],
   templateUrl: './security-page.html',
   styleUrl: './security-page.scss',
 })
