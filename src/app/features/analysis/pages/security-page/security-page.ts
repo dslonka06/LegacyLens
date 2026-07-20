@@ -22,8 +22,6 @@ import type { FolderNode, FileNode } from '@app/knowledge/models/repository.mode
 })
 export class SecurityPage implements OnInit, OnDestroy {
   security: SecurityAnalysis | null = null;
-  securityOverview: string | null = null;
-  overviewLoading = false;
   hasWorkspace = false;
   expandedFindings = new Set<string>();
   highlightedFilePath: string | null = null;
@@ -43,14 +41,10 @@ export class SecurityPage implements OnInit, OnDestroy {
 
     const active = this.manager.getActive();
     this.security = active?.knowledgeModel?.ai?.security ?? null;
-    this.securityOverview = active?.knowledgeModel?.ai?.securityOverview ?? null;
-    this.overviewLoading = this.security !== null && this.securityOverview === null;
     this.hasWorkspace = active?.knowledgeModel != null;
 
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       this.security = ws?.knowledgeModel?.ai?.security ?? null;
-      this.securityOverview = ws?.knowledgeModel?.ai?.securityOverview ?? null;
-      this.overviewLoading = this.security !== null && this.securityOverview === null;
       this.hasWorkspace = ws?.knowledgeModel != null;
     });
   }

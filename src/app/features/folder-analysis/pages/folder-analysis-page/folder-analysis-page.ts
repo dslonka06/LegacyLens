@@ -53,6 +53,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   isDragging = false;
 
   private sub: Subscription | null = null;
+  private stagesSub: Subscription | null = null;
   private limitSub: Subscription | null = null;
   private animTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -85,12 +86,14 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
+    this.stagesSub = this.manager.activeStages$.subscribe(() => this.cdr.detectChanges());
     this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
     this.runAnimations();
   }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+    this.stagesSub?.unsubscribe();
     this.limitSub?.unsubscribe();
     if (this.animTimer) clearTimeout(this.animTimer);
   }
@@ -377,30 +380,19 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   get pipelineStages(): { label: string; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
     const ai = this.model?.ai;
     const running = this.manager.getActiveStages(this.workspace?.id ?? '');
-    const stages: AIStage[] = [
-      'understanding',
-      'security',
-      'recommendations',
-      'learningPath',
-    ];
+    const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
+    let hitFailure = false;
+    return stages.map((s) => {
+      if (hitFailure) return { label: STAGE_LABELS[s], state: 'pending' as const };
+      if (ai?.failedStages?.includes(s)) { hitFailure = true; return { label: STAGE_LABELS[s], state: 'failed' as const }; }
+      if (ai?.completedStages?.includes(s)) return { label: STAGE_LABELS[s], state: 'complete' as const };
+      if (running.has(s)) return { label: STAGE_LABELS[s], state: 'running' as const };
+      return { label: STAGE_LABELS[s], state: 'pending' as const };
+    });
+  }
 
-    const structuralRunning = this.isAnalyzing && !this.model;
-    const scanState = this.model ? 'complete' : structuralRunning ? 'running' : 'pending';
-    const parseState = this.model ? 'complete' : structuralRunning ? 'running' : 'pending';
-
-    return [
-      { label: 'Scan', state: scanState as 'complete' | 'failed' | 'running' | 'pending' },
-      { label: 'Parse', state: parseState as 'complete' | 'failed' | 'running' | 'pending' },
-      ...stages.map((s) => {
-        if (!this.model) return { label: STAGE_LABELS[s], state: 'pending' as const };
-        if (running.has(s)) return { label: STAGE_LABELS[s], state: 'running' as const };
-        if (ai?.completedStages?.includes(s))
-          return { label: STAGE_LABELS[s], state: 'complete' as const };
-        if (ai?.failedStages?.includes(s))
-          return { label: STAGE_LABELS[s], state: 'failed' as const };
-        return { label: STAGE_LABELS[s], state: 'pending' as const };
-      }),
-    ];
+  get pipelineHasFailure(): boolean {
+    return this.pipelineStages.some((s) => s.state === 'failed');
   }
 
   // ── Metric cards ───────────────────────────────────────────────────────────

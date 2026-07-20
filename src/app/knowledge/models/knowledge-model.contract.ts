@@ -166,8 +166,6 @@ export interface KnowledgeAIResults {
   understanding?: SystemUnderstanding;
   /** Security findings and overview narrative produced by AI. */
   security?: SecurityAnalysis;
-  /** AI-generated security narrative (populated after security findings). */
-  securityOverview?: string;
   /** Actionable improvement recommendations from AI. */
   recommendations?: RecommendationAnalysis;
   /** Guided onboarding learning path from AI. */

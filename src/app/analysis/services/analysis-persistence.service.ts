@@ -9,9 +9,8 @@ import { Workspace } from '@app/workspace/models/workspace-entity.model';
  * to SQLite via Electron IPC. Runs as a root-level singleton — no component
  * needs to wire this up manually.
  *
- * Saves when both understanding AND securityOverview are present, replacing
- * any prior save for that repository. This avoids partial saves where only
- * one AI field has resolved.
+ * Saves when understanding is present, replacing any prior save for that
+ * repository. This avoids partial saves where only structural data has resolved.
  */
 @Injectable({ providedIn: 'root' })
 export class AnalysisPersistenceService implements OnDestroy {
@@ -30,15 +29,13 @@ export class AnalysisPersistenceService implements OnDestroy {
           (ws) =>
             ws !== null &&
             ws.repositoryId !== null &&
-            ws.knowledgeModel?.ai?.understanding != null &&
-            ws.knowledgeModel?.ai?.securityOverview != null,
+            ws.knowledgeModel?.ai?.understanding != null,
         ),
         map((ws) => ws!),
         distinctUntilChanged(
           (a, b) =>
             a.id === b.id &&
-            a.knowledgeModel?.ai?.understanding === b.knowledgeModel?.ai?.understanding &&
-            a.knowledgeModel?.ai?.securityOverview === b.knowledgeModel?.ai?.securityOverview,
+            a.knowledgeModel?.ai?.understanding === b.knowledgeModel?.ai?.understanding,
         ),
       )
       .subscribe((ws) => {
@@ -53,7 +50,6 @@ export class AnalysisPersistenceService implements OnDestroy {
     if (!this.electron.isElectron) return;
 
     const aiResult = {
-      securityOverview: ws.knowledgeModel?.ai?.securityOverview ?? null,
       systemUnderstanding: ws.knowledgeModel?.ai?.understanding ?? null,
       recommendationAnalysis: ws.knowledgeModel?.ai?.recommendations ?? null,
       learningPathAnalysis: ws.knowledgeModel?.ai?.learningPath ?? null,

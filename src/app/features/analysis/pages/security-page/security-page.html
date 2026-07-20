@@ -71,16 +71,7 @@
                 </svg>
                 Security Overview
               </div>
-              <div class="sec-overview-loading" *ngIf="overviewLoading">
-                <span class="sec-overview-shimmer"></span>
-                <span class="sec-overview-shimmer sec-overview-shimmer--short"></span>
-                <span class="sec-overview-shimmer"></span>
-              </div>
-              <p class="sec-overview-text" *ngIf="securityOverview">{{ securityOverview }}</p>
-              <p class="sec-overview-unavailable" *ngIf="!overviewLoading && !securityOverview">
-                AI-generated security overview is not available. Ensure the AI provider is
-                configured and re-analyse.
-              </p>
+              <p class="sec-overview-text">{{ security!.executiveSummary }}</p>
             </div>
 
             <div class="sec-metrics">

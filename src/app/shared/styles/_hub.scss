@@ -928,64 +928,100 @@
 
 // ── Pipeline card ─────────────────────────────────────────────
 
-.pipeline-dots-row {
+.pipeline-track {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0;
+  margin: 4px 0 6px;
 }
 
-.pipeline-dot {
-  width: 9px;
-  height: 9px;
+.pipeline-bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+}
+
+.pipeline-bubble {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
+  border: 2px solid var(--border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: border-color 0.2s, background 0.2s;
+
+  svg { width: 12px; height: 12px; }
+
+  &--complete {
+    border-color: var(--success);
+    background: color-mix(in srgb, var(--success) 15%, transparent);
+    svg { stroke: var(--success); }
+  }
+
+  &--running {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  &--failed {
+    border-color: var(--error);
+    background: color-mix(in srgb, var(--error) 15%, transparent);
+    svg { stroke: var(--error); }
+  }
+
+  &--pending {
+    border-color: var(--border);
+    opacity: 0.5;
+  }
+}
+
+.pipeline-bubble-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.pipeline-bubble-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  &--active { color: var(--accent); font-weight: 600; }
+  &--failed  { color: var(--error); }
+}
+
+.pipeline-connector {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 2px;
   background: var(--border);
+  margin-top: 13px;
   transition: background 0.2s;
 
   &--complete { background: var(--success); }
-  &--running  { background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
   &--failed   { background: var(--error); }
 }
 
-.pipeline-stage-list {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.pipeline-stage-row {
+.pipeline-error-notice {
   display: flex;
   align-items: center;
-  gap: 7px;
-}
-
-.pipeline-stage-dot-sm {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--border);
-
-  &.dot-sm--complete { background: var(--success); }
-  &.dot-sm--running  { background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
-  &.dot-sm--failed   { background: var(--error); }
-  &.dot-sm--pending  { background: var(--border); }
-}
-
-.pipeline-stage-name {
-  flex: 1;
-  font-size: 12px;
-  color: var(--text-muted);
-  transition: color 0.15s;
-
-  &--active { color: var(--accent); font-weight: 600; }
-}
-
-.pipeline-stage-status {
+  gap: 6px;
   font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 600;
-  width: 14px;
-  text-align: center;
+  color: var(--error);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid color-mix(in srgb, var(--error) 25%, transparent);
+
+  svg { width: 14px; height: 14px; flex-shrink: 0; }
 }
 
 // ── Workspace card ────────────────────────────────────────────
@@ -1294,14 +1330,6 @@
 
 // ─── Identity card stage dots (analyzing overlay) ─────────────
 
-.identity-stage-dots {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-}
 
 // ─── Progressive hub shell — first row always rendered ───────
 
