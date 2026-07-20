@@ -27,7 +27,7 @@ const STAGE_LABELS: Record<AIStage, string> = {
   security: 'Security',
   recommendations: 'Recommendations',
   learningPath: 'Learning Path',
-  documentation: 'Documentation',
+  documentation: 'Documentation', // kept for type completeness; not rendered
 };
 
 @Component({
@@ -103,6 +103,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       }
 
       if (modelArrived || aiUpdated) {
+        console.log('[Hub] calling animateCountsTo, cards pending states:', this.metricCards.map(c => ({ id: c.id, pending: c.pending, count: c.count })));
         this.animateCountsTo(this.metricCards);
       }
     });
@@ -427,7 +428,6 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       'security',
       'recommendations',
       'learningPath',
-      'documentation',
     ];
 
     const scanState = this.model ? 'complete' : this.isAnalyzing ? 'running' : 'pending';

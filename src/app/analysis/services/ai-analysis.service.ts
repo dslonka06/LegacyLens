@@ -38,14 +38,13 @@ export class AIAnalysisService {
   async runAll(workspaceId: string, model: KnowledgeModel, generation: number): Promise<void> {
     if (!this.electron.isElectron) return;
 
-    // security + understanding run concurrently first.
+    // security, understanding, and recommendations run concurrently.
     // learningPath depends on understanding, so it runs after.
-    // recommendations and documentation are independent.
+    // documentation stage is omitted — its result is unused by the pipeline.
     await Promise.all([
       this.runStage(workspaceId, model, 'security', generation),
       this.runStage(workspaceId, model, 'understanding', generation),
       this.runStage(workspaceId, model, 'recommendations', generation),
-      this.runStage(workspaceId, model, 'documentation', generation),
     ]);
 
     // learningPath needs understanding to be present — read it from the workspace
@@ -76,15 +75,14 @@ export class AIAnalysisService {
       if (result !== null) {
         const currentGen = this.manager.getGeneration(workspaceId);
         console.log(`[AI] stage merge: ${stage} gen=${generation} currentGen=${currentGen} match=${currentGen === generation}`);
-        const completed = [...(model.ai?.completedStages ?? []), stage] as AIStage[];
 
+        // Pass the stage result and let mergeAIResults union completedStages atomically
+        // inside the same patch call. Reading completedStages here and passing a pre-built
+        // list creates a race when concurrent stages finish at the same time.
         this.manager.mergeAIResults(
           workspaceId,
-          {
-            ...this.stageResultToPartial(stage, result),
-            completedStages: [...new Set(completed)],
-            failedStages: model.ai?.failedStages ?? [],
-          },
+          this.stageResultToPartial(stage, result),
+          stage,
           generation,
         );
         console.log(`[AI] stage merged: ${stage}`);
@@ -100,36 +98,49 @@ export class AIAnalysisService {
 
   // ── Private ───────────────────────────────────────────────────────────────
 
+  private withTimeout<T>(promise: Promise<T>, stage: AIStage, ms = 30_000): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error(`stage timed out after ${ms}ms`)), ms);
+      promise.then(
+        (v) => { clearTimeout(timer); resolve(v); },
+        (e) => { clearTimeout(timer); reject(e); },
+      );
+    });
+  }
+
   private async callStage(model: KnowledgeModel, stage: AIStage): Promise<unknown> {
     console.log(`[AI] callStage invoking IPC: ${stage}`);
     switch (stage) {
       case 'security':
-        return this.electron.intelligenceSecurity(model, null) as Promise<SecurityAnalysis>;
+        return this.withTimeout(
+          this.electron.intelligenceSecurity(model, null) as Promise<SecurityAnalysis>,
+          stage,
+        );
 
       case 'understanding':
-        return this.electron.intelligenceSystemUnderstanding(
-          model,
-          null,
-        ) as Promise<SystemUnderstanding>;
+        return this.withTimeout(
+          this.electron.intelligenceSystemUnderstanding(model, null) as Promise<SystemUnderstanding>,
+          stage,
+        );
 
       case 'recommendations':
-        return this.electron.intelligenceRecommendations(
-          model,
-          null,
-        ) as Promise<RecommendationAnalysis>;
+        return this.withTimeout(
+          this.electron.intelligenceRecommendations(model, null) as Promise<RecommendationAnalysis>,
+          stage,
+        );
 
       case 'learningPath': {
         const understanding = model.ai?.understanding ?? null;
-        return this.electron.intelligenceLearningPath(
-          model,
-          null,
-          understanding,
-          model.targetType,
-        ) as Promise<LearningPathAnalysis>;
+        return this.withTimeout(
+          this.electron.intelligenceLearningPath(
+            model,
+            null,
+            understanding,
+            model.targetType,
+          ) as Promise<LearningPathAnalysis>,
+          stage,
+        );
       }
-
-      case 'documentation':
-        return this.electron.buildContext('analysis', model) as Promise<unknown>;
 
       default:
         return null;

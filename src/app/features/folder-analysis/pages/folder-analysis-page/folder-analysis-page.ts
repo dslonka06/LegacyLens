@@ -382,7 +382,6 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
       'security',
       'recommendations',
       'learningPath',
-      'documentation',
     ];
 
     const scanState = this.model ? 'complete' : this.isAnalyzing ? 'running' : 'pending';

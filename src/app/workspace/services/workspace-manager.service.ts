@@ -224,9 +224,17 @@ export class WorkspaceManagerService {
    * Partial merge — only updates the fields present in `aiResults`.
    * Called by AIAnalysisService as each AI stage completes.
    *
+   * `completedStage` is unioned into the existing completedStages array here,
+   * atomically inside patch(), so concurrent stages can never overwrite each other's entry.
+   *
    * @param generation  If provided, the result is dropped if the workspace has moved on.
    */
-  mergeAIResults(id: string, aiResults: Partial<KnowledgeAIResults>, generation?: number): void {
+  mergeAIResults(
+    id: string,
+    aiResults: Partial<KnowledgeAIResults>,
+    completedStage: AIStage,
+    generation?: number,
+  ): void {
     const currentGen = this.getGeneration(id);
     if (generation !== undefined && currentGen !== generation) {
       console.warn(`[Manager] mergeAIResults DROPPED gen=${generation} currentGen=${currentGen}`);
@@ -239,7 +247,8 @@ export class WorkspaceManagerService {
     }
 
     const existing = ws.knowledgeModel.ai ?? { completedStages: [], failedStages: [] };
-    const merged: KnowledgeAIResults = { ...existing, ...aiResults };
+    const completedStages = [...new Set([...existing.completedStages, completedStage])] as AIStage[];
+    const merged: KnowledgeAIResults = { ...existing, ...aiResults, completedStages, failedStages: existing.failedStages };
 
     console.log(`[Manager] mergeAIResults calling patch ws=${id} completedStages=${JSON.stringify(merged.completedStages)}`);
     this.patch(id, {

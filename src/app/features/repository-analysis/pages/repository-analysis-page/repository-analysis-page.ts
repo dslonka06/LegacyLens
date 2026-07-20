@@ -511,7 +511,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       'security',
       'recommendations',
       'learningPath',
-      'documentation',
     ];
 
     const scanState = this.model
