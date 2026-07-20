@@ -201,36 +201,48 @@
         </div>
       </div>
 
-      <!-- AI Pipeline card — vertical stage rows -->
+      <!-- AI Analysis summary card -->
       <div class="info-card info-card--pipeline">
         <div class="info-card-label">AI Analysis</div>
-        <div class="pipeline-stage-list">
-          <div
-            class="pipeline-stage-row"
-            *ngFor="let s of pipelineStages"
-            [class.pipeline-stage-row--running]="s.state === 'running'"
-            [class.pipeline-stage-row--pending]="s.state === 'pending'"
-          >
-            <span
-              class="pipeline-stage-dot"
-              [class.pipeline-stage-dot--complete]="s.state === 'complete'"
-              [class.pipeline-stage-dot--running]="s.state === 'running'"
-              [class.pipeline-stage-dot--failed]="s.state === 'failed'"
-            ></span>
-            <span class="pipeline-stage-name">{{ s.label }}</span>
-            <span class="pipeline-stage-status" *ngIf="s.state === 'running'">
-              {{ pipelineStatusText[s.stage] }}
-            </span>
-            <span class="pipeline-stage-outcome" *ngIf="s.state === 'complete'">
-              {{ stageOutcome(s.stage) }}
-            </span>
-            <span class="pipeline-stage-failed" *ngIf="s.state === 'failed'">Failed</span>
+
+        <!-- Running state -->
+        <ng-container *ngIf="aiSummary.isRunning">
+          <div class="ai-card-running">
+            <span class="ai-card-spinner"></span>
+            <span class="ai-card-running-label">{{ aiSummary.runningStage ?? 'Analyzing' }}&hellip;</span>
           </div>
-        </div>
-        <div class="pipeline-error-notice" *ngIf="pipelineHasFailure">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>
-          One or more AI stages failed. Structural data is still available.
-        </div>
+        </ng-container>
+
+        <!-- Complete or partial state -->
+        <ng-container *ngIf="!aiSummary.isRunning && model">
+          <div class="ai-card-grid">
+            <div class="ai-card-stat" [class.ai-card-stat--risk-Critical]="aiSummary.securityRisk === 'Critical'" [class.ai-card-stat--risk-High]="aiSummary.securityRisk === 'High'" [class.ai-card-stat--risk-Medium]="aiSummary.securityRisk === 'Medium'" [class.ai-card-stat--risk-Low]="aiSummary.securityRisk === 'Low'">
+              <span class="ai-card-stat-val">{{ aiSummary.securityRisk ?? '—' }}</span>
+              <span class="ai-card-stat-label">Security Risk</span>
+            </div>
+            <div class="ai-card-stat">
+              <span class="ai-card-stat-val">{{ aiSummary.findingCount }}</span>
+              <span class="ai-card-stat-label">Findings</span>
+            </div>
+            <div class="ai-card-stat">
+              <span class="ai-card-stat-val">{{ aiSummary.capabilityCount }}</span>
+              <span class="ai-card-stat-label">Capabilities</span>
+            </div>
+            <div class="ai-card-stat">
+              <span class="ai-card-stat-val">{{ aiSummary.recommendationCount }}</span>
+              <span class="ai-card-stat-label">Suggestions</span>
+            </div>
+          </div>
+          <div class="pipeline-error-notice" *ngIf="aiSummary.hasFailure">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>
+            Partial analysis — some stages failed.
+          </div>
+        </ng-container>
+
+        <!-- No model yet -->
+        <ng-container *ngIf="!aiSummary.isRunning && !model">
+          <span class="ai-card-empty">Run analysis to see AI insights.</span>
+        </ng-container>
       </div>
 
       <!-- Workspace card -->

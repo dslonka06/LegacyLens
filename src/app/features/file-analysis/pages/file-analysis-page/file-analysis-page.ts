@@ -506,6 +506,31 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     return this.model?.insights.maintainability ?? '—';
   }
 
+  // ── AI Analysis summary ────────────────────────────────────────
+
+  get aiSummary(): {
+    securityRisk: string | null;
+    findingCount: number;
+    recommendationCount: number;
+    capabilityCount: number;
+    hasFailure: boolean;
+    isRunning: boolean;
+    runningStage: string | null;
+  } {
+    const ai = this.model?.ai;
+    const running = this.manager.getActiveStages(this.workspace?.id ?? '');
+    const activeStage = (['understanding', 'security', 'recommendations', 'learningPath'] as AIStage[]).find((s) => running.has(s));
+    return {
+      securityRisk: ai?.security?.overallRisk ?? null,
+      findingCount: ai?.security?.findings?.length ?? 0,
+      recommendationCount: ai?.recommendations?.recommendations?.length ?? 0,
+      capabilityCount: ai?.understanding?.coreCapabilities?.length ?? 0,
+      hasFailure: (ai?.failedStages?.length ?? 0) > 0,
+      isRunning: running.size > 0,
+      runningStage: activeStage ? STAGE_LABELS[activeStage] : null,
+    };
+  }
+
   // ── Pipeline stage rows ────────────────────────────────────────
 
   get pipelineStages(): { label: string; stage: AIStage; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
