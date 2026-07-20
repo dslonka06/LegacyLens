@@ -202,11 +202,22 @@ export class WorkspaceManagerService {
 
   /** Set the structural KnowledgeModel after the Code Intelligence Engine completes. */
   setKnowledgeModel(id: string, model: KnowledgeModel): void {
+    // Stay in 'processing' — AI stages are about to start. Status flips to 'ready'
+    // in markAIPipelineComplete() once all stages finish, so the hub pipeline
+    // shows running dots during AI analysis instead of going green immediately.
     this.patch(id, {
       knowledgeModel: model,
-      status: 'ready',
+      status: 'processing',
       lastModifiedAt: new Date().toISOString(),
     });
+  }
+
+  /** Transition workspace to 'ready' after all AI stages have completed or failed. */
+  markAIPipelineComplete(id: string): void {
+    const ws = this.getById(id);
+    if (ws?.status === 'processing') {
+      this.patch(id, { status: 'ready', lastModifiedAt: new Date().toISOString() });
+    }
   }
 
   /** Mark the workspace as processing (structural pipeline running). */

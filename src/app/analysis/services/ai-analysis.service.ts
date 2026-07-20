@@ -51,6 +51,9 @@ export class AIAnalysisService {
     const ws = this.manager.getById(workspaceId);
     const updatedModel = ws?.knowledgeModel ?? model;
     await this.runStage(workspaceId, updatedModel, 'learningPath', generation);
+
+    // All stages done — flip status to ready so the hub shows the final state.
+    this.manager.markAIPipelineComplete(workspaceId);
   }
 
   /**

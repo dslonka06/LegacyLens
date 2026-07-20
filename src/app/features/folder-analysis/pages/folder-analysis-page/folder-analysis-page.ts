@@ -384,8 +384,9 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
       'learningPath',
     ];
 
-    const scanState = this.model ? 'complete' : this.isAnalyzing ? 'running' : 'pending';
-    const parseState = this.model ? 'complete' : this.isAnalyzing ? 'running' : 'pending';
+    const structuralRunning = this.isAnalyzing && !this.model;
+    const scanState = this.model ? 'complete' : structuralRunning ? 'running' : 'pending';
+    const parseState = this.model ? 'complete' : structuralRunning ? 'running' : 'pending';
 
     return [
       { label: 'Scan', state: scanState as 'complete' | 'failed' | 'running' | 'pending' },

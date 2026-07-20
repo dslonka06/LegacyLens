@@ -430,8 +430,11 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       'learningPath',
     ];
 
-    const scanState = this.model ? 'complete' : this.isAnalyzing ? 'running' : 'pending';
-    const parseState = this.model ? 'complete' : this.isAnalyzing ? 'running' : 'pending';
+    // Scan/Parse reflect the structural phase — complete as soon as the model exists,
+    // running only while we're still waiting for the structural result.
+    const structuralRunning = this.isAnalyzing && !this.model;
+    const scanState = this.model ? 'complete' : structuralRunning ? 'running' : 'pending';
+    const parseState = this.model ? 'complete' : structuralRunning ? 'running' : 'pending';
 
     return [
       { label: 'Scan', state: scanState as 'complete' | 'failed' | 'running' | 'pending' },

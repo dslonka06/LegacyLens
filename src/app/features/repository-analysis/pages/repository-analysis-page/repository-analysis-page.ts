@@ -513,12 +513,9 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       'learningPath',
     ];
 
-    const scanState = this.model
-      ? 'complete'
-      : this.isAnalyzing || this.isScanning
-        ? 'running'
-        : 'pending';
-    const parseState = this.model ? 'complete' : this.isAnalyzing ? 'running' : 'pending';
+    const structuralRunning = (this.isAnalyzing || this.isScanning) && !this.model;
+    const scanState = this.model ? 'complete' : structuralRunning ? 'running' : 'pending';
+    const parseState = this.model ? 'complete' : structuralRunning ? 'running' : 'pending';
 
     return [
       {
