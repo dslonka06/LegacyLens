@@ -43,6 +43,13 @@ const STAGE_LABELS: Record<AIStage, string> = {
   documentation: 'Documentation',
 };
 
+const STAGE_MESSAGES: Record<string, string[]> = {
+  understanding: ['Analysing structure...', 'Sending to LLM...', 'Processing response...', 'Mapping capabilities...'],
+  security: ['Scanning for vulnerabilities...', 'Sending to LLM...', 'Evaluating risk...', 'Cataloguing findings...'],
+  recommendations: ['Reviewing code patterns...', 'Sending to LLM...', 'Generating suggestions...'],
+  learningPath: ['Building learning plan...', 'Sending to LLM...', 'Structuring path...'],
+};
+
 @Component({
   selector: 'app-repository-analysis-page',
   standalone: true,
@@ -61,6 +68,10 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   showArcDraw = false;
   showMetricCards = false;
   isReturning = false;
+
+  // Pipeline cycling status text per stage
+  pipelineStatusText: Record<string, string> = {};
+  private statusTimers: Record<string, ReturnType<typeof setInterval>> = {};
 
   // Electron / repo loading state
   isScanning = false;
@@ -89,6 +100,9 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    const init = this.manager.getActive();
+    this.workspace = init ?? null;
+    this.model = init?.knowledgeModel ?? null;
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       const prevId = this.workspace?.id;
       const prevStatus = this.workspace?.status;
@@ -119,7 +133,21 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
-    this.stagesSub = this.manager.activeStages$.subscribe(() => this.cdr.detectChanges());
+    this.stagesSub = this.manager.activeStages$.subscribe(() => {
+      // Update status cycling — start/stop per stage
+      const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
+      stages.forEach((stage) => {
+        const running = this.manager.getActiveStages(this.workspace?.id ?? '').has(stage);
+        const hasTimer = !!this.statusTimers[stage];
+        if (running && !hasTimer) {
+          this.startStatusCycle(stage);
+        } else if (!running && hasTimer) {
+          this.stopStatusCycle(stage);
+        }
+      });
+      this.cdr.detectChanges();
+    });
+
     this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
     this.runAnimations();
 
@@ -138,6 +166,58 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     this.limitSub?.unsubscribe();
     this.scanProgressUnsub?.();
     if (this.animTimer) clearTimeout(this.animTimer);
+    this.stopAllStatusCycles();
+  }
+
+  // ── Pipeline status cycling ─────────────────────────────────
+
+  startStatusCycle(stage: AIStage): void {
+    const messages = STAGE_MESSAGES[stage] ?? ['Processing...'];
+    let idx = 0;
+    this.pipelineStatusText[stage] = messages[0];
+    this.statusTimers[stage] = setInterval(() => {
+      this.zone.run(() => {
+        idx = (idx + 1) % messages.length;
+        this.pipelineStatusText[stage] = messages[idx];
+        this.cdr.detectChanges();
+      });
+    }, 2000);
+  }
+
+  stopStatusCycle(stage: AIStage): void {
+    if (this.statusTimers[stage]) {
+      clearInterval(this.statusTimers[stage]);
+      delete this.statusTimers[stage];
+    }
+  }
+
+  private stopAllStatusCycles(): void {
+    Object.keys(this.statusTimers).forEach((stage) => {
+      clearInterval(this.statusTimers[stage]);
+    });
+    this.statusTimers = {};
+  }
+
+  stageOutcome(stage: AIStage): string {
+    const ai = this.model?.ai;
+    switch (stage) {
+      case 'understanding': {
+        const caps = ai?.understanding?.coreCapabilities?.length ?? 0;
+        return caps > 0 ? `${caps} capabilities` : 'Capabilities mapped';
+      }
+      case 'security': {
+        const count = ai?.security?.findings?.length ?? 0;
+        return `${count} finding${count !== 1 ? 's' : ''}`;
+      }
+      case 'recommendations': {
+        const count = ai?.recommendations?.recommendations?.length ?? 0;
+        return `${count} suggestion${count !== 1 ? 's' : ''}`;
+      }
+      case 'learningPath':
+        return 'Path generated';
+      default:
+        return '';
+    }
   }
 
   // ── Repo loading (Electron IPC) ────────────────────────────────────────────
@@ -412,12 +492,22 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     return map[this.workspace?.status ?? 'empty'];
   }
 
+  get statusChipClass(): string {
+    switch (this.workspace?.status) {
+      case 'ready': return 'workspace-status-chip--ready';
+      case 'processing': return 'workspace-status-chip--processing';
+      case 'failed':
+      case 'error': return 'workspace-status-chip--failed';
+      default: return 'workspace-status-chip--empty';
+    }
+  }
+
   get canReanalyze(): boolean {
     return this.knowledge.canReanalyze(this.workspace?.id ?? '') && !this.isAnalyzing;
   }
 
   get workspaceList(): Workspace[] {
-    return this.manager.workspaces;
+    return this.manager.workspaces.filter((w) => w.type === this.workspace?.type);
   }
 
   // ── Repo metrics ───────────────────────────────────────────────────────────
@@ -467,13 +557,10 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     if (!this.model) return 'unknown';
     const c = this.model.insights.complexity;
     const m = this.model.insights.maintainability;
-    const crit =
-      this.model.ai?.security?.findings?.filter(
-        (f) => f.severity === 'critical' || f.severity === 'high',
-      ).length ?? 0;
+    if (!c || !m) return 'unknown';
 
-    if (c === 'High' || m === 'Low' || crit >= 3) return 'critical';
-    if (c === 'Low' && m === 'High' && crit === 0) return 'healthy';
+    if (c === 'High' || m === 'Low') return 'critical';
+    if (c === 'Low' && m === 'High') return 'healthy';
     if (c === 'Medium' || m === 'Medium') return 'fair';
     return 'needs-attention';
   }
@@ -496,32 +583,39 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     return this.model?.insights.maintainability ?? '—';
   }
 
-  get securityRiskCount(): number {
-    return (
-      this.model?.ai?.security?.findings?.filter(
-        (f) => f.severity === 'critical' || f.severity === 'high',
-      ).length ?? 0
-    );
-  }
-
   // ── Pipeline stages ────────────────────────────────────────────────────────
 
-  get pipelineStages(): { label: string; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
+  get pipelineStages(): { label: string; stage: AIStage; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
     const ai = this.model?.ai;
     const running = this.manager.getActiveStages(this.workspace?.id ?? '');
     const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
     let hitFailure = false;
     return stages.map((s) => {
-      if (hitFailure) return { label: STAGE_LABELS[s], state: 'pending' as const };
-      if (ai?.failedStages?.includes(s)) { hitFailure = true; return { label: STAGE_LABELS[s], state: 'failed' as const }; }
-      if (ai?.completedStages?.includes(s)) return { label: STAGE_LABELS[s], state: 'complete' as const };
-      if (running.has(s)) return { label: STAGE_LABELS[s], state: 'running' as const };
-      return { label: STAGE_LABELS[s], state: 'pending' as const };
+      if (hitFailure) return { label: STAGE_LABELS[s], stage: s, state: 'pending' as const };
+      if (ai?.failedStages?.includes(s)) { hitFailure = true; return { label: STAGE_LABELS[s], stage: s, state: 'failed' as const }; }
+      if (ai?.completedStages?.includes(s)) return { label: STAGE_LABELS[s], stage: s, state: 'complete' as const };
+      if (running.has(s)) return { label: STAGE_LABELS[s], stage: s, state: 'running' as const };
+      return { label: STAGE_LABELS[s], stage: s, state: 'pending' as const };
     });
   }
 
   get pipelineHasFailure(): boolean {
     return this.pipelineStages.some((s) => s.state === 'failed');
+  }
+
+  // ── Identity metrics ─────────────────────────────────────────
+
+  get identityMetrics(): { label: string; value: string }[] {
+    if (!this.model) return [];
+    return [
+      { label: 'Files', value: String(this.fileCount) },
+      { label: 'Languages', value: String(this.model.structure.languages?.length ?? 0) },
+      { label: 'Frameworks', value: String(this.model.structure.frameworks?.length ?? 0) },
+    ];
+  }
+
+  get executiveSummary(): string {
+    return this.model?.ai?.understanding?.executiveSummary ?? '';
   }
 
   // ── Metric cards ───────────────────────────────────────────────────────────

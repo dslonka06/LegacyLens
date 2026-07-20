@@ -1,12 +1,5 @@
-<div class="lp-no-workspace" *ngIf="!hasWorkspace">
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
+<div class="no-session" *ngIf="!hasWorkspace">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="10" />
     <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
   </svg>
@@ -14,47 +7,32 @@
   <p>Upload a file, folder, or repository to generate a learning path.</p>
 </div>
 
-<div class="lp-layout" *ngIf="hasWorkspace">
-  <div class="lp-page-header">
-    <div class="lp-page-header-icon">
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-      </svg>
-    </div>
-    <div class="lp-page-header-text">
-      <h1 class="lp-page-title">Learning Path</h1>
-      <p class="lp-page-description">
-        Follow the roadmap below to learn this codebase in a structured order. Each stage builds on
-        the previous one and is intended to maximise understanding while minimising unnecessary
-        complexity.
-      </p>
+<div class="insight-page" *ngIf="hasWorkspace">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+        </svg>
+      </div>
+      <div>
+        <h1>Learning Path</h1>
+        <p class="page-subtitle">Follow the roadmap below to learn this codebase in a structured order.</p>
+      </div>
     </div>
   </div>
 
-  <div class="lp-pending" *ngIf="!lp">
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
+  <div class="no-session" *ngIf="!lp">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10" />
       <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
     </svg>
+    <h3>Analysis Pending</h3>
     <p>Learning path is being generated. It will appear here once analysis completes.</p>
   </div>
 
-  <ng-container *ngIf="lp">
+  <div class="page-content" *ngIf="lp">
     <div class="lp-body">
       <div class="lp-col-left">
         <div class="lp-section-card">
@@ -214,7 +192,7 @@
           <div class="lp-nextsteps-grid">
             <a
               *ngFor="let step of lp!.nextSteps"
-              [routerLink]="step.route"
+              [routerLink]="fixedRoute(step.route)"
               class="lp-nextstep-card"
             >
               <div class="lp-nextstep-dest">{{ step.destination }}</div>
@@ -271,5 +249,5 @@
         </div>
       </div>
     </div>
-  </ng-container>
+  </div>
 </div>

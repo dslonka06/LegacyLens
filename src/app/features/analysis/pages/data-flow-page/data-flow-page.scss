@@ -29,7 +29,9 @@
 .df-tree-rail {
   height: 100%;
   min-height: 400px;
-  max-height: 100%;
+  max-height: calc(100vh - 180px);
+  position: sticky;
+  top: 0;
   overflow: hidden;
 }
 
@@ -66,15 +68,15 @@
   border-radius: 6px;
 
   &.flow-tag-input {
-    background: rgba(56, 189, 248, 0.1);
-    color: #67e8f9;
-    border: 1px solid rgba(56, 189, 248, 0.2);
+    background: color-mix(in srgb, var(--info) 10%, transparent);
+    color: var(--info);
+    border: 1px solid color-mix(in srgb, var(--info) 20%, transparent);
   }
 
   &.flow-tag-output {
-    background: rgba(34, 197, 94, 0.1);
-    color: #4ade80;
-    border: 1px solid rgba(34, 197, 94, 0.2);
+    background: color-mix(in srgb, var(--success) 10%, transparent);
+    color: var(--success);
+    border: 1px solid color-mix(in srgb, var(--success) 20%, transparent);
   }
 }
 
@@ -116,7 +118,7 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgba(124, 92, 255, 0.15);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
   color: var(--accent);
   display: flex;
   align-items: center;
@@ -204,7 +206,7 @@
   gap: 0;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: var(--radius-card);
   overflow: hidden;
 }
 
@@ -244,4 +246,37 @@
   font-size: 13px;
   color: var(--text-muted);
   font-style: italic;
+}
+
+.flow-workflow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.flow-workflow-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.flow-workflow-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-content);
+  flex-shrink: 0;
+  min-width: 140px;
+}
+
+.flow-workflow-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  flex: 1;
+  min-width: 0;
 }

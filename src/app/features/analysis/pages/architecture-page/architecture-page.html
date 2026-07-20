@@ -49,10 +49,12 @@
             <div class="arch-pattern-card" *ngFor="let p of patterns">
               <div class="arch-pattern-info">
                 <span class="arch-pattern-name">{{ p.name }}</span>
-                <span class="arch-pattern-desc">{{ confidencePercent(p) }}% confidence</span>
               </div>
-              <div class="arch-confidence-bar">
-                <div class="arch-confidence-fill" [style.width.%]="confidencePercent(p)"></div>
+              <div class="arch-confidence-row">
+                <div class="arch-confidence-bar">
+                  <div class="arch-confidence-fill" [style.width.%]="confidencePercent(p)"></div>
+                </div>
+                <span class="arch-confidence-pct">{{ confidencePercent(p) }}%</span>
               </div>
               <p class="arch-pattern-summary">{{ architectureDescription(p.name) }}</p>
               <div class="arch-indicators" *ngIf="p.indicators.length">

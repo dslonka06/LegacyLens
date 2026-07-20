@@ -65,9 +65,9 @@
 }
 
 .rec-card {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   padding: 20px 22px;
 }
 
@@ -103,9 +103,9 @@
 }
 
 .rec-metric {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -131,30 +131,30 @@
 }
 
 .rec-metric-critical .rec-metric-value {
-  color: #ef4444;
+  color: var(--severity-critical);
 }
 .rec-metric-high .rec-metric-value {
-  color: #f97316;
+  color: var(--severity-high);
 }
 
 .debt-critical .rec-metric-value {
-  color: #ef4444;
+  color: var(--severity-critical);
 }
 .debt-high .rec-metric-value {
-  color: #f97316;
+  color: var(--severity-high);
 }
 .debt-moderate .rec-metric-value {
-  color: #eab308;
+  color: var(--severity-medium);
 }
 .debt-low .rec-metric-value {
   color: var(--success);
 }
 
 .readiness-not-ready .rec-metric-value {
-  color: #ef4444;
+  color: var(--severity-critical);
 }
 .readiness-partial .rec-metric-value {
-  color: #eab308;
+  color: var(--severity-medium);
 }
 .readiness-ready .rec-metric-value {
   color: var(--success);
@@ -246,16 +246,16 @@
   flex-shrink: 0;
   white-space: nowrap;
   &.priority-critical {
-    background: color-mix(in srgb, #ef4444 14%, transparent);
-    color: #ef4444;
+    background: color-mix(in srgb, var(--severity-critical) 14%, transparent);
+    color: var(--severity-critical);
   }
   &.priority-high {
-    background: color-mix(in srgb, #f97316 14%, transparent);
-    color: #f97316;
+    background: color-mix(in srgb, var(--severity-high) 14%, transparent);
+    color: var(--severity-high);
   }
   &.priority-medium {
-    background: color-mix(in srgb, #eab308 14%, transparent);
-    color: #eab308;
+    background: color-mix(in srgb, var(--severity-medium) 14%, transparent);
+    color: var(--severity-medium);
   }
   &.priority-low {
     background: color-mix(in srgb, var(--success) 14%, transparent);

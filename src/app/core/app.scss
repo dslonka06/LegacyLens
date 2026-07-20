@@ -22,11 +22,11 @@
   overflow: hidden;
 }
 
-// ─── Theme toggle — top-right corner ─────────────────────
+// ─── Theme toggle — top-right corner (non-hub pages) ─────
 .app-theme-toggle {
   position: absolute;
-  top: 16px;
-  right: 20px;
+  top: 20px;
+  right: 168px;
   z-index: 150;
 }
 

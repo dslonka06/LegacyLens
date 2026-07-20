@@ -31,9 +31,9 @@
 }
 
 .su-card {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   padding: 14px 16px;
 }
 

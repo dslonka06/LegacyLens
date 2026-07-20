@@ -43,6 +43,9 @@
   --warning: #f4b544;
   --error: #ef5b63;
   --info: #5c8dff;
+  --severity-critical: #ef4444;
+  --severity-high: #f97316;
+  --severity-medium: #eab308;
 
   // ── Sidebar ───────────────────────────────────────────────
   --sidebar-bg: #0f1117;
@@ -118,6 +121,9 @@
   --warning: #d4920a;
   --error: #d93b44;
   --info: #2b6fd4;
+  --severity-critical: #f05252;
+  --severity-high: #ff6b35;
+  --severity-medium: #d4a017;
 
   // ── Sidebar ───────────────────────────────────────────────
   --sidebar-bg: #eceef8;
@@ -219,28 +225,33 @@ ol {
 //          history, documentation, data-flow pages
 // ════════════════════════════════════════════════════════
 
-.insight-page {
+.insight-page,
+.doc-builder-page {
   flex: 1;
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  background: var(--bg-primary);
   position: relative;
 
-  // Ambient purple orb — matches homepage atmosphere, stays behind content
   &::before {
     content: '';
     position: absolute;
     inset: 0;
-    pointer-events: none;
     z-index: 0;
-    background:
-      radial-gradient(ellipse 70% 35% at 15% 0%, rgba(124, 92, 255, 0.06) 0%, transparent 70%),
-      radial-gradient(ellipse 40% 25% at 85% 10%, rgba(124, 92, 255, 0.03) 0%, transparent 65%);
+    pointer-events: none;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.9;
+    transition: opacity 0.3s;
+    background-image: url('assets/DarkThemeBackground.png');
   }
 
-  // Ensure header and content sit above the pseudo-element
+  [data-theme='light'] &::before {
+    background-image: url('assets/LightThemeBackground.png');
+  }
+
   > * {
     position: relative;
     z-index: 1;

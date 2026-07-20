@@ -30,6 +30,13 @@ const STAGE_LABELS: Record<AIStage, string> = {
   documentation: 'Documentation', // kept for type completeness; not rendered
 };
 
+const STAGE_MESSAGES: Record<string, string[]> = {
+  understanding: ['Analysing structure...', 'Sending to LLM...', 'Processing response...', 'Mapping capabilities...'],
+  security: ['Scanning for vulnerabilities...', 'Sending to LLM...', 'Evaluating risk...', 'Cataloguing findings...'],
+  recommendations: ['Reviewing code patterns...', 'Sending to LLM...', 'Generating suggestions...'],
+  learningPath: ['Building learning plan...', 'Sending to LLM...', 'Structuring path...'],
+};
+
 @Component({
   selector: 'app-file-analysis-page',
   standalone: true,
@@ -48,6 +55,10 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   showArcDraw = false;
   showMetricCards = false;
   isReturning = false;
+
+  // Pipeline cycling status text per stage
+  pipelineStatusText: Record<string, string> = {};
+  private statusTimers: Record<string, ReturnType<typeof setInterval>> = {};
 
   // Animated count display — counts up from 0 to actual value when cards appear
   displayedCounts: Record<string, number> = {};
@@ -71,6 +82,9 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    const init = this.manager.getActive();
+    this.workspace = init ?? null;
+    this.model = init?.knowledgeModel ?? null;
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       const prevId = this.workspace?.id;
       const prevStatus = this.workspace?.status;
@@ -109,8 +123,21 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       }
     });
 
-    // Re-render when stage running state changes so pipeline dots update live
-    this.stagesSub = this.manager.activeStages$.subscribe(() => this.cdr.detectChanges());
+    // Re-render when stage running state changes so pipeline rows update live
+    this.stagesSub = this.manager.activeStages$.subscribe((stagesMap) => {
+      // Update status cycling — start/stop per stage
+      const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
+      stages.forEach((stage) => {
+        const running = this.manager.getActiveStages(this.workspace?.id ?? '').has(stage);
+        const hasTimer = !!this.statusTimers[stage];
+        if (running && !hasTimer) {
+          this.startStatusCycle(stage);
+        } else if (!running && hasTimer) {
+          this.stopStatusCycle(stage);
+        }
+      });
+      this.cdr.detectChanges();
+    });
 
     this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
     this.runAnimations();
@@ -122,6 +149,58 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     this.limitSub?.unsubscribe();
     if (this.animTimer) clearTimeout(this.animTimer);
     this.clearCountTimers();
+    this.stopAllStatusCycles();
+  }
+
+  // ── Pipeline status cycling ─────────────────────────────────
+
+  startStatusCycle(stage: AIStage): void {
+    const messages = STAGE_MESSAGES[stage] ?? ['Processing...'];
+    let idx = 0;
+    this.pipelineStatusText[stage] = messages[0];
+    this.statusTimers[stage] = setInterval(() => {
+      this.zone.run(() => {
+        idx = (idx + 1) % messages.length;
+        this.pipelineStatusText[stage] = messages[idx];
+        this.cdr.detectChanges();
+      });
+    }, 2000);
+  }
+
+  stopStatusCycle(stage: AIStage): void {
+    if (this.statusTimers[stage]) {
+      clearInterval(this.statusTimers[stage]);
+      delete this.statusTimers[stage];
+    }
+  }
+
+  private stopAllStatusCycles(): void {
+    Object.keys(this.statusTimers).forEach((stage) => {
+      clearInterval(this.statusTimers[stage]);
+    });
+    this.statusTimers = {};
+  }
+
+  stageOutcome(stage: AIStage): string {
+    const ai = this.model?.ai;
+    switch (stage) {
+      case 'understanding': {
+        const caps = ai?.understanding?.coreCapabilities?.length ?? 0;
+        return caps > 0 ? `${caps} capabilities` : 'Capabilities mapped';
+      }
+      case 'security': {
+        const count = ai?.security?.findings?.length ?? 0;
+        return `${count} finding${count !== 1 ? 's' : ''}`;
+      }
+      case 'recommendations': {
+        const count = ai?.recommendations?.recommendations?.length ?? 0;
+        return `${count} suggestion${count !== 1 ? 's' : ''}`;
+      }
+      case 'learningPath':
+        return 'Path generated';
+      default:
+        return '';
+    }
   }
 
   // ── Animation sequence ─────────────────────────────────────────
@@ -373,12 +452,22 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     return map[this.workspace?.status ?? 'empty'];
   }
 
+  get statusChipClass(): string {
+    switch (this.workspace?.status) {
+      case 'ready': return 'workspace-status-chip--ready';
+      case 'processing': return 'workspace-status-chip--processing';
+      case 'failed':
+      case 'error': return 'workspace-status-chip--failed';
+      default: return 'workspace-status-chip--empty';
+    }
+  }
+
   get canReanalyze(): boolean {
     return this.knowledge.canReanalyze(this.workspace?.id ?? '') && !this.isAnalyzing;
   }
 
   get workspaceList(): Workspace[] {
-    return this.manager.workspaces;
+    return this.manager.workspaces.filter((w) => w.type === this.workspace?.type);
   }
 
   // ── Code Health ────────────────────────────────────────────────
@@ -387,13 +476,10 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     if (!this.model) return 'unknown';
     const c = this.model.insights.complexity;
     const m = this.model.insights.maintainability;
-    const crit =
-      this.model.ai?.security?.findings?.filter(
-        (f) => f.severity === 'critical' || f.severity === 'high',
-      ).length ?? 0;
+    if (!c || !m) return 'unknown';
 
-    if (c === 'High' || m === 'Low' || crit >= 3) return 'critical';
-    if (c === 'Low' && m === 'High' && crit === 0) return 'healthy';
+    if (c === 'High' || m === 'Low') return 'critical';
+    if (c === 'Low' && m === 'High') return 'healthy';
     if (c === 'Medium' || m === 'Medium') return 'fair';
     return 'needs-attention';
   }
@@ -416,36 +502,25 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     return this.model?.insights.maintainability ?? '—';
   }
 
-  get securityHealthLabel(): string {
-    const findings = this.model?.ai?.security?.findings ?? [];
-    if (findings.some((f) => f.severity === 'critical')) return 'Critical';
-    if (findings.some((f) => f.severity === 'high')) return 'High Risk';
-    return 'Good';
-  }
+  // ── Pipeline stage rows ────────────────────────────────────────
 
-  // ── Pipeline stage dots ────────────────────────────────────────
-
-  get pipelineStages(): { label: string; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
+  get pipelineStages(): { label: string; stage: AIStage; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
     const ai = this.model?.ai;
     const running = this.manager.getActiveStages(this.workspace?.id ?? '');
     const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
 
-    // Once a stage has failed, all subsequent stages should appear greyed out (pending),
-    // not show as running — analysis stops progressing after a failure.
     let hitFailure = false;
 
     return stages.map((s) => {
-      if (hitFailure) return { label: STAGE_LABELS[s], state: 'pending' as const };
+      if (hitFailure) return { label: STAGE_LABELS[s], stage: s, state: 'pending' as const };
       if (ai?.failedStages?.includes(s)) {
         hitFailure = true;
-        return { label: STAGE_LABELS[s], state: 'failed' as const };
+        return { label: STAGE_LABELS[s], stage: s, state: 'failed' as const };
       }
       if (ai?.completedStages?.includes(s))
-        return { label: STAGE_LABELS[s], state: 'complete' as const };
-      if (running.has(s)) return { label: STAGE_LABELS[s], state: 'running' as const };
-      // Still waiting for structural model or stage not yet started
-      if (this.isAnalyzing) return { label: STAGE_LABELS[s], state: 'pending' as const };
-      return { label: STAGE_LABELS[s], state: 'pending' as const };
+        return { label: STAGE_LABELS[s], stage: s, state: 'complete' as const };
+      if (running.has(s)) return { label: STAGE_LABELS[s], stage: s, state: 'running' as const };
+      return { label: STAGE_LABELS[s], stage: s, state: 'pending' as const };
     });
   }
 
@@ -528,5 +603,20 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     const sym = Object.values(this.model.structure.symbols)[0];
     if (!sym) return null;
     return sym.classes.length + sym.methods.length;
+  }
+
+  // ── Identity metrics ─────────────────────────────────────────
+
+  get identityMetrics(): { label: string; value: string }[] {
+    if (!this.model) return [];
+    return [
+      { label: 'Language', value: this.language || '—' },
+      { label: 'File Type', value: this.detectedKind || '—' },
+      { label: 'Symbols', value: this.symbolCount !== null ? String(this.symbolCount) : '—' },
+    ];
+  }
+
+  get executiveSummary(): string {
+    return this.model?.ai?.understanding?.executiveSummary ?? '';
   }
 }

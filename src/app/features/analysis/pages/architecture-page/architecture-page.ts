@@ -80,15 +80,14 @@ export class ArchitecturePage implements OnInit, OnDestroy {
   }
 
   get architectureNarrative(): string {
-    const ai = this.model?.ai?.understanding?.executiveSummary;
-    if (ai) return ai;
     const pts = this.patterns;
     if (!pts.length) return '';
-    const names = pts
-      .slice(0, 3)
-      .map((p) => p.name)
-      .join(', ');
-    return `This workspace follows a ${names} structure with ${this.nodeCount} modules and ${this.edgeCount} dependency connections.`;
+    const names = pts.slice(0, 3).map((p) => p.name).join(', ');
+    const topConf = this.confidencePercent(pts[0]);
+    const hubNote = this.hubs.length > 0
+      ? ` ${this.hubs.length} central hub module${this.hubs.length > 1 ? 's' : ''} act as primary integration points.`
+      : '';
+    return `Detected pattern${pts.length > 1 ? 's' : ''}: ${names} (${topConf}% confidence). ${this.nodeCount} modules, ${this.edgeCount} dependency connections.${hubNote}`;
   }
 
   confidencePercent(p: ArchitecturePattern): number {

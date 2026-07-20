@@ -125,7 +125,17 @@
           </div>
         </div>
 
-        <div class="arch-empty-state" *ngIf="!hasDataFlow">
+        <div class="doc-block" *ngIf="keyWorkflows.length > 0">
+          <div class="doc-block-label">Key Workflows</div>
+          <div class="flow-workflow-list">
+            <div class="flow-workflow-item" *ngFor="let wf of keyWorkflows">
+              <div class="flow-workflow-name">{{ wf.name }}</div>
+              <div class="flow-workflow-desc">{{ wf.description }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arch-empty-state" *ngIf="!hasDataFlow && !keyWorkflows.length">
           No dependency data available. Upload a folder or repository with multiple interconnected
           files.
         </div>

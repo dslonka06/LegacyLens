@@ -721,36 +721,29 @@
   overflow: visible;
 }
 
-// Outer hex ring — slow rotation
+// Hex ring groups — no animation by default
 .hex-ring-outer {
   transform-origin: 50% 50%;
-  animation: hex-spin-slow 8s linear infinite;
 }
 
-// Inner hex — counter-rotation + subtle pulse
 .hex-ring-inner {
   transform-origin: 50% 50%;
-  animation: hex-spin-reverse 5s linear infinite;
 }
 
-// Core glow blob
 .hex-core {
   transform-origin: 50% 50%;
-  animation: hex-pulse 2.4s ease-in-out infinite;
 }
 
-// When analyzing: everything pulses faster and glows
+// When analyzing: spin and pulse
 .identity-hex--analyzing {
-  .hex-ring-outer { animation-duration: 3s; }
-  .hex-ring-inner { animation-duration: 2s; }
-  .hex-core       { animation-duration: 1.2s; }
+  .hex-ring-outer { animation: hex-spin-slow 3s linear infinite; }
+  .hex-ring-inner { animation: hex-spin-reverse 2s linear infinite; }
+  .hex-core       { animation: hex-pulse 1.2s ease-in-out infinite; }
 }
 
-// When ready (model loaded): slow, calm
+// When ready: fully stopped, settled at full opacity
 .identity-hex--ready {
-  .hex-ring-outer { animation-duration: 12s; }
-  .hex-ring-inner { animation-duration: 8s; }
-  .hex-core       { animation: none; opacity: 0.9; }
+  .hex-core { opacity: 0.9; }
 }
 
 @keyframes hex-spin-slow {
@@ -816,7 +809,7 @@
 
 .hub-info-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 2fr 1fr;
   gap: 12px;
 }
 
@@ -865,14 +858,15 @@
 }
 
 .health-arc {
-  width: 80px;
-  height: 50px;
+  width: 100px;
+  height: 60px;
 }
 
-// Arc draw animation — triggered by --animated class added after mount
+// Arc draw animation — triggered by --draw class added after mount
+// Arc path: M 10 56 A 42 42 0 0 1 90 56 — approx length 132
 .health-arc-fill {
-  stroke-dasharray: 107;
-  stroke-dashoffset: 107;
+  stroke-dasharray: 132;
+  stroke-dashoffset: 132;
   transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 
   &--healthy          { stroke: var(--success);  }
@@ -883,14 +877,14 @@
 
 // Applied by component after animation delay to trigger arc draw
 .health-arc-fill--draw {
-  &.health-arc-fill--healthy        { stroke-dashoffset: 0;  }
-  &.health-arc-fill--fair           { stroke-dashoffset: 27; }
-  &.health-arc-fill--needs-attention { stroke-dashoffset: 54; }
-  &.health-arc-fill--critical       { stroke-dashoffset: 80; }
+  &.health-arc-fill--healthy        { stroke-dashoffset: 0;   }
+  &.health-arc-fill--fair           { stroke-dashoffset: 33;  }
+  &.health-arc-fill--needs-attention { stroke-dashoffset: 66;  }
+  &.health-arc-fill--critical       { stroke-dashoffset: 99;  }
 }
 
 .health-tier-label {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -1317,6 +1311,11 @@
   .hub-metric-row {
     grid-template-columns: repeat(3, 1fr);
   }
+
+  .hub-info-row {
+    grid-template-columns: 1fr 1fr;
+    .info-card--pipeline { grid-column: 1 / -1; }
+  }
 }
 
 @media (max-width: 640px) {
@@ -1328,26 +1327,272 @@
   }
 }
 
+// ─── Identity card — new unified layout ──────────────────────
+
+// Icon block — no inner panel wrapper, raw SVG
+.identity-card-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  svg {
+    width: 40px;
+    height: 48px;
+  }
+
+  &--file svg {
+    width: 40px;
+    height: 48px;
+  }
+
+  &--folder svg {
+    width: 48px;
+    height: 40px;
+  }
+
+  &--repo svg {
+    width: 40px;
+    height: 44px;
+  }
+}
+
+.identity-file-ext-overlay {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(141, 99, 255, 0.9);
+  line-height: 1;
+  pointer-events: none;
+}
+
+// Right metrics stack
+.identity-metrics {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.identity-metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  text-align: right;
+}
+
+.identity-metric-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.identity-metric-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+// AI description with typewriter animation
+.identity-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 480px;
+  text-overflow: ellipsis;
+}
+
+// Typewriter effect — CSS steps animation on width
+// Only applied on first appearance (not when isReturning)
+.identity-desc--typing {
+  width: 0;
+  animation: typewriter 1.8s steps(40) 0.15s forwards;
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+// ─── Pipeline — vertical stage rows ──────────────────────────
+
+.pipeline-stage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.pipeline-stage-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  transition: background 0.15s;
+
+  &--running {
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
+    border-left: 2px solid var(--accent);
+    padding-left: 6px;
+  }
+
+  &--pending {
+    opacity: 0.5;
+  }
+}
+
+.pipeline-stage-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+  transition: background 0.2s;
+
+  &--complete { background: var(--success); }
+  &--running  {
+    background: var(--accent);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  &--failed   { background: var(--error); }
+}
+
+.pipeline-stage-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  min-width: 90px;
+}
+
+.pipeline-stage-status {
+  font-size: 11px;
+  color: var(--accent);
+  font-style: italic;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pipeline-stage-outcome {
+  font-size: 11px;
+  color: var(--success);
+  flex: 1;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pipeline-stage-failed {
+  font-size: 11px;
+  color: var(--error);
+  font-weight: 600;
+  flex: 1;
+  text-align: right;
+}
+
+// ─── Workspace card — grid + chips ───────────────────────────
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin: 2px 0;
+}
+
+.workspace-chip {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--border);
+  border: 2px solid transparent;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  cursor: default;
+
+  &--active {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    box-shadow: 0 0 0 1px rgba(141, 99, 255, 0.3);
+  }
+
+  &--ready {
+    background: color-mix(in srgb, var(--success) 18%, transparent);
+    border-color: color-mix(in srgb, var(--success) 35%, transparent);
+  }
+
+  &--processing {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  &--failed {
+    background: color-mix(in srgb, var(--error) 18%, transparent);
+    border-color: color-mix(in srgb, var(--error) 35%, transparent);
+  }
+
+  &--empty {
+    background: var(--border);
+    border-color: transparent;
+  }
+}
+
+.workspace-last-analyzed {
+  font-size: 10px;
+  color: var(--text-muted);
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+// Status chip colour variants
+.workspace-status-chip--ready {
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+  color: var(--success);
+}
+
+.workspace-status-chip--processing {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+
+.workspace-status-chip--failed {
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+  color: var(--error);
+}
+
+.workspace-status-chip--empty {
+  background: color-mix(in srgb, var(--text-muted) 10%, transparent);
+  color: var(--text-muted);
+}
+
 // ─── Identity card stage dots (analyzing overlay) ─────────────
 
 
 // ─── Progressive hub shell — first row always rendered ───────
 
-// First row: identity/upload card (flex: 1) + workspace card (fixed width)
+// First row: identity/upload card full width
 .hub-first-row {
   display: flex;
   gap: 16px;
   align-items: stretch;
 
-  // Identity card takes remaining space; workspace card is fixed
   .hub-identity-card {
     flex: 1;
     min-width: 0;
-  }
-
-  .info-card--workspace {
-    flex-shrink: 0;
-    width: 220px;
   }
 }
 

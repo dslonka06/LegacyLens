@@ -1,23 +1,29 @@
 <div class="doc-builder-page">
-  <div class="doc-empty" *ngIf="!hasContent">
-    <div class="doc-empty-icon">
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-      </svg>
-    </div>
+  <div class="no-session" *ngIf="!hasContent">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+    </svg>
     <h3>No analysis available</h3>
     <p>Upload a file, folder, or repository to generate documentation.</p>
   </div>
 
   <div class="doc-builder-layout" *ngIf="hasContent">
+    <div class="doc-page-header page-header">
+      <div class="page-title">
+        <div class="page-icon slate">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+        </div>
+        <div>
+          <h1>Documentation</h1>
+          <p class="page-subtitle">Select sections to build and export a document for {{ workspaceName }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="doc-builder-inner">
     <!-- Code viewer panel (file workspaces only) -->
     <div *ngIf="sourceCode" class="code-panel" [style.width.px]="codeEditorWidth">
       <app-code-editor
@@ -37,27 +43,8 @@
 
     <div class="doc-selector-col" [style.width.px]="panelWidths[0]">
       <div class="doc-selector-header">
-        <div class="doc-selector-title-row">
-          <div class="doc-selector-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-            </svg>
-          </div>
-          <div>
-            <span class="doc-selector-heading">Build Documentation</span>
-            <span class="doc-selector-sub">{{ workspaceName }}</span>
-          </div>
-        </div>
-
         <div class="section-controls">
+          <span class="doc-selector-section-label">Sections</span>
           <button class="ctrl-btn" (click)="selectAll()">All</button>
           <button class="ctrl-btn" (click)="selectNone()">None</button>
           <span class="selection-count">{{ selectedCount }} / {{ availableCount }}</span>
@@ -191,5 +178,6 @@
         </div>
       </div>
     </div>
-  </div>
+    </div><!-- /doc-builder-inner -->
+  </div><!-- /doc-builder-layout -->
 </div>

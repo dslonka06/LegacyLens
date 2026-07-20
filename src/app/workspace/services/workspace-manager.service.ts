@@ -174,15 +174,20 @@ export class WorkspaceManagerService {
       this._saveTimers.delete(id);
     }
 
+    const deletedType = this._workspaces$.value.find((w) => w.id === id)?.type;
     const remaining = this._workspaces$.value.filter((w) => w.id !== id);
     this._workspaces$.next(remaining);
     this.electronService.deleteWorkspace(id);
 
     if (this._activeId$.value === id) {
-      if (remaining.length > 0) {
-        const next = remaining[remaining.length - 1];
+      const sameType = remaining.filter((w) => w.type === deletedType);
+      if (sameType.length > 0) {
+        const next = sameType[sameType.length - 1];
         this._activeId$.next(next.id);
         this.router.navigate([this.routeForType(next.type)]);
+      } else if (deletedType) {
+        this._activeId$.next(remaining.length > 0 ? remaining[remaining.length - 1].id : null);
+        this.router.navigate([this.routeForType(deletedType)]);
       } else {
         this._activeId$.next(null);
         this.router.navigate(['/']);

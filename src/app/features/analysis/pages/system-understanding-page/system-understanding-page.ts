@@ -29,6 +29,9 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.codeEditorWidth = this.layoutService.load('understanding-code')?.[0] ?? 420;
+    const active = this.manager.getActive();
+    this.hasWorkspace = active !== null;
+    this.understanding = active?.knowledgeModel?.ai?.understanding ?? null;
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       this.hasWorkspace = ws !== null;
       this.understanding = ws?.knowledgeModel?.ai?.understanding ?? null;

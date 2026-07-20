@@ -58,4 +58,12 @@ export class LearningPathPage implements OnInit, OnDestroy {
   isConceptExpanded(i: number): boolean {
     return this.expandedConcepts.has(i);
   }
+
+  fixedRoute(rawRoute: string): string {
+    const type = this.workspace?.type;
+    if (!type || type === 'file') return rawRoute;
+    const base = type === 'folder' ? '/folder-analysis' : '/repository-analysis';
+    // Replace any analysis prefix with the correct one for this workspace type
+    return rawRoute.replace(/^\/(file|folder|repository)-analysis/, base);
+  }
 }

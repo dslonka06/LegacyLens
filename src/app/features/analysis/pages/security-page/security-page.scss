@@ -65,9 +65,9 @@
 }
 
 .sec-card {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   padding: 20px 22px;
 }
 
@@ -145,9 +145,9 @@
 }
 
 .sec-metric {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -173,30 +173,30 @@
 }
 
 .sec-metric-critical {
-  color: #ef4444;
+  color: var(--severity-critical);
 }
 .sec-metric-high {
-  color: #f97316;
+  color: var(--severity-high);
 }
 
 .risk-critical .sec-metric-value {
-  color: #ef4444;
+  color: var(--severity-critical);
 }
 .risk-high .sec-metric-value {
-  color: #f97316;
+  color: var(--severity-high);
 }
 .risk-medium .sec-metric-value {
-  color: #eab308;
+  color: var(--severity-medium);
 }
 .risk-low .sec-metric-value {
   color: var(--success);
 }
 
 .maturity-low .sec-metric-value {
-  color: #ef4444;
+  color: var(--severity-critical);
 }
 .maturity-medium .sec-metric-value {
-  color: #f97316;
+  color: var(--severity-high);
 }
 .maturity-high .sec-metric-value {
   color: var(--success);
@@ -253,21 +253,21 @@
 }
 
 .sev-group-critical {
-  color: #ef4444;
+  color: var(--severity-critical);
   .sec-sev-dot {
-    background: #ef4444;
+    background: var(--severity-critical);
   }
 }
 .sev-group-high {
-  color: #f97316;
+  color: var(--severity-high);
   .sec-sev-dot {
-    background: #f97316;
+    background: var(--severity-high);
   }
 }
 .sev-group-medium {
-  color: #eab308;
+  color: var(--severity-medium);
   .sec-sev-dot {
-    background: #eab308;
+    background: var(--severity-medium);
   }
 }
 .sev-group-low {
@@ -407,16 +407,16 @@
   flex-shrink: 0;
   white-space: nowrap;
   &.sev-critical {
-    background: color-mix(in srgb, #ef4444 14%, transparent);
-    color: #ef4444;
+    background: color-mix(in srgb, var(--severity-critical) 14%, transparent);
+    color: var(--severity-critical);
   }
   &.sev-high {
-    background: color-mix(in srgb, #f97316 14%, transparent);
-    color: #f97316;
+    background: color-mix(in srgb, var(--severity-high) 14%, transparent);
+    color: var(--severity-high);
   }
   &.sev-medium {
-    background: color-mix(in srgb, #eab308 14%, transparent);
-    color: #eab308;
+    background: color-mix(in srgb, var(--severity-medium) 14%, transparent);
+    color: var(--severity-medium);
   }
   &.sev-low {
     background: color-mix(in srgb, var(--success) 14%, transparent);

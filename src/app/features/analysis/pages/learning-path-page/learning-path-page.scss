@@ -3,104 +3,8 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
-  overflow-y: auto;
+  overflow: hidden;
   height: 100%;
-}
-
-.lp-no-workspace {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  gap: 12px;
-  padding: 48px 32px;
-  text-align: center;
-  color: var(--text-muted);
-  svg {
-    width: 48px;
-    height: 48px;
-    opacity: 0.2;
-  }
-  h3 {
-    font-size: 16px;
-    color: var(--text-content);
-    margin: 0;
-    font-weight: 600;
-  }
-  p {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin: 0;
-  }
-}
-
-.lp-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 20px 24px 40px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.lp-page-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 20px 20px 20px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.lp-page-header-icon {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2px;
-  svg {
-    width: 22px;
-    height: 22px;
-    color: var(--accent);
-  }
-}
-
-.lp-page-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text-content);
-  margin: 0 0 8px;
-  line-height: 1.2;
-}
-.lp-page-description {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.75;
-  margin: 0;
-}
-
-.lp-pending {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 48px 32px;
-  text-align: center;
-  svg {
-    width: 44px;
-    height: 44px;
-    opacity: 0.2;
-  }
-  p {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin: 0;
-  }
 }
 
 .lp-body {
@@ -108,6 +12,7 @@
   grid-template-columns: 1fr 320px;
   gap: 20px;
   align-items: start;
+  width: 100%;
 }
 
 .lp-col-left,
@@ -118,9 +23,9 @@
 }
 
 .lp-section-card {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   padding: 20px 22px;
 }
 
@@ -173,7 +78,7 @@
 
 .lp-step {
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   background: var(--bg-primary);
   overflow: hidden;
   cursor: pointer;
@@ -388,7 +293,7 @@
 .lp-concept-card {
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -440,7 +345,7 @@
 .lp-nextstep-card {
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   padding: 16px;
   text-decoration: none;
   display: flex;

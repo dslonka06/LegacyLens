@@ -129,9 +129,13 @@ export class DataFlowPage implements OnInit, OnDestroy {
       : this.flowNodes.length > 0;
   }
 
+  get keyWorkflows(): { name: string; description: string }[] {
+    return this.model?.ai?.understanding?.mostImportantWorkflows ?? [];
+  }
+
   get dataFlowNarrative(): string | null {
     if (!this.hasDataFlow) return null;
-    if (this.isFileScope) return null; // file view uses structured steps, not narrative
+    if (this.isFileScope) return null;
     const nodes = this.flowNodes.length;
     const hubs = this.hubCount;
     const conns = this.totalConnections;
