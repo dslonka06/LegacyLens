@@ -54,6 +54,7 @@ function runMigrations(db) {
     migrate_v1,
     migrate_v2,
     migrate_v3,
+    migrate_v4,
   ];
 
   for (let i = currentVersion; i < migrations.length; i++) {
@@ -145,6 +146,11 @@ function migrate_v3(db) {
       knowledge_model  TEXT
     );
   `);
+}
+
+function migrate_v4(db) {
+  // Add path column to workspaces so repository hubs remember the folder they point to.
+  db.exec(`ALTER TABLE workspaces ADD COLUMN path TEXT;`);
 }
 
 module.exports = { openDatabase, getDatabase, getDbPath };

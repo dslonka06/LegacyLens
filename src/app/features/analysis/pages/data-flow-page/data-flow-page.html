@@ -1,23 +1,14 @@
 <div class="insight-page">
   <div class="page-header">
     <div class="page-title">
-      <div class="page-icon cyan">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-        </svg>
+      <div class="page-breadcrumb">
+        <span>Analysis</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6" /></svg>
+        <span>Data Flow</span>
       </div>
-      <div>
-        <h1>Data Flow</h1>
-        <p class="page-subtitle" *ngIf="workspaceName">{{ workspaceName }}</p>
-        <p class="page-subtitle" *ngIf="!workspaceName">Module dependency chains and data paths</p>
-      </div>
+      <h1>Data Flow</h1>
+      <p class="page-subtitle" *ngIf="workspaceName">{{ workspaceName }}</p>
+      <p class="page-subtitle" *ngIf="!workspaceName">Module dependency chains and data paths</p>
     </div>
     <app-theme-toggle></app-theme-toggle>
   </div>

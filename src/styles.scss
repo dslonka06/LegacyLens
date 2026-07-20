@@ -263,23 +263,16 @@ ol {
   align-items: flex-end;
   justify-content: space-between;
   padding: 20px 36px 6px;
+  min-height: 88px;
   flex-shrink: 0;
   gap: 16px;
 }
 
 .page-title {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
-
-  // Text column inside page-title (sibling to page-icon)
-  > div {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
 
   h1 {
     font-size: 22px;
@@ -288,6 +281,26 @@ ol {
     letter-spacing: -0.4px;
     margin: 0;
     line-height: 1.2;
+  }
+}
+
+.page-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+
+  span {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  svg {
+    width: 12px;
+    height: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
   }
 }
 

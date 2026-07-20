@@ -65,8 +65,10 @@
 }
 
 .sec-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
   border-radius: var(--radius-card);
   padding: 20px 22px;
 }
@@ -145,8 +147,10 @@
 }
 
 .sec-metric {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
   border-radius: var(--radius-card);
   padding: 14px 16px;
   display: flex;

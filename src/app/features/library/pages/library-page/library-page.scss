@@ -1,19 +1,37 @@
-@use '../../../../shared/styles/hub' as *;
-
 :host {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.9;
+    background-image: url('../../../../../assets/DarkThemeBackground.png');
+  }
+
+  [data-theme='light'] &::before {
+    background-image: url('../../../../../assets/LightThemeBackground.png');
+  }
 }
 
 .library-page {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
-  padding: 0 32px 48px;
+  padding: 0 36px 48px;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
@@ -24,28 +42,24 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 24px 0 20px;
+  padding: 20px 0 6px;
+  min-height: 88px;
   flex-shrink: 0;
+  gap: 16px;
 }
 
 .lib-topbar-left {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  min-width: 0;
 }
 
-.lib-heading {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text-heading);
-  margin: 0;
-  letter-spacing: -0.5px;
-}
-
-.lib-subheading {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin: 0;
+.lib-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 // ── Filter bar ────────────────────────────────────────────────────────────────
@@ -56,9 +70,11 @@
   gap: 12px;
   flex-wrap: wrap;
   padding: 14px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-card);
   margin-bottom: 20px;
   flex-shrink: 0;
 }
@@ -235,24 +251,26 @@
   flex-direction: column;
   gap: 10px;
   padding: 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-card);
   cursor: pointer;
   overflow: hidden;
-  transition: border-color 0.15s, background 0.15s, transform 0.15s, box-shadow 0.15s;
+  transition: border-color 0.18s, background 0.15s, transform 0.18s, box-shadow 0.18s;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-glow);
 
     .lib-card-delete { opacity: 1; }
     .lib-card-arrow { opacity: 1; transform: translateX(0); }
   }
 
-  &--file:hover   { border-color: rgba(92, 141, 255, 0.35); }
-  &--folder:hover { border-color: rgba(52, 211, 153, 0.35); }
-  &--repo:hover   { border-color: rgba(167, 139, 250, 0.35); }
+  &--file:hover   { border-color: rgba(92, 141, 255, 0.45); }
+  &--folder:hover { border-color: rgba(52, 211, 153, 0.45); }
+  &--repo:hover   { border-color: rgba(167, 139, 250, 0.45); }
 }
 
 // Delete confirmation overlay

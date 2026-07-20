@@ -301,10 +301,10 @@
 }
 
 .analyzing-spinner {
-  width: 44px;
-  height: 44px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  border: 3px solid var(--border);
+  border: 4px solid var(--border);
   border-top-color: var(--accent);
   animation: spin 0.85s linear infinite;
 }
@@ -383,6 +383,7 @@
   align-items: flex-end;
   justify-content: space-between;
   padding: 20px 36px 6px;
+  min-height: 88px;
   gap: 16px;
   flex-shrink: 0;
   opacity: 0;
@@ -1336,23 +1337,23 @@
   position: relative;
 
   svg {
-    width: 40px;
-    height: 48px;
+    width: 60px;
+    height: 72px;
   }
 
   &--file svg {
-    width: 40px;
-    height: 48px;
+    width: 60px;
+    height: 72px;
   }
 
   &--folder svg {
-    width: 48px;
-    height: 40px;
+    width: 72px;
+    height: 60px;
   }
 
   &--repo svg {
-    width: 40px;
-    height: 44px;
+    width: 60px;
+    height: 66px;
   }
 }
 

@@ -23,8 +23,10 @@
 }
 
 .lp-section-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
   border-radius: var(--radius-card);
   padding: 20px 22px;
 }
@@ -291,8 +293,10 @@
 }
 
 .lp-concept-card {
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
   border-radius: var(--radius-card);
   padding: 12px;
   display: flex;
@@ -343,8 +347,10 @@
 }
 
 .lp-nextstep-card {
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
   border-radius: var(--radius-card);
   padding: 16px;
   text-decoration: none;

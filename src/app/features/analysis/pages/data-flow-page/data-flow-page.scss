@@ -204,8 +204,10 @@
 .metrics-strip {
   display: flex;
   gap: 0;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
   border-radius: var(--radius-card);
   overflow: hidden;
 }

@@ -122,6 +122,7 @@ export class WorkspaceManagerService {
       createdAt: now,
       lastModifiedAt: now,
       repositoryId: null,
+      path: null,
       knowledgeModel: null,
     };
 
@@ -199,6 +200,10 @@ export class WorkspaceManagerService {
 
   setRepositoryId(id: string, repositoryId: string): void {
     this.patch(id, { repositoryId });
+  }
+
+  setPath(id: string, path: string): void {
+    this.patch(id, { path });
   }
 
   // ── Knowledge Model ───────────────────────────────────────────────────────
@@ -386,6 +391,7 @@ export class WorkspaceManagerService {
           createdAt: p.createdAt,
           lastModifiedAt: p.lastModifiedAt,
           repositoryId: p.repositoryId,
+          path: p.path ?? null,
           knowledgeModel: p.knowledgeModel,
         };
       });
@@ -414,6 +420,7 @@ export class WorkspaceManagerService {
           createdAt: current.createdAt,
           lastModifiedAt: current.lastModifiedAt,
           repositoryId: current.repositoryId,
+          path: current.path,
           knowledgeModel: current.knowledgeModel,
         };
         this.electronService.saveWorkspace(payload);

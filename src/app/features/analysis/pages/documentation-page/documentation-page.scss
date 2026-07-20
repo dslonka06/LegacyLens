@@ -48,6 +48,11 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-card);
 }
 
 .doc-selector-header {
@@ -291,6 +296,11 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-card);
 }
 
 .doc-preview-header {

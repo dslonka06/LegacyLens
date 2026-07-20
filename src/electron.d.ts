@@ -293,6 +293,7 @@ export interface PersistedWorkspace {
   createdAt: string;
   lastModifiedAt: string;
   repositoryId: string | null;
+  path: string | null;
   knowledgeModel: import('@app/knowledge/models/knowledge-model.contract').KnowledgeModel | null;
 }
 

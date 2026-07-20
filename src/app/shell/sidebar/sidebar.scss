@@ -117,7 +117,6 @@
   justify-content: center;
   width: var(--sidebar-btn-size);
   height: var(--sidebar-btn-size);
-  text-decoration: none;
   flex-shrink: 0;
   margin-bottom: 8px;
   transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
@@ -140,11 +139,6 @@
     flex-shrink: 0;
   }
 
-  &:hover {
-    background: var(--bg-hover);
-    border-color: rgba(141, 99, 255, 0.3);
-    box-shadow: 0 0 0 1px rgba(141, 99, 255, 0.15);
-  }
 }
 
 // App name shown in expanded state, right of logo

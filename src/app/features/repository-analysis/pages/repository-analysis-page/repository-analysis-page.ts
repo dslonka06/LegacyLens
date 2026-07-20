@@ -12,7 +12,6 @@ import {
 } from '@app/core/services/target-validation.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { WorkspaceKnowledgeService } from '@app/knowledge/services/workspace-knowledge.service';
-import { PendingRepositoryService } from '@app/core/services/pending-repository.service';
 import { ElectronService } from '@app/core/services/electron.service';
 import { WorkspaceClassifierService } from '@app/workspace/services/workspace-classifier.service';
 import { CurrentWorkspaceService } from '@app/workspace/services/current-workspace.service';
@@ -89,7 +88,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   constructor(
     private readonly manager: WorkspaceManagerService,
     private readonly knowledge: WorkspaceKnowledgeService,
-    private readonly pendingRepo: PendingRepositoryService,
     private readonly electronService: ElectronService,
     private readonly workspaceClassifier: WorkspaceClassifierService,
     private readonly currentWorkspace: CurrentWorkspaceService,
@@ -152,12 +150,9 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
     this.runAnimations();
 
-    // Consume the pending repository path set by the home page library
-    const pending = this.pendingRepo.consume();
-    if (pending) {
-      const id = this.manager.activeId;
-      if (id) this.manager.setRepositoryId(id, pending.repositoryId);
-      this.loadFromPath(pending.path);
+    // Auto-load from stored path when returning to an empty workspace that has one
+    if (this.workspace?.status === 'empty' && this.workspace.path) {
+      this.loadFromPath(this.workspace.path);
     }
   }
 
@@ -223,6 +218,12 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   // ── Repo loading (Electron IPC) ────────────────────────────────────────────
 
+  async pickAndLoadFolder(): Promise<void> {
+    const folderPath = await this.electronService.pickFolder('Select Repository Folder');
+    if (!folderPath) return;
+    this.loadFromPath(folderPath);
+  }
+
   private async loadFromPath(folderPath: string): Promise<void> {
     const validation = await this.targetValidation.validate(folderPath, 'repository');
     if (!validation.valid && validation.mismatch) {
@@ -231,6 +232,10 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       return;
     }
     if (!validation.valid) return;
+
+    // Persist the path so returning sessions can re-scan without re-picking
+    const activeId = this.manager.activeId;
+    if (activeId) this.manager.setPath(activeId, folderPath);
 
     this.isScanning = true;
     this.scanFileCount = 0;
@@ -428,10 +433,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   deleteWorkspace(): void {
     if (this.workspace) this.manager.delete(this.workspace.id);
-  }
-
-  goToHome(): void {
-    this.router.navigate(['/']);
   }
 
   openSwitcher(): void {

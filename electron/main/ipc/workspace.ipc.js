@@ -12,14 +12,15 @@ function registerWorkspaceHandlers() {
   ipcMain.handle('workspaces:save', wrapHandler((_event, workspace) => {
     const db = getDatabase();
     db.prepare(`
-      INSERT INTO workspaces (id, name, type, status, created_at, last_modified_at, repository_id, knowledge_model)
-      VALUES (@id, @name, @type, @status, @createdAt, @lastModifiedAt, @repositoryId, @knowledgeModel)
+      INSERT INTO workspaces (id, name, type, status, created_at, last_modified_at, repository_id, path, knowledge_model)
+      VALUES (@id, @name, @type, @status, @createdAt, @lastModifiedAt, @repositoryId, @path, @knowledgeModel)
       ON CONFLICT(id) DO UPDATE SET
         name             = excluded.name,
         type             = excluded.type,
         status           = excluded.status,
         last_modified_at = excluded.last_modified_at,
         repository_id    = excluded.repository_id,
+        path             = excluded.path,
         knowledge_model  = excluded.knowledge_model
     `).run({
       id:             workspace.id,
@@ -29,6 +30,7 @@ function registerWorkspaceHandlers() {
       createdAt:      workspace.createdAt,
       lastModifiedAt: workspace.lastModifiedAt,
       repositoryId:   workspace.repositoryId ?? null,
+      path:           workspace.path ?? null,
       knowledgeModel: workspace.knowledgeModel != null
         ? JSON.stringify(workspace.knowledgeModel)
         : null,
@@ -52,6 +54,7 @@ function rowToWorkspace(row) {
     createdAt:      row.created_at,
     lastModifiedAt: row.last_modified_at,
     repositoryId:   row.repository_id ?? null,
+    path:           row.path ?? null,
     knowledgeModel: row.knowledge_model ? JSON.parse(row.knowledge_model) : null,
   };
 }

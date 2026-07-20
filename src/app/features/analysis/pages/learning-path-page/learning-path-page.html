@@ -10,16 +10,13 @@
 <div class="insight-page" *ngIf="hasWorkspace">
   <div class="page-header">
     <div class="page-title">
-      <div class="page-icon amber">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-        </svg>
+      <div class="page-breadcrumb">
+        <span>Analysis</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6" /></svg>
+        <span>Learning Path</span>
       </div>
-      <div>
-        <h1>Learning Path</h1>
-        <p class="page-subtitle">Follow the roadmap below to learn this codebase in a structured order.</p>
-      </div>
+      <h1>Learning Path</h1>
+      <p class="page-subtitle">Follow the roadmap below to learn this codebase in a structured order.</p>
     </div>
     <app-theme-toggle></app-theme-toggle>
   </div>

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { Workspace, WorkspaceType } from '@app/workspace/models/workspace-entity.model';
 
 type TypeFilter = 'all' | WorkspaceType;
@@ -13,7 +14,7 @@ type StatusFilter = 'all' | 'ready' | 'failed';
 @Component({
   selector: 'app-library-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ThemeToggle],
   templateUrl: './library-page.html',
   styleUrl: './library-page.scss',
 })

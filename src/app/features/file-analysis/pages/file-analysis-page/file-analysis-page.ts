@@ -418,6 +418,9 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       if (symbols?.exports.length && !symbols?.classes.length) return 'Utility';
       return 'Source File';
     }
+    // "Repository" is a design pattern name from the legacy analysis engine — remap to
+    // something that reads as a file type rather than a workspace/analysis type.
+    if (symbols.type === 'Repository') return 'Data Access';
     return symbols.type;
   }
 

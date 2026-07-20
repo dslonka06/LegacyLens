@@ -22,6 +22,9 @@ export interface Workspace {
   /** Links to the SQLite repository record. null for file workspaces (not persisted). */
   repositoryId: string | null;
 
+  /** The folder path used for repository analysis. Persisted so returning sessions can re-read the directory without going through the home library. */
+  path: string | null;
+
   /**
    * The single source of truth for all analyzed content.
    * null until WorkspaceKnowledgeService.process() completes its structural phase.
