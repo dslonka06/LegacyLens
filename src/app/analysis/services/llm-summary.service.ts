@@ -67,7 +67,7 @@ export class LLMSummaryService {
       const scope = model.targetType;
       const workspaceName = model.workspaceName ?? 'Unknown';
       const languages = model.structure.languages ?? [];
-      const technologies = model.structure.technologies?.map(t => t.name) ?? [];
+      const technologies = model.structure.technologies?.map(t => t.technology) ?? [];
       const totalFiles = model.structure.totalFiles ?? 0;
       const structuralPatterns = model.relationships.architecture?.patterns ?? [];
 

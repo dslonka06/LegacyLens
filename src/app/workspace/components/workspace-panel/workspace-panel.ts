@@ -13,11 +13,15 @@ import { WorkspaceKnowledgeService } from '@app/knowledge/services/workspace-kno
 import { ExportService } from '@app/analysis/services/export.service';
 import type { AIStage } from '@app/knowledge/models/knowledge-model.contract';
 
-const STAGE_LABELS: Record<AIStage, string> = {
+const STAGE_LABELS: Partial<Record<AIStage, string>> = {
   understanding: 'Understanding',
   security: 'Security',
   recommendations: 'Recommendations',
   learningPath: 'Learning Path',
+  architecture: 'Architecture',
+  dataFlow: 'Data Flow',
+  prompt: 'Prompt',
+  generate: 'Generate',
   documentation: 'Documentation',
 };
 
