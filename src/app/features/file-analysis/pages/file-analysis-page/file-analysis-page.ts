@@ -19,6 +19,7 @@ export interface HubMetricCard {
   icon: string;
   count: number | null;
   tags?: string[];
+  subtitle?: string;
   label: string;
   route: string;
   suggested: boolean;
@@ -528,6 +529,41 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     return this.aiPipeline.hasFailure;
   }
 
+  get coreAnalysisState(): 'complete' | 'partial' | 'running' | 'failed' | 'idle' {
+    const stage = this.aiPipeline.stages.find(s => s.id === 'derive');
+    if (!stage) return 'idle';
+    if (stage.state === 'partial') return 'partial';
+    return stage.state as any;
+  }
+
+  get coreAnalysisLabel(): string {
+    switch (this.coreAnalysisState) {
+      case 'complete': return 'Complete';
+      case 'partial':  return 'Partial';
+      case 'running':  return 'Running…';
+      case 'failed':   return 'Failed';
+      default:         return 'Pending';
+    }
+  }
+
+  get aiInsightsState(): 'complete' | 'partial' | 'running' | 'failed' | 'idle' {
+    if (this.aiPipeline.noProvider) return 'failed';
+    const gen = this.aiPipeline.stages.find(s => s.id === 'generate');
+    if (!gen) return 'idle';
+    return gen.state as any;
+  }
+
+  get aiInsightsLabel(): string {
+    if (this.aiPipeline.noProvider) return 'Unavailable';
+    switch (this.aiInsightsState) {
+      case 'complete': return 'Complete';
+      case 'partial':  return 'Partial';
+      case 'running':  return 'Running…';
+      case 'failed':   return 'Failed';
+      default:         return 'Pending';
+    }
+  }
+
   get pipelineStages(): { label: string; stage: AIStage; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
     const ai = this.model?.ai;
     const running = this.manager.getActiveStages(this.workspace?.id ?? '');
@@ -541,6 +577,37 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     });
   }
 
+  // ── Detected role tags ─────────────────────────────────────────
+
+  get detectedRoleTags(): string[] {
+    const u = this.model?.ai?.understanding;
+    if (!u) return [];
+    const tags: string[] = [];
+    const resp = u.keyResponsibilities?.[0];
+    if (resp) tags.push(resp);
+    const caps = u.coreCapabilities?.slice(0, 2).map((c) => c.name) ?? [];
+    for (const cap of caps) {
+      if (!tags.includes(cap)) tags.push(cap);
+    }
+    return tags.slice(0, 3);
+  }
+
+  // ── AI analysis statistics ─────────────────────────────────────
+
+  get aiStats(): { label: string; value: string }[] {
+    const ai = this.model?.ai;
+    if (!ai) return [];
+    const sym = Object.values(this.model?.structure.symbols ?? {})[0];
+    const symbolCount = sym ? sym.classes.length + sym.methods.length : 0;
+    const importCount = sym ? sym.imports.length : 0;
+    const findingCount = ai.security?.findings?.length ?? 0;
+    return [
+      { label: 'Symbols analyzed', value: String(symbolCount) },
+      { label: 'Dependencies mapped', value: String(importCount) },
+      { label: 'Findings generated', value: String(findingCount) },
+    ];
+  }
+
   // ── Metric cards ───────────────────────────────────────────────
 
   get metricCards(): HubMetricCard[] {
@@ -548,22 +615,47 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     const base = '/file-analysis';
     const suggested = this.suggestedRoute;
 
+    const importCount = this.importCount !== '—' ? Number(this.importCount) : 0;
+    const refBy = this.referencedByCount;
+    const depSubtitle = importCount > 0 || refBy > 0
+      ? `${importCount} import${importCount !== 1 ? 's' : ''}${refBy > 0 ? ` · ${refBy} referenced by` : ''}`
+      : 'No dependencies found';
+
+    const secCount = ai?.security?.findings?.length ?? 0;
+    const secSubtitle = secCount === 0 ? 'No issues detected'
+      : ai?.security?.findings?.some(f => f.severity === 'critical') ? `${ai!.security!.findings.filter(f => f.severity === 'critical').length} critical`
+      : ai?.security?.findings?.some(f => f.severity === 'high') ? `${ai!.security!.findings.filter(f => f.severity === 'high').length} high priority`
+      : `${secCount} issue${secCount !== 1 ? 's' : ''}`;
+
+    const recCount = ai?.recommendations?.recommendations?.length ?? 0;
+    const highRec = ai?.recommendations?.recommendations?.filter((r: any) => r.priority === 'high').length ?? 0;
+    const recSubtitle = recCount === 0 ? 'No suggestions'
+      : highRec > 0 ? `${highRec} high priority`
+      : `${recCount} suggestion${recCount !== 1 ? 's' : ''}`;
+
+    const flowSteps = this.model?.insights.dataFlow?.steps?.length ?? 0;
+    const flowSubtitle = flowSteps > 0 ? 'Flow steps detected' : 'No flow data';
+
+    const syms = this.symbolTotal;
+    const symSubtitle = syms !== null && syms > 0 ? 'Functions, classes & exports' : 'No symbols extracted';
+
     return [
       {
-        id: 'understanding',
-        icon: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 16v-4 M12 8h.01',
-        count: null,
-        tags: ai?.understanding?.coreCapabilities?.slice(0, 2).map((c) => c.name),
-        label: 'Understanding',
-        route: `${base}/system-understanding`,
-        suggested: suggested === 'understanding',
-        pending: !ai?.completedStages?.includes('understanding'),
+        id: 'dependencies',
+        icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+        count: importCount > 0 ? importCount : null,
+        subtitle: depSubtitle,
+        label: 'Dependencies & Relations',
+        route: `${base}/data-flow`,
+        suggested: false,
+        pending: !this.model?.capabilities.includes('fileParsing'),
       },
       {
         id: 'security',
         icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
-        count: ai?.security?.findings?.length ?? null,
-        label: 'Security Issues',
+        count: secCount > 0 ? secCount : null,
+        subtitle: secSubtitle,
+        label: 'Security',
         route: `${base}/security`,
         suggested: suggested === 'security',
         pending: !ai?.completedStages?.includes('security'),
@@ -571,7 +663,8 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       {
         id: 'recommendations',
         icon: 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
-        count: ai?.recommendations?.recommendations?.length ?? null,
+        count: recCount > 0 ? recCount : null,
+        subtitle: recSubtitle,
         label: 'Recommendations',
         route: `${base}/code-recommendations`,
         suggested: suggested === 'recommendations',
@@ -580,8 +673,9 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       {
         id: 'dataflow',
         icon: 'M22 12H18L15 21 9 3 6 12 2 12',
-        count: this.model?.insights.dataFlow?.steps?.length ?? null,
-        label: 'Flow Steps',
+        count: flowSteps > 0 ? flowSteps : null,
+        subtitle: flowSubtitle,
+        label: 'Data Flow',
         route: `${base}/data-flow`,
         suggested: false,
         pending: !this.model?.capabilities.includes('fileParsing'),
@@ -589,11 +683,23 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       {
         id: 'symbols',
         icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
-        count: this.symbolCount,
+        count: syms,
+        subtitle: symSubtitle,
         label: 'Key Symbols',
-        route: `${base}/architecture`,
+        route: `${base}/system-understanding`,
         suggested: false,
         pending: !this.model?.capabilities.includes('symbolExtraction'),
+      },
+      {
+        id: 'learning',
+        icon: 'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
+        count: null,
+        tags: ['Next'],
+        subtitle: 'Personalized roadmap for this file',
+        label: 'Learning Path',
+        route: `${base}/learning-path`,
+        suggested: false,
+        pending: !ai?.completedStages?.includes('learningPath'),
       },
     ];
   }
@@ -611,25 +717,111 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     return 'understanding';
   }
 
-  private get symbolCount(): number | null {
+  // ── Identity metrics ─────────────────────────────────────────
+
+  private get lineCount(): string {
+    const src = this.model?.structure.sourceCode;
+    if (!src) return '—';
+    return String(src.split('\n').length);
+  }
+
+  private get importCount(): string {
+    if (!this.model) return '—';
+    const sym = Object.values(this.model.structure.symbols)[0];
+    if (!sym) return '—';
+    return String(sym.imports.length);
+  }
+
+  private formatBytes(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  private get fileSize(): string {
+    const src = this.model?.structure.sourceCode;
+    if (!src) return '—';
+    return this.formatBytes(new TextEncoder().encode(src).length);
+  }
+
+  get issueCount(): number {
+    return this.model?.insights.risks?.length ?? 0;
+  }
+
+  private get symbolTotal(): number | null {
     if (!this.model) return null;
     const sym = Object.values(this.model.structure.symbols)[0];
     if (!sym) return null;
-    return sym.classes.length + sym.methods.length;
+    return sym.classes.length + sym.methods.length + sym.exports.length;
   }
 
-  // ── Identity metrics ─────────────────────────────────────────
+  private get referencedByCount(): number {
+    const filePath = this.model?.structure.filePath;
+    if (!filePath) return 0;
+    const graph = this.model?.relationships.dependencies?.graph;
+    if (!graph) return 0;
+    const fileName = filePath.split(/[\\/]/).pop() ?? '';
+    const node = graph.nodes.find(n => n.name === fileName || n.id === filePath);
+    if (!node) return 0;
+    return graph.edges.filter(e => e.target === node.id).length;
+  }
 
-  get identityMetrics(): { label: string; value: string }[] {
+  get identityMetrics(): { icon: string; label: string; value: string }[] {
     if (!this.model) return [];
     return [
-      { label: 'Language', value: this.language || '—' },
-      { label: 'File Type', value: this.detectedKind || '—' },
-      { label: 'Symbols', value: this.symbolCount !== null ? String(this.symbolCount) : '—' },
+      {
+        icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
+        label: 'Language',
+        value: this.language || '—',
+      },
+      {
+        icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6',
+        label: 'Size',
+        value: this.fileSize,
+      },
+      {
+        icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+        label: 'Lines',
+        value: this.lineCount,
+      },
+      {
+        icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
+        label: 'Symbols',
+        value: this.symbolTotal !== null ? String(this.symbolTotal) : '—',
+      },
     ];
   }
 
   get executiveSummary(): string {
-    return this.model?.ai?.understanding?.executiveSummary ?? '';
+    const u = this.model?.ai?.understanding;
+    if (!u) return '';
+
+    const parts: string[] = [];
+
+    // Language + type
+    const lang = this.model?.structure.fileLanguage ?? this.model?.structure.languages?.[0];
+    const kind = u.keyResponsibilities?.[0] ?? null;
+    if (lang && kind) parts.push(`${lang} · ${kind}`);
+    else if (lang) parts.push(lang);
+
+    // Health signal
+    const h = u.health;
+    if (h) {
+      const worstHealth = [h.complexity, h.riskLevel, h.maintainability]
+        .filter(v => v === 'Low').length;
+      if (worstHealth >= 2) parts.push('health concerns flagged');
+      else if (h.riskLevel === 'Low') parts.push('risk flagged');
+    }
+
+    // Security signal
+    const sec = this.model?.ai?.security;
+    if (sec && (sec.overallRisk === 'critical' || sec.overallRisk === 'high')) {
+      const critCount = sec.findings.filter(f => f.severity === 'critical').length;
+      const highCount = sec.findings.filter(f => f.severity === 'high').length;
+      const label = critCount > 0 ? `${critCount} critical finding${critCount > 1 ? 's' : ''}` : `${highCount} high finding${highCount > 1 ? 's' : ''}`;
+      parts.push(label);
+    }
+
+    return parts.length ? parts.join(' · ') : (u.executiveSummary ?? '');
   }
 }

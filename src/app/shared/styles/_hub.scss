@@ -612,6 +612,24 @@
   font-weight: 500;
 }
 
+.identity-role-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.identity-role-tag {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 3px;
+  padding: 1px 6px;
+}
+
 .identity-path {
   font-size: 11px;
   color: var(--text-muted);
@@ -838,6 +856,48 @@
   color: var(--text-muted);
 }
 
+.info-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.info-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.1px;
+  flex: 1;
+}
+
+.info-card-info-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  cursor: help;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+  &:hover { opacity: 1; }
+}
+
+.info-card-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: auto;
+  transition: opacity 0.15s;
+  &:hover { opacity: 0.8; }
+  svg { width: 12px; height: 12px; }
+}
+
 // ── Health card ───────────────────────────────────────────────
 
 .info-card--health {
@@ -1004,6 +1064,104 @@
   &--failed   { background: var(--error); }
 }
 
+.pipeline-status-row {
+  display: flex;
+  gap: 20px;
+}
+
+.pipeline-status-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pipeline-status-group-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.pipeline-status-group-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+
+  &.pipeline-status--complete   { color: var(--success); }
+  &.pipeline-status--partial    { color: var(--warning); }
+  &.pipeline-status--running    { color: var(--accent);  }
+  &.pipeline-status--failed     { color: var(--error);   }
+  &.pipeline-status--unavailable { color: var(--error);  }
+}
+
+.pipeline-substep-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pipeline-substep-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+
+  svg { width: 10px; height: 10px; flex-shrink: 0; stroke: var(--text-muted); }
+
+  &--complete {
+    color: var(--text-secondary);
+    svg { stroke: var(--success); }
+  }
+  &--failed {
+    color: var(--error);
+    svg { stroke: var(--error); }
+  }
+  &--running {
+    color: var(--accent);
+    svg { stroke: var(--accent); }
+  }
+}
+
+.pipeline-substep-spinner {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-top-color: var(--accent);
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.pipeline-card-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.pipeline-configure-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+}
+
 .pipeline-error-notice {
   display: flex;
   align-items: center;
@@ -1015,6 +1173,36 @@
   border-top: 1px solid color-mix(in srgb, var(--error) 25%, transparent);
 
   svg { width: 14px; height: 14px; flex-shrink: 0; }
+}
+
+.pipeline-stats {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.pipeline-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+}
+
+.pipeline-stat-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.pipeline-stat-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
 }
 
 // ── AI Analysis summary card ──────────────────────────────────
@@ -1179,6 +1367,9 @@
 
   &--manage {
     width: 100%;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
     margin-top: auto;
     justify-content: center;
   }
@@ -1238,6 +1429,14 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 10px;
+
+  &--4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  &--6 {
+    grid-template-columns: repeat(6, 1fr);
+  }
 }
 
 .metric-card {
@@ -1246,7 +1445,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
-  padding: 16px 16px 14px;
+  padding: 20px 18px 16px;
   background: var(--panel-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -1271,17 +1470,17 @@
 }
 
 .metric-card-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
 
   svg {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     color: var(--accent);
   }
 }
@@ -1294,7 +1493,7 @@
 }
 
 .metric-card-count {
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.5px;
@@ -1335,9 +1534,16 @@
 }
 
 .metric-card-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted);
   line-height: 1.3;
+}
+
+.metric-card-subtitle {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-top: 1px;
 }
 
 .metric-card-arrow {
@@ -1465,28 +1671,40 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .identity-metric-item {
   display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.identity-metric-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.identity-metric-text {
+  display: flex;
   flex-direction: column;
-  gap: 1px;
-  text-align: right;
+  gap: 0px;
 }
 
 .identity-metric-label {
   font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   color: var(--text-muted);
 }
 
 .identity-metric-val {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 // AI description with typewriter animation
@@ -1594,16 +1812,48 @@
 
 // ─── Workspace card — grid + chips ───────────────────────────
 
-.workspace-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
+.workspace-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.workspace-divider {
+  height: 1px;
+  background: var(--border);
   margin: 2px 0;
 }
 
+.workspace-analyzed-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.workspace-analyzed-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.workspace-analyzed-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .workspace-chip {
-  width: 24px;
-  height: 24px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
   border-radius: 6px;
   background: var(--border);
   border: 2px solid transparent;
@@ -1638,12 +1888,6 @@
   }
 }
 
-.workspace-last-analyzed {
-  font-size: 10px;
-  color: var(--text-muted);
-  padding-top: 4px;
-  border-top: 1px solid var(--border);
-}
 
 // Status chip colour variants
 .workspace-status-chip--ready {

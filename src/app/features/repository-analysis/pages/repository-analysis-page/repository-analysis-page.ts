@@ -624,15 +624,84 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   get identityMetrics(): { label: string; value: string }[] {
     if (!this.model) return [];
+    const primaryLang = this.model.structure.languages?.[0] ?? '—';
+    const architecture = this.model.relationships.architecture?.patterns?.[0]?.name ?? '—';
     return [
+      { label: 'Primary Language', value: primaryLang },
       { label: 'Files', value: String(this.fileCount) },
-      { label: 'Languages', value: String(this.model.structure.languages?.length ?? 0) },
-      { label: 'Frameworks', value: String(this.model.structure.frameworks?.length ?? 0) },
+      { label: 'Architecture', value: architecture },
+    ];
+  }
+
+  // ── Detected role tags ─────────────────────────────────────────
+
+  get detectedRoleTags(): string[] {
+    const u = this.model?.ai?.understanding;
+    const patterns = this.model?.relationships.architecture?.patterns ?? [];
+    const techs = this.model?.structure.technologies ?? [];
+    const tags: string[] = [];
+    if (patterns[0]?.name) tags.push(patterns[0].name);
+    if (techs[0]?.technology && techs[0].technology !== patterns[0]?.name) {
+      tags.push(techs[0].technology);
+    }
+    const cap = u?.coreCapabilities?.[0]?.name;
+    if (cap && !tags.includes(cap)) tags.push(cap);
+    return tags.slice(0, 3);
+  }
+
+  // ── AI analysis statistics ─────────────────────────────────────
+
+  get aiStats(): { label: string; value: string }[] {
+    const ai = this.model?.ai;
+    if (!ai) return [];
+    const fileCount = this.model?.structure.totalFiles ?? 0;
+    const moduleCount = this.model?.structure.projects?.length ?? 0;
+    const depCount = this.dependencyCount;
+    return [
+      { label: 'Files analyzed', value: String(fileCount) },
+      { label: 'Modules detected', value: String(moduleCount) },
+      { label: 'Dependencies mapped', value: String(depCount) },
     ];
   }
 
   get executiveSummary(): string {
-    return this.model?.ai?.understanding?.executiveSummary ?? '';
+    const u = this.model?.ai?.understanding;
+    if (!u) return '';
+
+    const parts: string[] = [];
+
+    // File count + primary language/tech
+    const fileCount = this.model?.structure.totalFiles;
+    const lang = this.model?.structure.languages?.[0];
+    const tech = this.model?.structure.technologies?.[0]?.technology;
+    if (fileCount && lang) parts.push(`${fileCount} files · ${tech ? tech : lang}`);
+    else if (fileCount) parts.push(`${fileCount} files`);
+
+    // Architecture pattern
+    const pattern = this.model?.relationships.architecture?.patterns?.[0]?.name;
+    if (pattern) parts.push(pattern);
+
+    // Business criticality if notable
+    if (u.businessCriticality === 'Critical' || u.businessCriticality === 'High') {
+      parts.push(`${u.businessCriticality.toLowerCase()} criticality`);
+    }
+
+    // Security signal
+    const sec = this.model?.ai?.security;
+    if (sec && (sec.overallRisk === 'critical' || sec.overallRisk === 'high')) {
+      const critCount = sec.findings.filter(f => f.severity === 'critical').length;
+      const highCount = sec.findings.filter(f => f.severity === 'high').length;
+      const label = critCount > 0 ? `${critCount} critical finding${critCount > 1 ? 's' : ''}` : `${highCount} high finding${highCount > 1 ? 's' : ''}`;
+      parts.push(label);
+    }
+
+    // Debt hotspots if any
+    const hotspotCount = u.technicalDebtHotspots?.length ?? 0;
+    if (hotspotCount > 0 && !parts.some(p => p.includes('finding'))) {
+      parts.push(`${hotspotCount} debt hotspot${hotspotCount > 1 ? 's' : ''}`);
+    }
+
+    return parts.length ? parts.join(' · ') : (u.executiveSummary ?? '');
   }
 
   // ── Metric cards ───────────────────────────────────────────────────────────
@@ -644,14 +713,13 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
     return [
       {
-        id: 'understanding',
-        icon: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 16v-4 M12 8h.01',
-        count: null,
-        tags: ai?.understanding?.coreCapabilities?.slice(0, 2).map((c) => c.name),
-        label: 'Understanding',
-        route: `${base}/system-understanding`,
-        suggested: suggested === 'understanding',
-        pending: !ai?.completedStages?.includes('understanding'),
+        id: 'dependencies',
+        icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+        count: this.dependencyCount > 0 ? this.dependencyCount : null,
+        label: 'Dependencies & Relations',
+        route: `${base}/data-flow`,
+        suggested: false,
+        pending: !this.model?.capabilities.includes('dependencyResolution'),
       },
       {
         id: 'security',
@@ -681,13 +749,14 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
         pending: !this.model?.capabilities.includes('architectureDiscovery'),
       },
       {
-        id: 'dependencies',
-        icon: 'M22 12H18L15 21 9 3 6 12 2 12',
-        count: this.dependencyCount > 0 ? this.dependencyCount : null,
-        label: 'Dependencies',
-        route: `${base}/data-flow`,
-        suggested: false,
-        pending: !this.model?.capabilities.includes('dependencyResolution'),
+        id: 'key-areas',
+        icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
+        count: null,
+        tags: ai?.understanding?.coreCapabilities?.slice(0, 2).map((c) => c.name),
+        label: 'Key Areas',
+        route: `${base}/system-understanding`,
+        suggested: suggested === 'understanding',
+        pending: !ai?.completedStages?.includes('understanding'),
       },
     ];
   }

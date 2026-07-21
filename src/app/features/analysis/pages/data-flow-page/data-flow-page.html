@@ -13,20 +13,11 @@
     <app-theme-toggle></app-theme-toggle>
   </div>
 
-  <ng-container *ngIf="hasWorkspace; else noWorkspace">
-    <app-explanation-card
-      *ngIf="llmSummary || isGenerating || isNoProvider"
-      title="AI Analysis"
-      [content]="llmSummary"
-      [isLoading]="isGenerating"
-      [error]="null"
-      [noProvider]="isNoProvider"
-    ></app-explanation-card>
-
-    <div
-      class="df-layout"
-      [class.df-layout--has-tree]="folderTree && !isFileScope"
-    >
+  <div
+    class="df-layout"
+    [class.df-layout--has-tree]="folderTree && !isFileScope"
+    *ngIf="hasWorkspace; else noWorkspace"
+  >
     <!-- File tree rail (folder/repo, non-file-scope only) -->
     <div class="df-tree-rail" *ngIf="folderTree && !isFileScope">
       <app-file-tree-panel
@@ -38,6 +29,14 @@
     </div>
 
     <div class="page-content">
+      <app-explanation-card
+        *ngIf="llmSummary || isGenerating || isNoProvider"
+        title="AI Analysis"
+        [content]="llmSummary"
+        [isLoading]="isGenerating"
+        [error]="null"
+        [noProvider]="isNoProvider"
+      ></app-explanation-card>
 
       <!-- File scope: structured deterministic data flow -->
       <ng-container *ngIf="isFileScope">
@@ -144,9 +143,8 @@
       </ng-container>
     </div>
     <!-- /page-content -->
-    </div>
-    <!-- /df-layout -->
-  </ng-container>
+  </div>
+  <!-- /df-layout -->
 
   <ng-template #noWorkspace>
     <div class="no-session">

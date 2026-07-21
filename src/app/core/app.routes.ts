@@ -17,14 +17,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'file-analysis/architecture',
-    canActivate: [workspaceInitGuard],
-    loadComponent: () =>
-      import('../features/analysis/pages/architecture-page/architecture-page').then(
-        (m) => m.ArchitecturePage,
-      ),
-  },
-  {
     path: 'file-analysis/data-flow',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
