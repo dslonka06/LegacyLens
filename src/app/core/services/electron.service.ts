@@ -279,6 +279,16 @@ export class ElectronService {
     return this.api.intelligence.security(model);
   }
 
+  async intelligenceArchitectureAnalysis(model: KnowledgeModel): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.architectureAnalysis(model);
+  }
+
+  async intelligenceDataFlowAnalysis(model: KnowledgeModel): Promise<unknown> {
+    if (!this.api) return null;
+    return this.api.intelligence.dataFlowAnalysis(model);
+  }
+
   async intelligenceInsights(knowledge: unknown): Promise<unknown[]> {
     if (!this.api) return [];
     return this.api.intelligence.insights(knowledge);

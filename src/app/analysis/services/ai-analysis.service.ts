@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ElectronService } from '@app/core/services/electron.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { LLMSummaryService } from './llm-summary.service';
 import type {
   KnowledgeModel,
   AIStage,
@@ -10,6 +11,8 @@ import type { SecurityAnalysis } from '@app/analysis/models/security-analysis.mo
 import type { SystemUnderstanding } from '@app/analysis/models/system-understanding.model';
 import type { RecommendationAnalysis } from '@app/analysis/models/recommendation-analysis.model';
 import type { LearningPathAnalysis } from '@app/analysis/models/learning-path-analysis.model';
+import type { ArchitectureAIAnalysis } from '@app/knowledge/models/architecture-ai-analysis.model';
+import type { DataFlowAIAnalysis } from '@app/knowledge/models/data-flow-ai-analysis.model';
 
 /**
  * AIAnalysisService — owns the async AI pipeline.
@@ -26,6 +29,7 @@ export class AIAnalysisService {
   constructor(
     private readonly electron: ElectronService,
     private readonly manager: WorkspaceManagerService,
+    private readonly llmSummary: LLMSummaryService,
   ) {}
 
   /**
@@ -38,19 +42,29 @@ export class AIAnalysisService {
   async runAll(workspaceId: string, model: KnowledgeModel, generation: number): Promise<void> {
     if (!this.electron.isElectron) return;
 
-    // security, understanding, and recommendations run concurrently.
-    // learningPath depends on understanding, so it runs after.
-    // documentation stage is omitted — its result is unused by the pipeline.
+    // ── Derive tier ─────────────────────────────────────────────────────────────
+    // Five of six derive stages run concurrently — they have no interdependencies.
+    // learningPath depends on understanding completing first, so it runs after.
     await Promise.all([
-      this.runStage(workspaceId, model, 'security', generation),
-      this.runStage(workspaceId, model, 'understanding', generation),
-      this.runStage(workspaceId, model, 'recommendations', generation),
+      this.runStage(workspaceId, model, 'security',         generation),
+      this.runStage(workspaceId, model, 'understanding',    generation),
+      this.runStage(workspaceId, model, 'recommendations',  generation),
+      this.runStage(workspaceId, model, 'architecture',     generation),
+      this.runStage(workspaceId, model, 'dataFlow',         generation),
     ]);
 
-    // learningPath needs understanding to be present — read it from the workspace
-    const ws = this.manager.getById(workspaceId);
-    const updatedModel = ws?.knowledgeModel ?? model;
-    await this.runStage(workspaceId, updatedModel, 'learningPath', generation);
+    // learningPath reads model.ai.understanding — fetch the updated model after the concurrent batch
+    const wsAfterDerive = this.manager.getById(workspaceId);
+    const modelAfterDerive = wsAfterDerive?.knowledgeModel ?? model;
+    await this.runStage(workspaceId, modelAfterDerive, 'learningPath', generation);
+
+    // ── Prompt + Generate tier ───────────────────────────────────────────────────
+    // All derive stages are complete — run the LLM summary generation.
+    // We pass the freshest model snapshot so all six summaries have access to
+    // the full derive results including learningPath.
+    const wsAfterAllDerive = this.manager.getById(workspaceId);
+    const modelForGenerate = wsAfterAllDerive?.knowledgeModel ?? modelAfterDerive;
+    await this.llmSummary.runAll(workspaceId, modelForGenerate, generation);
 
     // All stages done — flip status to ready so the hub shows the final state.
     this.manager.markAIPipelineComplete(workspaceId);
@@ -145,6 +159,18 @@ export class AIAnalysisService {
         );
       }
 
+      case 'architecture':
+        return this.withTimeout(
+          this.electron.intelligenceArchitectureAnalysis(model) as Promise<ArchitectureAIAnalysis>,
+          stage,
+        );
+
+      case 'dataFlow':
+        return this.withTimeout(
+          this.electron.intelligenceDataFlowAnalysis(model) as Promise<DataFlowAIAnalysis>,
+          stage,
+        );
+
       default:
         return null;
     }
@@ -160,8 +186,10 @@ export class AIAnalysisService {
         return { recommendations: result as RecommendationAnalysis };
       case 'learningPath':
         return { learningPath: result as LearningPathAnalysis };
-      case 'documentation':
-        return {};
+      case 'architecture':
+        return { architecture: result as ArchitectureAIAnalysis };
+      case 'dataFlow':
+        return { dataFlow: result as DataFlowAIAnalysis };
       default:
         return {};
     }

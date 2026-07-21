@@ -68,11 +68,12 @@
 
       <div class="page-content">
         <app-explanation-card
-          *ngIf="showExplanationCard"
-          title="AI Intelligence"
-          [content]="understanding!.understandingNarrative ?? ''"
-          [isLoading]="false"
+          *ngIf="llmSummary || isGenerating || isNoProvider"
+          title="AI Analysis"
+          [content]="llmSummary"
+          [isLoading]="isGenerating"
           [error]="null"
+          [noProvider]="isNoProvider"
         >
         </app-explanation-card>
 

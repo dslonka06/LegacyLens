@@ -22,6 +22,9 @@ import type { SecurityAnalysis } from '@app/analysis/models/security-analysis.mo
 import type { SystemUnderstanding } from '@app/analysis/models/system-understanding.model';
 import type { RecommendationAnalysis } from '@app/analysis/models/recommendation-analysis.model';
 import type { LearningPathAnalysis } from '@app/analysis/models/learning-path-analysis.model';
+import type { ArchitectureAIAnalysis } from './architecture-ai-analysis.model';
+import type { DataFlowAIAnalysis } from './data-flow-ai-analysis.model';
+import type { LLMSummaries } from './llm-summaries.model';
 
 // ── Target type ────────────────────────────────────────────────────────────────
 
@@ -44,11 +47,25 @@ export type KnowledgeCapability =
 
 // ── AI pipeline stages ─────────────────────────────────────────────────────────
 
+// ── Stage groupings ────────────────────────────────────────────────────────────
+// Derive stages: heuristic engines populate model.ai.* structured data.
+// Prompt stage:  builds LLM prompts from derived data (one per page).
+// Generate stage: calls the LLM for each prompt, stores narrative text.
+// Finalise is implicit — handled by markAIPipelineComplete.
+
 export type AIStage =
+  // Derive tier — heuristic analysis engines
   | 'understanding'
   | 'security'
   | 'recommendations'
   | 'learningPath'
+  | 'architecture'
+  | 'dataFlow'
+  // Prompt tier — builds structured prompts from derived data
+  | 'prompt'
+  // Generate tier — LLM calls, produces narrative text
+  | 'generate'
+  // Legacy / unused
   | 'documentation';
 
 // ── Structure sub-types ────────────────────────────────────────────────────────
@@ -162,18 +179,31 @@ export interface KnowledgeInsights {
 // source of all AI narrative about the analyzed artifact.
 
 export interface KnowledgeAIResults {
+  // ── Derive tier ──────────────────────────────────────────────────────────────
   /** Full AI understanding: executive summary, business purpose, health, key areas. */
   understanding?: SystemUnderstanding;
-  /** Security findings and overview narrative produced by AI. */
+  /** Security findings and risk surface produced by heuristic scanning. */
   security?: SecurityAnalysis;
-  /** Actionable improvement recommendations from AI. */
+  /** Actionable improvement recommendations from structural analysis. */
   recommendations?: RecommendationAnalysis;
-  /** Guided onboarding learning path from AI. */
+  /** Guided onboarding learning path. */
   learningPath?: LearningPathAnalysis;
+  /** Architecture pattern analysis with layer breakdown and coupling assessment. */
+  architecture?: ArchitectureAIAnalysis;
+  /** Data flow workflow analysis with entry points, bottlenecks, and risk profiles. */
+  dataFlow?: DataFlowAIAnalysis;
+
+  // ── Generate tier ─────────────────────────────────────────────────────────────
+  /** LLM-generated narrative summaries, one per page. Populated after the generate stage. */
+  summaries?: LLMSummaries;
+
+  // ── Stage tracking ────────────────────────────────────────────────────────────
   /** AI stages that completed successfully. */
   completedStages: AIStage[];
   /** AI stages that failed — partial results remain usable. */
   failedStages: AIStage[];
+  /** AI stages that partially succeeded (some sub-operations succeeded, some failed). */
+  partialStages?: AIStage[];
   /** Error messages keyed by stage — present only for failed stages. */
   stageErrors?: Partial<Record<AIStage, string>>;
 }

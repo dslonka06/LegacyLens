@@ -31,6 +31,15 @@
   </div>
 
   <div class="page-content" *ngIf="lp">
+    <app-explanation-card
+      *ngIf="llmSummary || isGenerating || isNoProvider"
+      title="AI Analysis"
+      [content]="llmSummary"
+      [isLoading]="isGenerating"
+      [error]="null"
+      [noProvider]="isNoProvider"
+    ></app-explanation-card>
+
     <div class="lp-body">
       <div class="lp-col-left">
         <div class="lp-section-card">

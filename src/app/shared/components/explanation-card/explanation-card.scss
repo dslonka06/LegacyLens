@@ -153,6 +153,42 @@
   }
 }
 
+// ─── No provider ─────────────────────────────────────────
+.ec-no-provider {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  color: var(--text-muted);
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+}
+
+.ec-no-provider-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ec-no-provider-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ec-no-provider-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
 // ─── Error ───────────────────────────────────────────────
 .ec-error {
   display: flex;

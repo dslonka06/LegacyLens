@@ -39,6 +39,20 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
     });
   }
 
+  get llmSummary(): string | null {
+    return this.manager.getActive()?.knowledgeModel?.ai?.summaries?.understanding ?? null;
+  }
+
+  get isGenerating(): boolean {
+    const wsId = this.manager.getActive()?.id ?? '';
+    return this.manager.getActiveStages(wsId).has('generate');
+  }
+
+  get isNoProvider(): boolean {
+    const ai = this.manager.getActive()?.knowledgeModel?.ai;
+    return ai?.failedStages.includes('generate') === true && ai?.stageErrors?.['generate'] === 'no-provider';
+  }
+
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }

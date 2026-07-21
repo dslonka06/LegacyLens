@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
+import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
 import type {
   KnowledgeModel,
   ArchitecturePattern,
@@ -14,7 +15,7 @@ import type { FolderNode, FileNode } from '@app/knowledge/models/repository.mode
 @Component({
   selector: 'app-architecture-page',
   standalone: true,
-  imports: [CommonModule, FileTreePanel, ThemeToggle],
+  imports: [CommonModule, FileTreePanel, ThemeToggle, ExplanationCard],
   templateUrl: './architecture-page.html',
   styleUrl: './architecture-page.scss',
 })
@@ -93,6 +94,20 @@ export class ArchitecturePage implements OnInit, OnDestroy {
 
   confidencePercent(p: ArchitecturePattern): number {
     return Math.round((p.confidence ?? 0) * 100);
+  }
+
+  get llmSummary(): string | null {
+    return this.model?.ai?.summaries?.architecture ?? null;
+  }
+
+  get isGenerating(): boolean {
+    const wsId = this.manager.getActive()?.id ?? '';
+    return this.manager.getActiveStages(wsId).has('generate');
+  }
+
+  get isNoProvider(): boolean {
+    const ai = this.model?.ai;
+    return ai?.failedStages.includes('generate') === true && ai?.stageErrors?.['generate'] === 'no-provider';
   }
 
   architectureDescription(name: string): string {

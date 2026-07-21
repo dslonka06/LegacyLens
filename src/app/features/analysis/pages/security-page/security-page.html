@@ -63,6 +63,15 @@
           </div>
 
           <div class="sec-content">
+            <app-explanation-card
+              *ngIf="llmSummary || isGenerating || isNoProvider"
+              title="AI Analysis"
+              [content]="llmSummary"
+              [isLoading]="isGenerating"
+              [error]="null"
+              [noProvider]="isNoProvider"
+            ></app-explanation-card>
+
             <div class="sec-card sec-overview">
               <div class="sec-card-header">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

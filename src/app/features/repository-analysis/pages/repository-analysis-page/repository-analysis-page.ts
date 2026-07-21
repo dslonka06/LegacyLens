@@ -21,6 +21,10 @@ import { Workspace, WorkspaceStatus } from '@app/workspace/models/workspace-enti
 import type { KnowledgeModel, AIStage } from '@app/knowledge/models/knowledge-model.contract';
 import type { ElectronDirectoryEntry } from '../../../../../electron';
 import { hashContent } from '@app/core/utils/hash';
+import {
+  buildAIPipelineState,
+  type AIPipelineState,
+} from '@app/shared/utils/ai-pipeline-state';
 
 export type HealthTier = 'healthy' | 'fair' | 'needs-attention' | 'critical' | 'unknown';
 
@@ -35,19 +39,27 @@ export interface HubMetricCard {
   pending: boolean;
 }
 
-const STAGE_LABELS: Record<AIStage, string> = {
+const STAGE_LABELS: Partial<Record<AIStage, string>> = {
   understanding: 'Understanding',
   security: 'Security',
   recommendations: 'Recommendations',
   learningPath: 'Learning Path',
+  architecture: 'Architecture',
+  dataFlow: 'Data Flow',
   documentation: 'Documentation',
+  prompt: 'Prompt',
+  generate: 'Generate',
 };
 
 const STAGE_MESSAGES: Record<string, string[]> = {
-  understanding: ['Analysing structure...', 'Sending to LLM...', 'Processing response...', 'Mapping capabilities...'],
-  security: ['Scanning for vulnerabilities...', 'Sending to LLM...', 'Evaluating risk...', 'Cataloguing findings...'],
-  recommendations: ['Reviewing code patterns...', 'Sending to LLM...', 'Generating suggestions...'],
-  learningPath: ['Building learning plan...', 'Sending to LLM...', 'Structuring path...'],
+  understanding: ['Analysing structure...', 'Mapping capabilities...'],
+  security: ['Scanning for vulnerabilities...', 'Evaluating risk...'],
+  recommendations: ['Reviewing code patterns...', 'Generating suggestions...'],
+  learningPath: ['Building learning plan...', 'Structuring path...'],
+  architecture: ['Detecting patterns...', 'Assessing coupling...'],
+  dataFlow: ['Tracing workflows...', 'Profiling risk...'],
+  prompt: ['Building prompts...'],
+  generate: ['Calling LLM...', 'Generating summaries...'],
 };
 
 @Component({
@@ -585,49 +597,27 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     return this.model?.insights.maintainability ?? '—';
   }
 
-  // ── AI Analysis summary ───────────────────────────────────────────────────
+  // ── AI Pipeline card ──────────────────────────────────────────────────────
 
-  get aiSummary(): {
-    securityRisk: string | null;
-    findingCount: number;
-    recommendationCount: number;
-    capabilityCount: number;
-    hasFailure: boolean;
-    isRunning: boolean;
-    runningStage: string | null;
-  } {
-    const ai = this.model?.ai;
-    const running = this.manager.getActiveStages(this.workspace?.id ?? '');
-    const activeStage = (['understanding', 'security', 'recommendations', 'learningPath'] as AIStage[]).find((s) => running.has(s));
-    return {
-      securityRisk: ai?.security?.overallRisk ?? null,
-      findingCount: ai?.security?.findings?.length ?? 0,
-      recommendationCount: ai?.recommendations?.recommendations?.length ?? 0,
-      capabilityCount: ai?.understanding?.coreCapabilities?.length ?? 0,
-      hasFailure: (ai?.failedStages?.length ?? 0) > 0,
-      isRunning: running.size > 0,
-      runningStage: activeStage ? STAGE_LABELS[activeStage] : null,
-    };
+  get aiPipeline(): AIPipelineState {
+    return buildAIPipelineState(this.model, this.workspace, this.manager);
   }
 
-  // ── Pipeline stages ────────────────────────────────────────────────────────
+  get pipelineHasFailure(): boolean {
+    return this.aiPipeline.hasFailure;
+  }
 
   get pipelineStages(): { label: string; stage: AIStage; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
     const ai = this.model?.ai;
     const running = this.manager.getActiveStages(this.workspace?.id ?? '');
     const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
-    let hitFailure = false;
-    return stages.map((s) => {
-      if (hitFailure) return { label: STAGE_LABELS[s], stage: s, state: 'pending' as const };
-      if (ai?.failedStages?.includes(s)) { hitFailure = true; return { label: STAGE_LABELS[s], stage: s, state: 'failed' as const }; }
-      if (ai?.completedStages?.includes(s)) return { label: STAGE_LABELS[s], stage: s, state: 'complete' as const };
-      if (running.has(s)) return { label: STAGE_LABELS[s], stage: s, state: 'running' as const };
-      return { label: STAGE_LABELS[s], stage: s, state: 'pending' as const };
+    return stages.map(s => {
+      const label = STAGE_LABELS[s] ?? s;
+      if (ai?.failedStages?.includes(s)) return { label, stage: s, state: 'failed' as const };
+      if (ai?.completedStages?.includes(s)) return { label, stage: s, state: 'complete' as const };
+      if (running.has(s)) return { label, stage: s, state: 'running' as const };
+      return { label, stage: s, state: 'pending' as const };
     });
-  }
-
-  get pipelineHasFailure(): boolean {
-    return this.pipelineStages.some((s) => s.state === 'failed');
   }
 
   // ── Identity metrics ─────────────────────────────────────────

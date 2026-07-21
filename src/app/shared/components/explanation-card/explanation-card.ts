@@ -13,6 +13,7 @@ export class ExplanationCard {
   @Input() content: string | null = null;
   @Input() isLoading = false;
   @Input() error: string | null = null;
+  @Input() noProvider = false;
   @Output() readonly dismiss = new EventEmitter<void>();
 
   get paragraphs(): string[] {

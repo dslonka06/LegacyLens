@@ -1,0 +1,18 @@
+export interface WorkflowRiskProfile {
+  workflowName: string;
+  entryPoint: string;
+  stepCount: number;
+  bottleneckNodes: string[];
+  failureRisk: 'Low' | 'Moderate' | 'High';
+}
+
+export interface DataFlowAIAnalysis {
+  workflowCount: number;
+  primaryWorkflows: WorkflowRiskProfile[];
+  entryPoints: string[];
+  bottlenecks: string[];
+  externalDependencies: string[];
+  mostReferenced: string[];
+  dataAccessNodes: string[];
+  generatedAt: string;
+}

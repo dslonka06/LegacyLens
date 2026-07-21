@@ -266,48 +266,66 @@
           </div>
         </div>
 
-        <!-- AI Analysis summary card -->
+        <!-- AI Analysis pipeline card -->
         <div class="info-card info-card--pipeline">
           <div class="info-card-label">AI Analysis</div>
 
-          <!-- Running state -->
-          <ng-container *ngIf="aiSummary.isRunning">
-            <div class="ai-card-running">
-              <span class="ai-card-spinner"></span>
-              <span class="ai-card-running-label">{{ aiSummary.runningStage ?? 'Analyzing' }}&hellip;</span>
-            </div>
-          </ng-container>
+          <ng-container *ngIf="model; else aiCardEmpty">
+            <div class="pipeline-stages">
+              <div
+                class="pipeline-stage"
+                *ngFor="let stage of aiPipeline.stages"
+                [class.pipeline-stage--idle]="stage.state === 'idle'"
+                [class.pipeline-stage--running]="stage.state === 'running'"
+                [class.pipeline-stage--complete]="stage.state === 'complete'"
+                [class.pipeline-stage--partial]="stage.state === 'partial'"
+                [class.pipeline-stage--failed]="stage.state === 'failed'"
+              >
+                <div class="pipeline-stage-header">
+                  <span class="pipeline-stage-icon">
+                    <!-- idle -->
+                    <svg *ngIf="stage.state === 'idle'" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/></svg>
+                    <!-- running -->
+                    <span *ngIf="stage.state === 'running'" class="pipeline-stage-spinner"></span>
+                    <!-- complete -->
+                    <svg *ngIf="stage.state === 'complete'" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.5"/><polyline points="5.5,8 7,9.5 10.5,6"/></svg>
+                    <!-- partial -->
+                    <svg *ngIf="stage.state === 'partial'" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="5.5" y1="8" x2="10.5" y2="8"/></svg>
+                    <!-- failed -->
+                    <svg *ngIf="stage.state === 'failed'" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="6" y1="6" x2="10" y2="10"/><line x1="10" y1="6" x2="6" y2="10"/></svg>
+                  </span>
+                  <span class="pipeline-stage-label">{{ stage.label }}</span>
+                  <span class="pipeline-stage-status-text" *ngIf="stage.state === 'running'">running</span>
+                </div>
 
-          <!-- Complete or partial state -->
-          <ng-container *ngIf="!aiSummary.isRunning && model">
-            <div class="ai-card-grid">
-              <div class="ai-card-stat" [class.ai-card-stat--risk-Critical]="aiSummary.securityRisk === 'Critical'" [class.ai-card-stat--risk-High]="aiSummary.securityRisk === 'High'" [class.ai-card-stat--risk-Medium]="aiSummary.securityRisk === 'Medium'" [class.ai-card-stat--risk-Low]="aiSummary.securityRisk === 'Low'">
-                <span class="ai-card-stat-val">{{ aiSummary.securityRisk ?? '—' }}</span>
-                <span class="ai-card-stat-label">Security Risk</span>
-              </div>
-              <div class="ai-card-stat">
-                <span class="ai-card-stat-val">{{ aiSummary.findingCount }}</span>
-                <span class="ai-card-stat-label">Findings</span>
-              </div>
-              <div class="ai-card-stat">
-                <span class="ai-card-stat-val">{{ aiSummary.capabilityCount }}</span>
-                <span class="ai-card-stat-label">Capabilities</span>
-              </div>
-              <div class="ai-card-stat">
-                <span class="ai-card-stat-val">{{ aiSummary.recommendationCount }}</span>
-                <span class="ai-card-stat-label">Suggestions</span>
+                <!-- Derive substeps -->
+                <div class="pipeline-substeps" *ngIf="stage.substeps && stage.substeps.length > 0">
+                  <span
+                    class="pipeline-substep"
+                    *ngFor="let sub of stage.substeps"
+                    [class.pipeline-substep--idle]="sub.state === 'idle'"
+                    [class.pipeline-substep--running]="sub.state === 'running'"
+                    [class.pipeline-substep--complete]="sub.state === 'complete'"
+                    [class.pipeline-substep--failed]="sub.state === 'failed'"
+                    [title]="sub.label"
+                  ></span>
+                </div>
               </div>
             </div>
-            <div class="pipeline-error-notice" *ngIf="aiSummary.hasFailure">
+
+            <div class="pipeline-error-notice" *ngIf="aiPipeline.noProvider && !aiPipeline.isRunning">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>
+              No AI provider configured — AI explanations are unavailable.
+            </div>
+            <div class="pipeline-error-notice" *ngIf="aiPipeline.hasFailure && !aiPipeline.isRunning && !aiPipeline.noProvider">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>
               Partial analysis — some stages failed.
             </div>
           </ng-container>
 
-          <!-- No model yet -->
-          <ng-container *ngIf="!aiSummary.isRunning && !model">
-            <span class="ai-card-empty">Run analysis to see AI insights.</span>
-          </ng-container>
+          <ng-template #aiCardEmpty>
+            <span class="ai-card-empty">Run analysis to see AI pipeline.</span>
+          </ng-template>
         </div>
 
         <!-- Workspace -->

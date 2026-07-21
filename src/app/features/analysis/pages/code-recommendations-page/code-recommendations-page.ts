@@ -11,13 +11,14 @@ import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-
 import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
+import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
 @Component({
   selector: 'app-code-recommendations-page',
   standalone: true,
-  imports: [CommonModule, FileTreePanel, CodeEditor, ResizeDividerComponent, ThemeToggle],
+  imports: [CommonModule, FileTreePanel, CodeEditor, ResizeDividerComponent, ThemeToggle, ExplanationCard],
   templateUrl: './code-recommendations-page.html',
   styleUrl: './code-recommendations-page.scss',
 })
@@ -124,5 +125,19 @@ export class CodeRecommendationsPage implements OnInit, OnDestroy {
     if (level === 'Ready') return 'readiness-ready';
     if (level === 'Partially Ready') return 'readiness-partial';
     return 'readiness-not-ready';
+  }
+
+  get llmSummary(): string | null {
+    return this.workspace?.knowledgeModel?.ai?.summaries?.recommendations ?? null;
+  }
+
+  get isGenerating(): boolean {
+    const wsId = this.workspace?.id ?? '';
+    return this.manager.getActiveStages(wsId).has('generate');
+  }
+
+  get isNoProvider(): boolean {
+    const ai = this.workspace?.knowledgeModel?.ai;
+    return ai?.failedStages.includes('generate') === true && ai?.stageErrors?.['generate'] === 'no-provider';
   }
 }

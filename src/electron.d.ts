@@ -246,6 +246,8 @@ interface ElectronIntelligenceAPI {
   learningPath(model: _KM): Promise<unknown>;
   recommendations(model: _KM): Promise<unknown>;
   security(model: _KM): Promise<unknown>;
+  architectureAnalysis(model: _KM): Promise<unknown>;
+  dataFlowAnalysis(model: _KM): Promise<unknown>;
 
   // ── D2/D3 pipeline ────────────────────────────────────────────────────────────
   runPipeline(targetType: _AT, files: unknown[]): Promise<PipelineResult>;

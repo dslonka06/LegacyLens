@@ -20,6 +20,7 @@ import type {
   KnowledgeAIResults,
   AIStage,
 } from '@app/knowledge/models/knowledge-model.contract';
+import type { LLMSummaryKey } from '@app/knowledge/models/llm-summaries.model';
 import { ElectronService } from '@app/core/services/electron.service';
 import type { PersistedWorkspace } from '../../../electron';
 
@@ -279,6 +280,34 @@ export class WorkspaceManagerService {
     console.log(`[Manager] mergeAIResults patch done`);
   }
 
+  /**
+   * Merge a single LLM-generated summary key into model.ai.summaries.
+   * Reads the current summaries inside patch() scope so concurrent calls
+   * cannot overwrite each other's key — each call reads the latest state.
+   *
+   * Does NOT add the key to completedStages — the caller is responsible for
+   * calling mergeAIResults({}, 'generate', generation) once all keys are done.
+   */
+  mergeSummaryKey(id: string, key: LLMSummaryKey, text: string, generation?: number): void {
+    const currentGen = this.getGeneration(id);
+    if (generation !== undefined && currentGen !== generation) {
+      console.warn(`[Manager] mergeSummaryKey DROPPED gen=${generation} currentGen=${currentGen} key=${key}`);
+      return;
+    }
+    const ws = this.getById(id);
+    if (!ws?.knowledgeModel) {
+      console.warn(`[Manager] mergeSummaryKey DROPPED — no knowledgeModel for ws=${id} key=${key}`);
+      return;
+    }
+
+    const existing = ws.knowledgeModel.ai ?? { completedStages: [], failedStages: [] };
+    const summaries = { ...(existing.summaries ?? {}), [key]: text };
+    this.patch(id, {
+      knowledgeModel: { ...ws.knowledgeModel, ai: { ...existing, summaries } },
+      lastModifiedAt: new Date().toISOString(),
+    });
+  }
+
   /** Mark an AI stage as failed without losing other AI results. */
   markAIStageFailed(id: string, stage: AIStage, generation?: number, errorMessage?: string): void {
     if (generation !== undefined && this.getGeneration(id) !== generation) return;
@@ -295,6 +324,23 @@ export class WorkspaceManagerService {
       knowledgeModel: {
         ...ws.knowledgeModel,
         ai: { ...existing, failedStages, stageErrors },
+      },
+    });
+  }
+
+  /** Mark an AI stage as partially complete — some sub-operations succeeded, some failed. */
+  markAIStagePartial(id: string, stage: AIStage, generation?: number): void {
+    if (generation !== undefined && this.getGeneration(id) !== generation) return;
+    const ws = this.getById(id);
+    if (!ws?.knowledgeModel) return;
+
+    const existing = ws.knowledgeModel.ai ?? { completedStages: [], failedStages: [] };
+    const partialStages = [...new Set([...(existing.partialStages ?? []), stage])];
+
+    this.patch(id, {
+      knowledgeModel: {
+        ...ws.knowledgeModel,
+        ai: { ...existing, partialStages },
       },
     });
   }

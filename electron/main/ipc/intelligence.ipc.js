@@ -14,6 +14,8 @@ const { LearningPathAnalysisEngine } = require('../engines/analysis/learning-pat
 const { DataFlowDiscoveryEngine } = require('../engines/analysis/data-flow-discovery.engine');
 const { RecommendationAnalysisEngine } = require('../engines/analysis/recommendation-analysis.engine');
 const { SecurityAnalysisEngine } = require('../engines/analysis/security-analysis.engine');
+const { ArchitectureAnalysisEngine } = require('../engines/analysis/architecture-analysis.engine');
+const { DataFlowAnalysisEngine } = require('../engines/analysis/data-flow-analysis.engine');
 const { RepositoryInsightsEngine } = require('../engines/analysis/repository-insights.engine');
 const { RepositorySummaryEngine } = require('../engines/analysis/repository-summary.engine');
 const { CapabilityPipelineEngine, CAPABILITY_MAP } = require('../engines/core/capability-pipeline.engine');
@@ -43,6 +45,8 @@ const learningPath = new LearningPathAnalysisEngine();
 const dataFlowDiscovery = new DataFlowDiscoveryEngine();
 const recommendations = new RecommendationAnalysisEngine();
 const securityAnalysis = new SecurityAnalysisEngine();
+const architectureAnalysis = new ArchitectureAnalysisEngine();
+const dataFlowAnalysis = new DataFlowAnalysisEngine();
 const repositoryInsights = new RepositoryInsightsEngine();
 const repositorySummary = new RepositorySummaryEngine();
 
@@ -227,6 +231,24 @@ function registerIntelligenceHandlers() {
       ? securityAnalysis.analyzeKnowledge(knowledge, session)
       : securityAnalysis.analyzeFile(session));
     console.log('[IPC] intelligence:security done result=' + (result ? 'ok' : 'null'));
+    return result;
+  }));
+
+  // intelligence:architectureAnalysis — AI-tier architecture analysis from KnowledgeModel
+  ipcMain.handle('intelligence:architectureAnalysis', wrapHandler(async (_event, model) => {
+    if (!model) throw new Error('model is required');
+    console.log('[IPC] intelligence:architectureAnalysis targetType=' + model.targetType);
+    const result = architectureAnalysis.analyze(model);
+    console.log('[IPC] intelligence:architectureAnalysis done result=' + (result ? 'ok' : 'null'));
+    return result;
+  }));
+
+  // intelligence:dataFlowAnalysis — AI-tier data flow analysis from KnowledgeModel
+  ipcMain.handle('intelligence:dataFlowAnalysis', wrapHandler(async (_event, model) => {
+    if (!model) throw new Error('model is required');
+    console.log('[IPC] intelligence:dataFlowAnalysis targetType=' + model.targetType);
+    const result = dataFlowAnalysis.analyze(model);
+    console.log('[IPC] intelligence:dataFlowAnalysis done result=' + (result ? 'ok' : 'null'));
     return result;
   }));
 

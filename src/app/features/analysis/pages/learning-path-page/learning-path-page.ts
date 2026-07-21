@@ -4,13 +4,14 @@ import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
+import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
 import { LearningPathAnalysis } from '@app/analysis/models/learning-path-analysis.model';
 import { Workspace } from '@app/workspace/models/workspace-entity.model';
 
 @Component({
   selector: 'app-learning-path-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ThemeToggle],
+  imports: [CommonModule, RouterLink, ThemeToggle, ExplanationCard],
   templateUrl: './learning-path-page.html',
   styleUrl: './learning-path-page.scss',
 })
@@ -64,7 +65,20 @@ export class LearningPathPage implements OnInit, OnDestroy {
     const type = this.workspace?.type;
     if (!type || type === 'file') return rawRoute;
     const base = type === 'folder' ? '/folder-analysis' : '/repository-analysis';
-    // Replace any analysis prefix with the correct one for this workspace type
     return rawRoute.replace(/^\/(file|folder|repository)-analysis/, base);
+  }
+
+  get llmSummary(): string | null {
+    return this.workspace?.knowledgeModel?.ai?.summaries?.learningPath ?? null;
+  }
+
+  get isGenerating(): boolean {
+    const wsId = this.workspace?.id ?? '';
+    return this.manager.getActiveStages(wsId).has('generate');
+  }
+
+  get isNoProvider(): boolean {
+    const ai = this.workspace?.knowledgeModel?.ai;
+    return ai?.failedStages.includes('generate') === true && ai?.stageErrors?.['generate'] === 'no-provider';
   }
 }
