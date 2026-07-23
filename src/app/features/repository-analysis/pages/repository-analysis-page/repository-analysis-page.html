@@ -220,16 +220,15 @@
       <div class="hub-info-row" [class.hub-section--animate]="showInfoCards">
         <!-- Code health -->
         <div class="info-card info-card--health" [class]="'health-' + healthTier">
-          <div class="info-card-label">Code Health</div>
+          <div class="info-card-header">
+            <span class="info-card-title">Code Health</span>
+            <svg class="info-card-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="About Code Health">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </div>
           <div class="health-arc-wrap">
             <svg class="health-arc" viewBox="0 0 100 60">
-              <path
-                d="M 10 56 A 42 42 0 0 1 90 56"
-                fill="none"
-                stroke="rgba(255,255,255,0.08)"
-                stroke-width="7"
-                stroke-linecap="round"
-              />
+              <path d="M 10 56 A 42 42 0 0 1 90 56" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7" stroke-linecap="round" />
               <path
                 class="health-arc-fill"
                 [class.health-arc-fill--healthy]="healthTier === 'healthy'"
@@ -248,71 +247,106 @@
           <div class="health-stats">
             <div class="health-stat">
               <span class="health-stat-label">Complexity</span>
-              <span
-                class="health-stat-val"
+              <span class="health-stat-val"
                 [class.complexity-Low]="complexityLabel === 'Low'"
                 [class.complexity-Medium]="complexityLabel === 'Medium'"
                 [class.complexity-High]="complexityLabel === 'High'"
-                >{{ complexityLabel }}</span
-              >
+              >{{ complexityLabel }}</span>
             </div>
             <div class="health-stat">
               <span class="health-stat-label">Maintainability</span>
-              <span
-                class="health-stat-val"
+              <span class="health-stat-val"
                 [class.maint-High]="maintainabilityLabel === 'High'"
                 [class.maint-Medium]="maintainabilityLabel === 'Medium'"
                 [class.maint-Low]="maintainabilityLabel === 'Low'"
-                >{{ maintainabilityLabel }}</span
-              >
+              >{{ maintainabilityLabel }}</span>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-label">Issues</span>
+              <span class="health-stat-val" [class.stat-error]="issueCount > 0">{{ issueCount }}</span>
             </div>
           </div>
+          <button class="info-card-nav-link" (click)="navigate('/repository-analysis/system-understanding')">
+            View system understanding
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
         </div>
 
         <!-- AI Analysis pipeline card -->
         <div class="info-card info-card--pipeline">
-          <div class="info-card-label">AI Analysis</div>
+          <div class="info-card-header">
+            <span class="info-card-title">AI Analysis</span>
+            <svg class="info-card-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="About AI Analysis">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </div>
 
           <ng-container *ngIf="model; else aiCardEmpty">
-            <div class="pipeline-stages">
-              <div
-                class="pipeline-stage"
-                *ngFor="let stage of aiPipeline.stages"
-                [class.pipeline-stage--idle]="stage.state === 'idle'"
-                [class.pipeline-stage--running]="stage.state === 'running'"
-                [class.pipeline-stage--complete]="stage.state === 'complete'"
-                [class.pipeline-stage--partial]="stage.state === 'partial'"
-                [class.pipeline-stage--failed]="stage.state === 'failed'"
-              >
-                <div class="pipeline-stage-header">
-                  <span class="pipeline-stage-icon">
-                    <!-- idle -->
-                    <svg *ngIf="stage.state === 'idle'" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/></svg>
-                    <!-- running -->
-                    <span *ngIf="stage.state === 'running'" class="pipeline-stage-spinner"></span>
-                    <!-- complete -->
-                    <svg *ngIf="stage.state === 'complete'" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.5"/><polyline points="5.5,8 7,9.5 10.5,6"/></svg>
-                    <!-- partial -->
-                    <svg *ngIf="stage.state === 'partial'" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="5.5" y1="8" x2="10.5" y2="8"/></svg>
-                    <!-- failed -->
-                    <svg *ngIf="stage.state === 'failed'" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="6" y1="6" x2="10" y2="10"/><line x1="10" y1="6" x2="6" y2="10"/></svg>
-                  </span>
-                  <span class="pipeline-stage-label">{{ stage.label }}</span>
-                  <span class="pipeline-stage-status-text" *ngIf="stage.state === 'running'">running</span>
+            <!-- Stage track: Scan → Derive → Prompt → Generate → Finalise -->
+            <div class="pipeline-track">
+              <ng-container *ngFor="let stage of aiPipeline.stages; let i = index; let last = last">
+                <div class="pipeline-bubble-wrap">
+                  <div class="pipeline-bubble"
+                    [class.pipeline-bubble--complete]="stage.state === 'complete'"
+                    [class.pipeline-bubble--running]="stage.state === 'running'"
+                    [class.pipeline-bubble--failed]="stage.state === 'failed'"
+                    [class.pipeline-bubble--pending]="stage.state === 'idle'">
+                    <ng-container [ngSwitch]="stage.state">
+                      <svg *ngSwitchCase="'complete'" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>
+                      <svg *ngSwitchCase="'failed'" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="9" y2="9"/><line x1="9" y1="3" x2="3" y2="9"/></svg>
+                      <span *ngSwitchCase="'running'" class="pipeline-bubble-pulse"></span>
+                      <svg *ngSwitchDefault viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="6" cy="6" r="2"/></svg>
+                    </ng-container>
+                  </div>
+                  <span class="pipeline-bubble-label">{{ stage.label }}</span>
                 </div>
+                <div class="pipeline-connector" *ngIf="!last"
+                  [class.pipeline-connector--done]="stage.state === 'complete'">
+                </div>
+              </ng-container>
+            </div>
 
-                <!-- Derive substeps -->
-                <div class="pipeline-substeps" *ngIf="stage.substeps && stage.substeps.length > 0">
-                  <span
-                    class="pipeline-substep"
-                    *ngFor="let sub of stage.substeps"
-                    [class.pipeline-substep--idle]="sub.state === 'idle'"
-                    [class.pipeline-substep--running]="sub.state === 'running'"
-                    [class.pipeline-substep--complete]="sub.state === 'complete'"
-                    [class.pipeline-substep--failed]="sub.state === 'failed'"
-                    [title]="sub.label"
-                  ></span>
-                </div>
+            <!-- Core Analysis + AI Insights status summary -->
+            <div class="pipeline-status-row">
+              <div class="pipeline-status-group">
+                <span class="pipeline-status-group-label">Core Analysis</span>
+                <span class="pipeline-status-group-value"
+                  [class.pipeline-status--complete]="coreAnalysisState === 'complete'"
+                  [class.pipeline-status--partial]="coreAnalysisState === 'partial'"
+                  [class.pipeline-status--running]="coreAnalysisState === 'running'"
+                  [class.pipeline-status--failed]="coreAnalysisState === 'failed'"
+                >{{ coreAnalysisLabel }}</span>
+              </div>
+              <div class="pipeline-status-group">
+                <span class="pipeline-status-group-label">AI Insights</span>
+                <span class="pipeline-status-group-value"
+                  [class.pipeline-status--complete]="aiInsightsState === 'complete'"
+                  [class.pipeline-status--partial]="aiInsightsState === 'partial'"
+                  [class.pipeline-status--running]="aiInsightsState === 'running'"
+                  [class.pipeline-status--failed]="aiInsightsState === 'failed'"
+                  [class.pipeline-status--unavailable]="aiPipeline.noProvider"
+                >{{ aiInsightsLabel }}</span>
+              </div>
+            </div>
+
+            <!-- Per-derive substep checks -->
+            <div class="pipeline-substep-list" *ngIf="aiPipeline.stages[1]?.substeps?.length">
+              <div class="pipeline-substep-item"
+                *ngFor="let sub of aiPipeline.stages[1].substeps"
+                [class.pipeline-substep-item--complete]="sub.state === 'complete'"
+                [class.pipeline-substep-item--failed]="sub.state === 'failed'"
+                [class.pipeline-substep-item--running]="sub.state === 'running'">
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline *ngIf="sub.state === 'complete'" points="2,6 5,9 10,3"/>
+                  <ng-container *ngIf="sub.state === 'failed'">
+                    <line x1="3" y1="3" x2="9" y2="9"/><line x1="9" y1="3" x2="3" y2="9"/>
+                  </ng-container>
+                  <span *ngIf="sub.state === 'running'" class="pipeline-substep-spinner"></span>
+                  <circle *ngIf="sub.state === 'idle'" cx="6" cy="6" r="2"/>
+                </svg>
+                <span>{{ sub.label }}</span>
               </div>
             </div>
 
@@ -325,11 +359,14 @@
               Partial analysis — some stages failed.
             </div>
 
-            <div class="pipeline-stats" *ngIf="aiStats.length && !aiPipeline.isRunning">
-              <div class="pipeline-stat" *ngFor="let stat of aiStats">
-                <span class="pipeline-stat-val">{{ stat.value }}</span>
-                <span class="pipeline-stat-label">{{ stat.label }}</span>
+            <div class="pipeline-card-footer">
+              <div class="pipeline-stats" *ngIf="aiStats.length && !aiPipeline.isRunning">
+                <div class="pipeline-stat" *ngFor="let stat of aiStats">
+                  <span class="pipeline-stat-val">{{ stat.value }}</span>
+                  <span class="pipeline-stat-label">{{ stat.label }}</span>
+                </div>
               </div>
+              <button class="pipeline-configure-btn" (click)="navigate('/settings')">Configure AI</button>
             </div>
           </ng-container>
 
@@ -340,12 +377,14 @@
 
         <!-- Workspace -->
         <div class="info-card info-card--workspace">
-          <div class="info-card-label">Workspace</div>
+          <div class="info-card-header">
+            <span class="info-card-title">Workspace</span>
+          </div>
           <div class="workspace-name-row">
             <span class="workspace-name">{{ repoName }}</span>
             <span class="workspace-status-chip" [ngClass]="statusChipClass">{{ statusLabel }}</span>
           </div>
-          <div class="workspace-grid">
+          <div class="workspace-chips">
             <span
               class="workspace-chip"
               *ngFor="let ws of workspaceList"
@@ -355,10 +394,14 @@
               [class.workspace-chip--failed]="ws.status === 'failed' || ws.status === 'error'"
               [class.workspace-chip--empty]="ws.status === 'empty'"
               [title]="ws.name"
-            ></span>
+            >{{ ws.status === 'ready' ? (ws.name.split('.').pop()?.toUpperCase() ?? '?') : '' }}</span>
           </div>
-          <div class="workspace-last-analyzed" *ngIf="lastAnalyzed">Last analyzed: {{ lastAnalyzed }}</div>
-          <button class="ws-btn ws-btn--manage" (click)="goToLibrary()">Manage</button>
+          <div class="workspace-divider"></div>
+          <div class="workspace-analyzed-block" *ngIf="lastAnalyzed">
+            <span class="workspace-analyzed-label">Last analyzed</span>
+            <span class="workspace-analyzed-date">{{ lastAnalyzed }}</span>
+          </div>
+          <button class="ws-btn ws-btn--manage" (click)="goToLibrary()">Manage Workspace</button>
         </div>
       </div>
 
@@ -403,6 +446,7 @@
               <span class="metric-card-count metric-card-count--pending" *ngIf="card.pending">…</span>
             </ng-template>
             <span class="metric-card-label">{{ card.label }}</span>
+            <span class="metric-card-subtitle" *ngIf="card.subtitle">{{ card.subtitle }}</span>
           </div>
 
           <svg

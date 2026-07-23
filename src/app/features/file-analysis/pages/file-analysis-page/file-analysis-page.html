@@ -288,14 +288,14 @@
               [class.pipeline-substep-item--complete]="sub.state === 'complete'"
               [class.pipeline-substep-item--failed]="sub.state === 'failed'"
               [class.pipeline-substep-item--running]="sub.state === 'running'">
-              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg *ngIf="sub.state !== 'running'" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <polyline *ngIf="sub.state === 'complete'" points="2,6 5,9 10,3"/>
                 <ng-container *ngIf="sub.state === 'failed'">
                   <line x1="3" y1="3" x2="9" y2="9"/><line x1="9" y1="3" x2="3" y2="9"/>
                 </ng-container>
-                <span *ngIf="sub.state === 'running'" class="pipeline-substep-spinner"></span>
                 <circle *ngIf="sub.state === 'idle'" cx="6" cy="6" r="2"/>
               </svg>
+              <span *ngIf="sub.state === 'running'" class="pipeline-substep-spinner"></span>
               <span>{{ sub.label }}</span>
             </div>
           </div>

@@ -21,6 +21,7 @@ export interface HubMetricCard {
   icon: string;
   count: number | null;
   tags?: string[];
+  subtitle?: string;
   label: string;
   route: string;
   suggested: boolean;
@@ -475,6 +476,45 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
   get pipelineHasFailure(): boolean {
     return this.aiPipeline.hasFailure;
+  }
+
+  get coreAnalysisState(): 'complete' | 'partial' | 'running' | 'failed' | 'idle' {
+    const stage = this.aiPipeline.stages.find(s => s.id === 'derive');
+    if (!stage) return 'idle';
+    if (stage.state === 'partial') return 'partial';
+    return stage.state as any;
+  }
+
+  get coreAnalysisLabel(): string {
+    switch (this.coreAnalysisState) {
+      case 'complete': return 'Complete';
+      case 'partial':  return 'Partial';
+      case 'running':  return 'Running…';
+      case 'failed':   return 'Failed';
+      default:         return 'Pending';
+    }
+  }
+
+  get aiInsightsState(): 'complete' | 'partial' | 'running' | 'failed' | 'idle' {
+    if (this.aiPipeline.noProvider) return 'failed';
+    const gen = this.aiPipeline.stages.find(s => s.id === 'generate');
+    if (!gen) return 'idle';
+    return gen.state as any;
+  }
+
+  get aiInsightsLabel(): string {
+    if (this.aiPipeline.noProvider) return 'Unavailable';
+    switch (this.aiInsightsState) {
+      case 'complete': return 'Complete';
+      case 'partial':  return 'Partial';
+      case 'running':  return 'Running…';
+      case 'failed':   return 'Failed';
+      default:         return 'Pending';
+    }
+  }
+
+  get issueCount(): number {
+    return this.model?.insights.risks?.length ?? 0;
   }
 
   get pipelineStages(): { label: string; stage: AIStage; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
