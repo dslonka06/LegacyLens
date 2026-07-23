@@ -911,24 +911,27 @@
 
 .health-arc-wrap {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   width: 100%;
+  height: 70px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
 }
 
 .health-arc {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  max-width: 200px;
-  height: auto;
-  display: block;
+  height: 100%;
 }
 
-// Semicircle path: M 10 76 A 60 60 0 0 1 190 76 in viewBox 0 0 200 80
-// Circumference of full circle r=60: 2 * π * 60 ≈ 377 — half ≈ 188
+// Shallow arc: M 10 65 A 100 100 0 0 1 190 65 in viewBox 0 0 200 70
+// Large radius (100) relative to chord (180) = flat arc — arc length ≈ 196
 .health-arc-fill {
-  stroke-dasharray: 188;
-  stroke-dashoffset: 188;
+  stroke-dasharray: 196;
+  stroke-dashoffset: 196;
   transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1),
               filter 0.9s ease;
 
@@ -940,17 +943,18 @@
 
 .health-arc-fill--draw {
   &.health-arc-fill--healthy         { stroke-dashoffset: 0;   }
-  &.health-arc-fill--fair            { stroke-dashoffset: 47;  }
-  &.health-arc-fill--needs-attention { stroke-dashoffset: 94;  }
-  &.health-arc-fill--critical        { stroke-dashoffset: 141; }
+  &.health-arc-fill--fair            { stroke-dashoffset: 49;  }
+  &.health-arc-fill--needs-attention { stroke-dashoffset: 98;  }
+  &.health-arc-fill--critical        { stroke-dashoffset: 147; }
 }
 
 .health-tier-label {
-  font-size: 13px;
+  position: relative;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-primary);
   text-align: center;
-  margin-top: 6px;
+  z-index: 1;
 }
 
 .health-stats {
@@ -966,12 +970,12 @@
 }
 
 .health-stat-label {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-muted);
 }
 
 .health-stat-val {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
 
@@ -1002,10 +1006,10 @@
 }
 
 .pipeline-bubble {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  border: 1.5px solid var(--border);
+  border: 2px solid var(--border);
   background: transparent;
   display: flex;
   align-items: center;
@@ -1039,15 +1043,15 @@
 }
 
 .pipeline-bubble-pulse {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--accent);
   animation: pulse 1.2s ease-in-out infinite;
 }
 
 .pipeline-bubble-label {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--text-muted);
   text-align: center;
   line-height: 1.2;
@@ -1059,10 +1063,10 @@
 
 .pipeline-connector {
   flex: 0 0 auto;
-  width: 10px;
-  height: 1.5px;
+  width: 20px;
+  height: 2px;
   background: var(--border);
-  margin-top: 10px;
+  margin-top: 13px;
   transition: background 0.2s;
 
   &--complete { background: var(--success); }
@@ -1161,6 +1165,7 @@
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  margin-left: auto;
   transition: background 0.15s, border-color 0.15s;
   &:hover {
     background: color-mix(in srgb, var(--accent) 14%, transparent);
