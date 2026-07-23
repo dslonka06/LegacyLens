@@ -227,8 +227,8 @@
             </svg>
           </div>
           <div class="health-arc-wrap">
-            <svg class="health-arc" viewBox="0 0 200 70" preserveAspectRatio="xMidYMid meet">
-              <path d="M 10 65 A 100 100 0 0 1 190 65" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8" stroke-linecap="round" />
+            <svg class="health-arc" viewBox="0 0 200 105" preserveAspectRatio="xMidYMid meet">
+              <path d="M 10 100 A 90 90 0 0 1 190 100" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8" stroke-linecap="round" />
               <path
                 class="health-arc-fill"
                 [class.health-arc-fill--healthy]="healthTier === 'healthy'"
@@ -236,7 +236,7 @@
                 [class.health-arc-fill--needs-attention]="healthTier === 'needs-attention'"
                 [class.health-arc-fill--critical]="healthTier === 'critical'"
                 [class.health-arc-fill--draw]="showArcDraw"
-                d="M 10 65 A 100 100 0 0 1 190 65"
+                d="M 10 100 A 90 90 0 0 1 190 100"
                 fill="none"
                 stroke-width="8"
                 stroke-linecap="round"

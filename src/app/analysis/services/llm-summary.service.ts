@@ -12,16 +12,6 @@ import { DataFlowSummaryPromptBuilder } from '@app/ai/prompts/data-flow-summary-
 
 const LLM_TIMEOUT_MS = 120_000;
 
-/**
- * LLMSummaryService — owns the Prompt and Generate pipeline stages.
- *
- * After all Derive stages complete, AIAnalysisService calls runAll() here.
- * This service builds one prompt per page, calls the LLM for each in parallel,
- * and merges each generated narrative into model.ai.summaries as it arrives.
- *
- * If the LLM provider is not configured (aiExplain returns null), the stage
- * is skipped silently — no summary is stored and no fallback text is shown.
- */
 @Injectable({ providedIn: 'root' })
 export class LLMSummaryService {
   constructor(
@@ -35,30 +25,39 @@ export class LLMSummaryService {
     private readonly dataFlowPrompt: DataFlowSummaryPromptBuilder,
   ) {}
 
-  /**
-   * Build all applicable LLM prompts and generate narrative summaries.
-   * Runs all applicable summaries concurrently. Each result is merged into
-   * the workspace as it arrives — the UI updates progressively.
-   *
-   * If no provider URL has been configured by the user, the generate stage is
-   * skipped and the workspace is marked with a 'generate' failure so pages can
-   * show the "configure a provider" empty state instead of hiding the card.
-   */
   async runAll(workspaceId: string, model: KnowledgeModel, generation: number): Promise<void> {
-    if (!this.electron.isElectron) return;
+    console.log('[LLMSummary] runAll start', { workspaceId, generation, isElectron: this.electron.isElectron, hasAi: !!model.ai });
+
+    if (!this.electron.isElectron) {
+      console.log('[LLMSummary] early exit: not electron');
+      return;
+    }
 
     const ai = model.ai;
-    if (!ai) return;
+    if (!ai) {
+      console.log('[LLMSummary] early exit: model.ai is null/undefined');
+      return;
+    }
 
-    // Check that the user has explicitly configured a provider URL before spending
-    // time building prompts. getAiProviderUrl() returns null when no URL is stored.
-    const providerUrl = await this.electron.getAiProviderUrl();
+    console.log('[LLMSummary] ai keys present:', Object.keys(ai));
+
+    let providerUrl: string | null = null;
+    try {
+      providerUrl = await this.electron.getAiProviderUrl();
+      console.log('[LLMSummary] providerUrl=', providerUrl);
+    } catch (err) {
+      console.error('[LLMSummary] getAiProviderUrl threw:', err);
+      this.manager.markAIStageFailed(workspaceId, 'generate', generation, 'failed to read provider url');
+      return;
+    }
+
     if (!providerUrl) {
+      console.log('[LLMSummary] early exit: no provider url configured — marking no-provider');
       this.manager.markAIStageFailed(workspaceId, 'generate', generation, 'no-provider');
       return;
     }
 
-    // Mark prompt stage running — all prompt builds happen synchronously before any LLM call
+    console.log('[LLMSummary] building prompts...');
     this.manager.setStageRunning(workspaceId, 'prompt');
 
     const tasks: Array<{ key: LLMSummaryKey; prompt: string }> = [];
@@ -71,100 +70,101 @@ export class LLMSummaryService {
       const totalFiles = model.structure.totalFiles ?? 0;
       const structuralPatterns = model.relationships.architecture?.patterns ?? [];
 
+      console.log('[LLMSummary] prompt context:', { scope, workspaceName, totalFiles, languages, technologies });
+
       if (ai.understanding) {
+        console.log('[LLMSummary] building prompt: understanding');
         tasks.push({
           key: 'understanding',
           prompt: this.understandingPrompt.build({
-            workspaceName,
-            scope,
-            understanding: ai.understanding,
-            architecture: ai.architecture ?? null,
-            repositoryContext: null,
-            totalFiles,
-            languages,
-            technologies,
+            workspaceName, scope, understanding: ai.understanding,
+            architecture: ai.architecture ?? null, repositoryContext: null,
+            totalFiles, languages, technologies,
           }),
         });
+      } else {
+        console.log('[LLMSummary] skipping prompt: understanding (ai.understanding is falsy)');
       }
 
       if (ai.security) {
+        console.log('[LLMSummary] building prompt: security');
         tasks.push({
           key: 'security',
           prompt: this.securityPrompt.build({
-            workspaceName,
-            scope,
-            languages,
-            technologies,
+            workspaceName, scope, languages, technologies,
             architecturePatterns: structuralPatterns.map(p => p.name),
-            security: ai.security,
-            architecture: ai.architecture ?? null,
+            security: ai.security, architecture: ai.architecture ?? null,
           }),
         });
+      } else {
+        console.log('[LLMSummary] skipping prompt: security (ai.security is falsy)');
       }
 
       if (ai.recommendations) {
+        console.log('[LLMSummary] building prompt: recommendations');
         tasks.push({
           key: 'recommendations',
           prompt: this.recommendationsPrompt.build({
-            workspaceName,
-            scope,
-            recommendations: ai.recommendations,
-            architecture: ai.architecture ?? null,
-            totalFiles,
-            languages,
+            workspaceName, scope, recommendations: ai.recommendations,
+            architecture: ai.architecture ?? null, totalFiles, languages,
           }),
         });
+      } else {
+        console.log('[LLMSummary] skipping prompt: recommendations (ai.recommendations is falsy)');
       }
 
       if (ai.learningPath) {
+        console.log('[LLMSummary] building prompt: learningPath');
         tasks.push({
           key: 'learningPath',
           prompt: this.learningPathPrompt.build({
-            workspaceName,
-            scope,
-            learningPath: ai.learningPath,
-            understanding: ai.understanding ?? null,
-            totalFiles,
-            languages,
+            workspaceName, scope, learningPath: ai.learningPath,
+            understanding: ai.understanding ?? null, totalFiles, languages,
           }),
         });
+      } else {
+        console.log('[LLMSummary] skipping prompt: learningPath (ai.learningPath is falsy)');
       }
 
       if (ai.architecture) {
+        console.log('[LLMSummary] building prompt: architecture');
         tasks.push({
           key: 'architecture',
           prompt: this.architecturePrompt.build({
-            workspaceName,
-            scope,
-            architecture: ai.architecture,
-            structuralPatterns,
-            totalFiles,
-            languages,
-            technologies,
+            workspaceName, scope, architecture: ai.architecture,
+            structuralPatterns, totalFiles, languages, technologies,
           }),
         });
+      } else {
+        console.log('[LLMSummary] skipping prompt: architecture (ai.architecture is falsy)');
       }
 
       if (ai.dataFlow) {
+        console.log('[LLMSummary] building prompt: dataFlow');
         tasks.push({
           key: 'dataFlow',
           prompt: this.dataFlowPrompt.build({
-            workspaceName,
-            scope,
-            dataFlow: ai.dataFlow,
-            architecture: ai.architecture ?? null,
-            totalFiles,
-            languages,
+            workspaceName, scope, dataFlow: ai.dataFlow,
+            architecture: ai.architecture ?? null, totalFiles, languages,
           }),
         });
+      } else {
+        console.log('[LLMSummary] skipping prompt: dataFlow (ai.dataFlow is falsy)');
       }
+
+      console.log(`[LLMSummary] prompt build complete — ${tasks.length} tasks:`, tasks.map(t => t.key));
+    } catch (err) {
+      console.error('[LLMSummary] error during prompt building:', err);
     } finally {
       this.manager.clearStageRunning(workspaceId, 'prompt');
     }
 
-    if (tasks.length === 0) return;
+    if (tasks.length === 0) {
+      console.log('[LLMSummary] early exit: no tasks built (all ai fields were falsy)');
+      return;
+    }
 
-    // Mark generate stage running for the full parallel batch
+    console.log(`[LLMSummary] starting generate stage for ${tasks.length} tasks`);
     this.manager.setStageRunning(workspaceId, 'generate');
 
     try {
@@ -172,32 +172,29 @@ export class LLMSummaryService {
         tasks.map(task => this._generateAndMerge(workspaceId, model, generation, task.key, task.prompt)),
       );
 
-      // results[i] is true if the key was generated successfully, false if it failed.
+      console.log('[LLMSummary] all generate calls settled:', results.map((ok, i) => `${tasks[i].key}=${ok}`));
+
       const anyFailed  = results.some(ok => !ok);
       const anySuccess = results.some(ok => ok);
 
       if (!anySuccess) {
-        // Every call failed — mark generate as failed
+        console.error('[LLMSummary] generate stage: ALL tasks failed');
         this.manager.markAIStageFailed(workspaceId, 'generate', generation, 'All summary generations failed');
       } else if (anyFailed) {
-        // Partial success — some keys have summaries, some do not
+        console.warn('[LLMSummary] generate stage: partial success');
         this.manager.markAIStagePartial(workspaceId, 'generate', generation);
       } else {
-        // All keys succeeded
+        console.log('[LLMSummary] generate stage: all tasks succeeded');
         this.manager.mergeAIResults(workspaceId, {}, 'generate', generation);
       }
-    } catch {
-      // Individual failures are handled inside _generateAndMerge — this guard
-      // handles unexpected Promise.all-level errors only.
+    } catch (err) {
+      console.error('[LLMSummary] unexpected error in Promise.all:', err);
       this.manager.markAIStageFailed(workspaceId, 'generate', generation, 'Unexpected error during generate stage');
     } finally {
       this.manager.clearStageRunning(workspaceId, 'generate');
     }
   }
 
-  /**
-   * Returns true if the key was stored successfully, false if the call failed.
-   */
   private async _generateAndMerge(
     workspaceId: string,
     model: KnowledgeModel,
@@ -205,24 +202,29 @@ export class LLMSummaryService {
     key: LLMSummaryKey,
     prompt: string,
   ): Promise<boolean> {
+    console.log(`[LLMSummary] _generateAndMerge start key=${key} promptLength=${prompt.length}`);
     try {
+      console.log(`[LLMSummary] calling aiExplain key=${key}`);
       const text = await this._withTimeout(
         this.electron.aiExplain(prompt),
         LLM_TIMEOUT_MS,
         key,
       );
 
+      console.log(`[LLMSummary] aiExplain returned key=${key} text=${text === null ? 'NULL' : text === undefined ? 'UNDEFINED' : `string(${(text as string).length})`}`);
+
       if (text === null || text === undefined) {
+        console.warn(`[LLMSummary] key=${key} returned null/undefined — skipping merge`);
         return false;
       }
 
-      // Use mergeSummaryKey which reads and writes atomically in a single patch(),
-      // preventing concurrent calls from overwriting each other's key.
+      console.log(`[LLMSummary] merging key=${key}`);
       this.manager.mergeSummaryKey(workspaceId, key, text, generation);
+      console.log(`[LLMSummary] merge complete key=${key}`);
       return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error(`[LLMSummary] FAILED key=${key}`, message);
+      console.error(`[LLMSummary] FAILED key=${key}`, message, err);
       return false;
     }
   }
@@ -230,7 +232,10 @@ export class LLMSummaryService {
   private _withTimeout<T>(promise: Promise<T>, ms: number, key: string): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const timer = setTimeout(
-        () => reject(new Error(`LLM generate timed out after ${ms}ms for summary key=${key}`)),
+        () => {
+          console.error(`[LLMSummary] TIMEOUT key=${key} after ${ms}ms`);
+          reject(new Error(`LLM generate timed out after ${ms}ms for summary key=${key}`));
+        },
         ms,
       );
       promise.then(

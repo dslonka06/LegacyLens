@@ -912,11 +912,11 @@
 .health-arc-wrap {
   position: relative;
   width: 100%;
-  height: 70px;
+  height: 100px;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  padding-bottom: 8px;
+  padding-top: 8px;
 }
 
 .health-arc {
@@ -927,11 +927,12 @@
   height: 100%;
 }
 
-// Shallow arc: M 10 65 A 100 100 0 0 1 190 65 in viewBox 0 0 200 70
-// Large radius (100) relative to chord (180) = flat arc — arc length ≈ 196
+// Arc: M 10 100 A 90 90 0 0 1 190 100 — endpoints at left/right poles of r=90
+// circle centered at (100,100), so tangents are perfectly vertical at both ends.
+// ViewBox 0 0 200 105. Arc length = π * 90 ≈ 283
 .health-arc-fill {
-  stroke-dasharray: 196;
-  stroke-dashoffset: 196;
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
   transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1),
               filter 0.9s ease;
 
@@ -943,9 +944,9 @@
 
 .health-arc-fill--draw {
   &.health-arc-fill--healthy         { stroke-dashoffset: 0;   }
-  &.health-arc-fill--fair            { stroke-dashoffset: 49;  }
-  &.health-arc-fill--needs-attention { stroke-dashoffset: 98;  }
-  &.health-arc-fill--critical        { stroke-dashoffset: 147; }
+  &.health-arc-fill--fair            { stroke-dashoffset: 71;  }
+  &.health-arc-fill--needs-attention { stroke-dashoffset: 142; }
+  &.health-arc-fill--critical        { stroke-dashoffset: 212; }
 }
 
 .health-tier-label {
@@ -961,6 +962,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-top: 12px;
 }
 
 .health-stat {
