@@ -912,50 +912,45 @@
 .health-arc-wrap {
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 140px;
-  height: 140px;
+  width: 100%;
 }
 
 .health-arc {
-  position: absolute;
-  inset: 0;
   width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
+  max-width: 200px;
+  height: auto;
+  display: block;
 }
 
-// Full circle circumference: 2 * π * 42 ≈ 264
+// Semicircle path: M 10 76 A 60 60 0 0 1 190 76 in viewBox 0 0 200 80
+// Circumference of full circle r=60: 2 * π * 60 ≈ 377 — half ≈ 188
 .health-arc-fill {
-  stroke-dasharray: 264;
-  stroke-dashoffset: 264;
+  stroke-dasharray: 188;
+  stroke-dashoffset: 188;
   transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1),
               filter 0.9s ease;
 
-  &--healthy         { stroke: var(--success); filter: drop-shadow(0 0 6px var(--success)); }
-  &--fair            { stroke: var(--warning); filter: drop-shadow(0 0 6px var(--warning)); }
-  &--needs-attention { stroke: #f97316;        filter: drop-shadow(0 0 6px #f97316); }
-  &--critical        { stroke: var(--error);   filter: drop-shadow(0 0 6px var(--error)); }
+  &--healthy         { stroke: var(--success); filter: drop-shadow(0 0 5px var(--success)); }
+  &--fair            { stroke: var(--warning); filter: drop-shadow(0 0 5px var(--warning)); }
+  &--needs-attention { stroke: #f97316;        filter: drop-shadow(0 0 5px #f97316); }
+  &--critical        { stroke: var(--error);   filter: drop-shadow(0 0 5px var(--error)); }
 }
 
-// Tier offsets: healthy=full(0), fair=75%(66), needs-attention=50%(132), critical=25%(198)
 .health-arc-fill--draw {
   &.health-arc-fill--healthy         { stroke-dashoffset: 0;   }
-  &.health-arc-fill--fair            { stroke-dashoffset: 66;  }
-  &.health-arc-fill--needs-attention { stroke-dashoffset: 132; }
-  &.health-arc-fill--critical        { stroke-dashoffset: 198; }
+  &.health-arc-fill--fair            { stroke-dashoffset: 47;  }
+  &.health-arc-fill--needs-attention { stroke-dashoffset: 94;  }
+  &.health-arc-fill--critical        { stroke-dashoffset: 141; }
 }
 
 .health-tier-label {
-  position: relative;
   font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
   text-align: center;
-  line-height: 1.2;
-  max-width: 80px;
-  z-index: 1;
+  margin-top: 6px;
 }
 
 .health-stats {
@@ -1007,10 +1002,10 @@
 }
 
 .pipeline-bubble {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border: 2px solid var(--border);
+  border: 1.5px solid var(--border);
   background: transparent;
   display: flex;
   align-items: center;
@@ -1044,15 +1039,15 @@
 }
 
 .pipeline-bubble-pulse {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--accent);
   animation: pulse 1.2s ease-in-out infinite;
 }
 
 .pipeline-bubble-label {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-muted);
   text-align: center;
   line-height: 1.2;
@@ -1064,10 +1059,10 @@
 
 .pipeline-connector {
   flex: 0 0 auto;
-  width: 20px;
-  height: 2px;
+  width: 10px;
+  height: 1.5px;
   background: var(--border);
-  margin-top: 13px;
+  margin-top: 10px;
   transition: background 0.2s;
 
   &--complete { background: var(--success); }
@@ -1189,6 +1184,7 @@
     margin-top: 0;
     padding-top: 0;
     border-top: none;
+    flex: 1;
   }
 }
 

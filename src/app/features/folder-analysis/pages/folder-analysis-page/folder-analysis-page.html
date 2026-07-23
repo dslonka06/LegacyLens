@@ -168,14 +168,14 @@
         <!-- Name + subtype + description -->
         <div class="identity-info">
           <span class="identity-filename">{{ folderName }}</span>
-          <div class="identity-role-tags" *ngIf="detectedRoleTags.length">
-            <span class="identity-role-tag" *ngFor="let tag of detectedRoleTags">{{ tag }}</span>
-          </div>
           <span
             class="identity-desc"
             *ngIf="executiveSummary"
             [class.identity-desc--typing]="!isReturning"
           >{{ executiveSummary | slice:0:160 }}</span>
+          <div class="identity-role-tags" *ngIf="detectedRoleTags.length">
+            <span class="identity-role-tag" *ngFor="let tag of detectedRoleTags">{{ tag }}</span>
+          </div>
         </div>
 
         <div class="identity-spacer"></div>
@@ -237,18 +237,18 @@
             </svg>
           </div>
           <div class="health-arc-wrap">
-            <svg class="health-arc" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="7" />
-              <circle
+            <svg class="health-arc" viewBox="0 0 200 80" preserveAspectRatio="xMidYMid meet">
+              <path d="M 10 76 A 60 60 0 0 1 190 76" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8" stroke-linecap="round" />
+              <path
                 class="health-arc-fill"
                 [class.health-arc-fill--healthy]="healthTier === 'healthy'"
                 [class.health-arc-fill--fair]="healthTier === 'fair'"
                 [class.health-arc-fill--needs-attention]="healthTier === 'needs-attention'"
                 [class.health-arc-fill--critical]="healthTier === 'critical'"
                 [class.health-arc-fill--draw]="showArcDraw"
-                cx="50" cy="50" r="42"
+                d="M 10 76 A 60 60 0 0 1 190 76"
                 fill="none"
-                stroke-width="7"
+                stroke-width="8"
                 stroke-linecap="round"
               />
             </svg>
