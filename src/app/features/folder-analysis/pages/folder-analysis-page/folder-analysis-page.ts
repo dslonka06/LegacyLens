@@ -534,30 +534,20 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
   get identityMetrics(): { label: string; value: string }[] {
     if (!this.model) return [];
-    const primaryLang = this.model.structure.languages?.[0] ?? '—';
-    const primaryRole = this.model.relationships.architecture?.patterns?.[0]?.name ?? '—';
     return [
-      { label: 'Primary Language', value: primaryLang },
+      { label: 'Primary Language', value: this.model.structure.languages?.[0] ?? '—' },
       { label: 'Files', value: String(this.fileCount) },
-      { label: 'Primary Role', value: primaryRole },
+      { label: 'Subfolders', value: String(this.subfolderCount) },
     ];
   }
 
   // ── Detected role tags ─────────────────────────────────────────
 
   get detectedRoleTags(): string[] {
-    const u = this.model?.ai?.understanding;
-    const patterns = this.model?.relationships.architecture?.patterns ?? [];
-    const tags: string[] = [];
-    if (patterns[0]?.name) tags.push(patterns[0].name);
-    const caps = u?.coreCapabilities?.slice(0, 2).map((c) => c.name) ?? [];
-    for (const cap of caps) {
-      if (!tags.includes(cap)) tags.push(cap);
-    }
-    if (u?.keyResponsibilities?.[0] && !tags.includes(u.keyResponsibilities[0])) {
-      tags.push(u.keyResponsibilities[0]);
-    }
-    return tags.slice(0, 3);
+    const langs = this.model?.structure.languages ?? [];
+    const techs = (this.model?.structure.technologies ?? []).map((t: any) => t.technology ?? t);
+    const combined = [...new Set([...langs, ...techs])];
+    return combined.filter(Boolean).slice(0, 5);
   }
 
   // ── AI analysis statistics ─────────────────────────────────────
@@ -576,41 +566,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   }
 
   get executiveSummary(): string {
-    const u = this.model?.ai?.understanding;
-    if (!u) return '';
-
-    const parts: string[] = [];
-
-    // File count + primary language
-    const fileCount = this.model?.structure.totalFiles;
-    const lang = this.model?.structure.languages?.[0];
-    const tech = this.model?.structure.technologies?.[0]?.technology;
-    if (fileCount && lang) parts.push(`${fileCount} files · ${tech ? tech : lang}`);
-    else if (fileCount) parts.push(`${fileCount} files`);
-
-    // Architecture pattern
-    const pattern = this.model?.relationships.architecture?.patterns?.[0]?.name;
-    if (pattern) parts.push(pattern);
-
-    // Overall health signal
-    const h = u.health;
-    if (h) {
-      const lows = [h.complexity, h.riskLevel, h.maintainability, h.modernizationReadiness]
-        .filter(v => v === 'Low').length;
-      if (lows >= 2) parts.push('health concerns flagged');
-      else if (h.riskLevel === 'Low') parts.push('risk flagged');
-    }
-
-    // Security signal
-    const sec = this.model?.ai?.security;
-    if (sec && (sec.overallRisk === 'critical' || sec.overallRisk === 'high')) {
-      const critCount = sec.findings.filter(f => f.severity === 'critical').length;
-      const highCount = sec.findings.filter(f => f.severity === 'high').length;
-      const label = critCount > 0 ? `${critCount} critical finding${critCount > 1 ? 's' : ''}` : `${highCount} high finding${highCount > 1 ? 's' : ''}`;
-      parts.push(label);
-    }
-
-    return parts.length ? parts.join(' · ') : (u.executiveSummary ?? '');
+    return this.model?.ai?.understanding?.executiveSummary ?? '';
   }
 
   // ── Metric cards ───────────────────────────────────────────────────────────

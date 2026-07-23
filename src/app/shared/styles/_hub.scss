@@ -910,42 +910,52 @@
 }
 
 .health-arc-wrap {
+  position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  width: 140px;
+  height: 140px;
 }
 
 .health-arc {
-  width: 100px;
-  height: 60px;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
 }
 
-// Arc draw animation — triggered by --draw class added after mount
-// Arc path: M 10 56 A 42 42 0 0 1 90 56 — approx length 132
+// Full circle circumference: 2 * π * 42 ≈ 264
 .health-arc-fill {
-  stroke-dasharray: 132;
-  stroke-dashoffset: 132;
-  transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  stroke-dasharray: 264;
+  stroke-dashoffset: 264;
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.9s ease;
 
-  &--healthy          { stroke: var(--success);  }
-  &--fair             { stroke: var(--warning);  }
-  &--needs-attention  { stroke: #f97316;         }
-  &--critical         { stroke: var(--error);    }
+  &--healthy         { stroke: var(--success); filter: drop-shadow(0 0 6px var(--success)); }
+  &--fair            { stroke: var(--warning); filter: drop-shadow(0 0 6px var(--warning)); }
+  &--needs-attention { stroke: #f97316;        filter: drop-shadow(0 0 6px #f97316); }
+  &--critical        { stroke: var(--error);   filter: drop-shadow(0 0 6px var(--error)); }
 }
 
-// Applied by component after animation delay to trigger arc draw
+// Tier offsets: healthy=full(0), fair=75%(66), needs-attention=50%(132), critical=25%(198)
 .health-arc-fill--draw {
-  &.health-arc-fill--healthy        { stroke-dashoffset: 0;   }
-  &.health-arc-fill--fair           { stroke-dashoffset: 33;  }
-  &.health-arc-fill--needs-attention { stroke-dashoffset: 66;  }
-  &.health-arc-fill--critical       { stroke-dashoffset: 99;  }
+  &.health-arc-fill--healthy         { stroke-dashoffset: 0;   }
+  &.health-arc-fill--fair            { stroke-dashoffset: 66;  }
+  &.health-arc-fill--needs-attention { stroke-dashoffset: 132; }
+  &.health-arc-fill--critical        { stroke-dashoffset: 198; }
 }
 
 .health-tier-label {
-  font-size: 15px;
+  position: relative;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 80px;
+  z-index: 1;
 }
 
 .health-stats {
@@ -1097,8 +1107,9 @@
 
 .pipeline-substep-list {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px 12px;
 }
 
 .pipeline-substep-item {
@@ -1137,7 +1148,7 @@
 
 .pipeline-card-footer {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
   margin-top: auto;
@@ -1173,6 +1184,12 @@
   border-top: 1px solid color-mix(in srgb, var(--error) 25%, transparent);
 
   svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  &--inline {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
 }
 
 .pipeline-stats {
@@ -1670,27 +1687,15 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
+  gap: 6px;
+  min-width: 160px;
 }
 
 .identity-metric-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.identity-metric-icon {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  color: var(--text-muted);
-}
-
-.identity-metric-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0px;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .identity-metric-label {
@@ -1699,12 +1704,15 @@
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .identity-metric-val {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
+  text-align: right;
+  white-space: nowrap;
 }
 
 // AI description with typewriter animation

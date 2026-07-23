@@ -106,13 +106,8 @@
           <!-- Right metrics stack — shown once model is available -->
           <div class="identity-metrics" *ngIf="hasModel">
             <div class="identity-metric-item" *ngFor="let m of identityMetrics">
-              <svg class="identity-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path [attr.d]="m.icon" />
-              </svg>
-              <div class="identity-metric-text">
-                <span class="identity-metric-label">{{ m.label }}</span>
-                <span class="identity-metric-val">{{ m.value }}</span>
-              </div>
+              <span class="identity-metric-label">{{ m.label }}</span>
+              <span class="identity-metric-val">{{ m.value }}</span>
             </div>
           </div>
 
@@ -175,16 +170,16 @@
         </div>
 
         <div class="health-arc-wrap">
-          <svg class="health-arc" viewBox="0 0 100 60">
-            <path d="M 10 56 A 42 42 0 0 1 90 56" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7" stroke-linecap="round" />
-            <path
+          <svg class="health-arc" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="7" />
+            <circle
               class="health-arc-fill"
               [class.health-arc-fill--healthy]="healthTier === 'healthy'"
               [class.health-arc-fill--fair]="healthTier === 'fair'"
               [class.health-arc-fill--needs-attention]="healthTier === 'needs-attention'"
               [class.health-arc-fill--critical]="healthTier === 'critical'"
               [class.health-arc-fill--draw]="showArcDraw"
-              d="M 10 56 A 42 42 0 0 1 90 56"
+              cx="50" cy="50" r="42"
               fill="none"
               stroke-width="7"
               stroke-linecap="round"
@@ -311,12 +306,6 @@
           </div>
 
           <div class="pipeline-card-footer">
-            <div class="pipeline-stats" *ngIf="aiStats.length && !aiPipeline.isRunning">
-              <div class="pipeline-stat" *ngFor="let stat of aiStats">
-                <span class="pipeline-stat-val">{{ stat.value }}</span>
-                <span class="pipeline-stat-label">{{ stat.label }}</span>
-              </div>
-            </div>
             <button class="pipeline-configure-btn" (click)="navigate('/settings')">Configure AI</button>
           </div>
         </ng-container>

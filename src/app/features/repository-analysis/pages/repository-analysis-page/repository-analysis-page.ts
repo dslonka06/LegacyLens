@@ -531,6 +531,10 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     return this.model?.structure.totalFiles ?? 0;
   }
 
+  get subfolderCount(): number {
+    return this.model?.structure.folderTree?.children.length ?? 0;
+  }
+
   get languageList(): string {
     const langs = this.model?.structure.languages ?? [];
     return langs.length ? langs.slice(0, 3).join(', ') : '—';
@@ -664,29 +668,20 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   get identityMetrics(): { label: string; value: string }[] {
     if (!this.model) return [];
-    const primaryLang = this.model.structure.languages?.[0] ?? '—';
-    const architecture = this.model.relationships.architecture?.patterns?.[0]?.name ?? '—';
     return [
-      { label: 'Primary Language', value: primaryLang },
+      { label: 'Primary Language', value: this.model.structure.languages?.[0] ?? '—' },
       { label: 'Files', value: String(this.fileCount) },
-      { label: 'Architecture', value: architecture },
+      { label: 'Subfolders', value: String(this.subfolderCount) },
     ];
   }
 
   // ── Detected role tags ─────────────────────────────────────────
 
   get detectedRoleTags(): string[] {
-    const u = this.model?.ai?.understanding;
-    const patterns = this.model?.relationships.architecture?.patterns ?? [];
-    const techs = this.model?.structure.technologies ?? [];
-    const tags: string[] = [];
-    if (patterns[0]?.name) tags.push(patterns[0].name);
-    if (techs[0]?.technology && techs[0].technology !== patterns[0]?.name) {
-      tags.push(techs[0].technology);
-    }
-    const cap = u?.coreCapabilities?.[0]?.name;
-    if (cap && !tags.includes(cap)) tags.push(cap);
-    return tags.slice(0, 3);
+    const langs = this.model?.structure.languages ?? [];
+    const techs = (this.model?.structure.technologies ?? []).map((t: any) => t.technology ?? t);
+    const combined = [...new Set([...langs, ...techs])];
+    return combined.filter(Boolean).slice(0, 5);
   }
 
   // ── AI analysis statistics ─────────────────────────────────────
@@ -705,43 +700,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   }
 
   get executiveSummary(): string {
-    const u = this.model?.ai?.understanding;
-    if (!u) return '';
-
-    const parts: string[] = [];
-
-    // File count + primary language/tech
-    const fileCount = this.model?.structure.totalFiles;
-    const lang = this.model?.structure.languages?.[0];
-    const tech = this.model?.structure.technologies?.[0]?.technology;
-    if (fileCount && lang) parts.push(`${fileCount} files · ${tech ? tech : lang}`);
-    else if (fileCount) parts.push(`${fileCount} files`);
-
-    // Architecture pattern
-    const pattern = this.model?.relationships.architecture?.patterns?.[0]?.name;
-    if (pattern) parts.push(pattern);
-
-    // Business criticality if notable
-    if (u.businessCriticality === 'Critical' || u.businessCriticality === 'High') {
-      parts.push(`${u.businessCriticality.toLowerCase()} criticality`);
-    }
-
-    // Security signal
-    const sec = this.model?.ai?.security;
-    if (sec && (sec.overallRisk === 'critical' || sec.overallRisk === 'high')) {
-      const critCount = sec.findings.filter(f => f.severity === 'critical').length;
-      const highCount = sec.findings.filter(f => f.severity === 'high').length;
-      const label = critCount > 0 ? `${critCount} critical finding${critCount > 1 ? 's' : ''}` : `${highCount} high finding${highCount > 1 ? 's' : ''}`;
-      parts.push(label);
-    }
-
-    // Debt hotspots if any
-    const hotspotCount = u.technicalDebtHotspots?.length ?? 0;
-    if (hotspotCount > 0 && !parts.some(p => p.includes('finding'))) {
-      parts.push(`${hotspotCount} debt hotspot${hotspotCount > 1 ? 's' : ''}`);
-    }
-
-    return parts.length ? parts.join(' · ') : (u.executiveSummary ?? '');
+    return this.model?.ai?.understanding?.executiveSummary ?? '';
   }
 
   // ── Metric cards ───────────────────────────────────────────────────────────

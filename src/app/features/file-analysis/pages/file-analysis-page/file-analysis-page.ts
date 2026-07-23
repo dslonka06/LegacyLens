@@ -580,16 +580,10 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   // ── Detected role tags ─────────────────────────────────────────
 
   get detectedRoleTags(): string[] {
-    const u = this.model?.ai?.understanding;
-    if (!u) return [];
-    const tags: string[] = [];
-    const resp = u.keyResponsibilities?.[0];
-    if (resp) tags.push(resp);
-    const caps = u.coreCapabilities?.slice(0, 2).map((c) => c.name) ?? [];
-    for (const cap of caps) {
-      if (!tags.includes(cap)) tags.push(cap);
-    }
-    return tags.slice(0, 3);
+    const lang = this.model?.structure.fileLanguage ?? this.model?.structure.languages?.[0];
+    const techs = (this.model?.structure.technologies ?? []).map((t: any) => t.technology ?? t);
+    const combined = [...new Set([...(lang ? [lang] : []), ...techs])];
+    return combined.filter(Boolean).slice(0, 5);
   }
 
   // ── AI analysis statistics ─────────────────────────────────────
@@ -766,62 +760,16 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     return graph.edges.filter(e => e.target === node.id).length;
   }
 
-  get identityMetrics(): { icon: string; label: string; value: string }[] {
+  get identityMetrics(): { label: string; value: string }[] {
     if (!this.model) return [];
     return [
-      {
-        icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
-        label: 'Language',
-        value: this.language || '—',
-      },
-      {
-        icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6',
-        label: 'Size',
-        value: this.fileSize,
-      },
-      {
-        icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
-        label: 'Lines',
-        value: this.lineCount,
-      },
-      {
-        icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
-        label: 'Symbols',
-        value: this.symbolTotal !== null ? String(this.symbolTotal) : '—',
-      },
+      { label: 'Language', value: this.language || '—' },
+      { label: 'Size', value: this.fileSize },
+      { label: 'Lines', value: this.lineCount },
     ];
   }
 
   get executiveSummary(): string {
-    const u = this.model?.ai?.understanding;
-    if (!u) return '';
-
-    const parts: string[] = [];
-
-    // Language + type
-    const lang = this.model?.structure.fileLanguage ?? this.model?.structure.languages?.[0];
-    const kind = u.keyResponsibilities?.[0] ?? null;
-    if (lang && kind) parts.push(`${lang} · ${kind}`);
-    else if (lang) parts.push(lang);
-
-    // Health signal
-    const h = u.health;
-    if (h) {
-      const worstHealth = [h.complexity, h.riskLevel, h.maintainability]
-        .filter(v => v === 'Low').length;
-      if (worstHealth >= 2) parts.push('health concerns flagged');
-      else if (h.riskLevel === 'Low') parts.push('risk flagged');
-    }
-
-    // Security signal
-    const sec = this.model?.ai?.security;
-    if (sec && (sec.overallRisk === 'critical' || sec.overallRisk === 'high')) {
-      const critCount = sec.findings.filter(f => f.severity === 'critical').length;
-      const highCount = sec.findings.filter(f => f.severity === 'high').length;
-      const label = critCount > 0 ? `${critCount} critical finding${critCount > 1 ? 's' : ''}` : `${highCount} high finding${highCount > 1 ? 's' : ''}`;
-      parts.push(label);
-    }
-
-    return parts.length ? parts.join(' · ') : (u.executiveSummary ?? '');
+    return this.model?.ai?.understanding?.executiveSummary ?? '';
   }
 }

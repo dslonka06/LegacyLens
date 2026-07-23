@@ -227,16 +227,16 @@
             </svg>
           </div>
           <div class="health-arc-wrap">
-            <svg class="health-arc" viewBox="0 0 100 60">
-              <path d="M 10 56 A 42 42 0 0 1 90 56" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7" stroke-linecap="round" />
-              <path
+            <svg class="health-arc" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="7" />
+              <circle
                 class="health-arc-fill"
                 [class.health-arc-fill--healthy]="healthTier === 'healthy'"
                 [class.health-arc-fill--fair]="healthTier === 'fair'"
                 [class.health-arc-fill--needs-attention]="healthTier === 'needs-attention'"
                 [class.health-arc-fill--critical]="healthTier === 'critical'"
                 [class.health-arc-fill--draw]="showArcDraw"
-                d="M 10 56 A 42 42 0 0 1 90 56"
+                cx="50" cy="50" r="42"
                 fill="none"
                 stroke-width="7"
                 stroke-linecap="round"
@@ -350,21 +350,14 @@
               </div>
             </div>
 
-            <div class="pipeline-error-notice" *ngIf="aiPipeline.noProvider && !aiPipeline.isRunning">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>
-              No AI provider configured — AI explanations are unavailable.
-            </div>
-            <div class="pipeline-error-notice" *ngIf="aiPipeline.hasFailure && !aiPipeline.isRunning && !aiPipeline.noProvider">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>
-              Partial analysis — some stages failed.
-            </div>
-
             <div class="pipeline-card-footer">
-              <div class="pipeline-stats" *ngIf="aiStats.length && !aiPipeline.isRunning">
-                <div class="pipeline-stat" *ngFor="let stat of aiStats">
-                  <span class="pipeline-stat-val">{{ stat.value }}</span>
-                  <span class="pipeline-stat-label">{{ stat.label }}</span>
-                </div>
+              <div class="pipeline-error-notice pipeline-error-notice--inline" *ngIf="aiPipeline.noProvider && !aiPipeline.isRunning">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>
+                No AI provider configured — AI explanations are unavailable.
+              </div>
+              <div class="pipeline-error-notice pipeline-error-notice--inline" *ngIf="aiPipeline.hasFailure && !aiPipeline.isRunning && !aiPipeline.noProvider">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>
+                Partial analysis — some stages failed.
               </div>
               <button class="pipeline-configure-btn" (click)="navigate('/settings')">Configure AI</button>
             </div>
