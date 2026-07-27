@@ -1,5 +1,6 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 const { openDatabase } = require('./main/database/database');
 const { registerRepositoryHandlers } = require('./main/ipc/repository.ipc');
@@ -28,8 +29,9 @@ function createWindow() {
     },
   });
 
-  if (app.isPackaged) {
-    win.loadFile(path.join(__dirname, '..', 'dist', 'browser', 'index.html'));
+  const distIndex = path.join(__dirname, '..', 'dist', 'browser', 'index.html');
+  if (app.isPackaged || fs.existsSync(distIndex)) {
+    win.loadFile(distIndex);
   } else {
     win.loadURL('http://localhost:4200');
   }

@@ -23,6 +23,23 @@
  */
 
 const PRESETS = [
+  // ── Local ─────────────────────────────────────────────────────────────────
+
+  {
+    id: 'ollama',
+    displayName: 'Ollama',
+    category: 'local',
+    protocol: 'ollama',
+    defaultBaseUrl: null,
+    requiresApiKey: false,
+    requiresHostInput: true,
+    supportsModelDiscovery: true,
+    suggestedModels: ['qwen3:8b', 'qwen3:4b', 'llama3.1:8b', 'deepseek-r1:8b'],
+    apiKeyUrl: null,
+    downloadUrl: 'https://ollama.com/download',
+    description: 'Run open-source models locally — free, private',
+  },
+
   // ── Cloud ─────────────────────────────────────────────────────────────────
 
   {
@@ -60,64 +77,6 @@ const PRESETS = [
   },
 
   {
-    id: 'groq',
-    displayName: 'Groq',
-    category: 'cloud',
-    protocol: 'openai-compat',
-    defaultBaseUrl: 'https://api.groq.com/openai/v1',
-    requiresApiKey: true,
-    requiresHostInput: false,
-    supportsModelDiscovery: false,
-    suggestedModels: [
-      'llama-3.3-70b-versatile',
-      'llama-3.1-8b-instant',
-      'mixtral-8x7b-32768',
-      'gemma2-9b-it',
-    ],
-    apiKeyUrl: 'https://console.groq.com/keys',
-    downloadUrl: null,
-    description: 'Fast inference — Llama, Mixtral, Gemma',
-  },
-
-  {
-    id: 'together',
-    displayName: 'Together AI',
-    category: 'cloud',
-    protocol: 'openai-compat',
-    defaultBaseUrl: 'https://api.together.xyz/v1',
-    requiresApiKey: true,
-    requiresHostInput: false,
-    supportsModelDiscovery: false,
-    suggestedModels: [
-      'meta-llama/Llama-3.3-70B-Instruct-Turbo',
-      'Qwen/Qwen2.5-72B-Instruct-Turbo',
-      'deepseek-ai/DeepSeek-R1',
-    ],
-    apiKeyUrl: 'https://api.together.xyz/settings/api-keys',
-    downloadUrl: null,
-    description: 'Llama, Qwen, DeepSeek, and 100+ models',
-  },
-
-  {
-    id: 'mistral',
-    displayName: 'Mistral',
-    category: 'cloud',
-    protocol: 'openai-compat',
-    defaultBaseUrl: 'https://api.mistral.ai/v1',
-    requiresApiKey: true,
-    requiresHostInput: false,
-    supportsModelDiscovery: false,
-    suggestedModels: [
-      'mistral-large-latest',
-      'mistral-small-latest',
-      'codestral-latest',
-    ],
-    apiKeyUrl: 'https://console.mistral.ai/api-keys',
-    downloadUrl: null,
-    description: 'Mistral Large, Small, and Codestral',
-  },
-
-  {
     id: 'openai-compat-custom',
     displayName: 'Custom Endpoint',
     category: 'cloud',
@@ -130,53 +89,6 @@ const PRESETS = [
     apiKeyUrl: null,
     downloadUrl: null,
     description: 'Any OpenAI-compatible API endpoint',
-  },
-
-  // ── Local ─────────────────────────────────────────────────────────────────
-
-  {
-    id: 'ollama',
-    displayName: 'Ollama',
-    category: 'local',
-    protocol: 'ollama',
-    defaultBaseUrl: null,
-    requiresApiKey: false,
-    requiresHostInput: true,
-    supportsModelDiscovery: true,
-    suggestedModels: ['qwen3:8b', 'qwen3:4b', 'llama3.1:8b', 'deepseek-r1:8b'],
-    apiKeyUrl: null,
-    downloadUrl: 'https://ollama.com/download',
-    description: 'Run open-source models locally — free, private',
-  },
-
-  {
-    id: 'lmstudio',
-    displayName: 'LM Studio',
-    category: 'local',
-    protocol: 'openai-compat',
-    defaultBaseUrl: 'http://localhost:1234/v1',
-    requiresApiKey: false,
-    requiresHostInput: true,
-    supportsModelDiscovery: false,
-    suggestedModels: [],
-    apiKeyUrl: null,
-    downloadUrl: 'https://lmstudio.ai',
-    description: 'Run models via LM Studio\'s local server',
-  },
-
-  {
-    id: 'jan',
-    displayName: 'Jan',
-    category: 'local',
-    protocol: 'openai-compat',
-    defaultBaseUrl: 'http://localhost:1337/v1',
-    requiresApiKey: false,
-    requiresHostInput: true,
-    supportsModelDiscovery: false,
-    suggestedModels: [],
-    apiKeyUrl: null,
-    downloadUrl: 'https://jan.ai',
-    description: 'Run models via Jan\'s local API server',
   },
 ];
 

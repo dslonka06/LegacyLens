@@ -105,10 +105,10 @@ class ProviderRegistry {
    * For Ollama: returns the list of installed models via /api/tags.
    * Returns [] if the active preset doesn't support discovery or the call fails.
    */
-  async discoverModels() {
-    const presetId = this.settings.get('activePresetId');
-    if (!presetId) return [];
-    const preset = getPresetById(presetId);
+  async discoverModels(presetId) {
+    const id = presetId ?? this.settings.get('activePresetId');
+    if (!id) return [];
+    const preset = getPresetById(id);
     if (!preset || preset.protocol !== 'ollama') return [];
     const provider = this._instantiate('ollama');
     if (typeof provider.getModels === 'function') return provider.getModels();

@@ -170,7 +170,7 @@ export class SystemUnderstandingEngine {
     const fileName = session.fileName;
 
     const executiveSummary = ai?.summary || analysis.summary ||
-      `${fileName} is a ${analysis.language} ${analysis.type} file.`;
+      this._buildFileSummary(fileName, analysis);
 
     const businessPurpose = ai?.businessPurpose || analysis.businessPurpose ||
       `This file implements ${analysis.type.toLowerCase()} functionality within the application.`;
@@ -485,6 +485,26 @@ export class SystemUnderstandingEngine {
     return [...techs].slice(0, 5);
   }
 
+  private _buildFileSummary(fileName: string, analysis: any): string {
+    const lang = analysis.language ?? 'unknown';
+    const responsibilities: string[] = analysis.responsibilities ?? [];
+    const deps: string[] = analysis.dependencies ?? [];
+
+    if (responsibilities.length > 0) {
+      const primary = responsibilities[0].toLowerCase().replace(/\.$/, '');
+      const extra = responsibilities.length > 1
+        ? ` alongside ${responsibilities.length - 1} other responsibilit${responsibilities.length === 2 ? 'y' : 'ies'}`
+        : '';
+      return `${fileName} is a ${lang} file that ${primary}${extra}.`;
+    }
+
+    if (deps.length > 0) {
+      return `${fileName} is a ${lang} file with ${deps.length} dependenc${deps.length === 1 ? 'y' : 'ies'}.`;
+    }
+
+    return `${fileName} is a ${lang} source file.`;
+  }
+
   private buildKnowledgeSummary(
     files: { path: string }[],
     patterns: { name: string }[],
@@ -492,19 +512,23 @@ export class SystemUnderstandingEngine {
     techs: string[],
     isRepo: boolean,
   ): string {
-    const scope = isRepo ? 'repository' : 'subsystem';
+    const scope = isRepo ? 'repository' : 'project';
     const fileCount = files.length;
     const primaryLang = langs[0] ?? 'unknown language';
+    const allLangs = langs.slice(0, 3);
+    const langStr = allLangs.length > 1
+      ? `${allLangs.slice(0, -1).join(', ')} and ${allLangs[allLangs.length - 1]}`
+      : primaryLang;
     const primaryPattern = patterns[0]?.name ?? '';
-    const primaryTech = techs[0] ?? '';
+    const techStr = techs.slice(0, 3).join(', ');
 
-    let summary = `This ${scope} contains ${fileCount} file${fileCount !== 1 ? 's' : ''} written primarily in ${primaryLang}`;
-    if (primaryTech) summary += `, built with ${primaryTech}`;
-    if (primaryPattern) summary += `. The codebase follows a ${primaryPattern} architectural pattern`;
+    let summary = `A ${fileCount}-file ${langStr} ${scope}`;
+    if (techStr) summary += ` using ${techStr}`;
+    if (primaryPattern) summary += `, following a ${primaryPattern} architecture`;
     summary += '.';
 
     if (isRepo && patterns.length > 1) {
-      summary += ` Additional patterns include ${patterns.slice(1, 3).map(p => p.name).join(' and ')}.`;
+      summary += ` Also exhibits ${patterns.slice(1, 3).map(p => p.name).join(' and ')} patterns.`;
     }
 
     return summary;

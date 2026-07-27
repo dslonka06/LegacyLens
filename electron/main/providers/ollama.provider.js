@@ -86,6 +86,7 @@ class OllamaProvider extends BaseAiProvider {
         model,
         messages,
         stream: false,
+        think: false,
         ...(maxTokens ? { options: { num_predict: maxTokens } } : {}),
       };
       const body = JSON.stringify(bodyObj);
@@ -101,31 +102,41 @@ class OllamaProvider extends BaseAiProvider {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(body),
         },
-        timeout: 300_000,
       };
+
+      let settled = false;
+      const done = (fn) => { if (!settled) { settled = true; fn(); } };
+
+      // Wall-clock timeout — http.request's built-in timeout only fires on
+      // socket inactivity, not total request duration.
+      const timer = setTimeout(() => {
+        done(() => {
+          req.destroy();
+          reject(new Error('Ollama request timed out after 300s'));
+        });
+      }, 300_000);
 
       const req = lib.request(options, (res) => {
         let data = '';
         res.on('data', chunk => { data += chunk; });
         res.on('end', () => {
-          if (res.statusCode < 200 || res.statusCode >= 300) {
-            reject(new Error(`Ollama API error ${res.statusCode}: ${data.slice(0, 300)}`));
-            return;
-          }
-          try {
-            const json = JSON.parse(data);
-            resolve(json?.message?.content ?? '');
-          } catch {
-            reject(new Error('Ollama returned non-JSON response'));
-          }
+          clearTimeout(timer);
+          done(() => {
+            if (res.statusCode < 200 || res.statusCode >= 300) {
+              reject(new Error(`Ollama API error ${res.statusCode}: ${data.slice(0, 300)}`));
+              return;
+            }
+            try {
+              const json = JSON.parse(data);
+              resolve(json?.message?.content ?? '');
+            } catch {
+              reject(new Error('Ollama returned non-JSON response'));
+            }
+          });
         });
       });
 
-      req.on('error', reject);
-      req.on('timeout', () => {
-        req.destroy();
-        reject(new Error('Ollama request timed out'));
-      });
+      req.on('error', (err) => { clearTimeout(timer); done(() => reject(err)); });
 
       req.write(body);
       req.end();

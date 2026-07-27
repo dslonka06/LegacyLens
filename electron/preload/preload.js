@@ -69,7 +69,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getProviders:     ()                           => invoke('ai:getProviders'),
     getPresets:       ()                           => invoke('ai:getPresets'),
     getCapabilities:  (presetId)                   => invoke('ai:getCapabilities', presetId),
-    discoverModels:   ()                           => invoke('ai:discoverModels'),
+    discoverModels:   (presetId)                    => invoke('ai:discoverModels', presetId),
     testConnection:   ()                           => invoke('ai:testConnection'),
     setApiKey:        (presetId, plainKey)         => invoke('ai:setApiKey', presetId, plainKey),
     isKeyConfigured:  (presetId)                   => invoke('ai:isKeyConfigured', presetId),
@@ -118,7 +118,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ── App info ──────────────────────────────────────────────────────────────
   app: {
-    getVersion: () => invoke('app:getVersion'),
+    getVersion:   () => invoke('app:getVersion'),
+    openExternal: (url) => invoke('app:openExternal', url),
   },
 
   // ── Auto-updater ──────────────────────────────────────────────────────────

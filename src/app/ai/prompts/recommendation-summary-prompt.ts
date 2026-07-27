@@ -67,7 +67,7 @@ export class RecommendationSummaryPromptBuilder {
     }
 
     if (recs.improvementThemes.length > 0) {
-      parts.push(`Recurring improvement themes: ${recs.improvementThemes.join(', ')}`);
+      parts.push(`Recurring improvement themes: ${recs.improvementThemes.slice(0, 6).join(', ')}`);
     }
 
     if (architecture) {

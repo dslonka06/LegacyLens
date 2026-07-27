@@ -8,8 +8,8 @@ export class AiAnalysisService {
   constructor(private readonly electron: ElectronService) {}
 
   analyze(fileName: string, sourceCode: string): Observable<AiAnalysisResult> {
-    return from(this.electron.aiAnalyze(fileName, sourceCode)).pipe(
-      catchError((err: Error) => throwError(() => err)),
-    ) as Observable<AiAnalysisResult>;
+    return from(
+      this.electron.aiAnalyze(fileName, sourceCode) as Promise<AiAnalysisResult>,
+    ).pipe(catchError((err: Error) => throwError(() => err)));
   }
 }

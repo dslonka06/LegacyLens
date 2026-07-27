@@ -33,11 +33,10 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 380px;
+  min-height: 440px;
   background: url('../../../../assets/HomepageBackground.png') top center / cover no-repeat;
   flex-shrink: 0;
-  padding-bottom: 40px;
-
+  padding-bottom: 0;
 }
 
 .hero-overlay {
@@ -151,12 +150,21 @@
   z-index: 2;
   max-width: 1040px;
   width: calc(100% - 64px);
-  margin: 68px auto 0;
+  margin: 120px auto 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 0;
   text-align: center;
+}
+
+// Reserved space so the sub-line never causes layout shift
+.hero-status-sub-reserved {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
 }
 
 .hero-status-headline {
@@ -223,7 +231,7 @@
   gap: 16px;
   max-width: 1040px;
   width: calc(100% - 64px);
-  margin: 64px auto 0;
+  margin: 48px auto 0;
 
   @media (max-width: 800px) {
     grid-template-columns: 1fr;
@@ -547,6 +555,58 @@
   svg { width: 14px; height: 14px; }
 
   &:hover { color: #c4b5fd; }
+}
+
+// ── Capabilities bar (floating base of hero) ─────────────────────────────────
+
+.hero-caps-bar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0;
+  max-width: 1040px;
+  width: calc(100% - 64px);
+  margin: 20px auto 0;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.hero-cap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 16px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.15s;
+
+  svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.85);
+    svg { opacity: 1; }
+  }
+}
+
+.hero-cap-sep {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
 }
 
 // ── Analysis Library preview (inside hero) ────────────────────────────────────

@@ -74,6 +74,11 @@ export class ElectronService {
     try { return await this.api.app.getVersion(); } catch { return ''; }
   }
 
+  async openExternal(url: string): Promise<void> {
+    if (!this.api) return;
+    await this.api.app.openExternal(url);
+  }
+
   // ── Repositories ──────────────────────────────────────────────────────────
 
   async getRepositories(): Promise<ElectronRepository[]> {
@@ -243,9 +248,9 @@ export class ElectronService {
     return this.api.ai.getCapabilities(presetId ?? undefined);
   }
 
-  async aiDiscoverModels(): Promise<string[]> {
+  async aiDiscoverModels(presetId?: string): Promise<string[]> {
     if (!this.api) return [];
-    return this.api.ai.discoverModels();
+    return this.api.ai.discoverModels(presetId);
   }
 
   async aiTestConnection(): Promise<{ ok: boolean; reason?: string }> {

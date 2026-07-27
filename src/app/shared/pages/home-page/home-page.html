@@ -24,34 +24,24 @@
       </div>
     </header>
 
-    <!-- Status-aware hero text -->
+    <!-- Status-aware hero text — fixed height so panels never shift -->
     <div class="hero-status" [class.hero-status--analyzing]="heroStatusState === 'analyzing'">
-
-      <!-- Idle: no recent analyses -->
-      <ng-container *ngIf="heroStatusState === 'idle'">
-        <span class="hero-status-headline">What will you analyze today?</span>
-      </ng-container>
-
-      <!-- Recent: has past analyses, none currently running -->
-      <ng-container *ngIf="heroStatusState === 'recent'">
-        <span class="hero-status-headline">What will you analyze today?</span>
-        <button class="hero-status-sub hero-status-sub--link" (click)="navigateToRecent()">
+      <span class="hero-status-headline">
+        <ng-container *ngIf="heroStatusState === 'analyzing'">
+          <span class="hero-status-pulse"></span>
+          Analyzing {{ heroStatusName }}…
+        </ng-container>
+        <ng-container *ngIf="heroStatusState !== 'analyzing'">What will you analyze today?</ng-container>
+      </span>
+      <div class="hero-status-sub-reserved">
+        <button class="hero-status-sub hero-status-sub--link" *ngIf="heroStatusState === 'recent'" (click)="navigateToRecent()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
           Last analyzed: <strong>{{ heroStatusName }}</strong>&nbsp;&nbsp;·&nbsp;&nbsp;{{ heroStatusTime }}
         </button>
-      </ng-container>
-
-      <!-- Analyzing: active pipeline running -->
-      <ng-container *ngIf="heroStatusState === 'analyzing'">
-        <span class="hero-status-headline">
-          <span class="hero-status-pulse"></span>
-          Analyzing {{ heroStatusName }}…
-        </span>
-        <span class="hero-status-sub">Building knowledge model and running AI pipeline</span>
-      </ng-container>
-
+        <span class="hero-status-sub" *ngIf="heroStatusState === 'analyzing'">Building knowledge model and running AI pipeline</span>
+      </div>
     </div>
 
     <!-- Two-column panel row -->
@@ -200,6 +190,64 @@
 
     </div>
 
+    <!-- Capabilities bar — floats at base of hero -->
+    <div class="hero-caps-bar">
+      <div class="hero-cap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        <span>Architecture</span>
+      </div>
+      <div class="hero-cap-sep"></div>
+      <div class="hero-cap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        <span>Data Flow</span>
+      </div>
+      <div class="hero-cap-sep"></div>
+      <div class="hero-cap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span>Security</span>
+      </div>
+      <div class="hero-cap-sep"></div>
+      <div class="hero-cap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 11 12 14 22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        <span>Recommendations</span>
+      </div>
+      <div class="hero-cap-sep"></div>
+      <div class="hero-cap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+        </svg>
+        <span>Learning Path</span>
+      </div>
+      <div class="hero-cap-sep"></div>
+      <div class="hero-cap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <span>System Understanding</span>
+      </div>
+      <div class="hero-cap-sep"></div>
+      <div class="hero-cap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <span>Documentation</span>
+      </div>
+    </div>
+
     <!-- Analysis Library preview — always shown inside hero area -->
     <div class="hero-library">
       <div class="hero-library-header">
@@ -256,120 +304,5 @@
 
   <!-- ── Body ─────────────────────────────────────────────────────────────── -->
   <main class="home-body">
-
-    <!-- Capabilities strip -->
-    <section class="home-caps">
-      <div class="section-header">
-        <span class="section-label">What you get</span>
-        <div class="section-line"></div>
-      </div>
-      <div class="caps-grid">
-        <div class="cap cap--arch">
-          <div class="cap-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="3" y="3" width="7" height="7" />
-              <rect x="14" y="3" width="7" height="7" />
-              <rect x="3" y="14" width="7" height="7" />
-              <rect x="14" y="14" width="7" height="7" />
-            </svg>
-          </div>
-          <span class="cap-label">Architecture</span>
-          <span class="cap-desc">Layers, patterns, system design</span>
-        </div>
-        <div class="cap cap--flow">
-          <div class="cap-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>
-          </div>
-          <span class="cap-label">Data Flow</span>
-          <span class="cap-desc">Workflows and interactions</span>
-        </div>
-        <div class="cap cap--security">
-          <div class="cap-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-          </div>
-          <span class="cap-label">Security</span>
-          <span class="cap-desc">Findings, risks, sensitive areas</span>
-        </div>
-        <div class="cap cap--recs">
-          <div class="cap-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <polyline points="9 11 12 14 22 4" />
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-            </svg>
-          </div>
-          <span class="cap-label">Recommendations</span>
-          <span class="cap-desc">Prioritized modernization roadmap</span>
-        </div>
-        <div class="cap cap--deps">
-          <div class="cap-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="18" cy="18" r="3" />
-              <circle cx="6" cy="6" r="3" />
-              <path d="M6 21V9a9 9 0 0 0 9 9" />
-            </svg>
-          </div>
-          <span class="cap-label">Dependencies</span>
-          <span class="cap-desc">Graphs, hubs, orphaned files</span>
-        </div>
-        <div class="cap cap--docs">
-          <div class="cap-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-          </div>
-          <span class="cap-label">Documentation</span>
-          <span class="cap-desc">AI-generated docs, export to PDF</span>
-        </div>
-      </div>
-    </section>
   </main>
 </div>

@@ -69,7 +69,7 @@ export class DataFlowSummaryPromptBuilder {
       parts.push(``, `Workflow risk profiles:`);
       for (const wf of df.primaryWorkflows.slice(0, 6)) {
         const bottleneckNote = wf.bottleneckNodes.length > 0
-          ? ` | bottlenecks: ${wf.bottleneckNodes.join(', ')}`
+          ? ` | bottlenecks: ${wf.bottleneckNodes.slice(0, 5).join(', ')}`
           : '';
         parts.push(`- ${wf.workflowName}: ${wf.stepCount} steps, entry: ${wf.entryPoint || 'unknown'}, risk: ${wf.failureRisk}${bottleneckNote}`);
       }

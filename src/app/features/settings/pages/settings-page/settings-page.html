@@ -35,72 +35,63 @@
     <div class="settings-group" *ngIf="electron.isElectron">
       <div class="settings-group-label">AI</div>
 
-      <!-- ── CONFIGURED STATE ─────────────────────────────────────────────── -->
-      <ng-container *ngIf="isConfigured && !showChangeProvider">
+      <!-- ── CONFIGURED STATUS CARD ────────────────────────────────────────── -->
+      <div class="ai-status-card" *ngIf="isConfigured">
+        <div class="ai-status-header">
+          <div class="ai-status-dot ai-status-dot--ok"></div>
+          <span class="ai-status-name">{{ activePreset?.displayName ?? activeStatus?.id }}</span>
+          <span class="ai-status-category">{{ activePreset?.category === 'local' ? 'Local' : 'Cloud' }}</span>
+        </div>
 
-        <!-- Current provider status card -->
-        <div class="ai-status-card">
-          <div class="ai-status-header">
-            <div class="ai-status-dot ai-status-dot--ok"></div>
-            <span class="ai-status-name">{{ activePreset?.displayName ?? activeStatus?.id }}</span>
-            <span class="ai-status-category">{{ activePreset?.category === 'local' ? 'Local' : 'Cloud' }}</span>
+        <div class="ai-status-meta">
+          <div class="ai-status-meta-row" *ngIf="activeModel">
+            <span class="ai-meta-label">Model</span>
+            <span class="ai-meta-val">{{ activeModel }}</span>
           </div>
-
-          <div class="ai-status-meta">
-            <div class="ai-status-meta-row" *ngIf="activeModel">
-              <span class="ai-meta-label">Model</span>
-              <span class="ai-meta-val">{{ activeModel }}</span>
-            </div>
-            <div class="ai-status-meta-row" *ngIf="activeStatus?.lastTestedAt">
-              <span class="ai-meta-label">Last tested</span>
-              <span class="ai-meta-val">{{ activeStatus!.lastTestedAt | date:'short' }}</span>
-            </div>
-            <div class="ai-status-meta-row" *ngIf="activeStatus?.available === false">
-              <span class="ai-meta-label ai-meta-label--warn">Connection failed</span>
-              <span class="ai-meta-val ai-meta-val--warn">{{ activeStatus?.reason }}</span>
-            </div>
+          <div class="ai-status-meta-row" *ngIf="activeStatus?.lastTestedAt">
+            <span class="ai-meta-label">Last tested</span>
+            <span class="ai-meta-val">{{ activeStatus!.lastTestedAt | date:'short' }}</span>
           </div>
-
-          <div class="ai-status-caps">
-            <span class="ai-cap">Repository Analysis</span>
-            <span class="ai-cap">AI Chat</span>
-            <span class="ai-cap">Documentation</span>
-          </div>
-
-          <div class="ai-status-actions">
-            <button class="btn-secondary" (click)="testConnection()" [disabled]="testState === 'testing'">
-              {{ testState === 'testing' ? 'Testing…' : 'Retest Connection' }}
-            </button>
-            <button class="btn-secondary" (click)="startChangeProvider()">Change Provider</button>
-          </div>
-
-          <div class="test-result" *ngIf="testState !== 'idle'" [class.ok]="testState === 'ok'" [class.fail]="testState === 'fail'">
-            <span *ngIf="testState === 'testing'">Testing connection…</span>
-            <span *ngIf="testState === 'ok'">Connection successful</span>
-            <span *ngIf="testState === 'fail'">Connection failed<ng-container *ngIf="testReason"> — {{ testReason }}</ng-container></span>
+          <div class="ai-status-meta-row" *ngIf="activeStatus?.available === false">
+            <span class="ai-meta-label ai-meta-label--warn">Connection failed</span>
+            <span class="ai-meta-val ai-meta-val--warn">{{ activeStatus?.reason }}</span>
           </div>
         </div>
 
-      </ng-container>
-
-      <!-- ── ONBOARDING / CHANGE PROVIDER ────────────────────────────────── -->
-      <ng-container *ngIf="!isConfigured || showChangeProvider">
-
-        <!-- Welcome banner — only shown when nothing is configured yet -->
-        <div class="ai-welcome" *ngIf="!isConfigured">
-          <div class="ai-welcome-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 8v4l3 3"/>
-            </svg>
-          </div>
-          <div class="ai-welcome-text">
-            <span class="ai-welcome-title">Configure AI to unlock analysis</span>
-            <span class="ai-welcome-desc">Choose a local or cloud provider to enable repository explanations, AI chat, learning paths, and documentation generation.</span>
-          </div>
+        <div class="ai-status-caps">
+          <span class="ai-cap">Repository Analysis</span>
+          <span class="ai-cap">AI Chat</span>
+          <span class="ai-cap">Documentation</span>
         </div>
 
-        <!-- Category tabs -->
-        <div class="provider-categories">
+        <div class="ai-status-actions">
+          <button class="btn-secondary" (click)="testConnection()" [disabled]="testState === 'testing'">
+            {{ testState === 'testing' ? 'Testing…' : 'Retest Connection' }}
+          </button>
+        </div>
+
+        <div class="test-result" *ngIf="testState !== 'idle'" [class.ok]="testState === 'ok'" [class.fail]="testState === 'fail'">
+          <span *ngIf="testState === 'testing'">Testing connection…</span>
+          <span *ngIf="testState === 'ok'">Connection successful</span>
+          <span *ngIf="testState === 'fail'">Connection failed<ng-container *ngIf="testReason"> — {{ testReason }}</ng-container></span>
+        </div>
+      </div>
+
+      <!-- Welcome banner — only shown when nothing is configured yet -->
+      <div class="ai-welcome" *ngIf="!isConfigured">
+        <div class="ai-welcome-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 8v4l3 3"/>
+          </svg>
+        </div>
+        <div class="ai-welcome-text">
+          <span class="ai-welcome-title">Configure AI to unlock analysis</span>
+          <span class="ai-welcome-desc">Choose a local or cloud provider to enable repository explanations, AI chat, learning paths, and documentation generation.</span>
+        </div>
+      </div>
+
+      <!-- Provider selection — always visible -->
+      <div class="provider-categories">
           <div class="provider-category">
             <div class="provider-category-label">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -150,83 +141,23 @@
           <div class="config-panel">
             <div class="config-panel-title">Configure {{ selectedPreset.displayName }}</div>
 
-            <!-- Ollama setup state machine -->
+            <!-- ── OLLAMA ──────────────────────────────────────────────────── -->
             <ng-container *ngIf="isOllama">
 
-              <!-- Step 1: Install Ollama -->
-              <div class="setup-step" *ngIf="ollamaSetupState === 'not-installed'">
-                <div class="setup-step-header">
-                  <span class="setup-step-num">1</span>
-                  <span class="setup-step-label">Install Ollama</span>
-                </div>
-                <p class="setup-step-desc">Ollama runs open-source AI models locally on your machine. It's free, private, and works entirely offline.</p>
-                <div class="setup-step-actions">
-                  <button class="btn-primary" (click)="openDownloadUrl()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                    Download Ollama
-                  </button>
-                </div>
-                <div class="setup-step-then">
-                  <p class="setup-step-desc">After installing, pull a recommended model:</p>
-                  <div class="recommended-models">
-                    <div class="recommended-model" *ngFor="let m of selectedPreset.suggestedModels; let i = index">
-                      <div class="recommended-model-header">
-                        <span class="recommended-model-name">{{ m }}</span>
-                        <span class="recommended-model-badge" *ngIf="i === 0">Recommended</span>
-                      </div>
-                      <div class="copy-command">
-                        <code>ollama pull {{ m }}</code>
-                        <button class="btn-copy" (click)="copyToClipboard('ollama pull ' + m)" title="Copy command">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+              <div class="config-field">
+                <div class="ollama-discover-row">
                   <button class="btn-secondary" (click)="discoverOllamaModels()" [disabled]="discoveringModels">
-                    {{ discoveringModels ? 'Checking…' : 'I\'ve installed Ollama — check for models' }}
+                    {{ discoveringModels ? 'Checking…' : 'Check for installed models' }}
                   </button>
+                  <span class="ollama-status ollama-status--warn" *ngIf="ollamaSetupState === 'no-models'">No models found</span>
+                  <span class="ollama-status ollama-status--ok" *ngIf="ollamaSetupState === 'ready'">
+                    {{ discoveredModels.length }} model{{ discoveredModels.length === 1 ? '' : 's' }} found
+                  </span>
                 </div>
               </div>
 
-              <!-- Step 2: No models found -->
-              <div class="setup-step" *ngIf="ollamaSetupState === 'no-models'">
-                <div class="setup-step-header">
-                  <span class="setup-step-num setup-step-num--warn">!</span>
-                  <span class="setup-step-label">No models installed</span>
-                </div>
-                <p class="setup-step-desc">Ollama is running but no models were found. Run one of these commands in a terminal:</p>
-                <div class="recommended-models">
-                  <div class="recommended-model" *ngFor="let m of selectedPreset.suggestedModels; let i = index">
-                    <div class="recommended-model-header">
-                      <span class="recommended-model-name">{{ m }}</span>
-                      <span class="recommended-model-badge" *ngIf="i === 0">Recommended</span>
-                    </div>
-                    <div class="copy-command">
-                      <code>ollama pull {{ m }}</code>
-                      <button class="btn-copy" (click)="copyToClipboard('ollama pull ' + m)" title="Copy command">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <button class="btn-secondary" (click)="discoverOllamaModels()" [disabled]="discoveringModels">
-                  {{ discoveringModels ? 'Checking…' : 'Check again' }}
-                </button>
-              </div>
-
-              <!-- Step 3: Models found — select one -->
-              <div class="setup-step" *ngIf="ollamaSetupState === 'ready'">
-                <div class="setup-step-header">
-                  <span class="setup-step-num setup-step-num--ok">✓</span>
-                  <span class="setup-step-label">Ollama is ready</span>
-                </div>
-                <p class="setup-step-desc">Select a model to use:</p>
+              <div class="config-field" *ngIf="ollamaSetupState === 'ready'">
+                <label class="config-label">Model</label>
                 <div class="model-chips">
                   <button
                     class="model-chip"
@@ -235,12 +166,8 @@
                     (click)="selectModel(m)"
                   >{{ m }}</button>
                 </div>
-                <button class="btn-discover" (click)="discoverOllamaModels()" [disabled]="discoveringModels">
-                  {{ discoveringModels ? 'Refreshing…' : 'Refresh models' }}
-                </button>
               </div>
 
-              <!-- Host override (advanced) -->
               <div class="config-field config-field--secondary">
                 <label class="config-label">Host <span class="config-label-hint">optional — default: http://localhost:11434</span></label>
                 <input class="settings-input" type="text" [(ngModel)]="hostInput" placeholder="http://localhost:11434" />
@@ -248,72 +175,90 @@
 
             </ng-container>
 
-            <!-- Local download hint for non-Ollama local providers -->
-            <ng-container *ngIf="!isOllama && selectedPreset.category === 'local' && selectedPreset.downloadUrl">
-              <div class="setup-step">
-                <div class="setup-step-header">
-                  <span class="setup-step-num">1</span>
-                  <span class="setup-step-label">Install {{ selectedPreset.displayName }}</span>
-                </div>
-                <p class="setup-step-desc">{{ selectedPreset.displayName }} must be running with its local API server enabled before SystemLens can connect.</p>
-                <button class="btn-primary" (click)="openDownloadUrl()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                  </svg>
-                  Download {{ selectedPreset.displayName }}
-                </button>
+            <!-- ── CLOUD / CUSTOM ──────────────────────────────────────────── -->
+            <ng-container *ngIf="!isOllama">
+
+              <div class="config-field" *ngIf="selectedPreset.requiresHostInput">
+                <label class="config-label">Base URL</label>
+                <input class="settings-input settings-input--wide" type="text" [(ngModel)]="hostInput" [placeholder]="hostPlaceholder" />
               </div>
-            </ng-container>
 
-            <!-- Base URL (for local non-Ollama + custom endpoint) -->
-            <div class="config-field" *ngIf="isOpenAICompat && selectedPreset.requiresHostInput">
-              <label class="config-label">{{ effectiveHostLabel }}</label>
-              <input
-                class="settings-input settings-input--wide"
-                type="text"
-                [(ngModel)]="hostInput"
-                [placeholder]="hostPlaceholder"
-              />
-            </div>
+              <div class="config-field" *ngIf="selectedPreset.requiresApiKey">
+                <label class="config-label">API Key</label>
+                <div class="key-input-wrap">
+                  <input
+                    class="settings-input settings-input--wide"
+                    type="password"
+                    [(ngModel)]="apiKeyInput"
+                    [placeholder]="apiKeyConfigured ? '••••••••••••••••' : 'Enter API key'"
+                    autocomplete="off"
+                  />
+                  <span class="key-badge" *ngIf="apiKeyConfigured">Configured</span>
+                </div>
+              </div>
 
-            <!-- API key (cloud providers) -->
-            <div class="config-field" *ngIf="selectedPreset.requiresApiKey">
-              <label class="config-label">
-                API Key
-                <button class="btn-link" *ngIf="selectedPreset.apiKeyUrl" (click)="openApiKeyUrl()">Get API key ↗</button>
-              </label>
-              <div class="key-input-wrap">
+              <div class="config-field">
+                <label class="config-label">Model</label>
                 <input
                   class="settings-input settings-input--wide"
-                  type="password"
-                  [(ngModel)]="apiKeyInput"
-                  [placeholder]="apiKeyConfigured ? '••••••••••••••••' : 'Enter API key'"
-                  autocomplete="off"
+                  type="text"
+                  [(ngModel)]="aiModel"
+                  [placeholder]="selectedPreset.suggestedModels[0] || 'Enter model name'"
                 />
-                <span class="key-badge" *ngIf="apiKeyConfigured">Configured</span>
+                <div class="model-chips" *ngIf="modelChoices.length">
+                  <button
+                    class="model-chip"
+                    *ngFor="let m of modelChoices"
+                    [class.active]="aiModel === m"
+                    (click)="selectModel(m)"
+                  >{{ m }}</button>
+                </div>
+              </div>
+
+            </ng-container>
+
+            <!-- ── SETUP HELP (collapsible) ───────────────────────────────── -->
+            <div class="setup-help">
+              <button class="setup-help-toggle" (click)="showSetupHelp = !showSetupHelp">
+                <svg class="setup-help-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round"
+                     [class.setup-help-chevron--open]="showSetupHelp">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+                How do I set this up?
+              </button>
+
+              <div class="setup-help-body" *ngIf="showSetupHelp">
+                <ng-container *ngIf="isOllama">
+                  <p class="setup-help-step">1. <a class="setup-help-link" (click)="openDownloadUrl()">Download and install Ollama</a></p>
+                  <p class="setup-help-step">2. Open a terminal and pull a model:</p>
+                  <div class="recommended-models">
+                    <div class="copy-command" *ngFor="let m of selectedPreset.suggestedModels">
+                      <code>ollama pull {{ m }}</code>
+                      <button class="btn-copy" (click)="copyToClipboard('ollama pull ' + m)" title="Copy">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <p class="setup-help-step">3. Click <strong>Check for installed models</strong> above.</p>
+                </ng-container>
+
+                <ng-container *ngIf="!isOllama && selectedPreset.requiresApiKey">
+                  <p class="setup-help-step">1. <a class="setup-help-link" (click)="openApiKeyUrl()">Get an API key from {{ selectedPreset.displayName }} ↗</a></p>
+                  <p class="setup-help-step">2. Paste it into the API Key field above.</p>
+                  <p class="setup-help-step">3. Pick a model and click <strong>Save</strong>.</p>
+                </ng-container>
+
+                <ng-container *ngIf="isCustomEndpoint">
+                  <p class="setup-help-step">Enter the base URL of any OpenAI-compatible server, e.g. <code>http://localhost:8080/v1</code>.</p>
+                  <p class="setup-help-step">Add an API key only if your server requires one.</p>
+                </ng-container>
               </div>
             </div>
 
-            <!-- Model selection (cloud and non-Ollama local) -->
-            <div class="config-field" *ngIf="!isOllama && selectedPresetId">
-              <label class="config-label">Model</label>
-              <input
-                class="settings-input settings-input--wide"
-                type="text"
-                [(ngModel)]="aiModel"
-                [placeholder]="selectedPreset.suggestedModels[0] ?? 'Enter model name'"
-              />
-              <div class="model-chips" *ngIf="modelChoices.length">
-                <button
-                  class="model-chip"
-                  *ngFor="let m of modelChoices"
-                  [class.active]="aiModel === m"
-                  (click)="selectModel(m)"
-                >{{ m }}</button>
-              </div>
-            </div>
-
-            <!-- Test connection result -->
+            <!-- Test result -->
             <div class="test-result" *ngIf="testState !== 'idle'" [class.ok]="testState === 'ok'" [class.fail]="testState === 'fail'">
               <span *ngIf="testState === 'testing'">Testing connection…</span>
               <span *ngIf="testState === 'ok'">Connection successful</span>
@@ -325,7 +270,6 @@
               <button class="btn-secondary" *ngIf="canTestConnection" [disabled]="testState === 'testing'" (click)="testConnection()">
                 {{ testState === 'testing' ? 'Testing…' : 'Test Connection' }}
               </button>
-              <button class="btn-secondary" *ngIf="showChangeProvider" (click)="cancelChangeProvider()">Cancel</button>
               <button class="btn-save" [disabled]="!canSave" (click)="saveSettings()">
                 {{ saved ? 'Saved ✓' : 'Save' }}
               </button>
@@ -334,8 +278,6 @@
           </div>
 
         </ng-container>
-
-      </ng-container>
 
     </div>
 

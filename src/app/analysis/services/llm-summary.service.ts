@@ -10,7 +10,7 @@ import { LearningPathSummaryPromptBuilder } from '@app/ai/prompts/learning-path-
 import { ArchitectureSummaryPromptBuilder } from '@app/ai/prompts/architecture-summary-prompt';
 import { DataFlowSummaryPromptBuilder } from '@app/ai/prompts/data-flow-summary-prompt';
 
-const LLM_TIMEOUT_MS = 120_000;
+const LLM_TIMEOUT_MS = 300_000;
 
 @Injectable({ providedIn: 'root' })
 export class LLMSummaryService {
@@ -33,6 +33,7 @@ export class LLMSummaryService {
 
     let provider = 'unknown';
     let modelId = 'unknown';
+    let isLocal = false;
 
     try {
       const providers = await this.electron.aiGetProviders();
@@ -43,6 +44,7 @@ export class LLMSummaryService {
         return;
       }
       provider = active.id;
+      isLocal = active.category === 'local';
     } catch (err) {
       console.error('[LLMSummary] aiGetProviders threw:', err);
       this.manager.markAIStageFailed(workspaceId, 'generate', generation, 'failed to read provider status');
@@ -56,15 +58,23 @@ export class LLMSummaryService {
     const tasks = this._buildTasks(model);
     if (tasks.length === 0) return;
 
-    console.log(`[LLMSummary] generating ${tasks.length} summaries with ${provider}/${modelId}`);
+    console.log(`[LLMSummary] generating ${tasks.length} summaries with ${provider}/${modelId} (${isLocal ? 'sequential' : 'parallel'})`);
     this.manager.setStageRunning(workspaceId, 'generate');
 
     try {
-      const results = await Promise.all(
-        tasks.map(task =>
-          this._generateAndMerge(workspaceId, model, generation, task.key, task.prompt, provider, modelId),
-        ),
-      );
+      let results: boolean[];
+      if (isLocal) {
+        results = [];
+        for (const task of tasks) {
+          results.push(await this._generateAndMerge(workspaceId, model, generation, task.key, task.prompt, provider, modelId));
+        }
+      } else {
+        results = await Promise.all(
+          tasks.map(task =>
+            this._generateAndMerge(workspaceId, model, generation, task.key, task.prompt, provider, modelId),
+          ),
+        );
+      }
 
       const anyFailed  = results.some(ok => !ok);
       const anySuccess = results.some(ok => ok);

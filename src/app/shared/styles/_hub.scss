@@ -382,8 +382,8 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 20px 36px 6px;
-  min-height: 88px;
+  padding: 28px 36px 10px;
+  min-height: 110px;
   gap: 16px;
   flex-shrink: 0;
   opacity: 0;
@@ -404,17 +404,17 @@
 }
 
 .hub-heading {
-  font-size: 22px;
+  font-size: 30px;
   font-weight: 700;
   color: var(--text-heading);
-  letter-spacing: -0.4px;
+  letter-spacing: -0.6px;
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .hub-subheading {
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.4;
 }
@@ -423,19 +423,19 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .hub-breadcrumb-root {
-  font-size: 11px;
-  color: var(--text-muted);
+  font-size: 13px;
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
 .hub-breadcrumb-sep {
-  width: 12px;
-  height: 12px;
-  color: var(--text-muted);
+  width: 13px;
+  height: 13px;
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 
@@ -473,7 +473,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  color: var(--text-primary);
   padding: 4px 0 0;
 }
 
@@ -523,10 +523,10 @@
 .hub-body {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 36px;
+  padding: 16px 36px 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 // ─── Identity card ────────────────────────────────────────────
@@ -828,6 +828,8 @@
   display: grid;
   grid-template-columns: 1fr 2fr 1fr;
   gap: 12px;
+  flex: 1;
+  min-height: 0;
 }
 
 .info-card {
@@ -840,6 +842,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 0;
   transition: border-color 0.18s, box-shadow 0.18s;
 
   &:hover {
@@ -863,22 +866,15 @@
 }
 
 .info-card-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.1px;
+  letter-spacing: -0.2px;
   flex: 1;
 }
 
-.info-card-info-icon {
-  width: 14px;
-  height: 14px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  cursor: help;
-  opacity: 0.6;
-  transition: opacity 0.15s;
-  &:hover { opacity: 1; }
+.info-card-spacer {
+  flex: 1;
 }
 
 .info-card-nav-link {
@@ -898,6 +894,30 @@
   svg { width: 12px; height: 12px; }
 }
 
+// Shared nav button used by Code Health + AI Analysis
+.hub-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-family: inherit;
+  cursor: pointer;
+  align-self: flex-end;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+  svg { width: 14px; height: 14px; flex-shrink: 0; }
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  }
+}
+
 // ── Health card ───────────────────────────────────────────────
 
 .info-card--health {
@@ -909,85 +929,114 @@
   &.health-critical     { border-top-color: var(--error); }
 }
 
-.health-arc-wrap {
-  position: relative;
-  width: 100%;
-  height: 100px;
+.health-tier-block {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.health-tier-badge {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding-top: 8px;
-}
-
-.health-arc {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-// Arc: M 10 100 A 90 90 0 0 1 190 100 — endpoints at left/right poles of r=90
-// circle centered at (100,100), so tangents are perfectly vertical at both ends.
-// ViewBox 0 0 200 105. Arc length = π * 90 ≈ 283
-.health-arc-fill {
-  stroke-dasharray: 283;
-  stroke-dashoffset: 283;
-  transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-              filter 0.9s ease;
-
-  &--healthy         { stroke: var(--success); filter: drop-shadow(0 0 5px var(--success)); }
-  &--fair            { stroke: var(--warning); filter: drop-shadow(0 0 5px var(--warning)); }
-  &--needs-attention { stroke: #f97316;        filter: drop-shadow(0 0 5px #f97316); }
-  &--critical        { stroke: var(--error);   filter: drop-shadow(0 0 5px var(--error)); }
-}
-
-.health-arc-fill--draw {
-  &.health-arc-fill--healthy         { stroke-dashoffset: 0;   }
-  &.health-arc-fill--fair            { stroke-dashoffset: 71;  }
-  &.health-arc-fill--needs-attention { stroke-dashoffset: 142; }
-  &.health-arc-fill--critical        { stroke-dashoffset: 212; }
-}
-
-.health-tier-label {
-  position: relative;
-  font-size: 15px;
+  align-self: flex-start;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--text-primary);
-  text-align: center;
-  z-index: 1;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid;
+
+  &--healthy {
+    color: var(--success);
+    background: color-mix(in srgb, var(--success) 12%, transparent);
+    border-color: color-mix(in srgb, var(--success) 28%, transparent);
+  }
+  &--fair {
+    color: var(--warning);
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+    border-color: color-mix(in srgb, var(--warning) 28%, transparent);
+  }
+  &--needs-attention {
+    color: #f97316;
+    background: color-mix(in srgb, #f97316 12%, transparent);
+    border-color: color-mix(in srgb, #f97316 28%, transparent);
+  }
+  &--critical {
+    color: var(--error);
+    background: color-mix(in srgb, var(--error) 12%, transparent);
+    border-color: color-mix(in srgb, var(--error) 28%, transparent);
+  }
+  &--unknown {
+    color: var(--text-secondary);
+    background: color-mix(in srgb, var(--text-secondary) 8%, transparent);
+    border-color: var(--border);
+  }
 }
 
-.health-stats {
+.health-tier-meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.health-signals {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.health-signal-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.health-signal-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-secondary);
+}
+
+.health-signal-body {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.health-metrics {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
 }
 
-.health-stat {
+.health-metric-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.health-stat-label {
-  font-size: 13px;
-  color: var(--text-muted);
+.health-metric-label {
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 
-.health-stat-val {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-secondary);
+.health-metric-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
 
-  &.complexity-Low    { color: var(--success); }
-  &.complexity-Medium { color: var(--warning); }
-  &.complexity-High   { color: var(--error);   }
-  &.maint-High        { color: var(--success); }
-  &.maint-Medium      { color: var(--warning); }
-  &.maint-Low         { color: var(--error);   }
-  &.stat-error        { color: var(--error);   }
+  &.val--low    { color: var(--success); }
+  &.val--medium { color: var(--warning); }
+  &.val--high   { color: var(--error);   }
 }
 
 // ── Pipeline card ─────────────────────────────────────────────
@@ -1008,8 +1057,8 @@
 }
 
 .pipeline-bubble {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 2px solid var(--border);
   background: transparent;
@@ -1019,12 +1068,18 @@
   position: relative;
   transition: border-color 0.2s, background 0.2s;
 
-  svg { width: 12px; height: 12px; }
+  svg { width: 16px; height: 16px; }
 
   &--complete {
     border-color: var(--success);
     background: color-mix(in srgb, var(--success) 15%, transparent);
     svg { stroke: var(--success); }
+  }
+
+  &--partial {
+    border-color: var(--warning);
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+    svg { stroke: var(--warning); }
   }
 
   &--running {
@@ -1040,7 +1095,7 @@
 
   &--pending {
     border-color: var(--border);
-    opacity: 0.5;
+    opacity: 0.45;
   }
 }
 
@@ -1053,8 +1108,8 @@
 }
 
 .pipeline-bubble-label {
-  font-size: 12px;
-  color: var(--text-muted);
+  font-size: 11px;
+  color: var(--text-secondary);
   text-align: center;
   line-height: 1.2;
   white-space: nowrap;
@@ -1068,10 +1123,11 @@
   width: 20px;
   height: 2px;
   background: var(--border);
-  margin-top: 13px;
+  margin-top: 17px;
   transition: background 0.2s;
 
   &--complete { background: var(--success); }
+  &--partial  { background: var(--warning); }
   &--failed   { background: var(--error); }
 }
 
@@ -1147,33 +1203,91 @@
   flex-shrink: 0;
 }
 
-.pipeline-card-footer {
+// ── Pipeline section — Core Analysis / AI Insights blocks ────
+
+.pipeline-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.pipeline-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.pipeline-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.1px;
+}
+
+.pipeline-section-status {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+
+  &.pipeline-status--complete   { color: var(--success); }
+  &.pipeline-status--partial    { color: var(--warning); }
+  &.pipeline-status--running    { color: var(--accent);  }
+  &.pipeline-status--failed     { color: var(--error);   }
+}
+
+.pipeline-stage-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pipeline-stage-row-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-secondary);
+
+  &--complete { color: var(--text-primary); }
+  &--failed   { color: var(--error); }
+  &--running  { color: var(--accent); }
+}
+
+.pipeline-stage-row-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  stroke: var(--success);
+
+  &--fail { stroke: var(--error); }
+  &--idle { stroke: var(--text-secondary); opacity: 0.5; }
+}
+
+.pipeline-stage-row-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-top-color: var(--accent);
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+// ── Pipeline card footer ──────────────────────────────────────
+
+.pipeline-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
   margin-top: auto;
 }
 
-.pipeline-configure-btn {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
-  border-radius: 6px;
-  padding: 4px 10px;
-  font-family: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  margin-left: auto;
-  transition: background 0.15s, border-color 0.15s;
-  &:hover {
-    background: color-mix(in srgb, var(--accent) 14%, transparent);
-    border-color: color-mix(in srgb, var(--accent) 35%, transparent);
-  }
-}
+// .pipeline-configure-btn replaced by .hub-nav-btn
 
 .pipeline-error-notice {
   display: flex;

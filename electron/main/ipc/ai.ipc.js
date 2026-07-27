@@ -76,8 +76,8 @@ function registerAiHandlers() {
   }));
 
   // ── ai:discoverModels — Ollama: fetch installed models from /api/tags ─────
-  ipcMain.handle('ai:discoverModels', wrapHandler(() => {
-    return registry.discoverModels();
+  ipcMain.handle('ai:discoverModels', wrapHandler((_event, presetId) => {
+    return registry.discoverModels(presetId ?? undefined);
   }));
 
   // ── ai:testConnection — test the active provider (makes a real API call) ─

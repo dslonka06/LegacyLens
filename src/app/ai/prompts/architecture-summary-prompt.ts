@@ -105,7 +105,7 @@ export class ArchitectureSummaryPromptBuilder {
 
     if (arch.layerBreakdown.length > 0) {
       parts.push(``, `Layer breakdown:`);
-      for (const layer of arch.layerBreakdown) {
+      for (const layer of arch.layerBreakdown.slice(0, 8)) {
         const coupling = layer.couplingNotes ? ` [${layer.couplingNotes}]` : '';
         parts.push(`- ${layer.name}: ${layer.fileCount} nodes${coupling}`);
       }

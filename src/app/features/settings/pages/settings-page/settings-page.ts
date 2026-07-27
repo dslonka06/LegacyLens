@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { ThemeService } from '@app/core/services/theme.service';
 import { ElectronService, AiPreset, AiProviderStatus } from '@app/core/services/electron.service';
 
@@ -11,7 +10,7 @@ type OllamaSetupState = 'not-installed' | 'no-models' | 'ready';
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.scss',
 })
@@ -37,7 +36,7 @@ export class SettingsPage implements OnInit {
   testState: TestState = 'idle';
   testReason = '';
   saved = false;
-  showChangeProvider = false;
+  showSetupHelp = false;
   activeModel = '';
 
   constructor(
@@ -64,7 +63,7 @@ export class SettingsPage implements OnInit {
       || '';
 
     if (this.selectedPresetId) {
-      await this._loadPresetState(this.selectedPresetId);
+      await this._loadPresetState(this.selectedPresetId, true);
     }
   }
 
@@ -142,6 +141,7 @@ export class SettingsPage implements OnInit {
     this.testState = 'idle';
     this.discoveredModels = [];
     this.ollamaSetupState = 'not-installed';
+    this.showSetupHelp = false;
     await this._loadPresetState(presetId);
   }
 
@@ -154,7 +154,7 @@ export class SettingsPage implements OnInit {
   async discoverOllamaModels(): Promise<void> {
     this.discoveringModels = true;
     try {
-      this.discoveredModels = await this.electron.aiDiscoverModels();
+      this.discoveredModels = await this.electron.aiDiscoverModels(this.selectedPresetId);
       if (this.discoveredModels.length > 0) {
         this.ollamaSetupState = 'ready';
         if (!this.aiModel) this.aiModel = this.discoveredModels[0];
@@ -170,12 +170,12 @@ export class SettingsPage implements OnInit {
 
   openDownloadUrl(): void {
     const url = this.selectedPreset?.downloadUrl;
-    if (url) (window as any).electronAPI?.shell?.openExternal(url);
+    if (url) this.electron.openExternal(url);
   }
 
   openApiKeyUrl(): void {
     const url = this.selectedPreset?.apiKeyUrl;
-    if (url) (window as any).electronAPI?.shell?.openExternal(url);
+    if (url) this.electron.openExternal(url);
   }
 
   // ── Save ──────────────────────────────────────────────────────────────────
@@ -214,7 +214,6 @@ export class SettingsPage implements OnInit {
 
     this.saved = true;
     this.testState = 'idle';
-    this.showChangeProvider = false;
     setTimeout(() => { this.saved = false; }, 2000);
   }
 
@@ -233,27 +232,13 @@ export class SettingsPage implements OnInit {
     }
   }
 
-  // ── Change provider toggle ────────────────────────────────────────────────
-
-  startChangeProvider(): void {
-    this.showChangeProvider = true;
-    this.selectedPresetId = this.activeStatus?.id ?? '';
-    this.testState = 'idle';
-  }
-
-  cancelChangeProvider(): void {
-    this.showChangeProvider = false;
-    this.selectedPresetId = this.activeStatus?.id ?? '';
-    this.testState = 'idle';
-  }
-
   copyToClipboard(text: string): void {
     navigator.clipboard.writeText(text).catch(() => {});
   }
 
   // ── Private ───────────────────────────────────────────────────────────────
 
-  private async _loadPresetState(presetId: string): Promise<void> {
+  private async _loadPresetState(presetId: string, autoDiscover = false): Promise<void> {
     const preset = this.presets.find(p => p.id === presetId);
     if (!preset) return;
 
@@ -261,7 +246,9 @@ export class SettingsPage implements OnInit {
       this.apiKeyConfigured = await this.electron.aiIsKeyConfigured(presetId);
     }
 
-    if (preset.protocol === 'ollama') {
+    // Only auto-discover when returning to an already-saved Ollama preset,
+    // not when the user is selecting it for the first time in onboarding.
+    if (preset.protocol === 'ollama' && autoDiscover) {
       await this.discoverOllamaModels();
     }
 
