@@ -130,19 +130,19 @@ export class AIAnalysisService {
     switch (stage) {
       case 'security':
         return this.withTimeout(
-          this.electron.intelligenceSecurity(model, null) as Promise<SecurityAnalysis>,
+          this.electron.intelligenceSecurity(model) as Promise<SecurityAnalysis>,
           stage,
         );
 
       case 'understanding':
         return this.withTimeout(
-          this.electron.intelligenceSystemUnderstanding(model, null) as Promise<SystemUnderstanding>,
+          this.electron.intelligenceSystemUnderstanding(model) as Promise<SystemUnderstanding>,
           stage,
         );
 
       case 'recommendations':
         return this.withTimeout(
-          this.electron.intelligenceRecommendations(model, null) as Promise<RecommendationAnalysis>,
+          this.electron.intelligenceRecommendations(model) as Promise<RecommendationAnalysis>,
           stage,
         );
 
@@ -151,7 +151,6 @@ export class AIAnalysisService {
         return this.withTimeout(
           this.electron.intelligenceLearningPath(
             model,
-            null,
             understanding,
             model.targetType,
           ) as Promise<LearningPathAnalysis>,

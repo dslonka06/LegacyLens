@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { LLMSummaryService } from '@app/analysis/services/llm-summary.service';
+import type { LLMSummaryEntry } from '@app/knowledge/models/llm-summaries.model';
 import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
@@ -34,7 +36,10 @@ export class DataFlowPage implements OnInit, OnDestroy {
 
   private sub: Subscription | null = null;
 
-  constructor(private readonly manager: WorkspaceManagerService) {}
+  constructor(
+    private readonly manager: WorkspaceManagerService,
+    private readonly llmSummaryService: LLMSummaryService,
+  ) {}
 
   ngOnInit(): void {
     this.model = this.manager.getActive()?.knowledgeModel ?? null;
@@ -167,7 +172,7 @@ export class DataFlowPage implements OnInit, OnDestroy {
     return this.expandedWorkflowIndex === i;
   }
 
-  get llmSummary(): string | null {
+  get llmSummaryEntry(): LLMSummaryEntry | null {
     return this.model?.ai?.summaries?.dataFlow ?? null;
   }
 
@@ -179,5 +184,10 @@ export class DataFlowPage implements OnInit, OnDestroy {
   get isNoProvider(): boolean {
     const ai = this.model?.ai;
     return ai?.failedStages.includes('generate') === true && ai?.stageErrors?.['generate'] === 'no-provider';
+  }
+
+  onRegenerate(): void {
+    const wsId = this.manager.getActive()?.id;
+    if (wsId) this.llmSummaryService.regenerate(wsId, 'dataFlow');
   }
 }

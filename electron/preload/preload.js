@@ -63,10 +63,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ── AI ────────────────────────────────────────────────────────────────────
   ai: {
-    explain:         (prompt)              => invoke('ai:explain', prompt),
-    analyze:         (fileName, sourceCode) => invoke('ai:analyze', fileName, sourceCode),
-    getProviderUrl:  ()                    => invoke('ai:getProviderUrl'),
-    setProviderUrl:  (url)                 => invoke('ai:setProviderUrl', url),
+    explain:          (prompt)                    => invoke('ai:explain', prompt),
+    analyze:          (fileName, sourceCode)       => invoke('ai:analyze', fileName, sourceCode),
+    chat:             (messages, knowledgeModel)   => invoke('ai:chat', messages, knowledgeModel),
+    getProviders:     ()                           => invoke('ai:getProviders'),
+    getPresets:       ()                           => invoke('ai:getPresets'),
+    getCapabilities:  (presetId)                   => invoke('ai:getCapabilities', presetId),
+    discoverModels:   ()                           => invoke('ai:discoverModels'),
+    testConnection:   ()                           => invoke('ai:testConnection'),
+    setApiKey:        (presetId, plainKey)         => invoke('ai:setApiKey', presetId, plainKey),
+    isKeyConfigured:  (presetId)                   => invoke('ai:isKeyConfigured', presetId),
   },
 
   // ── Intelligence Engine ───────────────────────────────────────────────────

@@ -68,14 +68,12 @@
 
       <div class="page-content">
         <app-explanation-card
-          *ngIf="llmSummary || isGenerating || isNoProvider"
           title="AI Analysis"
-          [content]="llmSummary"
-          [isLoading]="isGenerating"
-          [error]="null"
+          [entry]="llmSummaryEntry"
+          [isGenerating]="isGenerating"
           [noProvider]="isNoProvider"
-        >
-        </app-explanation-card>
+          (regenerate)="onRegenerate()"
+        ></app-explanation-card>
 
         <div class="su-columns">
           <div class="su-col-left">

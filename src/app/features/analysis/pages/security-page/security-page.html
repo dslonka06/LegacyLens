@@ -64,12 +64,11 @@
 
           <div class="sec-content">
             <app-explanation-card
-              *ngIf="llmSummary || isGenerating || isNoProvider"
               title="AI Analysis"
-              [content]="llmSummary"
-              [isLoading]="isGenerating"
-              [error]="null"
+              [entry]="llmSummaryEntry"
+              [isGenerating]="isGenerating"
               [noProvider]="isNoProvider"
+              (regenerate)="onRegenerate()"
             ></app-explanation-card>
 
             <div class="sec-card sec-overview">

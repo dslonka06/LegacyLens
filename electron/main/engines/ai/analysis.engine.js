@@ -1,82 +1,43 @@
-const https = require('https');
-const http = require('http');
+const SYSTEM_PROMPT =
+  'You are an expert software analyst specializing in code review and architecture assessment. ' +
+  'Analyze the provided source code and return a JSON object with the following fields: ' +
+  'summary (string), businessPurpose (string), risks (array of strings), ' +
+  'architecture (string), modernizations (array of strings), documentation (string). ' +
+  'Respond with valid JSON only — no markdown fences, no prose outside the JSON object.';
 
 /**
- * Handles AI-powered single-file analysis calls.
- * Accepts fileName and sourceCode from Angular and forwards them to the
- * configured AI provider. Returns the raw AiAnalysisResult JSON.
+ * AiAnalysisEngine — handles single-file AI analysis calls.
+ *
+ * Builds the analysis prompt and delegates to the provider.
+ * The structured JSON response is parsed here before returning to Angular.
  */
 class AiAnalysisEngine {
 
-  constructor(settingsService) {
-    this.settings = settingsService;
+  constructor(providerRegistry) {
+    this.registry = providerRegistry;
   }
 
   /**
-   * Sends a file to the AI provider for analysis.
    * @param {string} fileName
    * @param {string} sourceCode
    * @returns {Promise<object>} AiAnalysisResult
    */
   async analyze(fileName, sourceCode) {
-    const providerUrl = await this.resolveProviderUrl();
-    return this.callProvider(providerUrl, fileName, sourceCode);
-  }
+    const provider = this.registry.getActiveProvider();
+    const prompt = `Analyze the following file:\n\nFile: ${fileName}\n\n\`\`\`\n${sourceCode}\n\`\`\``;
 
-  // ── Provider resolution ───────────────────────────────────────────────────
-
-  async resolveProviderUrl() {
-    const stored = await this.settings.get('aiProviderUrl');
-    if (stored) return stored;
-    return 'http://localhost:5000/api/ai/analyze';
-  }
-
-  // ── HTTP call ─────────────────────────────────────────────────────────────
-
-  callProvider(url, fileName, sourceCode) {
-    return new Promise((resolve, reject) => {
-      const body = JSON.stringify({ fileName, sourceCode });
-      const parsed = new URL(url);
-      const isHttps = parsed.protocol === 'https:';
-      const lib = isHttps ? https : http;
-
-      const options = {
-        hostname: parsed.hostname,
-        port: parsed.port || (isHttps ? 443 : 80),
-        path: parsed.pathname + parsed.search,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(body),
-        },
-        timeout: 300_000,
-      };
-
-      const req = lib.request(options, (res) => {
-        let data = '';
-        res.on('data', chunk => { data += chunk; });
-        res.on('end', () => {
-          if (res.statusCode < 200 || res.statusCode >= 300) {
-            reject(new Error(`AI provider returned ${res.statusCode}: ${data}`));
-            return;
-          }
-          try {
-            resolve(JSON.parse(data));
-          } catch {
-            reject(new Error(`AI provider returned non-JSON response: ${data.slice(0, 200)}`));
-          }
-        });
-      });
-
-      req.on('error', reject);
-      req.on('timeout', () => {
-        req.destroy();
-        reject(new Error('AI provider request timed out after 5 minutes'));
-      });
-
-      req.write(body);
-      req.end();
+    const text = await provider.generate({
+      messages: [{ role: 'user', content: prompt }],
+      systemPrompt: SYSTEM_PROMPT,
+      maxTokens: 2048,
     });
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      // Provider didn't return clean JSON — wrap the prose in the expected shape
+      return { summary: text, businessPurpose: '', risks: [], architecture: '', modernizations: [], documentation: '' };
+    }
   }
 }
 

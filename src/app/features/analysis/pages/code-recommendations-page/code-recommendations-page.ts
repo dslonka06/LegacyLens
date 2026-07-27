@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { LLMSummaryService } from '@app/analysis/services/llm-summary.service';
+import type { LLMSummaryEntry } from '@app/knowledge/models/llm-summaries.model';
 import {
   RecommendationAnalysis,
   Recommendation,
@@ -40,6 +42,7 @@ export class CodeRecommendationsPage implements OnInit, OnDestroy {
   constructor(
     private readonly manager: WorkspaceManagerService,
     private readonly layoutService: PanelLayoutService,
+    private readonly llmSummaryService: LLMSummaryService,
   ) {}
 
   ngOnInit(): void {
@@ -127,7 +130,7 @@ export class CodeRecommendationsPage implements OnInit, OnDestroy {
     return 'readiness-not-ready';
   }
 
-  get llmSummary(): string | null {
+  get llmSummaryEntry(): LLMSummaryEntry | null {
     return this.workspace?.knowledgeModel?.ai?.summaries?.recommendations ?? null;
   }
 
@@ -139,5 +142,10 @@ export class CodeRecommendationsPage implements OnInit, OnDestroy {
   get isNoProvider(): boolean {
     const ai = this.workspace?.knowledgeModel?.ai;
     return ai?.failedStages.includes('generate') === true && ai?.stageErrors?.['generate'] === 'no-provider';
+  }
+
+  onRegenerate(): void {
+    const wsId = this.workspace?.id;
+    if (wsId) this.llmSummaryService.regenerate(wsId, 'recommendations');
   }
 }

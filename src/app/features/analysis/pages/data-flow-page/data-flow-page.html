@@ -30,12 +30,11 @@
 
     <div class="page-content">
       <app-explanation-card
-        *ngIf="llmSummary || isGenerating || isNoProvider"
         title="AI Analysis"
-        [content]="llmSummary"
-        [isLoading]="isGenerating"
-        [error]="null"
+        [entry]="llmSummaryEntry"
+        [isGenerating]="isGenerating"
         [noProvider]="isNoProvider"
+        (regenerate)="onRegenerate()"
       ></app-explanation-card>
 
       <!-- File scope: structured deterministic data flow -->

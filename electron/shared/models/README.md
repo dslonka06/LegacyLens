@@ -1,8 +1,7 @@
 # Shared Models
 
-Complex model classes (as opposed to pure type interfaces in contracts/).
+Complex model classes (as opposed to pure type interfaces in `contracts/`).
 
-Use this directory for models that have constructor logic or helper methods
-that need to be shared across the Angular/Electron boundary.
-
-Phase 1: empty. Populated as contracts mature and helper logic is needed.
+Currently empty — shared state is expressed as plain interface types in the
+contract files. Add here only when a model needs constructor logic or helper
+methods that both Angular and Electron must share.

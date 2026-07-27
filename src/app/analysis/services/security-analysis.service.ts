@@ -8,6 +8,6 @@ export class SecurityAnalysisService {
   constructor(private readonly electron: ElectronService) {}
 
   async analyze(model: KnowledgeModel): Promise<SecurityAnalysis> {
-    return this.electron.intelligenceSecurity(model, null) as Promise<SecurityAnalysis>;
+    return this.electron.intelligenceSecurity(model) as Promise<SecurityAnalysis>;
   }
 }

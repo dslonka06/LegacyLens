@@ -1,10 +1,19 @@
+export interface LLMSummaryEntry {
+  content: string;
+  status: 'complete' | 'failed' | 'stale';
+  provider: string;
+  model: string;
+  generatedAt: string;
+  error?: string;
+}
+
 export interface LLMSummaries {
-  understanding?: string;
-  security?: string;
-  recommendations?: string;
-  learningPath?: string;
-  architecture?: string;
-  dataFlow?: string;
+  understanding?: LLMSummaryEntry;
+  security?: LLMSummaryEntry;
+  recommendations?: LLMSummaryEntry;
+  learningPath?: LLMSummaryEntry;
+  architecture?: LLMSummaryEntry;
+  dataFlow?: LLMSummaryEntry;
 }
 
 export type LLMSummaryKey = keyof LLMSummaries;

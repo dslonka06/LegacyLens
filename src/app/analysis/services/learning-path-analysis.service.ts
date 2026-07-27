@@ -11,7 +11,6 @@ export class LearningPathAnalysisService {
     return this.electron.intelligenceLearningPath(
       model,
       null,
-      null,
       model.targetType,
     ) as Promise<LearningPathAnalysis>;
   }

@@ -117,49 +117,83 @@
         </div>
       </div>
 
-      <!-- AI Provider Status -->
+      <!-- AI Status -->
       <div class="panel panel--ai">
-        <h2 class="panel-title">AI Provider Status</h2>
+        <h2 class="panel-title">AI</h2>
 
-        <div class="ai-status-row">
-          <span class="ai-status-dot" [class.ai-status-dot--ok]="aiProviderStatus === 'configured'" [class.ai-status-dot--err]="aiProviderStatus === 'not-configured'"></span>
-          <span class="ai-status-label" *ngIf="aiProviderStatus === 'configured'">Connected</span>
-          <span class="ai-status-label ai-status-label--err" *ngIf="aiProviderStatus === 'not-configured'">Not configured</span>
-          <span class="ai-status-label ai-status-label--muted" *ngIf="aiProviderStatus === 'checking'">Checking…</span>
-        </div>
-
-        <div class="ai-divider"></div>
-
-        <div class="ai-meta-row">
-          <svg class="ai-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-          </svg>
-          <div class="ai-meta-body">
-            <span class="ai-meta-label">URL</span>
-            <span class="ai-meta-val">http://localhost:5000</span>
+        <!-- Checking -->
+        <ng-container *ngIf="aiStatus === 'checking'">
+          <div class="ai-status-row">
+            <span class="ai-status-dot"></span>
+            <span class="ai-status-label ai-status-label--muted">Checking…</span>
           </div>
-        </div>
+        </ng-container>
 
-        <div class="ai-meta-row">
-          <svg class="ai-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
-            <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
-            <line x1="6" y1="6" x2="6.01" y2="6" />
-            <line x1="6" y1="18" x2="6.01" y2="18" />
-          </svg>
-          <div class="ai-meta-body">
-            <span class="ai-meta-label">Model</span>
-            <span class="ai-meta-val">{{ aiProviderLabel }}</span>
+        <!-- Configured -->
+        <ng-container *ngIf="aiStatus === 'configured' && aiProvider">
+          <div class="ai-status-row">
+            <span class="ai-status-dot ai-status-dot--ok"></span>
+            <span class="ai-status-label">Ready</span>
+            <span class="ai-provider-category">{{ aiProvider.category === 'local' ? 'Local' : 'Cloud' }}</span>
           </div>
-        </div>
+
+          <div class="ai-divider"></div>
+
+          <div class="ai-meta-row">
+            <svg class="ai-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            <div class="ai-meta-body">
+              <span class="ai-meta-label">Provider</span>
+              <span class="ai-meta-val">{{ aiProvider.displayName }}</span>
+            </div>
+          </div>
+
+          <div class="ai-meta-row" *ngIf="aiModel">
+            <svg class="ai-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+              <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+            </svg>
+            <div class="ai-meta-body">
+              <span class="ai-meta-label">Model</span>
+              <span class="ai-meta-val">{{ aiModel }}</span>
+            </div>
+          </div>
+
+          <div class="ai-meta-row" *ngIf="aiProvider.lastTestedAt">
+            <svg class="ai-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <div class="ai-meta-body">
+              <span class="ai-meta-label">Last tested</span>
+              <span class="ai-meta-val">{{ aiProvider.lastTestedAt | date:'short' }}</span>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Not configured -->
+        <ng-container *ngIf="aiStatus === 'not-configured'">
+          <div class="ai-status-row">
+            <span class="ai-status-dot ai-status-dot--off"></span>
+            <span class="ai-status-label ai-status-label--muted">Not configured</span>
+          </div>
+
+          <div class="ai-divider"></div>
+
+          <div class="ai-unconfigured-list">
+            <span>Repository explanations</span>
+            <span>AI chat</span>
+            <span>Learning guidance</span>
+            <span>Documentation generation</span>
+          </div>
+        </ng-container>
 
         <div class="ai-divider"></div>
 
         <a routerLink="/settings" class="ai-settings-link">
-          Go to Settings
+          {{ aiStatus === 'not-configured' ? 'Configure AI' : 'Manage AI Settings' }}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
           </svg>
         </a>
       </div>

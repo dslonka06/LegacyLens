@@ -7,6 +7,8 @@ import {
   SecuritySeverity,
 } from '@app/analysis/models/security-analysis.model';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import { LLMSummaryService } from '@app/analysis/services/llm-summary.service';
+import type { LLMSummaryEntry } from '@app/knowledge/models/llm-summaries.model';
 import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
 import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
@@ -36,6 +38,7 @@ export class SecurityPage implements OnInit, OnDestroy {
   constructor(
     private readonly manager: WorkspaceManagerService,
     private readonly layoutService: PanelLayoutService,
+    private readonly llmSummaryService: LLMSummaryService,
   ) {}
 
   ngOnInit(): void {
@@ -134,7 +137,7 @@ export class SecurityPage implements OnInit, OnDestroy {
     );
   }
 
-  get llmSummary(): string | null {
+  get llmSummaryEntry(): LLMSummaryEntry | null {
     return this.manager.getActive()?.knowledgeModel?.ai?.summaries?.security ?? null;
   }
 
@@ -146,5 +149,10 @@ export class SecurityPage implements OnInit, OnDestroy {
   get isNoProvider(): boolean {
     const ai = this.manager.getActive()?.knowledgeModel?.ai;
     return ai?.failedStages.includes('generate') === true && ai?.stageErrors?.['generate'] === 'no-provider';
+  }
+
+  onRegenerate(): void {
+    const wsId = this.manager.getActive()?.id;
+    if (wsId) this.llmSummaryService.regenerate(wsId, 'security');
   }
 }

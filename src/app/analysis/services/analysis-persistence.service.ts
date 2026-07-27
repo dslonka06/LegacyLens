@@ -55,13 +55,13 @@ export class AnalysisPersistenceService implements OnDestroy {
       learningPathAnalysis: ws.knowledgeModel?.ai?.learningPath ?? null,
     };
 
-    Promise.all([this.electron.getSetting('aiProvider'), this.electron.getSetting('aiModel')])
-      .then(([aiProvider, aiModel]) => {
+    Promise.all([this.electron.getSetting('activePresetId'), this.electron.getSetting('aiModel')])
+      .then(([activePresetId, aiModel]) => {
         return this.electron.saveAnalysis({
           repositoryId,
           scope: ws.type,
           aiResult,
-          aiProvider: (aiProvider as string | null) ?? undefined,
+          aiProvider: (activePresetId as string | null) ?? undefined,
           aiModel: (aiModel as string | null) ?? undefined,
         });
       })

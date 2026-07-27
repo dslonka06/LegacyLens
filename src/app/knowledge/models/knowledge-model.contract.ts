@@ -214,7 +214,7 @@ export interface KnowledgeMetadata {
   /** ISO timestamp of last full or partial structural build. */
   builtAt: string;
   /** Schema version — increment when shape changes incompatibly. */
-  schemaVersion: '2';
+  schemaVersion: '2' | '3';
   /** Opaque ID linking this model to its SQLite persistence row. */
   buildId?: string;
   /** True when this model was restored from cache without a fresh scan. */
