@@ -382,8 +382,8 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 28px 36px 10px;
-  min-height: 110px;
+  padding: 36px 36px 14px;
+  min-height: 130px;
   gap: 16px;
   flex-shrink: 0;
   opacity: 0;
@@ -414,7 +414,7 @@
 
 .hub-subheading {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   margin: 0;
   line-height: 1.4;
 }
@@ -538,13 +538,13 @@
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid var(--panel-border-identity);
   border-radius: var(--radius-card);
-  padding: 22px 28px;
+  padding: 16px 28px;
   display: flex;
   align-items: center;
   gap: 24px;
   position: relative;
   overflow: hidden;
-  min-height: 96px;
+  min-height: 148px;
 
   // Radial purple glow from center
   &::after {
@@ -592,8 +592,9 @@
 .identity-info {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   min-width: 0;
+  flex: 1;
 }
 
 .identity-filename {
@@ -724,8 +725,8 @@
 
 .identity-hex-wrap {
   flex-shrink: 0;
-  width: 72px;
-  height: 72px;
+  width: 96px;
+  height: 96px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -733,8 +734,8 @@
 }
 
 .identity-hex {
-  width: 68px;
-  height: 68px;
+  width: 96px;
+  height: 96px;
   overflow: visible;
 }
 
@@ -830,6 +831,7 @@
   gap: 12px;
   flex: 1;
   min-height: 0;
+  align-items: stretch;
 }
 
 .info-card {
@@ -838,7 +840,7 @@
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-card);
-  padding: 18px 20px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -850,6 +852,7 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   }
 }
+
 
 .info-card-label {
   font-size: 10px;
@@ -898,20 +901,20 @@
 .hub-nav-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: 7px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
   border-radius: 8px;
-  padding: 7px 14px;
+  padding: 9px 17px;
   font-family: inherit;
   cursor: pointer;
   align-self: flex-end;
   white-space: nowrap;
   transition: background 0.15s, border-color 0.15s;
-  svg { width: 14px; height: 14px; flex-shrink: 0; }
+  svg { width: 15px; height: 15px; flex-shrink: 0; }
   &:hover {
     background: color-mix(in srgb, var(--accent) 16%, transparent);
     border-color: color-mix(in srgb, var(--accent) 38%, transparent);
@@ -927,6 +930,16 @@
   &.health-fair         { border-top-color: var(--warning); }
   &.health-needs-attention { border-top-color: #f97316; }
   &.health-critical     { border-top-color: var(--error); }
+}
+
+.info-card--workspace {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.info-card--pipeline {
+  min-height: 0;
 }
 
 .health-tier-block {
@@ -1212,14 +1225,34 @@
   flex-shrink: 0;
 }
 
+// ── Pipeline sections wrapper — splits Core Analysis / AI Insights evenly ────
+
+.pipeline-sections {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+}
+
 // ── Pipeline section — Core Analysis / AI Insights blocks ────
 
 .pipeline-section {
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 8px;
-  padding-top: 10px;
+  padding: 10px 0;
   border-top: 1px solid var(--border);
+  min-height: 0;
+
+  & + & {
+    margin-top: 0;
+  }
 }
 
 .pipeline-section-header {
@@ -1249,15 +1282,16 @@
 
 .pipeline-stage-rows {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px 12px;
 }
 
 .pipeline-stage-row-item {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
 
   &--complete { color: var(--text-primary); }
@@ -1492,12 +1526,24 @@
   &:disabled { opacity: 0.4; cursor: default; }
 
   &--reanalyze {
+    display: flex;
+    align-items: center;
+    padding: 9px 17px;
+    font-size: 13px;
+    font-weight: 600;
+    gap: 7px;
     background: color-mix(in srgb, var(--accent) 12%, transparent);
     border-color: color-mix(in srgb, var(--accent) 22%, transparent);
     color: var(--accent);
+    svg { width: 15px; height: 15px; flex-shrink: 0; }
     &:hover:not(:disabled) {
       background: color-mix(in srgb, var(--accent) 20%, transparent);
     }
+  }
+
+  &--reanalyze-below {
+    margin-top: 12px;
+    align-self: flex-start;
   }
 
   &--delete {
@@ -1587,8 +1633,9 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: flex-start;
   gap: 8px;
-  padding: 16px 14px 14px;
+  padding: 18px 18px 22px;
   background: var(--panel-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -1630,17 +1677,27 @@
 }
 
 .metric-card-body {
-  width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
   gap: 3px;
   padding-bottom: 4px;
+
+  &--learning {
+    margin-top: auto;
+  }
+}
+
+.metric-card-learning-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-heading);
+  letter-spacing: -0.4px;
+  line-height: 1.1;
 }
 
 .metric-card-count {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--text-heading);
   letter-spacing: -0.5px;
@@ -1662,7 +1719,6 @@
   font-size: 11px;
   color: var(--text-secondary);
   line-height: 1.3;
-  text-align: center;
 }
 
 .metric-card-arrow {
@@ -1791,6 +1847,7 @@
   flex-direction: column;
   gap: 6px;
   min-width: 160px;
+  margin-right: 16px;
 }
 
 .identity-metric-item {
@@ -1926,6 +1983,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  max-height: 108px;
+  overflow-y: auto;
 }
 
 .workspace-divider {
@@ -1938,6 +1997,15 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.workspace-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
 }
 
 .workspace-analyzed-label {
@@ -1955,46 +2023,64 @@
 }
 
 .workspace-chip {
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  height: 32px;
+  border-radius: 8px;
   background: var(--border);
   border: 2px solid transparent;
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
-  cursor: default;
+  color: var(--text-primary);
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, color 0.2s;
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: var(--bg-card);
+    border-color: rgba(141, 99, 255, 0.3);
+    color: var(--text-heading);
+  }
 
   &--active {
     border-color: var(--accent);
     background: color-mix(in srgb, var(--accent) 22%, transparent);
     box-shadow: 0 0 0 1px rgba(141, 99, 255, 0.3);
+    color: var(--accent);
+
+    &:hover {
+      background: color-mix(in srgb, var(--accent) 28%, transparent);
+    }
   }
 
   &--ready {
-    background: color-mix(in srgb, var(--success) 18%, transparent);
-    border-color: color-mix(in srgb, var(--success) 35%, transparent);
+    background: color-mix(in srgb, var(--success) 14%, transparent);
+    border-color: color-mix(in srgb, var(--success) 30%, transparent);
+    color: var(--text-primary);
   }
 
   &--processing {
-    background: color-mix(in srgb, var(--accent) 18%, transparent);
-    border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
     animation: pulse 1.4s ease-in-out infinite;
   }
 
   &--failed {
-    background: color-mix(in srgb, var(--error) 18%, transparent);
-    border-color: color-mix(in srgb, var(--error) 35%, transparent);
+    background: color-mix(in srgb, var(--error) 14%, transparent);
+    border-color: color-mix(in srgb, var(--error) 30%, transparent);
+    color: var(--error);
   }
 
   &--empty {
     background: var(--border);
     border-color: transparent;
+    color: var(--text-muted);
+    cursor: default;
   }
 }
 
@@ -2265,4 +2351,181 @@
 @keyframes substepPulse {
   from { transform: scale(0.85); opacity: 0.7; }
   to   { transform: scale(1.15); opacity: 1; }
+}
+
+// ─── Hub header narrative ─────────────────────────────────────────────────
+
+.identity-narrative {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin: 2px 0 0;
+}
+
+// ─── Hub info button + popup (shared across all hub pages) ───────────────
+
+.hub-info-popup-wrap {
+  position: relative;
+}
+
+.hub-info-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: inherit;
+  line-height: 1;
+  transition: border-color 0.15s, color 0.15s;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+.hub-info-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-card);
+
+  p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+
+    strong {
+      color: var(--text-content);
+      font-weight: 600;
+    }
+  }
+}
+
+// ─── Health arc gauge ─────────────────────────────────────────────────────
+
+.health-arc-wrap {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  height: 84px;
+}
+
+.health-arc {
+  width: 170px;
+  height: 90px;
+  flex-shrink: 0;
+}
+
+.health-arc-fill {
+  stroke: var(--border);
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
+  transition: stroke-dashoffset 0s;
+
+  &.health-arc-fill--draw {
+    transition: stroke-dashoffset 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+  }
+
+  &.health-arc-fill--healthy    { stroke: var(--success); }
+  &.health-arc-fill--fair       { stroke: var(--warning); }
+  &.health-arc-fill--needs-attention { stroke: #f97316; }
+  &.health-arc-fill--critical   { stroke: var(--error); }
+
+  // Arc fill amounts per tier (out of 283 total dash length)
+  &.health-arc-fill--healthy.health-arc-fill--draw    { stroke-dashoffset: 0; }
+  &.health-arc-fill--fair.health-arc-fill--draw       { stroke-dashoffset: 71; }
+  &.health-arc-fill--needs-attention.health-arc-fill--draw { stroke-dashoffset: 141; }
+  &.health-arc-fill--critical.health-arc-fill--draw   { stroke-dashoffset: 212; }
+}
+
+.health-tier-label {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+// ─── Health stats grid (arc gauge variant) ───────────────────────────────
+
+.health-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  justify-content: space-evenly;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+.health-stat {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.health-stat-label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.health-stat-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.health-stat-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.health-stat-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex-shrink: 0;
+
+  &.complexity-Low   { color: var(--success); }
+  &.complexity-Medium { color: var(--warning); }
+  &.complexity-High  { color: var(--error); }
+
+  &.maint-High   { color: var(--success); }
+  &.maint-Medium { color: var(--warning); }
+  &.maint-Low    { color: var(--error); }
+
+  &.stat-error { color: var(--error); }
 }

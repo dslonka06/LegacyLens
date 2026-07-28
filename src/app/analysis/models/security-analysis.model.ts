@@ -44,6 +44,13 @@ export interface SecurityRelevantComponent {
   patterns: string[];
 }
 
+export interface SecurityNextStep {
+  priority: 'immediate' | 'high' | 'recommended';
+  title: string;
+  detail: string;
+  category: string;
+}
+
 export interface SecurityAnalysis {
   executiveSummary: string;
   summary: string;
@@ -57,4 +64,5 @@ export interface SecurityAnalysis {
   recommendationThemes: string[];
   readinessAssessment: string;
   generatedAt: string;
+  nextSteps?: SecurityNextStep[];
 }

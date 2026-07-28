@@ -39,40 +39,58 @@
 
       <!-- File scope: structured deterministic data flow -->
       <ng-container *ngIf="isFileScope">
-        <div class="doc-block" *ngIf="fileDataFlow; else noFileFlow">
-          <div class="doc-block-label">Data Flow</div>
 
+        <!-- Flow pattern overview -->
+        <div class="doc-block df-pattern-block" *ngIf="fileFlowPattern">
+          <span class="df-pattern-label">{{ fileFlowPattern.label }}</span>
+          <p class="df-pattern-overview">{{ fileFlowPattern.overview }}</p>
+        </div>
+
+        <div class="doc-block" *ngIf="fileDataFlow; else noFileFlow">
+
+          <!-- Inputs -->
           <div class="flow-section" *ngIf="fileDataFlow!.inputs.length">
             <div class="flow-section-label">Inputs</div>
+            <p class="df-io-frame" *ngIf="fileInputsFrame">{{ fileInputsFrame }}</p>
             <div class="flow-tag-list">
-              <span class="flow-tag flow-tag-input" *ngFor="let inp of fileDataFlow!.inputs">{{
-                inp
-              }}</span>
+              <span class="flow-tag flow-tag-input" *ngFor="let inp of fileDataFlow!.inputs">{{ inp }}</span>
             </div>
           </div>
 
+          <!-- Flow Steps -->
           <div class="flow-section" *ngIf="fileDataFlow!.steps.length">
             <div class="flow-section-label">Flow Steps</div>
             <div class="flow-steps">
               <div
                 class="flow-step"
-                *ngFor="let step of fileDataFlow!.steps; let i = index; let last = last"
+                *ngFor="let step of fileDataFlow!.steps; let i = index"
                 [ngClass]="getStepClass(i, fileDataFlow!.steps.length)"
+                [class.flow-step--expanded]="isStepExpanded(i)"
+                (click)="toggleStep(i)"
               >
                 <div class="step-badge">{{ i + 1 }}</div>
-                <div class="step-label">{{ step }}</div>
+                <div class="step-body">
+                  <div class="step-label">{{ step }}</div>
+                  <div class="step-desc" *ngIf="isStepExpanded(i) && fileStepNarrative[i]">
+                    {{ fileStepNarrative[i] }}
+                  </div>
+                </div>
+                <svg class="step-chevron" [class.step-chevron--open]="isStepExpanded(i)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
               </div>
             </div>
           </div>
 
+          <!-- Outputs -->
           <div class="flow-section" *ngIf="fileDataFlow!.outputs.length">
             <div class="flow-section-label">Outputs</div>
+            <p class="df-io-frame" *ngIf="fileOutputsFrame">{{ fileOutputsFrame }}</p>
             <div class="flow-tag-list">
-              <span class="flow-tag flow-tag-output" *ngFor="let out of fileDataFlow!.outputs">{{
-                out
-              }}</span>
+              <span class="flow-tag flow-tag-output" *ngFor="let out of fileDataFlow!.outputs">{{ out }}</span>
             </div>
           </div>
+
         </div>
 
         <ng-template #noFileFlow>

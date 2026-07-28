@@ -5,6 +5,35 @@
   overflow: hidden;
 }
 
+// ── Panel treatment — match hub info-card style ───────────────────────────
+// doc-block is normally a plain flex column with no chrome; on this page
+// every doc-block should look like a hub info-card.
+.doc-block {
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-card);
+  padding: 14px 16px;
+  gap: 12px;
+  transition: border-color 0.18s, box-shadow 0.18s;
+
+  &:hover {
+    border-color: rgba(141, 99, 255, 0.28);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.doc-block .doc-block-label,
+.doc-block-label,
+.flow-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-primary);
+}
+
 // ── Tree layout ───────────────────────────────────────────────
 .df-layout {
   display: contents;
@@ -35,6 +64,38 @@
   overflow: hidden;
 }
 
+// ── Flow pattern overview block ───────────────────────────────────────────────
+
+.df-pattern-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.df-pattern-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-primary);
+}
+
+.df-pattern-overview {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0;
+}
+
+// ── IO framing sentence ───────────────────────────────────────────────────────
+
+.df-io-frame {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 6px;
+}
+
 .flow-narrative {
   font-size: 14px;
   color: var(--text-content);
@@ -46,14 +107,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.flow-section-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--text-muted);
 }
 
 .flow-tag-list {
@@ -88,7 +141,7 @@
 
 .flow-step {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   padding: 10px 12px;
   background: var(--bg-card);
@@ -96,6 +149,10 @@
   font-size: 13px;
   color: var(--text-secondary);
   position: relative;
+  cursor: pointer;
+  transition: background 0.12s;
+
+  &:hover { background: var(--bg-hover); }
 
   &.step-first {
     border-radius: 8px 8px 0 0;
@@ -108,7 +165,6 @@
     border-top: none;
     border-radius: 0 0 8px 8px;
   }
-
   &:only-child {
     border-radius: 8px;
   }
@@ -117,6 +173,7 @@
 .step-badge {
   width: 22px;
   height: 22px;
+  min-width: 22px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--accent) 15%, transparent);
   color: var(--accent);
@@ -126,11 +183,38 @@
   font-size: 10px;
   font-weight: 700;
   flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.step-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .step-label {
-  flex: 1;
-  min-width: 0;
+  line-height: 1.4;
+}
+
+.step-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.step-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 200ms ease;
+  margin-top: 3px;
+
+  &.step-chevron--open {
+    transform: rotate(90deg);
+  }
 }
 
 .flow-node-list {
@@ -149,7 +233,7 @@
 .flow-node-name {
   width: 200px;
   flex-shrink: 0;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -204,11 +288,9 @@
 .metrics-strip {
   display: flex;
   gap: 0;
-  background: var(--panel-bg);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius-card);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   overflow: hidden;
 }
 
@@ -229,7 +311,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 .strip-val {

@@ -10,14 +10,13 @@ import { PdfExportService } from '@app/analysis/services/pdf-export.service';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
-import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import type { KnowledgeModel } from '@app/knowledge/models/knowledge-model.contract';
 
 @Component({
   selector: 'app-documentation-page',
   standalone: true,
-  imports: [CommonModule, ResizeDividerComponent, CodeEditor, ThemeToggle],
+  imports: [CommonModule, ResizeDividerComponent, ThemeToggle],
   templateUrl: './documentation-page.html',
   styleUrl: './documentation-page.scss',
 })
@@ -28,7 +27,6 @@ export class DocumentationPage implements OnInit, OnDestroy {
   previewText = '';
   isExporting = false;
   panelWidths = [320];
-  codeEditorWidth = 420;
 
   private sub: Subscription | null = null;
 
@@ -41,7 +39,6 @@ export class DocumentationPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.panelWidths = this.layoutService.load('documentation') ?? [320];
-    this.codeEditorWidth = this.layoutService.load('documentation-code')?.[0] ?? 420;
 
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       const prev = this.model;
@@ -117,19 +114,6 @@ export class DocumentationPage implements OnInit, OnDestroy {
   onPanelResize(index: number, width: number): void {
     this.panelWidths = this.panelWidths.map((w, i) => (i === index ? width : w));
     this.layoutService.save('documentation', this.panelWidths);
-  }
-
-  onCodePanelResize(width: number): void {
-    this.codeEditorWidth = width;
-    this.layoutService.save('documentation-code', [width]);
-  }
-
-  get sourceCode(): string | undefined {
-    return this.model?.structure.sourceCode;
-  }
-
-  get sourceFileName(): string | undefined {
-    return this.model?.structure.filePath ?? this.model?.workspaceName ?? undefined;
   }
 
   // ── Display helpers ───────────────────────────────────────────────────────────

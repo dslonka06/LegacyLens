@@ -121,12 +121,12 @@ const FOLDER_SECTIONS: SectionDef[] = [
 const FILE_SECTIONS: SectionDef[] = [
   {
     id: 'executive-summary',
-    title: 'Executive Summary',
+    title: 'System Understanding',
     description: 'What this file is and what it is responsible for.',
   },
   {
     id: 'architecture-overview',
-    title: 'Architecture Overview',
+    title: 'Architecture',
     description: 'Detected patterns, responsibilities, and structural role of this file.',
   },
   {
@@ -136,22 +136,17 @@ const FILE_SECTIONS: SectionDef[] = [
   },
   {
     id: 'risk-assessment',
-    title: 'Risk Assessment',
+    title: 'Security',
     description: 'Identified risks and code quality concerns in this file.',
   },
   {
     id: 'modernization',
-    title: 'Modernization Opportunities',
+    title: 'Recommendations',
     description: 'Recommended improvements for this file.',
   },
   {
-    id: 'key-files',
-    title: 'Key Dependencies',
-    description: 'Files this code directly depends on.',
-  },
-  {
     id: 'onboarding-guide',
-    title: 'Onboarding Guide',
+    title: 'Learning Path',
     description: 'How to get up to speed with this file quickly.',
   },
 ];
@@ -212,24 +207,26 @@ export class DocumentationBuilderService {
   private isSectionAvailable(id: DocumentationSectionId, model: KnowledgeModel): boolean {
     const caps = model.capabilities;
     const ai = model.ai;
+    const isFile = model.targetType === 'file';
 
     switch (id) {
       case 'executive-summary':
-        return !!ai?.understanding?.executiveSummary;
+        return isFile
+          ? !!ai?.summaries?.understanding?.content
+          : !!ai?.understanding?.executiveSummary;
 
       case 'repository-overview':
         return model.structure.totalFiles > 0;
 
       case 'architecture-overview':
-        return (
-          caps.includes('architectureDiscovery') &&
-          (model.relationships.architecture?.patterns.length ?? 0) > 0
-        );
+        return isFile
+          ? !!ai?.summaries?.architecture?.content
+          : caps.includes('architectureDiscovery') &&
+              (model.relationships.architecture?.patterns.length ?? 0) > 0;
 
       case 'data-flow':
-        // File: deterministic data flow steps; multi-file: dependency graph
-        return model.targetType === 'file'
-          ? (model.insights.dataFlow?.steps.length ?? 0) > 0
+        return isFile
+          ? !!ai?.summaries?.dataFlow?.content
           : caps.includes('dependencyResolution') &&
               (model.relationships.dependencies?.graph.nodes.length ?? 0) >= 3;
 
@@ -240,10 +237,14 @@ export class DocumentationBuilderService {
         );
 
       case 'risk-assessment':
-        return (model.insights.risks?.length ?? 0) > 0 || (ai?.security?.findings.length ?? 0) > 0;
+        return isFile
+          ? !!ai?.summaries?.security?.content
+          : (model.insights.risks?.length ?? 0) > 0 || (ai?.security?.findings.length ?? 0) > 0;
 
       case 'modernization':
-        return (ai?.recommendations?.recommendations.length ?? 0) > 0;
+        return isFile
+          ? !!ai?.summaries?.recommendations?.content
+          : (ai?.recommendations?.recommendations.length ?? 0) > 0;
 
       case 'key-files':
         return (
@@ -261,7 +262,9 @@ export class DocumentationBuilderService {
         );
 
       case 'onboarding-guide':
-        return !!ai?.learningPath;
+        return isFile
+          ? !!ai?.summaries?.learningPath?.content
+          : !!ai?.learningPath;
     }
   }
 
@@ -272,10 +275,13 @@ export class DocumentationBuilderService {
     const rel = model.relationships;
     const ins = model.insights;
     const ai = model.ai;
+    const isFile = model.targetType === 'file';
 
     switch (id) {
       case 'executive-summary':
-        return ai?.understanding?.executiveSummary ?? '';
+        return isFile
+          ? (ai?.summaries?.understanding?.content ?? '')
+          : (ai?.understanding?.executiveSummary ?? '');
 
       case 'repository-overview': {
         const lines = [
@@ -295,25 +301,15 @@ export class DocumentationBuilderService {
       }
 
       case 'architecture-overview': {
+        if (isFile) return ai?.summaries?.architecture?.content ?? '';
         const patterns = rel.architecture?.patterns ?? [];
         return patterns
-          .map(
-            (p) =>
-              `• ${p.name} (${Math.round((p.confidence ?? 0) * 100)}%) — ${p.indicators.join(', ')}`,
-          )
+          .map((p) => `• ${p.name} (${Math.round((p.confidence ?? 0) * 100)}%) — ${p.indicators.join(', ')}`)
           .join('\n');
       }
 
       case 'data-flow': {
-        if (model.targetType === 'file') {
-          const df = ins.dataFlow;
-          if (!df) return '';
-          const parts: string[] = [];
-          if (df.inputs.length) parts.push(`Inputs: ${df.inputs.join(', ')}`);
-          if (df.steps.length) parts.push(`Flow: ${df.steps.join(' → ')}`);
-          if (df.outputs.length) parts.push(`Outputs: ${df.outputs.join(', ')}`);
-          return parts.join('\n');
-        }
+        if (isFile) return ai?.summaries?.dataFlow?.content ?? '';
         const graph = rel.dependencies?.graph;
         if (!graph) return '';
         const nodeMap = new Map(graph.nodes.map((n) => [n.id, n.name]));
@@ -340,21 +336,22 @@ export class DocumentationBuilderService {
       }
 
       case 'risk-assessment': {
-        const detRisks = (ins.risks ?? []).map(
-          (r) => `[${r.severity.toUpperCase()}] ${r.description}`,
-        );
+        if (isFile) return ai?.summaries?.security?.content ?? '';
+        const detRisks = (ins.risks ?? []).map((r) => `[${r.severity.toUpperCase()}] ${r.description}`);
         const aiRisks = (ai?.security?.findings ?? [])
           .slice(0, 10)
           .map((f) => `[${f.severity.toUpperCase()}] ${f.title}: ${f.issueDescription}`);
         return [...detRisks, ...aiRisks].join('\n');
       }
 
-      case 'modernization':
+      case 'modernization': {
+        if (isFile) return ai?.summaries?.recommendations?.content ?? '';
         return (ai?.recommendations?.recommendations ?? [])
           .filter((r) => r.category === 'modernization' || r.category === 'technical-debt')
           .slice(0, 10)
           .map((r) => `• ${r.title}\n  ${r.recommendedImprovement}`)
           .join('\n');
+      }
 
       case 'key-files': {
         const ranks = rel.dependencies?.ranks ?? [];
@@ -383,6 +380,7 @@ export class DocumentationBuilderService {
           .join('\n');
 
       case 'onboarding-guide': {
+        if (isFile) return ai?.summaries?.learningPath?.content ?? '';
         const lp = ai?.learningPath;
         if (!lp) return '';
         const steps = (lp.roadmap ?? [])

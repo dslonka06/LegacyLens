@@ -18,8 +18,54 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   min-height: 0;
+  position: relative;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+
+  app-code-editor {
+    overflow: hidden;
+    min-height: 0;
+    flex: 1;
+  }
+
+  &--collapsed {
+    background: var(--editor-bg);
+    border-right: 1px solid var(--border);
+    min-width: 6px;
+  }
+}
+
+.code-panel-collapse-tab {
+  position: absolute;
+  right: -20px;
+  top: 80px;
+  z-index: 100;
+  width: 20px;
+  height: 40px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: var(--bg-card);
+    color: var(--accent);
+    border-color: rgba(141, 99, 255, 0.3);
+  }
 }
 
 .page-main {

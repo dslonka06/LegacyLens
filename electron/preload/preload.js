@@ -86,6 +86,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     scanRepository:       (files)                             => invoke('intelligence:scanRepository', files),
     classifyWorkspace:    (files)                             => invoke('intelligence:classifyWorkspace', files),
     systemUnderstanding:  (model)                             => invoke('intelligence:systemUnderstanding', model),
+    hubDirective:         (data)                              => invoke('intelligence:hubDirective', data),
     exploreWorkflows:     (flows)                             => invoke('intelligence:exploreWorkflows', flows),
     learningPath:         (model)                             => invoke('intelligence:learningPath', model),
     discoverDataFlows:    (knowledge, structure)              => invoke('intelligence:discoverDataFlows', knowledge, structure),

@@ -6,41 +6,42 @@ import { LLMSummaryService } from '@app/analysis/services/llm-summary.service';
 import type { LLMSummaryEntry } from '@app/knowledge/models/llm-summaries.model';
 import { SystemUnderstanding } from '@app/analysis/models/system-understanding.model';
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
-import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
-import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
-import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 
 @Component({
   selector: 'app-system-understanding-page',
   standalone: true,
-  imports: [CommonModule, ExplanationCard, CodeEditor, ResizeDividerComponent, ThemeToggle],
+  imports: [CommonModule, ExplanationCard, ThemeToggle],
   templateUrl: './system-understanding-page.html',
   styleUrl: './system-understanding-page.scss',
 })
 export class SystemUnderstandingPage implements OnInit, OnDestroy {
   understanding: SystemUnderstanding | null = null;
   hasWorkspace = false;
-  codeEditorWidth = 420;
-  expandedGroupIndex: number | null = null;
+  showHealthInfo = false;
+  showCompClasses = false;
+  showCompMethods = false;
+  showCompImportsExports = false;
+  expandedResponsibilityIndex: number | null = null;
 
   private sub: Subscription | null = null;
 
   constructor(
     private readonly manager: WorkspaceManagerService,
-    private readonly layoutService: PanelLayoutService,
     private readonly llmSummaryService: LLMSummaryService,
   ) {}
 
   ngOnInit(): void {
-    this.codeEditorWidth = this.layoutService.load('understanding-code')?.[0] ?? 420;
     const active = this.manager.getActive();
     this.hasWorkspace = active !== null;
     this.understanding = active?.knowledgeModel?.ai?.understanding ?? null;
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       this.hasWorkspace = ws !== null;
       this.understanding = ws?.knowledgeModel?.ai?.understanding ?? null;
-      this.expandedGroupIndex = null;
+      this.showCompClasses = false;
+      this.showCompMethods = false;
+      this.showCompImportsExports = false;
+      this.expandedResponsibilityIndex = null;
     });
   }
 
@@ -85,14 +86,53 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
     return map[this.healthTier];
   }
 
-  // ── Accordion ─────────────────────────────────────────────────────────────
+  // ── Responsibility accordion ──────────────────────────────────────────────
 
-  toggleGroup(index: number): void {
-    this.expandedGroupIndex = this.expandedGroupIndex === index ? null : index;
+  toggleResponsibility(index: number): void {
+    this.expandedResponsibilityIndex = this.expandedResponsibilityIndex === index ? null : index;
   }
 
-  isGroupExpanded(index: number): boolean {
-    return this.expandedGroupIndex === index;
+  isResponsibilityExpanded(index: number): boolean {
+    return this.expandedResponsibilityIndex === index;
+  }
+
+  // ── Heuristic narratives ──────────────────────────────────────────────────
+
+  get businessPurposeNarrative(): string {
+    return this.knowledgeModel?.ai?.businessPurposeNarrative ?? '';
+  }
+
+  get codeHealthNarrative(): string {
+    return this.knowledgeModel?.ai?.codeHealthNarrative ?? '';
+  }
+
+  get fileResponsibilities(): Array<{ text: string; description: string }> {
+    const responsibilities = this.understanding?.keyResponsibilities ?? [];
+    const descriptions = this.knowledgeModel?.ai?.fileResponsibilitiesNarrative ?? [];
+    return responsibilities.map((text, i) => ({
+      text,
+      description: descriptions[i] ?? '',
+    }));
+  }
+
+  get fileComponentClasses(): string[] {
+    return (this.knowledgeModel?.ai?.fileComponentsNarrative?.items ?? [])
+      .filter(i => i.kind === 'class')
+      .map(i => i.name);
+  }
+
+  get fileComponentMethods(): string[] {
+    return (this.knowledgeModel?.ai?.fileComponentsNarrative?.items ?? [])
+      .filter(i => i.kind === 'method')
+      .map(i => i.name);
+  }
+
+  get fileComponentImports(): string[] {
+    return this.knowledgeModel?.ai?.fileComponentsNarrative?.imports ?? [];
+  }
+
+  get fileComponentExports(): string[] {
+    return this.knowledgeModel?.ai?.fileComponentsNarrative?.exports ?? [];
   }
 
   // ── LLM summary ───────────────────────────────────────────────────────────
@@ -120,23 +160,6 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
-  }
-
-  onCodePanelResize(width: number): void {
-    this.codeEditorWidth = width;
-    this.layoutService.save('understanding-code', [width]);
-  }
-
-  get sourceCode(): string | undefined {
-    return this.manager.getActive()?.knowledgeModel?.structure.sourceCode;
-  }
-
-  get sourceFileName(): string | undefined {
-    return (
-      this.manager.getActive()?.knowledgeModel?.structure.filePath ??
-      this.manager.getActive()?.knowledgeModel?.workspaceName ??
-      undefined
-    );
   }
 
   get showExplanationCard(): boolean {

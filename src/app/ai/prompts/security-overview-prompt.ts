@@ -55,25 +55,26 @@ export class SecurityOverviewPromptBuilder {
     // ── Output format ────────────────────────────────────────────────────────
     if (scope === 'file') {
       if (totalFindings === 0) {
-        parts.push(`Output: 1 sentence. State there are no significant concerns in this file and what that suggests about it.`);
+        parts.push(`Output: 1 sentence. State that no significant security concerns were found in this file and briefly note what that suggests about its attack surface.`);
       } else {
         parts.push(
           `Output: 1 short paragraph, 50–90 words.`,
-          `Characterise the security posture of this file based on the type and severity of findings.`,
-          `What does the finding pattern say about how this file was written — carefully, hastily, or with a particular blind spot?`,
+          `Characterise the security properties of this file based on the type and severity of findings.`,
+          `What attack surface do these findings create? How exploitable are they given what this file does?`,
+          `What makes the specific combination of finding types more or less dangerous in context?`,
         );
       }
     } else if (scope === 'folder') {
       parts.push(
         `Output: 2 short paragraphs, 90–150 words.`,
-        `Paragraph 1: What does the overall risk level and finding distribution say about how security was considered when building this area?`,
-        `Paragraph 2: What is the most significant concern in this area, and what does its presence say about the development practice that produced it?`,
+        `Paragraph 1: What does the overall risk level and finding distribution reveal about the security properties of this area — what attack surface exists and how exposed is it?`,
+        `Paragraph 2: What is the most significant security concern, and what makes its presence in this specific context more or less dangerous than the severity label alone suggests?`,
       );
     } else {
       parts.push(
         `Output: 3–4 paragraphs, 160–260 words.`,
-        `Paragraph 1: What does the overall risk level and maturity score say about this system's security posture — was security a first-class concern or was it applied inconsistently?`,
-        `Paragraph 2: What does the concentration of findings across categories tell you about the team's security blind spots? Are the issues spread across many categories (broad negligence) or concentrated (a specific missing pattern)?`,
+        `Paragraph 1: What does the overall risk level and maturity score reveal about this system's security posture — where are the real attack surfaces and how well are they defended?`,
+        `Paragraph 2: What does the concentration of findings across categories reveal about which security properties (confidentiality, integrity, availability, authentication) are weakest?`,
         `Paragraph 3: What is the highest-risk surface area, and why does the specific combination of architecture, components, and finding types make it more dangerous than the severity counts alone would suggest?`,
         `Paragraph 4 (only if critical/high count > 0 and maturity is low): What does this system's security posture mean for its readiness to handle production load or external exposure?`,
       );
@@ -137,8 +138,7 @@ export class SecurityOverviewPromptBuilder {
 
     parts.push(
       ``,
-      `Reason about what the pattern of findings reveals about how this system was built.`,
-      `Do not describe the data — interpret it.`,
+      `Reason about what the findings reveal about the security properties of this system — attack surface, exploitability, and defence depth. Do not describe the data — interpret it.`,
     );
 
     return parts.join('\n');

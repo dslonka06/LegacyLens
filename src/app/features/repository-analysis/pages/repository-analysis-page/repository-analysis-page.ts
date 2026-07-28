@@ -79,6 +79,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   showIdentity = false;
   showInfoCards = false;
   showArcDraw = false;
+  showHealthInfo = false;
   showMetricCards = false;
   isReturning = false;
 
@@ -446,6 +447,10 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   deleteWorkspace(): void {
     if (this.workspace) this.manager.delete(this.workspace.id);
+  }
+
+  switchWorkspace(id: string): void {
+    this.manager.activate(id);
   }
 
   openSwitcher(): void {

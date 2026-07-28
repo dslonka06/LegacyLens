@@ -32,6 +32,7 @@ export class DataFlowPage implements OnInit, OnDestroy {
   hasWorkspace = false;
   flowNodes: FlowNode[] = [];
   expandedWorkflowIndex: number | null = null;
+  expandedStepIndex: number | null = null;
   selectedFilePath: string | null = null;
 
   private sub: Subscription | null = null;
@@ -49,6 +50,7 @@ export class DataFlowPage implements OnInit, OnDestroy {
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       this.model = ws?.knowledgeModel ?? null;
       this.hasWorkspace = this.model != null;
+      this.expandedStepIndex = null;
       this.buildFlow(this.model);
     });
   }
@@ -90,6 +92,30 @@ export class DataFlowPage implements OnInit, OnDestroy {
 
   get isFileScope(): boolean {
     return this.model?.targetType === 'file';
+  }
+
+  get fileFlowPattern(): { label: string; overview: string } | null {
+    return this.model?.ai?.dataFlowFileNarrative?.pattern ?? null;
+  }
+
+  get fileStepNarrative(): string[] {
+    return this.model?.ai?.dataFlowFileNarrative?.stepNarrative ?? [];
+  }
+
+  get fileInputsFrame(): string | null {
+    return this.model?.ai?.dataFlowFileNarrative?.inputsFrame ?? null;
+  }
+
+  get fileOutputsFrame(): string | null {
+    return this.model?.ai?.dataFlowFileNarrative?.outputsFrame ?? null;
+  }
+
+  toggleStep(index: number): void {
+    this.expandedStepIndex = this.expandedStepIndex === index ? null : index;
+  }
+
+  isStepExpanded(index: number): boolean {
+    return this.expandedStepIndex === index;
   }
 
   // ── Multi-file: dependency graph based flow ─────────────────────────────────

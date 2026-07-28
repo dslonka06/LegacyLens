@@ -1003,20 +1003,25 @@ export class SystemUnderstandingEngine {
     keyResponsibilities: string[],
     mostImportantItems: ImportantItem[],
   ): ResponsibilityGroup[] {
-    // At file scope, each responsibility becomes its own group.
-    // Components are the mostImportantItems entries (derived from responsibilities/inputs).
-    // Blast radius is always Low — no dependency graph at file scope.
     if (keyResponsibilities.length === 0) return [];
 
-    return keyResponsibilities.map((resp, i) => ({
-      responsibility: resp,
-      components: mostImportantItems.slice(i, i + 1).map(item => ({
-        name: item.name,
-        path: item.path,
-        whyImportant: item.whyImportant,
-        blastRadius: 'Low' as const,
-      })),
-    })).filter(g => g.components.length > 0);
+    const fileName = session.fileName;
+
+    // At file scope there is no dependency graph, so each responsibility is its own group.
+    // The component entry represents the file itself scoped to that responsibility.
+    // Use mostImportantItems where a matching entry exists, otherwise synthesise from the responsibility.
+    return keyResponsibilities.map((resp, i) => {
+      const matched = mostImportantItems[i];
+      return {
+        responsibility: resp,
+        components: [{
+          name: matched?.name ?? fileName,
+          path: matched?.path ?? session.fileName,
+          whyImportant: matched?.whyImportant ?? `Core responsibility of this file.`,
+          blastRadius: 'Low' as const,
+        }],
+      };
+    });
   }
 
   // Parses "Depended on by N other components" from whyImportant strings

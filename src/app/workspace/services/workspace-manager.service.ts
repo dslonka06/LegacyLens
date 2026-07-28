@@ -128,6 +128,14 @@ export class WorkspaceManagerService {
     return this._workspaces$.value.length < MAX_WORKSPACES;
   }
 
+  createNew(type: WorkspaceType): Workspace | null {
+    if (!this.canCreate()) {
+      this._limitReached$.next();
+      return null;
+    }
+    return this.create(type);
+  }
+
   workspace$(id: string): Observable<Workspace | null> {
     return this._workspaces$.pipe(
       map((ws) => ws.find((w) => w.id === id) ?? null),

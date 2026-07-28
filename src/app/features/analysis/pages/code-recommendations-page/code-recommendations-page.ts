@@ -36,6 +36,8 @@ export class CodeRecommendationsPage implements OnInit, OnDestroy {
   expandedRecs = new Set<string>();
   highlightedFilePath: string | null = null;
   codeEditorWidth = 420;
+  codeCollapsed = false;
+  private _preCollapseWidth = 420;
 
   private sub: Subscription | null = null;
 
@@ -60,6 +62,16 @@ export class CodeRecommendationsPage implements OnInit, OnDestroy {
   onCodePanelResize(width: number): void {
     this.codeEditorWidth = width;
     this.layoutService.save('recs-code', [width]);
+  }
+
+  toggleCodePanel(): void {
+    if (this.codeCollapsed) {
+      this.codeEditorWidth = this._preCollapseWidth;
+      this.codeCollapsed = false;
+    } else {
+      this._preCollapseWidth = this.codeEditorWidth;
+      this.codeCollapsed = true;
+    }
   }
 
   get sourceCode(): string | undefined {

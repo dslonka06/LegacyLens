@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { ElectronService } from '@app/core/services/electron.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import type { KnowledgeModel } from '@app/knowledge/models/knowledge-model.contract';
@@ -17,6 +17,7 @@ export class LLMSummaryService {
   constructor(
     private readonly electron: ElectronService,
     private readonly manager: WorkspaceManagerService,
+    private readonly ngZone: NgZone,
     private readonly understandingPrompt: RepositoryExplanationPromptBuilder,
     private readonly securityPrompt: SecurityOverviewPromptBuilder,
     private readonly recommendationsPrompt: RecommendationSummaryPromptBuilder,
@@ -40,14 +41,14 @@ export class LLMSummaryService {
       const active = providers.find(p => p.active && p.configured);
       if (!active) {
         console.log('[LLMSummary] early exit: no provider configured');
-        this.manager.markAIStageFailed(workspaceId, 'generate', generation, 'no-provider');
+        this.ngZone.run(() => this.manager.markAIStageFailed(workspaceId, 'generate', generation, 'no-provider'));
         return;
       }
       provider = active.id;
       isLocal = active.category === 'local';
     } catch (err) {
       console.error('[LLMSummary] aiGetProviders threw:', err);
-      this.manager.markAIStageFailed(workspaceId, 'generate', generation, 'failed to read provider status');
+      this.ngZone.run(() => this.manager.markAIStageFailed(workspaceId, 'generate', generation, 'failed to read provider status'));
       return;
     }
 
@@ -55,11 +56,33 @@ export class LLMSummaryService {
       modelId = (await this.electron.getAllSettings())['aiModel'] as string ?? 'unknown';
     } catch { /* non-fatal — provenance still records provider */ }
 
-    const tasks = this._buildTasks(model);
-    if (tasks.length === 0) return;
+    this.ngZone.run(() => this.manager.setStageRunning(workspaceId, 'prompt'));
+    let tasks: Array<{ key: LLMSummaryKey; prompt: string }>;
+    try {
+      tasks = this._buildTasks(model);
+    } catch (err) {
+      this.ngZone.run(() => {
+        this.manager.markAIStageFailed(workspaceId, 'prompt', generation, 'Prompt building threw unexpectedly');
+        this.manager.clearStageRunning(workspaceId, 'prompt');
+      });
+      return;
+    }
+
+    if (tasks.length === 0) {
+      this.ngZone.run(() => {
+        this.manager.markAIStageFailed(workspaceId, 'prompt', generation, 'No prompts could be built');
+        this.manager.clearStageRunning(workspaceId, 'prompt');
+      });
+      return;
+    }
+
+    this.ngZone.run(() => {
+      this.manager.mergeAIResults(workspaceId, {}, 'prompt', generation);
+      this.manager.clearStageRunning(workspaceId, 'prompt');
+    });
 
     console.log(`[LLMSummary] generating ${tasks.length} summaries with ${provider}/${modelId} (${isLocal ? 'sequential' : 'parallel'})`);
-    this.manager.setStageRunning(workspaceId, 'generate');
+    this.ngZone.run(() => this.manager.setStageRunning(workspaceId, 'generate'));
 
     try {
       let results: boolean[];
@@ -79,18 +102,20 @@ export class LLMSummaryService {
       const anyFailed  = results.some(ok => !ok);
       const anySuccess = results.some(ok => ok);
 
-      if (!anySuccess) {
-        this.manager.markAIStageFailed(workspaceId, 'generate', generation, 'All summary generations failed');
-      } else if (anyFailed) {
-        this.manager.markAIStagePartial(workspaceId, 'generate', generation);
-      } else {
-        this.manager.mergeAIResults(workspaceId, {}, 'generate', generation);
-      }
+      this.ngZone.run(() => {
+        if (!anySuccess) {
+          this.manager.markAIStageFailed(workspaceId, 'generate', generation, 'All summary generations failed');
+        } else if (anyFailed) {
+          this.manager.markAIStagePartial(workspaceId, 'generate', generation);
+        } else {
+          this.manager.mergeAIResults(workspaceId, {}, 'generate', generation);
+        }
+      });
     } catch (err) {
       console.error('[LLMSummary] unexpected error in Promise.all:', err);
-      this.manager.markAIStageFailed(workspaceId, 'generate', generation, 'Unexpected error during generate stage');
+      this.ngZone.run(() => this.manager.markAIStageFailed(workspaceId, 'generate', generation, 'Unexpected error during generate stage'));
     } finally {
-      this.manager.clearStageRunning(workspaceId, 'generate');
+      this.ngZone.run(() => this.manager.clearStageRunning(workspaceId, 'generate'));
     }
   }
 
@@ -133,11 +158,11 @@ export class LLMSummaryService {
     }
 
     const generation = this.manager.getGeneration(workspaceId);
-    this.manager.setStageRunning(workspaceId, 'generate');
+    this.ngZone.run(() => this.manager.setStageRunning(workspaceId, 'generate'));
     try {
       await this._generateAndMerge(workspaceId, model, generation, key, tasks[0].prompt, provider, modelId);
     } finally {
-      this.manager.clearStageRunning(workspaceId, 'generate');
+      this.ngZone.run(() => this.manager.clearStageRunning(workspaceId, 'generate'));
     }
   }
 
@@ -186,18 +211,18 @@ export class LLMSummaryService {
 
       if (text === null || text === undefined) {
         const entry: LLMSummaryEntry = { content: '', status: 'failed', provider, model: modelId, generatedAt, error: 'No response received' };
-        this.manager.mergeSummaryKey(workspaceId, key, entry, generation);
+        this.ngZone.run(() => this.manager.mergeSummaryKey(workspaceId, key, entry, generation));
         return false;
       }
 
       const entry: LLMSummaryEntry = { content: text, status: 'complete', provider, model: modelId, generatedAt };
-      this.manager.mergeSummaryKey(workspaceId, key, entry, generation);
+      this.ngZone.run(() => this.manager.mergeSummaryKey(workspaceId, key, entry, generation));
       return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[LLMSummary] FAILED key=${key}`, message);
       const entry: LLMSummaryEntry = { content: '', status: 'failed', provider, model: modelId, generatedAt, error: message };
-      this.manager.mergeSummaryKey(workspaceId, key, entry, generation);
+      this.ngZone.run(() => this.manager.mergeSummaryKey(workspaceId, key, entry, generation));
       return false;
     }
   }

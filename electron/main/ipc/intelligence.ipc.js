@@ -9,11 +9,18 @@ const { ProjectDiscoveryEngine } = require('../engines/knowledge/project-discove
 const { RepositoryScannerEngine } = require('../engines/knowledge/repository-scanner.engine');
 const { WorkspaceClassifierEngine } = require('../engines/knowledge/workspace-classifier.engine');
 const { SystemUnderstandingEngine } = require('../engines/analysis/system-understanding.engine');
+const { HubNarrativeEngine } = require('../engines/narrative/hub-narrative.engine');
+const { BusinessPurposeNarrativeEngine } = require('../engines/narrative/business-purpose-narrative.engine');
+const { CodeHealthNarrativeEngine } = require('../engines/narrative/code-health-narrative.engine');
+const { ResponsibilitiesNarrativeEngine } = require('../engines/narrative/responsibilities-narrative.engine');
+const { DataFlowPatternEngine } = require('../engines/narrative/data-flow-pattern.engine');
+const { DataFlowStepsNarrativeEngine } = require('../engines/narrative/data-flow-steps-narrative.engine');
 const { WorkflowExplorerEngine } = require('../engines/analysis/workflow-explorer.engine');
 const { LearningPathAnalysisEngine } = require('../engines/analysis/learning-path-analysis.engine');
 const { DataFlowDiscoveryEngine } = require('../engines/analysis/data-flow-discovery.engine');
 const { RecommendationAnalysisEngine } = require('../engines/analysis/recommendation-analysis.engine');
 const { SecurityAnalysisEngine } = require('../engines/analysis/security-analysis.engine');
+const { SecurityNextStepsEngine } = require('../engines/narrative/security-next-steps-narrative.engine');
 const { ArchitectureAnalysisEngine } = require('../engines/analysis/architecture-analysis.engine');
 const { DataFlowAnalysisEngine } = require('../engines/analysis/data-flow-analysis.engine');
 const { RepositoryInsightsEngine } = require('../engines/analysis/repository-insights.engine');
@@ -40,11 +47,18 @@ const projectDiscovery = new ProjectDiscoveryEngine();
 const repositoryScanner = new RepositoryScannerEngine();
 const workspaceClassifier = new WorkspaceClassifierEngine();
 const systemUnderstanding = new SystemUnderstandingEngine();
+const hubNarrative = new HubNarrativeEngine();
+const businessPurposeNarrative = new BusinessPurposeNarrativeEngine();
+const codeHealthNarrative = new CodeHealthNarrativeEngine();
+const responsibilitiesNarrative = new ResponsibilitiesNarrativeEngine();
+const dataFlowPattern = new DataFlowPatternEngine();
+const dataFlowStepsNarrative = new DataFlowStepsNarrativeEngine();
 const workflowExplorer = new WorkflowExplorerEngine();
 const learningPath = new LearningPathAnalysisEngine();
 const dataFlowDiscovery = new DataFlowDiscoveryEngine();
 const recommendations = new RecommendationAnalysisEngine();
 const securityAnalysis = new SecurityAnalysisEngine();
+const securityNextSteps = new SecurityNextStepsEngine();
 const architectureAnalysis = new ArchitectureAnalysisEngine();
 const dataFlowAnalysis = new DataFlowAnalysisEngine();
 const repositoryInsights = new RepositoryInsightsEngine();
@@ -74,7 +88,7 @@ function adaptModelForEngines(model) {
         type:                  'file',
         summary:               '',
         risks:                 (ins.risks ?? []).map(r => r.description),
-        responsibilities:      [],
+        responsibilities:      ins.responsibilities ?? model.ai?.understanding?.keyResponsibilities ?? [],
         dependencies:          [],
         architectureLayers:    [],
         patterns:              [],
@@ -105,8 +119,13 @@ function adaptModelForEngines(model) {
 
   // folder / repository — translate new shape to old RepositoryKnowledge shape
   const rel = model.relationships ?? {};
+  const symbols = model.structure?.symbols ?? {};
   const knowledge = {
-    sourceFiles:     [],
+    sourceFiles:     Object.keys(symbols).map(path => ({
+      path,
+      extension: path.split('.').pop() ?? '',
+      content:   '',
+    })),
     dependencyGraph: rel.dependencies?.graph  ?? null,
     architecture:    rel.architecture         ? { patterns: rel.architecture.patterns } : null,
     builtAt:         model.metadata?.builtAt  ?? new Date().toISOString(),
@@ -129,6 +148,15 @@ function adaptModelForEngines(model) {
   } : null;
 
   return { knowledge, session };
+}
+
+function _buildIOFrame(items, direction, fileType) {
+  if (items.length === 0) return null;
+  const listed = items.slice(0, 3).join(', ') + (items.length > 3 ? ` and ${items.length - 3} more` : '');
+  if (direction === 'input') {
+    return `This ${fileType.toLowerCase()} receives ${listed} as ${items.length === 1 ? 'its entry point' : 'entry points'} into the flow.`;
+  }
+  return `The flow produces ${listed}${items.length === 1 ? '' : ` as its ${items.length} outputs`}.`;
 }
 
 function registerIntelligenceHandlers() {
@@ -182,11 +210,116 @@ function registerIntelligenceHandlers() {
     if (!model) throw new Error('model is required');
     console.log('[IPC] intelligence:systemUnderstanding targetType=' + model.targetType);
     const { knowledge, session } = adaptModelForEngines(model);
-    const result = await (knowledge
+    const understanding = await (knowledge
       ? systemUnderstanding.analyzeKnowledge(knowledge, session)
       : systemUnderstanding.analyzeFile(session));
-    console.log('[IPC] intelligence:systemUnderstanding done result=' + (result ? 'ok' : 'null'));
-    return result;
+    console.log('[IPC] intelligence:systemUnderstanding done result=' + (understanding ? 'ok' : 'null'));
+
+    // Build structural hub narrative pass (pass 2 directive is appended by a later stage)
+    const ins = model.insights ?? {};
+    const rel = model.relationships ?? {};
+    const graph = rel.dependencies?.graph ?? null;
+    const isFile = model.targetType === 'file';
+    const symbols = model.structure?.symbols ?? {};
+
+    const inboundMap = new Map();
+    const outboundMap = new Map();
+    if (graph) {
+      for (const e of graph.edges ?? []) {
+        inboundMap.set(e.target, (inboundMap.get(e.target) ?? 0) + 1);
+        outboundMap.set(e.source, (outboundMap.get(e.source) ?? 0) + 1);
+      }
+    }
+
+    const narrativeData = {
+      scope:               isFile ? 'file' : (Object.keys(symbols).length > 20 ? 'repository' : 'folder'),
+      fileName:            model.structure?.filePath?.split(/[\\/]/).pop() ?? model.workspaceName ?? 'this',
+      inboundDeps:         isFile
+                             ? (ins.dataFlow?.inputs?.length ?? 0)
+                             : (graph?.nodes?.reduce((max, n) => Math.max(max, inboundMap.get(n.id) ?? 0), 0) ?? 0),
+      outboundDeps:        isFile
+                             ? (ins.dataFlow?.outputs?.length ?? 0)
+                             : (graph?.edges?.length ?? 0),
+      complexity:          ins.complexity ?? understanding?.health?.complexity ?? 'Medium',
+      maintainability:     ins.maintainability ?? understanding?.health?.maintainability ?? 'Medium',
+      riskCount:           (ins.risks ?? []).length,
+      symbolCount:         Object.keys(symbols).length,
+      flowSteps:           ins.dataFlow?.steps?.length ?? 0,
+      fileCount:           Object.keys(symbols).length,
+      couplingRatio:       graph && graph.nodes?.length > 0
+                             ? (graph.edges?.length ?? 0) / graph.nodes.length
+                             : 0,
+      architecturePatterns: (rel.architecture?.patterns ?? []).map(p => p.name),
+    };
+
+    const structural = hubNarrative.buildStructural(narrativeData);
+
+    const purposeData = {
+      scope:                     narrativeData.scope,
+      name:                      narrativeData.fileName,
+      businessCriticality:       understanding?.businessCriticality ?? 'Medium',
+      businessCriticalityReason: understanding?.businessCriticalityReason ?? '',
+      responsibilityCount:       (understanding?.responsibilityGroups ?? []).length,
+      capabilityCount:           (understanding?.coreCapabilities ?? []).length,
+      complexity:                narrativeData.complexity,
+      maintainability:           narrativeData.maintainability,
+      riskCount:                 narrativeData.riskCount,
+    };
+
+    const healthData = {
+      scope:           narrativeData.scope,
+      name:            narrativeData.fileName,
+      complexity:      narrativeData.complexity,
+      maintainability: narrativeData.maintainability,
+      riskCount:       narrativeData.riskCount,
+      fileCount:       narrativeData.fileCount,
+    };
+
+    // ── File-scope narrative engines ─────────────────────────────────────────
+    let fileResponsibilitiesNarrative = null;
+    let fileComponentsNarrative = null;
+
+    if (isFile) {
+      const s        = model.structure ?? {};
+      const filePath = s.filePath ?? '';
+      const symbolEntry = s.symbols?.[filePath] ?? Object.values(s.symbols ?? {})[0] ?? {};
+
+      const respData = {
+        responsibilities: ins.responsibilities ?? understanding?.keyResponsibilities ?? [],
+        language:         s.fileLanguage ?? s.languages?.[0] ?? 'Unknown',
+        fileType:         symbolEntry.type ?? 'file',
+        complexity:       ins.complexity      ?? 'Medium',
+        maintainability:  ins.maintainability ?? 'Medium',
+        inputs:           ins.dataFlow?.inputs  ?? [],
+        outputs:          ins.dataFlow?.outputs ?? [],
+        flowSteps:        ins.dataFlow?.steps   ?? [],
+        risks:            ins.risks ?? [],
+      };
+      fileResponsibilitiesNarrative = responsibilitiesNarrative.build(respData);
+
+      fileComponentsNarrative = {
+        items: [
+          ...(symbolEntry.classes ?? []).map(name => ({ name, kind: 'class' })),
+          ...(symbolEntry.methods ?? []).map(name => ({ name, kind: 'method' })),
+        ],
+        imports: symbolEntry.imports ?? [],
+        exports: symbolEntry.exports ?? [],
+      };
+    }
+
+    return {
+      understanding,
+      hubNarrative:                { structural, directive: '' },
+      businessPurposeNarrative:    businessPurposeNarrative.build(purposeData),
+      codeHealthNarrative:         codeHealthNarrative.build(healthData),
+      fileResponsibilitiesNarrative,
+      fileComponentsNarrative,
+    };
+  }));
+
+  // intelligence:hubDirective — pass 2 narrative, called after security + recommendations complete
+  ipcMain.handle('intelligence:hubDirective', wrapHandler(async (_event, data) => {
+    return hubNarrative.buildDirective(data);
   }));
 
   // intelligence:exploreWorkflows — build summaries from discovered workflow flows
@@ -227,9 +360,19 @@ function registerIntelligenceHandlers() {
     if (!model) throw new Error('model is required');
     console.log('[IPC] intelligence:security targetType=' + model.targetType);
     const { knowledge, session } = adaptModelForEngines(model);
+    const scope = model.targetType ?? 'repository';
     const result = await (knowledge
       ? securityAnalysis.analyzeKnowledge(knowledge, session)
       : securityAnalysis.analyzeFile(session));
+    if (result) {
+      result.nextSteps = securityNextSteps.build({
+        findings: result.findings,
+        overallRisk: result.overallRisk,
+        securityMaturity: result.securityMaturity,
+        scope,
+        name: model.name ?? '',
+      });
+    }
     console.log('[IPC] intelligence:security done result=' + (result ? 'ok' : 'null'));
     return result;
   }));
@@ -249,6 +392,30 @@ function registerIntelligenceHandlers() {
     console.log('[IPC] intelligence:dataFlowAnalysis targetType=' + model.targetType);
     const result = dataFlowAnalysis.analyze(model);
     console.log('[IPC] intelligence:dataFlowAnalysis done result=' + (result ? 'ok' : 'null'));
+
+    // ── File-scope narrative enrichment ──────────────────────────────────────
+    if (model.targetType === 'file') {
+      const ins = model.insights ?? {};
+      const s   = model.structure ?? {};
+      const steps   = ins.dataFlow?.steps   ?? [];
+      const inputs  = ins.dataFlow?.inputs  ?? [];
+      const outputs = ins.dataFlow?.outputs ?? [];
+      const language = s.fileLanguage ?? s.languages?.[0] ?? 'Unknown';
+      const symbolEntry = Object.values(s.symbols ?? {})[0] ?? {};
+      const fileType = symbolEntry.type ?? 'file';
+
+      const flowData = { steps, inputs, outputs, language, fileType };
+
+      const pattern      = dataFlowPattern.build(flowData);
+      const stepNarrative = dataFlowStepsNarrative.build(flowData);
+
+      // Inline framing sentences for inputs and outputs
+      const inputsFrame  = _buildIOFrame(inputs,  'input',  fileType);
+      const outputsFrame = _buildIOFrame(outputs, 'output', fileType);
+
+      return { ...result, fileNarrative: { pattern, stepNarrative, inputsFrame, outputsFrame } };
+    }
+
     return result;
   }));
 

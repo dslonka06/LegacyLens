@@ -22,23 +22,6 @@
       <app-theme-toggle></app-theme-toggle>
     </div>
     <div class="doc-builder-inner">
-    <!-- Code viewer panel (file workspaces only) -->
-    <div *ngIf="sourceCode" class="code-panel" [style.width.px]="codeEditorWidth">
-      <app-code-editor
-        [restoredFileName]="sourceFileName ?? null"
-        [restoredSourceCode]="sourceCode"
-        [readOnly]="true"
-        [hideFolderUpload]="true"
-      >
-      </app-code-editor>
-    </div>
-    <app-resize-divider
-      *ngIf="sourceCode"
-      [minLeft]="280"
-      [minRight]="340"
-      (leftWidthChange)="onCodePanelResize($event)"
-    ></app-resize-divider>
-
     <div class="doc-selector-col" [style.width.px]="panelWidths[0]">
       <div class="doc-selector-header">
         <div class="section-controls">

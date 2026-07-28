@@ -179,6 +179,11 @@ export class ElectronService {
     return this.api.filesystem.readDirectory(dirPath);
   }
 
+  async readFile(filePath: string): Promise<string | null> {
+    if (!this.api) return null;
+    return this.api.filesystem.readFile(filePath);
+  }
+
   async cancelScan(scanId: string): Promise<void> {
     if (!this.api) return;
     return this.api.filesystem.cancelScan(scanId);
@@ -315,6 +320,17 @@ export class ElectronService {
   async intelligenceSystemUnderstanding(model: KnowledgeModel): Promise<unknown> {
     if (!this.api) return null;
     return this.api.intelligence.systemUnderstanding(model);
+  }
+
+  async intelligenceHubDirective(data: {
+    securityCount: number;
+    securityHasCritical: boolean;
+    securityHasHigh: boolean;
+    recommendationCount: number;
+    scope: string;
+  }): Promise<string> {
+    if (!this.api) return '';
+    return this.api.intelligence.hubDirective(data);
   }
 
   async intelligenceExploreWorkflows(flows: unknown[]): Promise<unknown[]> {

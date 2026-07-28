@@ -49,7 +49,7 @@ export class SyntaxHighlightService {
     return this.initPromise;
   }
 
-  async highlight(code: string, language: string): Promise<string> {
+  async highlight(code: string, language: string, highlightLines?: { start: number; end: number }): Promise<string> {
     await this.init();
     if (!this.highlighter) return this.fallback(code);
 
@@ -57,6 +57,22 @@ export class SyntaxHighlightService {
     const theme = this.themeService.isDark ? DARK_THEME : LIGHT_THEME;
 
     try {
+      if (highlightLines) {
+        const hl = highlightLines;
+        return this.highlighter.codeToHtml(code, {
+          lang,
+          theme,
+          transformers: [
+            {
+              line(node: any, line: number) {
+                if (line >= hl.start && line <= hl.end) {
+                  this.addClassToHast(node, 'highlighted-line');
+                }
+              },
+            },
+          ],
+        });
+      }
       return this.highlighter.codeToHtml(code, { lang, theme });
     } catch {
       return this.fallback(code);

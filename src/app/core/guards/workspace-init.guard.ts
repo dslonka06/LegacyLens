@@ -21,7 +21,8 @@ export const workspaceInitGuard: CanActivateFn = async (route, state) => {
 
   await manager.ready;
 
-  const result = manager.activateOrCreateForType(type);
+  const forceNew = route.queryParamMap.get('new') === '1';
+  const result = forceNew ? manager.createNew(type) : manager.activateOrCreateForType(type);
   if (result === null) {
     // Limit reached — limitReached$ was emitted, stay on the active workspace
     // route (or home if no workspace is active) so the page can open the modal.

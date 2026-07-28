@@ -19,17 +19,23 @@
 
 <div class="insight-page" *ngIf="hasWorkspace && recs">
   <div class="page-split" [class.page-split--has-code]="sourceCode">
-    <div *ngIf="sourceCode" class="code-panel" [style.width.px]="codeEditorWidth">
+    <div *ngIf="sourceCode" class="code-panel" [class.code-panel--collapsed]="codeCollapsed" [style.width.px]="codeCollapsed ? 6 : codeEditorWidth">
+      <button class="code-panel-collapse-tab" (click)="toggleCodePanel()" [title]="codeCollapsed ? 'Show code' : 'Hide code'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline *ngIf="!codeCollapsed" points="15 18 9 12 15 6" />
+          <polyline *ngIf="codeCollapsed" points="9 18 15 12 9 6" />
+        </svg>
+      </button>
       <app-code-editor
+        *ngIf="!codeCollapsed"
         [restoredFileName]="sourceFileName ?? null"
         [restoredSourceCode]="sourceCode"
         [readOnly]="true"
         [hideFolderUpload]="true"
-      >
-      </app-code-editor>
+      ></app-code-editor>
     </div>
     <app-resize-divider
-      *ngIf="sourceCode"
+      *ngIf="sourceCode && !codeCollapsed"
       [minLeft]="280"
       [minRight]="400"
       (leftWidthChange)="onCodePanelResize($event)"

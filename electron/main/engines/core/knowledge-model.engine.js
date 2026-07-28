@@ -110,6 +110,7 @@ class KnowledgeModelEngine {
       }
 
       if (ar.hotspots?.length) insights.hotspots = ar.hotspots;
+      if (ar.responsibilities?.length) insights.responsibilities = ar.responsibilities;
     }
 
     // ── Metadata ───────────────────────────────────────────────────────────────

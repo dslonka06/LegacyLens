@@ -249,6 +249,7 @@ interface ElectronIntelligenceAPI {
 
   // ── AI analysis — accept KnowledgeModel, return typed result ─────────────────
   systemUnderstanding(model: _KM): Promise<unknown>;
+  hubDirective(data: unknown): Promise<string>;
   learningPath(model: _KM): Promise<unknown>;
   recommendations(model: _KM): Promise<unknown>;
   security(model: _KM): Promise<unknown>;

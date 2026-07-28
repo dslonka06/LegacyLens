@@ -171,6 +171,8 @@ export interface KnowledgeInsights {
   risks?: RiskInsight[];
   /** Files/areas flagged as hotspots by structural analysis. */
   hotspots?: string[];
+  /** Key responsibilities extracted from structural analysis (file scope). */
+  responsibilities?: string[];
 }
 
 // ── AI results ─────────────────────────────────────────────────────────────────
@@ -182,6 +184,19 @@ export interface KnowledgeAIResults {
   // ── Derive tier ──────────────────────────────────────────────────────────────
   /** Full AI understanding: executive summary, business purpose, health, key areas. */
   understanding?: SystemUnderstanding;
+  /** Heuristic hub header narrative. Structural pass available after derive; directive
+   *  sentence appended once security + recommendations stages complete. */
+  hubNarrative?: { structural: string; directive: string };
+  businessPurposeNarrative?: string;
+  codeHealthNarrative?: string;
+  /** File scope only: per-responsibility descriptions from heuristic engine. */
+  fileResponsibilitiesNarrative?: string[] | null;
+  /** File scope only: per-component descriptions from heuristic engine. */
+  fileComponentsNarrative?: {
+    items: Array<{ name: string; kind: 'class' | 'method'; description: string; isExported: boolean }>;
+    imports: string[];
+    exports: string[];
+  } | null;
   /** Security findings and risk surface produced by heuristic scanning. */
   security?: SecurityAnalysis;
   /** Actionable improvement recommendations from structural analysis. */
@@ -192,6 +207,13 @@ export interface KnowledgeAIResults {
   architecture?: ArchitectureAIAnalysis;
   /** Data flow workflow analysis with entry points, bottlenecks, and risk profiles. */
   dataFlow?: DataFlowAIAnalysis;
+  /** File scope only: heuristic narrative for the data flow page. */
+  dataFlowFileNarrative?: {
+    pattern: { label: string; overview: string };
+    stepNarrative: string[];
+    inputsFrame: string | null;
+    outputsFrame: string | null;
+  } | null;
 
   // ── Generate tier ─────────────────────────────────────────────────────────────
   /** LLM-generated narrative summaries, one per page. Populated after the generate stage. */

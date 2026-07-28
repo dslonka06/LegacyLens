@@ -383,8 +383,8 @@
     padding: 14px 16px;
     background: var(--editor-bg) !important;
     font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-    font-size: 13px;
-    line-height: 1.6;
+    font-size: 12px;
+    line-height: 1.45;
     tab-size: 2;
     white-space: pre;
     min-height: 100%;
@@ -437,5 +437,16 @@
   }
   span {
     font-size: 12px;
+  }
+}
+
+// ─── Line highlight (security findings) ──────────────────
+.shiki-viewer {
+  ::ng-deep .highlighted-line {
+    background: rgba(251, 191, 36, 0.12);
+    border-left: 2px solid rgba(251, 191, 36, 0.7);
+    display: block;
+    margin-left: -16px;
+    padding-left: 14px;
   }
 }

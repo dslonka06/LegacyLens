@@ -4,10 +4,12 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { WorkspaceKnowledgeService } from '@app/knowledge/services/workspace-knowledge.service';
+import { ElectronService } from '@app/core/services/electron.service';
 import { WorkspaceSwitcherModal } from '@app/workspace/components/workspace-switcher-modal/workspace-switcher-modal';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { Workspace, WorkspaceStatus } from '@app/workspace/models/workspace-entity.model';
 import type { KnowledgeModel, AIStage } from '@app/knowledge/models/knowledge-model.contract';
+import type { LLMSummaryKey } from '@app/knowledge/models/llm-summaries.model';
 import type { ElectronDirectoryEntry } from '../../../../../electron';
 import {
   buildAIPipelineState,
@@ -67,6 +69,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   showIdentity = false;
   showInfoCards = false;
   showArcDraw = false;
+  showHealthInfo = false;
   showMetricCards = false;
   isReturning = false;
 
@@ -90,6 +93,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   constructor(
     private readonly manager: WorkspaceManagerService,
     private readonly knowledge: WorkspaceKnowledgeService,
+    private readonly electron: ElectronService,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
     private readonly zone: NgZone,
@@ -140,7 +144,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     // Re-render when stage running state changes so pipeline rows update live
     this.stagesSub = this.manager.activeStages$.subscribe((stagesMap) => {
       // Update status cycling — start/stop per stage
-      const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
+      const stages: AIStage[] = ['understanding', 'dataFlow', 'security', 'recommendations', 'learningPath'];
       stages.forEach((stage) => {
         const running = this.manager.getActiveStages(this.workspace?.id ?? '').has(stage);
         const hasTimer = !!this.statusTimers[stage];
@@ -364,8 +368,32 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   // ── Workspace actions ────────────────────────────────────────
 
   reanalyze(): void {
-    const obs = this.knowledge.reanalyze(this.workspace!.id);
-    if (obs) obs.subscribe({ error: () => {} });
+    const ws = this.workspace;
+    if (!ws) return;
+
+    // Hot path: cache still warm from this session
+    const obs = this.knowledge.reanalyze(ws.id);
+    if (obs) { obs.subscribe({ error: () => {} }); return; }
+
+    // Cold path: app was reloaded — re-read the file from disk using the stored path
+    const path = ws.path;
+    if (!path) return;
+    const name = ws.name;
+
+    this.electron.readFile(path).then((content) => {
+      const entry: ElectronDirectoryEntry = {
+        name,
+        relativePath: name,
+        content: content ?? null,
+        size: 0,
+        modifiedAt: new Date().toISOString(),
+      };
+      this.knowledge.process('file', [entry], {
+        workspaceId: ws.id,
+        workspaceName: name,
+        persist: false,
+      }).subscribe({ error: () => {} });
+    });
   }
 
   newWorkspace(): void {
@@ -378,6 +406,10 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   deleteWorkspace(): void {
     if (this.workspace) this.manager.delete(this.workspace.id);
+  }
+
+  switchWorkspace(id: string): void {
+    this.manager.activate(id);
   }
 
   openSwitcher(): void {
@@ -567,12 +599,15 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   get pipelineStages(): { label: string; stage: AIStage; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
     const ai = this.model?.ai;
     const running = this.manager.getActiveStages(this.workspace?.id ?? '');
-    const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
+    const generateRunning = running.has('generate');
+    const stages: AIStage[] = ['understanding', 'dataFlow', 'security', 'recommendations', 'learningPath'];
     return stages.map(s => {
       const label = STAGE_LABELS[s] ?? s;
-      if (ai?.failedStages?.includes(s)) return { label, stage: s, state: 'failed' as const };
-      if (ai?.completedStages?.includes(s)) return { label, stage: s, state: 'complete' as const };
-      if (running.has(s)) return { label, stage: s, state: 'running' as const };
+      const summaryKey = s as LLMSummaryKey;
+      const summaryStatus = ai?.summaries?.[summaryKey]?.status;
+      if (summaryStatus === 'complete') return { label, stage: s, state: 'complete' as const };
+      if (summaryStatus === 'failed')   return { label, stage: s, state: 'failed' as const };
+      if (generateRunning)              return { label, stage: s, state: 'running' as const };
       return { label, stage: s, state: 'pending' as const };
     });
   }
@@ -753,5 +788,11 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   get executiveSummary(): string {
     return this.model?.ai?.understanding?.executiveSummary ?? '';
+  }
+
+  get hubNarrative(): string {
+    const hn = this.model?.ai?.hubNarrative;
+    if (!hn) return '';
+    return [hn.structural, hn.directive].filter(Boolean).join(' ');
   }
 }

@@ -105,7 +105,9 @@ export class WorkspaceKnowledgeService {
   }
 
   canReanalyze(workspaceId: string): boolean {
-    return this._inputCache.has(workspaceId);
+    if (this._inputCache.has(workspaceId)) return true;
+    const ws = this.manager.getById(workspaceId);
+    return !!(ws?.path);
   }
 
   // ── Private pipeline ──────────────────────────────────────────────────────

@@ -34,9 +34,17 @@ const DERIVE_STAGE_LABELS: Partial<Record<AIStage, string>> = {
   learningPath: 'Learning Path',
 };
 
-const DERIVE_STAGES: AIStage[] = [
+const DERIVE_STAGES_ALL: AIStage[] = [
   'understanding', 'security', 'recommendations', 'architecture', 'dataFlow', 'learningPath',
 ];
+
+const DERIVE_STAGES_FILE: AIStage[] = [
+  'understanding', 'dataFlow', 'security', 'recommendations', 'learningPath',
+];
+
+function deriveStagesFor(model: KnowledgeModel | null): AIStage[] {
+  return model?.targetType === 'file' ? DERIVE_STAGES_FILE : DERIVE_STAGES_ALL;
+}
 
 function stageState(
   stage: AIStage,
@@ -70,18 +78,19 @@ export function buildAIPipelineState(
   }
 
   // ── Derive ────────────────────────────────────────────────────────────────
-  const deriveSubsteps: AIPipelineSubstep[] = DERIVE_STAGES.map(s => ({
+  const deriveStages = deriveStagesFor(model);
+  const deriveSubsteps: AIPipelineSubstep[] = deriveStages.map(s => ({
     key: s,
     label: DERIVE_STAGE_LABELS[s] ?? s,
     // Individual derive stages are never partial — only the derive group is.
     state: stageState(s, ai, running) as Exclude<PipelineStageState, 'partial'>,
   }));
-  const anyDeriveRunning  = DERIVE_STAGES.some(s => running.has(s));
-  const allDeriveSettled  = !!ai && DERIVE_STAGES.every(s =>
+  const anyDeriveRunning  = deriveStages.some(s => running.has(s));
+  const allDeriveSettled  = !!ai && deriveStages.every(s =>
     ai.completedStages.includes(s) || ai.failedStages.includes(s),
   );
-  const someDeriveComplete = !!ai && DERIVE_STAGES.some(s => ai.completedStages.includes(s));
-  const someDerveFailed    = !!ai && DERIVE_STAGES.some(s => ai.failedStages.includes(s));
+  const someDeriveComplete = !!ai && deriveStages.some(s => ai.completedStages.includes(s));
+  const someDerveFailed    = !!ai && deriveStages.some(s => ai.failedStages.includes(s));
   let deriveState: PipelineStageState = 'idle';
   if (anyDeriveRunning)                      deriveState = 'running';
   else if (allDeriveSettled && someDerveFailed) deriveState = 'partial';

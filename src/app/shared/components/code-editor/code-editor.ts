@@ -82,6 +82,7 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
   @Input() restoredSourceCode: string | null = null;
   @Input() readOnly = false;
   @Input() hideFolderUpload = false;
+  @Input() highlightLines: { start: number; end: number } | null = null;
 
   @Output() readonly analyze = new EventEmitter<AnalysisSession>();
   @Output() readonly workspaceReady = new EventEmitter<WorkspaceProfile | null>();
@@ -137,6 +138,9 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
       this.renderHighlight();
       this.cdr.detectChanges();
     }
+    if (changes['highlightLines']) {
+      if (this.code) this.renderHighlight();
+    }
   }
 
   ngOnDestroy(): void {
@@ -148,12 +152,22 @@ export class CodeEditor implements OnInit, OnChanges, OnDestroy {
       this.highlightedHtml = null;
       return;
     }
-    this.highlighter.highlight(this.code, this.currentLanguage).then((html) => {
+    this.highlighter.highlight(this.code, this.currentLanguage, this.highlightLines ?? undefined).then((html) => {
       this.zone.run(() => {
         this.highlightedHtml = this.sanitizer.bypassSecurityTrustHtml(html);
         this.cdr.detectChanges();
+        if (this.highlightLines) {
+          this.scrollToHighlightedLine();
+        }
       });
     });
+  }
+
+  private scrollToHighlightedLine(): void {
+    setTimeout(() => {
+      const el = document.querySelector('.shiki-viewer .highlighted-line');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
   }
 
   get detectedLanguage(): string {
