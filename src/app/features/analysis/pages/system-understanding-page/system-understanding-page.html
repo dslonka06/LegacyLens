@@ -1,13 +1,6 @@
 <!-- No workspace -->
 <div class="no-session" *ngIf="!hasWorkspace">
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="10" />
     <path d="M12 16v-4" />
     <path d="M12 8h.01" />
@@ -18,14 +11,7 @@
 
 <!-- Has workspace, analysis not yet generated -->
 <div class="no-session" *ngIf="hasWorkspace && !understanding">
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="10" />
     <path d="M12 16v-4" />
     <path d="M12 8h.01" />
@@ -36,14 +22,15 @@
 
 <div class="insight-page" *ngIf="understanding">
   <div class="page-split" [class.page-split--has-code]="sourceCode">
+
+    <!-- File scope code panel -->
     <div *ngIf="sourceCode" class="code-panel" [style.width.px]="codeEditorWidth">
       <app-code-editor
         [restoredFileName]="sourceFileName ?? null"
         [restoredSourceCode]="sourceCode"
         [readOnly]="true"
         [hideFolderUpload]="true"
-      >
-      </app-code-editor>
+      ></app-code-editor>
     </div>
     <app-resize-divider
       *ngIf="sourceCode"
@@ -67,136 +54,204 @@
       </div>
 
       <div class="page-content">
-        <app-explanation-card
-          title="AI Analysis"
-          [entry]="llmSummaryEntry"
-          [isGenerating]="isGenerating"
-          [noProvider]="isNoProvider"
-          (regenerate)="onRegenerate()"
-        ></app-explanation-card>
 
-        <div class="su-columns">
-          <div class="su-col-left">
-            <div class="su-card su-card-prose">
-              <div class="su-prose-section">
-                <div class="su-card-header">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path
-                      d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
-                    />
-                    <line x1="7" y1="7" x2="7.01" y2="7" />
-                  </svg>
-                  Business Purpose
-                </div>
-                <p class="su-body-text su-body-text-spaced">{{ understanding!.businessPurpose }}</p>
+        <!-- ── Tier 1: AI Analysis ─────────────────────────────────────────── -->
+        <div class="su-tier">
+          <app-explanation-card
+            title="AI Analysis"
+            [entry]="llmSummaryEntry"
+            [isGenerating]="isGenerating"
+            [noProvider]="isNoProvider"
+            (regenerate)="onRegenerate()"
+          ></app-explanation-card>
+        </div>
+
+        <!-- ── Tier 2: Business Purpose + Code Health ─────────────────────── -->
+        <div class="su-tier su-tier--two-col">
+
+          <!-- Business Purpose -->
+          <div class="su-card su-card--stretch">
+            <div class="su-card-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                <line x1="7" y1="7" x2="7.01" y2="7" />
+              </svg>
+              Business Purpose
+            </div>
+            <p class="su-body-text">{{ understanding!.businessPurpose }}</p>
+          </div>
+
+          <!-- Code Health -->
+          <div class="su-card su-card--stretch su-card--health" [class]="'su-health-' + healthTier">
+            <div class="su-card-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+              Code Health
+            </div>
+            <div class="su-health-tier-row">
+              <span class="health-tier-badge" [class]="'health-tier-badge--' + healthTier">{{ healthTierLabel }}</span>
+            </div>
+            <div class="su-health-metrics">
+              <div class="su-health-metric">
+                <span class="su-health-metric-label">Complexity</span>
+                <span class="su-health-metric-val"
+                  [class.complexity-Low]="complexity === 'Low'"
+                  [class.complexity-Medium]="complexity === 'Medium'"
+                  [class.complexity-High]="complexity === 'High'"
+                >{{ complexity }}</span>
               </div>
-              <div class="su-prose-section su-prose-accent">
-                <div class="su-card-header">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <polygon
-                      points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                    />
-                  </svg>
-                  Why It Matters
-                </div>
-                <p class="su-body-text">{{ understanding!.whyItMatters }}</p>
+              <div class="su-health-metric">
+                <span class="su-health-metric-label">Maintainability</span>
+                <span class="su-health-metric-val"
+                  [class.maint-High]="maintainability === 'High'"
+                  [class.maint-Medium]="maintainability === 'Medium'"
+                  [class.maint-Low]="maintainability === 'Low'"
+                >{{ maintainability }}</span>
+              </div>
+              <div class="su-health-metric">
+                <span class="su-health-metric-label">Risk Level</span>
+                <span class="su-health-metric-val" [class.stat-error]="issueCount > 0">
+                  {{ issueCount === 0 ? 'Low' : issueCount <= 2 ? 'Medium' : 'High' }}
+                </span>
               </div>
             </div>
+            <div class="su-health-explanation">
+              <p><strong>Complexity</strong> measures how tangled the internal structure is, based on coupling between components.</p>
+              <p><strong>Maintainability</strong> reflects how easy the code is to change safely over time.</p>
+              <p><strong>Risk Level</strong> is driven by the number and severity of issues identified during analysis.</p>
+            </div>
+          </div>
+        </div>
 
-            <div class="su-card" *ngIf="understanding!.mostImportantWorkflows?.length">
-              <div class="su-card-header">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                </svg>
-                Most Important Workflows
-              </div>
-              <div class="su-workflow-list">
-                <div
-                  class="su-workflow-item"
-                  *ngFor="let wf of understanding!.mostImportantWorkflows"
-                >
-                  <div class="su-workflow-name">{{ wf.name }}</div>
-                  <div class="su-workflow-desc">{{ wf.description }}</div>
-                </div>
+        <!-- ── Tier 3: Workflows (folder + repo only) ─────────────────────── -->
+        <div class="su-tier" *ngIf="understanding!.scope !== 'file'">
+
+          <!-- Folder scope: key workflows -->
+          <div class="su-card" *ngIf="understanding!.scope === 'folder' && understanding!.keyWorkflows?.length">
+            <div class="su-card-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+              Key Workflows
+            </div>
+            <div class="su-numbered-list">
+              <div class="su-numbered-item" *ngFor="let wf of understanding!.keyWorkflows; let i = index">
+                <span class="su-number-circle">{{ i + 1 }}</span>
+                <span class="su-numbered-text">{{ wf }}</span>
               </div>
             </div>
           </div>
 
-          <div class="su-col-right">
-            <div class="su-card" *ngIf="understanding!.mostImportantItems.length">
-              <div class="su-card-header">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polygon
-                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                  />
-                </svg>
-                Key Components
+          <!-- Repo scope: most important workflows -->
+          <div class="su-card" *ngIf="understanding!.scope === 'repository' && understanding!.mostImportantWorkflows?.length">
+            <div class="su-card-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+              Most Important Workflows
+            </div>
+            <div class="su-workflow-list">
+              <div class="su-workflow-item" *ngFor="let wf of understanding!.mostImportantWorkflows">
+                <div class="su-workflow-name">{{ wf.name }}</div>
+                <div class="su-workflow-desc">{{ wf.description }}</div>
               </div>
-              <div class="su-item-list">
-                <div class="su-item" *ngFor="let item of understanding!.mostImportantItems">
-                  <div class="su-item-name">{{ item.name }}</div>
-                  <div class="su-item-reason">{{ item.whyImportant }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Tier 3 (file) / Tier 4 (folder+repo): Responsibilities & Components ── -->
+        <div class="su-tier" *ngIf="understanding!.responsibilityGroups?.length">
+          <div class="su-card">
+            <div class="su-card-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+              </svg>
+              Responsibilities &amp; Components
+            </div>
+            <p class="su-accordion-subtitle">What this code is accountable for, and the components behind each responsibility.</p>
+
+            <div class="su-accordion">
+              <div
+                class="su-accordion-row"
+                *ngFor="let group of understanding!.responsibilityGroups; let i = index"
+                [class.su-accordion-row--supporting]="group.responsibility === 'Supporting Components'"
+              >
+                <!-- Accordion header -->
+                <div class="su-accordion-header" (click)="toggleGroup(i)">
+                  <span class="su-number-circle" [class.su-number-circle--supporting]="group.responsibility === 'Supporting Components'">
+                    {{ group.responsibility === 'Supporting Components' ? '·' : (i + 1) }}
+                  </span>
+                  <span class="su-accordion-responsibility">{{ group.responsibility }}</span>
+                  <span class="su-accordion-count">{{ group.components.length }} component{{ group.components.length !== 1 ? 's' : '' }}</span>
+                  <svg class="su-accordion-chevron" [class.su-accordion-chevron--open]="isGroupExpanded(i)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </div>
+
+                <!-- Accordion body -->
+                <div class="su-accordion-body" [class.su-accordion-body--open]="isGroupExpanded(i)">
+                  <div class="su-accordion-indent">
+                    <div class="su-comp-card" *ngFor="let comp of group.components">
+                      <div class="su-comp-header">
+                        <span class="su-comp-name">{{ comp.name }}</span>
+                        <span class="su-blast-badge" [class]="'su-blast-badge--' + comp.blastRadius.toLowerCase()">
+                          {{ comp.blastRadius }}
+                        </span>
+                      </div>
+                      <span class="su-comp-path">{{ comp.path }}</span>
+                      <span class="su-comp-role">{{ comp.whyImportant }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="su-card su-dep-bar" *ngIf="understanding!.mostImportantDependencies?.length">
-          <div class="su-card-header">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="18" cy="18" r="3" />
-              <circle cx="6" cy="6" r="3" />
-              <path d="M13 6h3a2 2 0 0 1 2 2v7" />
-              <line x1="6" y1="9" x2="6" y2="21" />
-            </svg>
-            Key Dependencies
-          </div>
-          <div class="su-dep-grid">
-            <div class="su-dep-item" *ngFor="let dep of understanding!.mostImportantDependencies">
-              <div class="su-dep-header">
-                <span class="su-dep-name">{{ dep.name }}</span>
-                <span class="su-dep-type">{{ depTypeLabel(dep.type) }}</span>
+        <!-- ── Tier 5: Areas of Concern (repo only) ───────────────────────── -->
+        <div class="su-tier" *ngIf="understanding!.scope === 'repository'">
+          <div class="su-card" *ngIf="(understanding!.criticalAreas?.length || understanding!.technicalDebtHotspots?.length || understanding!.highRiskAreas?.length)">
+            <div class="su-card-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              Areas of Concern
+            </div>
+            <div class="su-concern-list">
+
+              <!-- Critical areas -->
+              <div class="su-concern-item" *ngFor="let area of understanding!.criticalAreas">
+                <div class="su-concern-header">
+                  <span class="su-concern-badge su-concern-badge--critical">Critical</span>
+                  <span class="su-concern-name">{{ area }}</span>
+                </div>
               </div>
-              <span class="su-dep-reason">{{ dep.whyImportant }}</span>
+
+              <!-- Technical debt hotspots -->
+              <div class="su-concern-item" *ngFor="let hotspot of understanding!.technicalDebtHotspots">
+                <div class="su-concern-header">
+                  <span class="su-concern-badge su-concern-badge--debt">Debt</span>
+                  <span class="su-concern-name">{{ hotspot.name }}</span>
+                </div>
+                <p class="su-concern-detail">{{ hotspot.reason }}</p>
+                <p class="su-concern-impact">{{ hotspot.impact }}</p>
+              </div>
+
+              <!-- High-risk areas -->
+              <div class="su-concern-item" *ngFor="let risk of understanding!.highRiskAreas">
+                <div class="su-concern-header">
+                  <span class="su-concern-badge su-concern-badge--risk">Risk</span>
+                  <span class="su-concern-name">{{ risk }}</span>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
+
       </div>
     </div>
     <!-- /page-main -->

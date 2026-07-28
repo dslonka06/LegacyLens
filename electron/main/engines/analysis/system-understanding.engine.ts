@@ -6,7 +6,6 @@ export interface SystemHealthSummary {
   complexity: HealthLevel;
   maintainability: HealthLevel;
   riskLevel: HealthLevel;
-  modernizationReadiness: HealthLevel;
   interpretation: string;
 }
 
@@ -39,6 +38,18 @@ export interface CoreCapability {
   businessValue: string;
 }
 
+export interface ResponsibilityComponent {
+  name: string;
+  path: string;
+  whyImportant: string;
+  blastRadius: 'High' | 'Medium' | 'Low';
+}
+
+export interface ResponsibilityGroup {
+  responsibility: string;
+  components: ResponsibilityComponent[];
+}
+
 export interface SystemUnderstanding {
   scope: 'file' | 'folder' | 'repository';
   executiveSummary: string;
@@ -54,6 +65,7 @@ export interface SystemUnderstanding {
   businessCriticalityReason: string;
   health: SystemHealthSummary;
   understandingNarrative: string;
+  responsibilityGroups: ResponsibilityGroup[];
   technicalDebtHotspots: TechDebtHotspot[] | null;
   mostImportantWorkflows: ImportantWorkflow[] | null;
   mostImportantDependencies: ImportantDependency[] | null;
@@ -147,6 +159,24 @@ export interface AnalysisSession {
   workspaceContext?: any;
 }
 
+// Shared folder-to-responsibility mapping used by both buildKeyResponsibilities and buildResponsibilityGroups
+const FOLDER_RESPONSIBILITY_MAP: Record<string, string> = {
+  controllers: 'Handle HTTP requests and coordinate responses',
+  api: 'Expose API endpoints for external and internal consumers',
+  services: 'Implement business logic and orchestrate operations',
+  repositories: 'Manage data persistence and retrieval',
+  models: 'Define data structures and domain entities',
+  components: 'Render UI elements and manage user interactions',
+  pages: 'Compose page-level views and manage routing',
+  middleware: 'Process requests and responses in the pipeline',
+  guards: 'Enforce authentication and authorization rules',
+  utils: 'Provide reusable utility functions',
+  helpers: 'Provide reusable helper logic',
+  config: 'Manage application configuration and settings',
+  migrations: 'Manage database schema evolution',
+  tests: 'Validate application behavior through automated testing',
+};
+
 // External frameworks / runtime identifiers for dependency classification
 const FRAMEWORK_KEYWORDS = [
   'angular', 'react', 'vue', 'next', 'nuxt', 'express', 'nest', 'fastapi',
@@ -201,6 +231,8 @@ export class SystemUnderstandingEngine {
     const understandingNarrative = ai?.explainSimpler || analysis.howItWorks ||
       this.buildFileNarrative(session);
 
+    const responsibilityGroups = this.buildFileResponsibilityGroups(session, keyResponsibilities, mostImportantItems);
+
     return {
       scope: 'file',
       executiveSummary,
@@ -216,6 +248,7 @@ export class SystemUnderstandingEngine {
       businessCriticalityReason: criticalityReason,
       health,
       understandingNarrative,
+      responsibilityGroups,
       technicalDebtHotspots: null,
       mostImportantWorkflows: null,
       mostImportantDependencies: null,
@@ -280,6 +313,9 @@ export class SystemUnderstandingEngine {
     const mostImportantWorkflows = isRepo ? this.buildImportantWorkflows(files, graph) : null;
     const mostImportantDependencies = isRepo ? this.buildImportantDependencies(files) : null;
 
+    // ── Responsibility groups ────────────────────────────────────────────────
+    const responsibilityGroups = this.buildResponsibilityGroups(keyResponsibilities, mostImportantItems, graph);
+
     return {
       scope: isRepo ? 'repository' : 'folder',
       executiveSummary,
@@ -295,6 +331,7 @@ export class SystemUnderstandingEngine {
       businessCriticalityReason: criticalityReason,
       health,
       understandingNarrative,
+      responsibilityGroups,
       technicalDebtHotspots,
       mostImportantWorkflows,
       mostImportantDependencies,
@@ -401,12 +438,10 @@ export class SystemUnderstandingEngine {
     const maintainability = this.normalizeHealth(a.maintainability);
     const riskLevel: HealthLevel = a.risks.some(r => r.severity === 'high' || r.severity === 'critical') ? 'Low'
       : a.risks.length > 2 ? 'Medium' : 'High';
-    const modernizationReadiness: HealthLevel = a.modernizationSuggestions.length >= 3 ? 'Low'
-      : a.modernizationSuggestions.length >= 1 ? 'Medium' : 'High';
 
-    const interpretation = this.buildHealthInterpretation(complexity, maintainability, riskLevel, modernizationReadiness);
+    const interpretation = this.buildHealthInterpretation(complexity, maintainability, riskLevel);
 
-    return { complexity, maintainability, riskLevel, modernizationReadiness, interpretation };
+    return { complexity, maintainability, riskLevel, interpretation };
   }
 
   private buildFileNarrative(session: AnalysisSession): string {
@@ -592,25 +627,8 @@ export class SystemUnderstandingEngine {
     const folders = this.extractTopFolders(files);
     const responsibilities: string[] = [];
 
-    const layerMap: Record<string, string> = {
-      controllers: 'Handle HTTP requests and coordinate responses',
-      api: 'Expose API endpoints for external and internal consumers',
-      services: 'Implement business logic and orchestrate operations',
-      repositories: 'Manage data persistence and retrieval',
-      models: 'Define data structures and domain entities',
-      components: 'Render UI elements and manage user interactions',
-      pages: 'Compose page-level views and manage routing',
-      middleware: 'Process requests and responses in the pipeline',
-      guards: 'Enforce authentication and authorization rules',
-      utils: 'Provide reusable utility functions',
-      helpers: 'Provide reusable helper logic',
-      config: 'Manage application configuration and settings',
-      migrations: 'Manage database schema evolution',
-      tests: 'Validate application behavior through automated testing',
-    };
-
     for (const folder of folders.slice(0, 6)) {
-      if (layerMap[folder]) responsibilities.push(layerMap[folder]);
+      if (FOLDER_RESPONSIBILITY_MAP[folder]) responsibilities.push(FOLDER_RESPONSIBILITY_MAP[folder]);
     }
 
     if (responsibilities.length === 0 && primaryPattern) {
@@ -817,9 +835,6 @@ export class SystemUnderstandingEngine {
 
     const complexity: HealthLevel = couplingRatio > 4 ? 'Low' : couplingRatio > 2 ? 'Medium' : 'High';
 
-    const modernizationCount = session?.aiAnalysis?.modernizations?.length ?? 0;
-    const modernizationReadiness: HealthLevel = modernizationCount >= 5 ? 'Low' : modernizationCount >= 2 ? 'Medium' : 'High';
-
     const riskCount = session?.aiAnalysis?.risks?.length ?? 0;
     const riskLevel: HealthLevel = riskCount >= 5 ? 'Low' : riskCount >= 2 ? 'Medium' : 'High';
 
@@ -827,9 +842,9 @@ export class SystemUnderstandingEngine {
     const maintainability: HealthLevel = files.length > 100 && couplingRatio > 3 ? 'Low'
       : files.length > 50 || couplingRatio > 2 ? 'Medium' : 'High';
 
-    const interpretation = this.buildHealthInterpretation(complexity, maintainability, riskLevel, modernizationReadiness);
+    const interpretation = this.buildHealthInterpretation(complexity, maintainability, riskLevel);
 
-    return { complexity, maintainability, riskLevel, modernizationReadiness, interpretation };
+    return { complexity, maintainability, riskLevel, interpretation };
   }
 
   private buildKnowledgeNarrative(
@@ -898,6 +913,116 @@ export class SystemUnderstandingEngine {
     }
 
     return parts.join(' ');
+  }
+
+  // ── Responsibility group builders ─────────────────────────────────────────
+
+  private buildResponsibilityGroups(
+    keyResponsibilities: string[],
+    mostImportantItems: ImportantItem[],
+    graph: DependencyGraph | undefined,
+  ): ResponsibilityGroup[] {
+    // Build reverse map: responsibility string → folder key
+    const responsibilityToFolder = new Map<string, string>();
+    for (const [folder, resp] of Object.entries(FOLDER_RESPONSIBILITY_MAP)) {
+      responsibilityToFolder.set(resp, folder);
+    }
+
+    // Compute inbound counts for blast radius derivation
+    const inboundMap = new Map<string, number>();
+    if (graph) {
+      for (const edge of graph.edges) {
+        inboundMap.set(edge.target, (inboundMap.get(edge.target) ?? 0) + 1);
+      }
+    }
+
+    // Build groups: one per responsibility
+    const groups: ResponsibilityGroup[] = keyResponsibilities.map(resp => ({
+      responsibility: resp,
+      components: [],
+    }));
+
+    const assignedPaths = new Set<string>();
+
+    for (const item of mostImportantItems) {
+      const itemFolder = item.path.split('/').slice(-2, -1)[0]?.toLowerCase() ?? '';
+      let assigned = false;
+
+      for (const group of groups) {
+        const folderKey = responsibilityToFolder.get(group.responsibility);
+        if (folderKey && itemFolder === folderKey) {
+          const inbound = inboundMap.get(item.name) ?? this.parseInboundFromReason(item.whyImportant);
+          group.components.push({
+            name: item.name,
+            path: item.path,
+            whyImportant: item.whyImportant,
+            blastRadius: inbound >= 5 ? 'High' : inbound >= 2 ? 'Medium' : 'Low',
+          });
+          assignedPaths.add(item.path);
+          assigned = true;
+          break;
+        }
+      }
+
+      if (!assigned) {
+        assignedPaths.add(item.path);
+        // Will be collected into supporting group below
+      }
+    }
+
+    // Collect unassigned items into a supporting group
+    const supporting = mostImportantItems.filter(item => {
+      const itemFolder = item.path.split('/').slice(-2, -1)[0]?.toLowerCase() ?? '';
+      return !groups.some(g => {
+        const folderKey = responsibilityToFolder.get(g.responsibility);
+        return folderKey && itemFolder === folderKey;
+      });
+    });
+
+    if (supporting.length > 0) {
+      groups.push({
+        responsibility: 'Supporting Components',
+        components: supporting.map(item => {
+          const inbound = inboundMap.get(item.name) ?? this.parseInboundFromReason(item.whyImportant);
+          return {
+            name: item.name,
+            path: item.path,
+            whyImportant: item.whyImportant,
+            blastRadius: inbound >= 5 ? 'High' : inbound >= 2 ? 'Medium' : 'Low',
+          };
+        }),
+      });
+    }
+
+    // Remove groups with no components (except Supporting Components)
+    return groups.filter(g => g.components.length > 0 || g.responsibility === 'Supporting Components');
+  }
+
+  private buildFileResponsibilityGroups(
+    session: AnalysisSession,
+    keyResponsibilities: string[],
+    mostImportantItems: ImportantItem[],
+  ): ResponsibilityGroup[] {
+    // At file scope, each responsibility becomes its own group.
+    // Components are the mostImportantItems entries (derived from responsibilities/inputs).
+    // Blast radius is always Low — no dependency graph at file scope.
+    if (keyResponsibilities.length === 0) return [];
+
+    return keyResponsibilities.map((resp, i) => ({
+      responsibility: resp,
+      components: mostImportantItems.slice(i, i + 1).map(item => ({
+        name: item.name,
+        path: item.path,
+        whyImportant: item.whyImportant,
+        blastRadius: 'Low' as const,
+      })),
+    })).filter(g => g.components.length > 0);
+  }
+
+  // Parses "Depended on by N other components" from whyImportant strings
+  private parseInboundFromReason(reason: string): number {
+    const match = reason.match(/Depended on by (\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
   }
 
   private buildDebtHotspots(
@@ -1171,13 +1296,12 @@ export class SystemUnderstandingEngine {
     complexity: HealthLevel,
     maintainability: HealthLevel,
     riskLevel: HealthLevel,
-    modernizationReadiness: HealthLevel,
   ): string {
-    const scores = [complexity, maintainability, riskLevel, modernizationReadiness];
+    const scores = [complexity, maintainability, riskLevel];
     const highs = scores.filter(s => s === 'High').length;
     const lows = scores.filter(s => s === 'Low').length;
 
-    if (lows >= 3) return 'This codebase shows significant health concerns across multiple dimensions. Prioritize reducing complexity and risk before adding features.';
+    if (lows >= 3) return 'Significant health concerns across all dimensions. Prioritize reducing complexity and risk before adding features.';
     if (lows === 2) return 'Several health indicators are concerning. Technical debt is accumulating and should be addressed systematically.';
     if (lows === 1) return 'Overall health is moderate with one dimension requiring attention. This is manageable with targeted effort.';
     if (highs >= 3) return 'This codebase is in good health. Complexity is manageable, maintainability is solid, and risk is low.';

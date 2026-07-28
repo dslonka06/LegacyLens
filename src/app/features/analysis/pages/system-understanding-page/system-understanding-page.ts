@@ -22,6 +22,7 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
   understanding: SystemUnderstanding | null = null;
   hasWorkspace = false;
   codeEditorWidth = 420;
+  expandedGroupIndex: number | null = null;
 
   private sub: Subscription | null = null;
 
@@ -39,8 +40,62 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       this.hasWorkspace = ws !== null;
       this.understanding = ws?.knowledgeModel?.ai?.understanding ?? null;
+      this.expandedGroupIndex = null;
     });
   }
+
+  // ── Knowledge model access ────────────────────────────────────────────────
+
+  private get knowledgeModel() {
+    return this.manager.getActive()?.knowledgeModel ?? null;
+  }
+
+  // ── Code Health ───────────────────────────────────────────────────────────
+
+  get complexity(): string {
+    return this.knowledgeModel?.insights.complexity ?? '—';
+  }
+
+  get maintainability(): string {
+    return this.knowledgeModel?.insights.maintainability ?? '—';
+  }
+
+  get issueCount(): number {
+    return this.knowledgeModel?.insights.risks?.length ?? 0;
+  }
+
+  get healthTier(): 'healthy' | 'fair' | 'needs-attention' | 'critical' | 'unknown' {
+    const c = this.knowledgeModel?.insights.complexity;
+    const m = this.knowledgeModel?.insights.maintainability;
+    if (!c || !m) return 'unknown';
+    if (c === 'High' || m === 'Low') return 'critical';
+    if (c === 'Low' && m === 'High') return 'healthy';
+    if (c === 'Medium' || m === 'Medium') return 'fair';
+    return 'needs-attention';
+  }
+
+  get healthTierLabel(): string {
+    const map: Record<string, string> = {
+      healthy: 'Healthy',
+      fair: 'Fair',
+      'needs-attention': 'Needs Attention',
+      critical: 'Critical',
+      unknown: 'Pending',
+    };
+    return map[this.healthTier];
+  }
+
+  // ── Accordion ─────────────────────────────────────────────────────────────
+
+  toggleGroup(index: number): void {
+    this.expandedGroupIndex = this.expandedGroupIndex === index ? null : index;
+  }
+
+  isGroupExpanded(index: number): boolean {
+    return this.expandedGroupIndex === index;
+  }
+
+  // ── LLM summary ───────────────────────────────────────────────────────────
 
   get llmSummaryEntry(): LLMSummaryEntry | null {
     return this.manager.getActive()?.knowledgeModel?.ai?.summaries?.understanding ?? null;
@@ -60,6 +115,8 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
     const wsId = this.manager.getActive()?.id;
     if (wsId) this.llmSummaryService.regenerate(wsId, 'understanding');
   }
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
@@ -84,17 +141,5 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
 
   get showExplanationCard(): boolean {
     return this.hasWorkspace && this.understanding !== null;
-  }
-
-  depTypeLabel(type: string): string {
-    const map: Record<string, string> = {
-      framework: 'Framework',
-      database: 'Database',
-      queue: 'Queue',
-      storage: 'Storage',
-      external: 'External',
-      internal: 'Internal',
-    };
-    return map[type] ?? type;
   }
 }
