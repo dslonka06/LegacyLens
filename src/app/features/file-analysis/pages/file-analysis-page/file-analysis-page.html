@@ -372,25 +372,25 @@
           [class.metric-card--pending]="card.pending"
           (click)="navigate(card.route)"
         >
+          <!-- Icon anchored top-left -->
           <div class="metric-card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path [attr.d]="card.icon" />
             </svg>
           </div>
+
+          <!-- Number centered, subtitle below -->
           <div class="metric-card-body">
-            <ng-container *ngIf="card.tags?.length; else countBlock">
-              <div class="metric-card-tags">
-                <span class="metric-card-tag" *ngFor="let tag of card.tags">{{ tag }}</span>
-              </div>
+            <ng-container *ngIf="card.id === 'learning'; else countBlock">
+              <!-- Learning path: no number, just subtitle -->
             </ng-container>
             <ng-template #countBlock>
-              <span class="metric-card-count" *ngIf="card.count !== null">{{ displayedCounts[card.id] || 0 }}</span>
-              <span class="metric-card-count metric-card-count--ai" *ngIf="card.count === null && !card.pending">AI</span>
+              <span class="metric-card-count" *ngIf="card.count !== null && !card.pending">{{ displayedCounts[card.id] ?? card.count }}</span>
               <span class="metric-card-count metric-card-count--pending" *ngIf="card.pending">…</span>
             </ng-template>
-            <span class="metric-card-label">{{ card.label }}</span>
-            <span class="metric-card-subtitle" *ngIf="card.subtitle">{{ card.subtitle }}</span>
+            <span class="metric-card-subtitle">{{ card.subtitle }}</span>
           </div>
+
           <svg class="metric-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <polyline points="9 18 15 12 9 6" />
           </svg>

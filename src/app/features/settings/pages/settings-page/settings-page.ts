@@ -3,14 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '@app/core/services/theme.service';
 import { ElectronService, AiPreset, AiProviderStatus } from '@app/core/services/electron.service';
+import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 
 type TestState = 'idle' | 'testing' | 'ok' | 'fail';
 type OllamaSetupState = 'not-installed' | 'no-models' | 'ready';
+type ConfirmAction = 'clearCache' | 'clearWorkspaces' | 'removeRepos' | 'factoryReset' | null;
 
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ThemeToggle],
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.scss',
 })
@@ -37,7 +39,28 @@ export class SettingsPage implements OnInit {
   testReason = '';
   saved = false;
   showSetupHelp = false;
+  showProviderConfig = false;
   activeModel = '';
+
+  // ── AI analysis behavior ──────────────────────────────────────────────────
+  deriveTimeoutSec = 30;
+  generateTimeoutSec = 300;
+  providerTimeoutSec = 300;
+  parallelSummaries = false;
+  maxTokensGenerate = 4096;
+
+  // ── App info ──────────────────────────────────────────────────────────────
+  appVersion = '';
+
+  // ── Storage ───────────────────────────────────────────────────────────────
+  dbPath = '';
+  storageStats: { repositories: number; workspaces: number; analyses: number; files: number; dbSizeKb: number } | null = null;
+  confirmAction: ConfirmAction = null;
+  confirmInput = '';
+  storageActionBusy = false;
+
+  // ── How it works ─────────────────────────────────────────────────────────
+  showHowItWorks = false;
 
   constructor(
     readonly theme: ThemeService,
@@ -45,25 +68,27 @@ export class SettingsPage implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    if (!this.electron.isElectron) return;
+    if (this.electron.isElectron) {
+      const [presets, settings, statuses, version] = await Promise.all([
+        this.electron.aiGetPresets(),
+        this.electron.getAllSettings(),
+        this.electron.aiGetProviders(),
+        this.electron.getAppVersion(),
+      ]);
 
-    const [presets, settings, statuses] = await Promise.all([
-      this.electron.aiGetPresets(),
-      this.electron.getAllSettings(),
-      this.electron.aiGetProviders(),
-    ]);
+      this.presets = presets;
+      this.activeStatus = statuses.find(s => s.active) ?? null;
+      this.selectedPresetId = (settings['activePresetId'] as string) ?? '';
+      this.aiModel = (settings['aiModel'] as string) ?? '';
+      this.activeModel = this.aiModel;
+      this.hostInput = (settings['ollamaHost'] as string)
+        || (settings['openaiCompatBaseUrl'] as string)
+        || '';
+      this.appVersion = version;
 
-    this.presets = presets;
-    this.activeStatus = statuses.find(s => s.active) ?? null;
-    this.selectedPresetId = (settings['activePresetId'] as string) ?? '';
-    this.aiModel = (settings['aiModel'] as string) ?? '';
-    this.activeModel = this.aiModel;
-    this.hostInput = (settings['ollamaHost'] as string)
-      || (settings['openaiCompatBaseUrl'] as string)
-      || '';
-
-    if (this.selectedPresetId) {
-      await this._loadPresetState(this.selectedPresetId, true);
+      if (this.selectedPresetId) {
+        await this._loadPresetState(this.selectedPresetId, true);
+      }
     }
   }
 
@@ -127,6 +152,15 @@ export class SettingsPage implements OnInit {
 
   get canSave(): boolean {
     return !!this.selectedPresetId;
+  }
+
+  get confirmIsFactoryReset(): boolean {
+    return this.confirmAction === 'factoryReset';
+  }
+
+  get confirmReady(): boolean {
+    if (this.confirmAction === 'factoryReset') return this.confirmInput.trim() === 'RESET';
+    return true;
   }
 
   // ── Provider selection ────────────────────────────────────────────────────
@@ -207,7 +241,6 @@ export class SettingsPage implements OnInit {
 
     await Promise.all(saves);
 
-    // Refresh active status after save
     const statuses = await this.electron.aiGetProviders();
     this.activeStatus = statuses.find(s => s.active) ?? null;
     this.activeModel = this.aiModel;
@@ -236,6 +269,48 @@ export class SettingsPage implements OnInit {
     navigator.clipboard.writeText(text).catch(() => {});
   }
 
+  // ── Storage management ────────────────────────────────────────────────────
+
+  openDbFolder(): void {
+    if (this.dbPath) this.electron.openExternal('file://' + this.dbPath.replace(/[^/\\]+$/, ''));
+  }
+
+  requestConfirm(action: ConfirmAction): void {
+    this.confirmAction = action;
+    this.confirmInput = '';
+  }
+
+  cancelConfirm(): void {
+    this.confirmAction = null;
+    this.confirmInput = '';
+  }
+
+  async executeConfirmedAction(): Promise<void> {
+    if (!this.confirmAction || !this.confirmReady) return;
+    this.storageActionBusy = true;
+    try {
+      // IPC handlers to be wired — stubs resolve immediately until main-process side is added
+      switch (this.confirmAction) {
+        case 'clearCache':
+          // await this.electron.clearAnalysisCache();
+          break;
+        case 'clearWorkspaces':
+          // await this.electron.clearAllWorkspaces();
+          break;
+        case 'removeRepos':
+          // await this.electron.removeAllRepositories();
+          break;
+        case 'factoryReset':
+          // await this.electron.factoryReset();
+          break;
+      }
+    } finally {
+      this.storageActionBusy = false;
+      this.confirmAction = null;
+      this.confirmInput = '';
+    }
+  }
+
   // ── Private ───────────────────────────────────────────────────────────────
 
   private async _loadPresetState(presetId: string, autoDiscover = false): Promise<void> {
@@ -246,13 +321,10 @@ export class SettingsPage implements OnInit {
       this.apiKeyConfigured = await this.electron.aiIsKeyConfigured(presetId);
     }
 
-    // Only auto-discover when returning to an already-saved Ollama preset,
-    // not when the user is selecting it for the first time in onboarding.
     if (preset.protocol === 'ollama' && autoDiscover) {
       await this.discoverOllamaModels();
     }
 
-    // Pre-fill host from saved settings or preset default
     if (!this.hostInput) {
       const settings = await this.electron.getAllSettings();
       if (preset.protocol === 'ollama') {

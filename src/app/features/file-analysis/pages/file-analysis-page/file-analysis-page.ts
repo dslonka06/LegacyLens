@@ -611,34 +611,17 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
     const importCount = this.importCount !== '—' ? Number(this.importCount) : 0;
     const refBy = this.referencedByCount;
-    const depSubtitle = importCount > 0 || refBy > 0
-      ? `${importCount} import${importCount !== 1 ? 's' : ''}${refBy > 0 ? ` · ${refBy} referenced by` : ''}`
-      : 'No dependencies found';
-
     const secCount = ai?.security?.findings?.length ?? 0;
-    const secSubtitle = secCount === 0 ? 'No issues detected'
-      : ai?.security?.findings?.some(f => f.severity === 'critical') ? `${ai!.security!.findings.filter(f => f.severity === 'critical').length} critical`
-      : ai?.security?.findings?.some(f => f.severity === 'high') ? `${ai!.security!.findings.filter(f => f.severity === 'high').length} high priority`
-      : `${secCount} issue${secCount !== 1 ? 's' : ''}`;
-
     const recCount = ai?.recommendations?.recommendations?.length ?? 0;
-    const highRec = ai?.recommendations?.recommendations?.filter((r: any) => r.priority === 'high').length ?? 0;
-    const recSubtitle = recCount === 0 ? 'No suggestions'
-      : highRec > 0 ? `${highRec} high priority`
-      : `${recCount} suggestion${recCount !== 1 ? 's' : ''}`;
-
     const flowSteps = this.model?.insights.dataFlow?.steps?.length ?? 0;
-    const flowSubtitle = flowSteps > 0 ? 'Flow steps detected' : 'No flow data';
-
     const syms = this.symbolTotal;
-    const symSubtitle = syms !== null && syms > 0 ? 'Functions, classes & exports' : 'No symbols extracted';
 
     return [
       {
         id: 'dependencies',
         icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
-        count: importCount > 0 ? importCount : null,
-        subtitle: depSubtitle,
+        count: importCount + refBy,
+        subtitle: 'Dependencies & Relations',
         label: 'Dependencies & Relations',
         route: `${base}/data-flow`,
         suggested: false,
@@ -647,8 +630,8 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       {
         id: 'security',
         icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
-        count: secCount > 0 ? secCount : null,
-        subtitle: secSubtitle,
+        count: secCount,
+        subtitle: 'Security Issues',
         label: 'Security',
         route: `${base}/security`,
         suggested: suggested === 'security',
@@ -657,8 +640,8 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       {
         id: 'recommendations',
         icon: 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
-        count: recCount > 0 ? recCount : null,
-        subtitle: recSubtitle,
+        count: recCount,
+        subtitle: 'Recommendations',
         label: 'Recommendations',
         route: `${base}/code-recommendations`,
         suggested: suggested === 'recommendations',
@@ -667,8 +650,8 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       {
         id: 'dataflow',
         icon: 'M22 12H18L15 21 9 3 6 12 2 12',
-        count: flowSteps > 0 ? flowSteps : null,
-        subtitle: flowSubtitle,
+        count: flowSteps,
+        subtitle: 'Data Flow Steps',
         label: 'Data Flow',
         route: `${base}/data-flow`,
         suggested: false,
@@ -677,8 +660,8 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       {
         id: 'symbols',
         icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
-        count: syms,
-        subtitle: symSubtitle,
+        count: syms ?? 0,
+        subtitle: 'Key Symbols',
         label: 'Key Symbols',
         route: `${base}/system-understanding`,
         suggested: false,
@@ -688,7 +671,6 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
         id: 'learning',
         icon: 'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
         count: null,
-        tags: ['Next'],
         subtitle: 'Personalized roadmap for this file',
         label: 'Learning Path',
         route: `${base}/learning-path`,
