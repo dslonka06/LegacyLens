@@ -16,14 +16,15 @@ class AiKnowledgeEngine {
 
   /**
    * @param {string} prompt Fully assembled prompt from Angular
+   * @param {number} [maxTokens=2048] Override for callers needing larger output (e.g. JSON security response)
    * @returns {Promise<string>}
    */
-  async explain(prompt) {
+  async explain(prompt, maxTokens = 2048) {
     const provider = this.registry.getActiveProvider();
     return provider.generate({
       messages: [{ role: 'user', content: prompt }],
       systemPrompt: SYSTEM_PROMPT,
-      maxTokens: 2048,
+      maxTokens,
     });
   }
 }

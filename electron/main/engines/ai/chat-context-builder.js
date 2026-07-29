@@ -56,10 +56,38 @@ function buildChatContext(model) {
     }
   }
 
-  // ── Security headline ─────────────────────────────────────────────────────
+  // ── Security ──────────────────────────────────────────────────────────────
   const security = model.ai?.security;
-  if (security?.riskLevel && security.riskLevel !== 'low') {
-    lines.push(`Security risk level: ${security.riskLevel}`);
+  if (security) {
+    if (security.overallRisk) lines.push(`Security risk: ${security.overallRisk}`);
+    if (security.securityMaturity) lines.push(`Security maturity: ${security.securityMaturity}`);
+    const findings = security.findings ?? [];
+    if (findings.length > 0) {
+      const byCat = {};
+      for (const f of findings) {
+        byCat[f.severity] = (byCat[f.severity] ?? 0) + 1;
+      }
+      const summary = Object.entries(byCat)
+        .map(([sev, n]) => `${n} ${sev}`)
+        .join(', ');
+      lines.push(`Security findings: ${findings.length} total (${summary})`);
+      const critical = findings.filter(f => f.severity === 'critical' || f.severity === 'high').slice(0, 3);
+      if (critical.length) {
+        lines.push(`Top findings: ${critical.map(f => f.title).join('; ')}`);
+      }
+    }
+  }
+
+  // ── Data flow ─────────────────────────────────────────────────────────────
+  const dataFlow = model.ai?.dataFlow;
+  if (dataFlow) {
+    if (dataFlow.inputs?.length) {
+      lines.push(`Data inputs: ${dataFlow.inputs.slice(0, 5).map(i => i.name ?? i).join(', ')}`);
+    }
+    if (dataFlow.outputs?.length) {
+      lines.push(`Data outputs: ${dataFlow.outputs.slice(0, 5).map(o => o.name ?? o).join(', ')}`);
+    }
+    if (dataFlow.pattern) lines.push(`Data flow pattern: ${dataFlow.pattern}`);
   }
 
   // ── Top-level symbols (file target only) ─────────────────────────────────
@@ -75,7 +103,8 @@ function buildChatContext(model) {
   const hubs = model.relationships?.dependencies?.hubs;
   if (hubs?.length) {
     const hubNames = hubs.slice(0, 5).map(h => h.name).join(', ');
-    lines.push(`Central files: ${hubNames}`);
+    const totalDeps = model.relationships?.dependencies?.totalDependencies;
+    lines.push(`Central files: ${hubNames}${totalDeps ? ` (${totalDeps} total dependencies)` : ''}`);
   }
 
   return lines.join('\n');

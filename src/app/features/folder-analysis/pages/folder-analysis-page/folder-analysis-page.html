@@ -269,8 +269,12 @@
               >{{ maintainabilityLabel }}</span>
             </div>
             <div class="health-stat">
-              <span class="health-stat-label">Issues</span>
-              <span class="health-stat-val" [class.stat-error]="issueCount > 0">{{ issueCount }}</span>
+              <span class="health-stat-label">Risk Level</span>
+              <span class="health-stat-val"
+                [class.maint-High]="healthLabel === 'Healthy'"
+                [class.maint-Medium]="healthLabel === 'Fair'"
+                [class.stat-error]="healthLabel === 'Critical' || healthLabel === 'Needs Attention'"
+              >{{ healthLabel }}</span>
             </div>
           </div>
           <button class="info-card-nav-link" (click)="navigate('/folder-analysis/system-understanding')">

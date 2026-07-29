@@ -17,9 +17,6 @@
     <app-explanation-card
       title="AI Analysis"
       [entry]="llmSummaryEntry"
-      [isGenerating]="isGenerating"
-      [noProvider]="isNoProvider"
-      (regenerate)="onRegenerate()"
     ></app-explanation-card>
 
     <div class="arch-cols" [class.arch-cols--has-tree]="folderTree">

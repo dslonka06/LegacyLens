@@ -239,7 +239,7 @@ export class DocumentationBuilderService {
       case 'risk-assessment':
         return isFile
           ? !!ai?.summaries?.security?.content
-          : (model.insights.risks?.length ?? 0) > 0 || (ai?.security?.findings.length ?? 0) > 0;
+          : (ai?.security?.findings.length ?? 0) > 0;
 
       case 'modernization':
         return isFile
@@ -337,11 +337,10 @@ export class DocumentationBuilderService {
 
       case 'risk-assessment': {
         if (isFile) return ai?.summaries?.security?.content ?? '';
-        const detRisks = (ins.risks ?? []).map((r) => `[${r.severity.toUpperCase()}] ${r.description}`);
-        const aiRisks = (ai?.security?.findings ?? [])
+        return (ai?.security?.findings ?? [])
           .slice(0, 10)
-          .map((f) => `[${f.severity.toUpperCase()}] ${f.title}: ${f.issueDescription}`);
-        return [...detRisks, ...aiRisks].join('\n');
+          .map((f) => `[${f.severity.toUpperCase()}] ${f.title}: ${f.issueDescription}`)
+          .join('\n');
       }
 
       case 'modernization': {
@@ -385,7 +384,7 @@ export class DocumentationBuilderService {
         if (!lp) return '';
         const steps = (lp.roadmap ?? [])
           .slice(0, 5)
-          .map((step) => `${step.stepNumber}. ${step.title}\n   ${step.goal}`);
+          .map((step) => `${step.stepNumber}. ${step.title}\n   ${step.description}`);
         return [lp.focusFirst ? `Start here: ${lp.focusFirst}` : '', ...steps]
           .filter(Boolean)
           .join('\n');

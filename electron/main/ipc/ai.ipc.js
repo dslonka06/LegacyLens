@@ -27,15 +27,19 @@ const analysisEngine = new AiAnalysisEngine(registry);
 const CHAT_SYSTEM_PROMPT =
   'You are an expert software analyst embedded inside SystemLens, a codebase intelligence tool. ' +
   'Answer questions about the analyzed workspace based on the context provided. ' +
-  'Be concise, accurate, and practical. When referencing files or components, be specific.';
+  'Be specific when referencing files, classes, or components. ' +
+  'Format all responses using Markdown: use bullet lists for enumerations, ' +
+  'code blocks (with language hint) for any code or file paths, ' +
+  'bold for key terms, and headings only when the answer has clearly distinct sections. ' +
+  'Keep answers focused — avoid generic advice unless no specific context is available.';
 
 function registerAiHandlers() {
 
   // ── ai:explain — knowledge pipeline (single-turn) ─────────────────────────
-  ipcMain.handle('ai:explain', wrapHandler(async (_event, prompt) => {
+  ipcMain.handle('ai:explain', wrapHandler(async (_event, prompt, maxTokens) => {
     if (!prompt || typeof prompt !== 'string') throw new Error('prompt is required');
     if (!registry.isConfigured()) throw new Error('No AI provider configured');
-    return knowledgeEngine.explain(prompt);
+    return knowledgeEngine.explain(prompt, maxTokens ?? undefined);
   }));
 
   // ── ai:analyze — single-file code analysis ────────────────────────────────
@@ -57,7 +61,7 @@ function registerAiHandlers() {
       : CHAT_SYSTEM_PROMPT;
 
     const provider = registry.getActiveProvider();
-    return provider.chat(messages, { systemPrompt, maxTokens: 2048 });
+    return provider.chat(messages, { systemPrompt, maxTokens: 4096 });
   }));
 
   // ── ai:getProviders — provider status list (no network calls) ────────────

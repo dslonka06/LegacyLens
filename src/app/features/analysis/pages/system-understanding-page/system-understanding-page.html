@@ -44,9 +44,6 @@
           <app-explanation-card
             title="AI Analysis"
             [entry]="llmSummaryEntry"
-            [isGenerating]="isGenerating"
-            [noProvider]="isNoProvider"
-            (regenerate)="onRegenerate()"
           ></app-explanation-card>
         </div>
 
@@ -95,9 +92,11 @@
                   </div>
                   <div class="su-health-metric">
                     <span class="su-health-metric-label">Risk Level</span>
-                    <span class="su-health-metric-val" [class.stat-error]="issueCount > 0">
-                      {{ issueCount === 0 ? 'Low' : issueCount <= 2 ? 'Medium' : 'High' }}
-                    </span>
+                    <span class="su-health-metric-val"
+                      [class.maint-High]="healthTier === 'healthy'"
+                      [class.maint-Medium]="healthTier === 'fair'"
+                      [class.stat-error]="healthTier === 'critical' || healthTier === 'needs-attention'"
+                    >{{ healthTierLabel }}</span>
                   </div>
                 </div>
               </div>

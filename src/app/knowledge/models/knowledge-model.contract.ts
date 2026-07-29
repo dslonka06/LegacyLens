@@ -243,6 +243,8 @@ export interface KnowledgeMetadata {
   fromCache?: boolean;
   /** True when only changed files were re-processed (incremental update). */
   partialRebuild?: boolean;
+  /** Absolute path to the repository root. Present for folder/repository targets only. */
+  repositoryPath?: string;
 }
 
 // ── Root contract ──────────────────────────────────────────────────────────────

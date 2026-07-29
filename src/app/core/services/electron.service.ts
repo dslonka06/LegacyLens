@@ -223,9 +223,9 @@ export class ElectronService {
 
   // ── AI ────────────────────────────────────────────────────────────────────
 
-  async aiExplain(prompt: string): Promise<string | null> {
+  async aiExplain(prompt: string, maxTokens?: number): Promise<string | null> {
     if (!this.api) return null;
-    return this.api.ai.explain(prompt);
+    return this.api.ai.explain(prompt, maxTokens);
   }
 
   async aiAnalyze(fileName: string, sourceCode: string): Promise<unknown> {

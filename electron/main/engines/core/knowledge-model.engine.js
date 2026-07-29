@@ -88,14 +88,6 @@ class KnowledgeModelEngine {
       if (ar.complexity)      insights.complexity      = ar.complexity;
       if (ar.maintainability) insights.maintainability = ar.maintainability;
 
-      if (ar.risks?.length) {
-        insights.risks = ar.risks.map(r => ({
-          severity:    r.severity    ?? 'low',
-          description: r.description ?? String(r),
-          location:    r.location    ?? undefined,
-        }));
-      }
-
       // Structured data flow — steps + inputs + outputs
       const rawDataFlow = ar.dataFlow;
       if (rawDataFlow) {
@@ -118,6 +110,9 @@ class KnowledgeModelEngine {
       builtAt:       new Date().toISOString(),
       schemaVersion: '2',
     };
+    if (isMultiFile && options.repositoryPath) {
+      metadata.repositoryPath = options.repositoryPath;
+    }
 
     return {
       // Identity

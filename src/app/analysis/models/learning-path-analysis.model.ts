@@ -1,45 +1,17 @@
+export interface CodeLocation {
+  label: string;
+  lineStart?: number;
+  lineEnd?: number;
+  filePaths?: string[];
+}
+
 export interface LearningStep {
   stepNumber: number;
   title: string;
-  goal: string;
-  whyItMatters: string;
-  recommendedFiles: string[];
-  recommendedFolders: string[];
+  description: string;
+  whyHere: string;
+  codeLocations: CodeLocation[];
   checkpoints: string[];
-  whereToNext: string;
-}
-
-export interface KeyConcept {
-  name: string;
-  plainEnglishDefinition: string;
-  whyItMatters: string;
-  whereItAppears: string;
-}
-
-export interface SystemArea {
-  name: string;
-  responsibility: string;
-  whyItMatters: string;
-  whenToLearnIt: string;
-  suggestedFiles: string[];
-}
-
-export interface SuggestedReadingItem {
-  rank: number;
-  label: string;
-  path?: string;
-  reason: string;
-}
-
-export interface IgnoreForNow {
-  area: string;
-  reason: string;
-}
-
-export interface NextStepLink {
-  destination: string;
-  route: string;
-  guidance: string;
 }
 
 export interface LearningPathAnalysis {
@@ -49,10 +21,5 @@ export interface LearningPathAnalysis {
   systemType: string;
   focusFirst: string;
   roadmap: LearningStep[];
-  keyConcepts: KeyConcept[];
-  systemAreas: SystemArea[];
-  suggestedReadingOrder: SuggestedReadingItem[];
-  ignoreForNow: IgnoreForNow[];
-  nextSteps: NextStepLink[];
   generatedAt: string;
 }

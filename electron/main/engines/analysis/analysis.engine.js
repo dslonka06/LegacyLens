@@ -35,12 +35,6 @@ class AnalysisEngine {
         architectureLayers: ['HTTP / API Layer', 'Controller', 'Service Layer', 'Repository / Data Access', 'Database'],
         patterns: ['MVC', 'Dependency Injection', 'Repository Pattern', 'DTO Pattern'],
         dataFlow: 'HTTP Request → Routing → Controller Action → Service Layer → Repository → Database → HTTP Response',
-        risks: [
-          { description: 'Input validation may be missing or incomplete', severity: 'high' },
-          { description: 'Authorization attributes may not be applied', severity: 'high' },
-          { description: 'Error responses may expose internal details', severity: 'medium' },
-          { description: 'No rate limiting detected', severity: 'low' },
-        ],
         modernizationSuggestions: [
           { description: 'Add request validation using FluentValidation', priority: 'high' },
           { description: 'Implement global exception handling middleware', priority: 'high' },
@@ -72,11 +66,6 @@ class AnalysisEngine {
         architectureLayers: ['Service Layer', 'Repository Interface', 'Repository Implementation', 'Entity Framework', 'Database'],
         patterns: ['Repository Pattern', 'Dependency Injection', 'Unit of Work'],
         dataFlow: 'Service Layer → Repository Method → LINQ / SQL Query → Entity Framework → Database → Entity Object',
-        risks: [
-          { description: 'Potential N+1 query performance issues', severity: 'high' },
-          { description: 'Missing async patterns may block threads', severity: 'medium' },
-          { description: 'No query result caching', severity: 'low' },
-        ],
         modernizationSuggestions: [
           { description: 'Ensure all operations use async/await', priority: 'high' },
           { description: 'Add caching layer for frequently accessed data', priority: 'medium' },
@@ -106,10 +95,6 @@ class AnalysisEngine {
         architectureLayers: ['Abstraction Layer', 'Contract Definition'],
         patterns: ['Dependency Inversion', 'Interface Segregation', 'Dependency Injection'],
         dataFlow: 'No direct data flow — abstraction definition.',
-        risks: [
-          { description: 'Interface changes are breaking changes', severity: 'medium' },
-          { description: 'Overly large interfaces violate Interface Segregation', severity: 'low' },
-        ],
         modernizationSuggestions: [
           { description: 'Review interface size — split if more than 7 methods', priority: 'medium' },
         ],
@@ -137,11 +122,6 @@ class AnalysisEngine {
         architectureLayers: ['Presentation Layer', 'Component', 'Service Layer'],
         patterns: ['Component Pattern', 'Dependency Injection', 'Event-Driven', 'Reactive'],
         dataFlow: 'Service → Component Property → Template Binding → DOM → User Event → Component Method → Service',
-        risks: [
-          { description: 'Business logic mixed in reduces testability', severity: 'medium' },
-          { description: 'Observable subscriptions without cleanup cause memory leaks', severity: 'medium' },
-          { description: 'Component may grow too large', severity: 'low' },
-        ],
         modernizationSuggestions: [
           { description: 'Move business logic into services', priority: 'high' },
           { description: 'Consider Angular signals for reactive state', priority: 'medium' },
@@ -170,10 +150,6 @@ class AnalysisEngine {
         architectureLayers: ['Component Layer', 'Service Layer', 'HTTP / Data Layer'],
         patterns: ['Dependency Injection', 'Singleton', 'Observable / Reactive'],
         dataFlow: 'Component → Service Method → HTTP / Computation → Observable → Component',
-        risks: [
-          { description: 'Shared mutable state may cause unexpected behavior', severity: 'medium' },
-          { description: 'Missing Observable error handling', severity: 'medium' },
-        ],
         modernizationSuggestions: [
           { description: 'Use Angular signals or RxJS BehaviorSubject for reactive state', priority: 'medium' },
           { description: 'Add error handling for all async operations', priority: 'high' },
@@ -202,7 +178,6 @@ class AnalysisEngine {
         architectureLayers: ['Application Layer'],
         patterns: ['Object-Oriented Design'],
         dataFlow: 'Depends on usage context.',
-        risks: [{ description: 'Separation of concerns should be reviewed', severity: 'low' }],
         modernizationSuggestions: [{ description: 'Review adherence to single responsibility principle', priority: 'medium' }],
         security: 'Review for any direct DOM manipulation or unsafe type assertions.',
       };
@@ -228,10 +203,6 @@ class AnalysisEngine {
         architectureLayers: ['Controller / API Layer', 'Service Layer', 'Repository / Data Access', 'Database'],
         patterns: ['Dependency Injection', 'Service Layer Pattern', 'SOLID Principles'],
         dataFlow: 'Controller → Service → Repository → Database → Repository → Service → Controller',
-        risks: [
-          { description: 'No error handling detected', severity: 'high' },
-          { description: 'Missing structured logging', severity: 'medium' },
-        ],
         modernizationSuggestions: [
           { description: 'Add structured logging using ILogger<T>', priority: 'high' },
           { description: 'Add try/catch with meaningful exception messages', priority: 'high' },
@@ -260,10 +231,6 @@ class AnalysisEngine {
         architectureLayers: ['HTTP / API Layer', 'Input Validation', 'Service Layer'],
         patterns: ['REST', 'MVC', 'Dependency Injection'],
         dataFlow: 'HTTP Request → Route Matching → Model Binding → Validation → Service Call → HTTP Response',
-        risks: [
-          { description: 'Input validation should be verified', severity: 'high' },
-          { description: 'Authentication must be confirmed', severity: 'high' },
-        ],
         modernizationSuggestions: [
           { description: 'Add rate limiting', priority: 'medium' },
           { description: 'Add API versioning', priority: 'medium' },
@@ -292,11 +259,6 @@ class AnalysisEngine {
         architectureLayers: ['Application / Repository Layer', 'SQL Query', 'Database Engine', 'Storage'],
         patterns: ['Query Object', 'Repository Pattern'],
         dataFlow: 'Application → Parameterized Query → Database Engine → Execution Plan → Result Set → Application',
-        risks: [
-          { description: 'SELECT * may retrieve unnecessary columns', severity: 'medium' },
-          { description: 'Missing indexes may cause full table scans', severity: 'high' },
-          { description: 'String concatenation is a SQL injection risk', severity: 'high' },
-        ],
         modernizationSuggestions: [
           { description: 'Replace SELECT * with explicit column names', priority: 'high' },
           { description: 'Add appropriate indexes', priority: 'high' },
@@ -325,7 +287,6 @@ class AnalysisEngine {
       architectureLayers: [],
       patterns: [],
       dataFlow: 'Unable to determine.',
-      risks: [],
       modernizationSuggestions: [],
       security: 'Unable to perform security analysis.',
     };

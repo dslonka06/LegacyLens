@@ -63,7 +63,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ── AI ────────────────────────────────────────────────────────────────────
   ai: {
-    explain:          (prompt)                    => invoke('ai:explain', prompt),
+    explain:          (prompt, maxTokens)          => invoke('ai:explain', prompt, maxTokens),
     analyze:          (fileName, sourceCode)       => invoke('ai:analyze', fileName, sourceCode),
     chat:             (messages, knowledgeModel)   => invoke('ai:chat', messages, knowledgeModel),
     getProviders:     ()                           => invoke('ai:getProviders'),

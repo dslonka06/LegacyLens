@@ -17,11 +17,8 @@ export class LearningPathSummaryPromptBuilder {
     const parts: string[] = [];
     const { learningPath: lp, understanding, scope } = ctx;
 
-    const conceptNames  = lp.keyConcepts.slice(0, 4).map(c => c.name);
-    const areaNames     = lp.systemAreas.slice(0, 4).map(a => a.name);
-    const firstStep     = lp.roadmap[0] ?? null;
-    const lastStep      = lp.roadmap[lp.roadmap.length - 1] ?? null;
-    const ignoreAreas   = lp.ignoreForNow.slice(0, 3).map(i => i.area);
+    const firstStep = lp.roadmap[0] ?? null;
+    const lastStep  = lp.roadmap[lp.roadmap.length - 1] ?? null;
 
     // ── Persona ───────────────────────────────────────────────────────────────
     parts.push(
@@ -57,12 +54,8 @@ export class LearningPathSummaryPromptBuilder {
     parts.push(`Type: ${lp.systemType || 'Unknown'} | Files: ${ctx.totalFiles} | Languages: ${ctx.languages.join(', ')}`);
     parts.push(``);
 
-    if (conceptNames.length > 0) {
-      parts.push(`Core domain concepts detected: ${conceptNames.join(', ')}`);
-    }
-
-    if (areaNames.length > 0) {
-      parts.push(`System areas identified: ${areaNames.join(', ')}`);
+    if (lp.welcomeSummary) {
+      parts.push(`System overview: ${lp.welcomeSummary}`);
     }
 
     if (lp.roadmap.length > 0) {
@@ -70,19 +63,15 @@ export class LearningPathSummaryPromptBuilder {
     }
 
     if (firstStep) {
-      parts.push(`Recommended starting point: ${firstStep.title} — ${firstStep.goal}`);
+      parts.push(`Recommended starting point: ${firstStep.title} — ${firstStep.description}`);
     }
 
     if (lastStep && lastStep !== firstStep) {
-      parts.push(`Final step: ${lastStep.title} — ${lastStep.goal}`);
+      parts.push(`Final step: ${lastStep.title} — ${lastStep.description}`);
     }
 
     if (lp.focusFirst) {
       parts.push(`Primary focus: ${lp.focusFirst}`);
-    }
-
-    if (ignoreAreas.length > 0) {
-      parts.push(`Areas to defer: ${ignoreAreas.join(', ')}`);
     }
 
     if (understanding) {
@@ -96,13 +85,6 @@ export class LearningPathSummaryPromptBuilder {
       }
       if (understanding.highRiskAreas.length > 0) {
         parts.push(`High-risk areas: ${understanding.highRiskAreas.slice(0, 3).join(', ')}`);
-      }
-    }
-
-    if (lp.suggestedReadingOrder.length > 0) {
-      parts.push(``, `Suggested reading order (for context):`);
-      for (const item of lp.suggestedReadingOrder.slice(0, 5)) {
-        parts.push(`${item.rank}. ${item.label}${item.path ? ` (${item.path})` : ''}: ${item.reason}`);
       }
     }
 

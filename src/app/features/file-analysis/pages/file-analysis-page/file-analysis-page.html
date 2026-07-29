@@ -204,10 +204,13 @@
           </div>
           <div class="health-stat">
             <div class="health-stat-label-group">
-              <span class="health-stat-label">Issues</span>
-              <span class="health-stat-desc">Problems found during structural analysis</span>
+              <span class="health-stat-label">Risk Level</span>
             </div>
-            <span class="health-stat-val" [class.stat-error]="issueCount > 0">{{ issueCount }}</span>
+            <span class="health-stat-val"
+              [class.maint-High]="healthLabel === 'Healthy'"
+              [class.maint-Medium]="healthLabel === 'Fair'"
+              [class.stat-error]="healthLabel === 'Critical' || healthLabel === 'Needs Attention'"
+            >{{ healthLabel }}</span>
           </div>
         </div>
 

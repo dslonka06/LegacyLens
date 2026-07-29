@@ -26,7 +26,8 @@
           <img src="assets/logo.png" alt="AI" width="18" height="18" />
         </div>
         <div class="chat-bubble">
-          <span class="chat-bubble-text">{{ msg.content }}</span>
+          <span class="chat-bubble-text" *ngIf="msg.role === 'user'">{{ msg.content }}</span>
+          <div class="chat-bubble-text chat-bubble-md" *ngIf="msg.role === 'assistant'" [innerHTML]="msg.content | markdown"></div>
           <span class="chat-bubble-time">{{ msg.timestamp }}</span>
         </div>
       </div>

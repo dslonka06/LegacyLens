@@ -1,9 +1,20 @@
-import { Component, EventEmitter, OnInit, OnDestroy, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnInit, OnDestroy, Output, ViewChild, Pipe, PipeTransform } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
+import { marked } from 'marked';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { ElectronService } from '@app/core/services/electron.service';
+
+@Pipe({ name: 'markdown', standalone: true })
+export class MarkdownPipe implements PipeTransform {
+  constructor(private sanitizer: DomSanitizer) {}
+  transform(value: string): SafeHtml {
+    const html = marked.parse(value, { async: false }) as string;
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+}
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -33,12 +44,13 @@ const SUGGESTED_PROMPTS: Record<string, string[]> = {
 @Component({
   selector: 'app-ai-chat-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MarkdownPipe],
   templateUrl: './ai-chat-panel.html',
   styleUrl: './ai-chat-panel.scss',
 })
 export class AiChatPanel implements OnInit, OnDestroy {
   @Output() closeRequested = new EventEmitter<void>();
+  @ViewChild('messagesContainer') private messagesContainer!: ElementRef<HTMLElement>;
 
   messages: ChatMessage[] = [];
   inputValue = '';
@@ -93,6 +105,7 @@ export class AiChatPanel implements OnInit, OnDestroy {
     });
     this.inputValue = '';
     this.isLoading = true;
+    this.scrollToBottom();
 
     const knowledgeModel = this.manager.getActive()?.knowledgeModel ?? null;
 
@@ -107,6 +120,7 @@ export class AiChatPanel implements OnInit, OnDestroy {
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         });
         this.isLoading = false;
+        this.scrollToBottom();
       },
       (err) => {
         const reason = err instanceof Error ? err.message : String(err);
@@ -116,8 +130,16 @@ export class AiChatPanel implements OnInit, OnDestroy {
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         });
         this.isLoading = false;
+        this.scrollToBottom();
       },
     );
+  }
+
+  private scrollToBottom(): void {
+    setTimeout(() => {
+      const el = this.messagesContainer?.nativeElement;
+      if (el) el.scrollTop = el.scrollHeight;
+    }, 0);
   }
 
   onKeydown(event: KeyboardEvent): void {

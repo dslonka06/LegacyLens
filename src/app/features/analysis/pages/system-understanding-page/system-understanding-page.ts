@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
-import { LLMSummaryService } from '@app/analysis/services/llm-summary.service';
 import type { LLMSummaryEntry } from '@app/knowledge/models/llm-summaries.model';
 import { SystemUnderstanding } from '@app/analysis/models/system-understanding.model';
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
@@ -26,10 +25,7 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
 
   private sub: Subscription | null = null;
 
-  constructor(
-    private readonly manager: WorkspaceManagerService,
-    private readonly llmSummaryService: LLMSummaryService,
-  ) {}
+  constructor(private readonly manager: WorkspaceManagerService) {}
 
   ngOnInit(): void {
     const active = this.manager.getActive();
@@ -61,9 +57,6 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
     return this.knowledgeModel?.insights.maintainability ?? '—';
   }
 
-  get issueCount(): number {
-    return this.knowledgeModel?.insights.risks?.length ?? 0;
-  }
 
   get healthTier(): 'healthy' | 'fair' | 'needs-attention' | 'critical' | 'unknown' {
     const c = this.knowledgeModel?.insights.complexity;
@@ -139,21 +132,6 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
 
   get llmSummaryEntry(): LLMSummaryEntry | null {
     return this.manager.getActive()?.knowledgeModel?.ai?.summaries?.understanding ?? null;
-  }
-
-  get isGenerating(): boolean {
-    const wsId = this.manager.getActive()?.id ?? '';
-    return this.manager.getActiveStages(wsId).has('generate');
-  }
-
-  get isNoProvider(): boolean {
-    const ai = this.manager.getActive()?.knowledgeModel?.ai;
-    return ai?.failedStages.includes('generate') === true && ai?.stageErrors?.['generate'] === 'no-provider';
-  }
-
-  onRegenerate(): void {
-    const wsId = this.manager.getActive()?.id;
-    if (wsId) this.llmSummaryService.regenerate(wsId, 'understanding');
   }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────

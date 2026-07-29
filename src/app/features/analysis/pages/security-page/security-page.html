@@ -13,7 +13,7 @@
     <path d="M12 8v4M12 16h.01" />
   </svg>
   <h3>Analysis Pending</h3>
-  <p>Security analysis will appear here once the AI analysis completes.</p>
+  <p>Security analysis will appear here once the analysis completes.</p>
 </div>
 
 <div class="insight-page" *ngIf="hasWorkspace && security">
@@ -51,7 +51,7 @@
             <span>Security</span>
           </div>
           <h1>Security</h1>
-          <p class="page-subtitle">Security posture, findings, and sensitive areas</p>
+          <p class="page-subtitle">AI-reviewed security posture and domain verification</p>
         </div>
         <app-theme-toggle></app-theme-toggle>
       </div>
@@ -68,147 +68,167 @@
 
           <div class="sec-content">
 
-            <!-- AI Analysis -->
+            <!-- Security Posture — AI explanation card -->
             <app-explanation-card
-              title="AI Analysis"
+              title="Security"
               [entry]="llmSummaryEntry"
               [isGenerating]="isGenerating"
               [noProvider]="isNoProvider"
               (regenerate)="onRegenerate()"
             ></app-explanation-card>
 
-            <!-- Security Findings -->
-            <div class="sec-card" *ngIf="hasFindings">
-              <div class="sec-card-header">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-                Security Findings
-                <span class="sec-count-badge">{{ security!.findings.length }}</span>
-              </div>
+            <!-- ── Awaiting LLM state ──────────────────────────────────────── -->
+            <ng-container *ngIf="hasEvidence && isSecurityGenerating && !isNoProvider">
 
-              <!-- Severity tabs -->
-              <div class="sec-tabs">
-                <button
-                  *ngFor="let sev of SEVERITY_ORDER"
-                  class="sec-tab"
-                  [class.sec-tab--active]="activeTab === sev"
-                  [class.sec-tab--empty]="tabCount(sev) === 0"
-                  (click)="selectTab(sev)"
-                >
-                  {{ severityLabel(sev) }}
-                  <span class="sec-tab-count">{{ tabCount(sev) }}</span>
-                </button>
-              </div>
-
-              <!-- Findings list for active tab -->
-              <div class="sec-findings-list" *ngIf="findingsForTab.length > 0; else emptyTab">
-                <div
-                  class="sec-finding-card"
-                  *ngFor="let finding of findingsForTab"
-                  [class.expanded]="isFindingExpanded(finding.id)"
-                  (click)="toggleFinding(finding)"
-                >
-                  <div class="sec-finding-header">
-                    <span class="sec-sev-badge" [class]="severityClass(finding.severity)">{{ finding.severity | uppercase }}</span>
-                    <span class="sec-cat-badge">{{ categoryLabel(finding.category) }}</span>
-                    <span class="sec-finding-title">{{ finding.title }}</span>
-                    <svg class="sec-finding-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="9 18 15 12 9 6"/>
-                    </svg>
-                  </div>
-
-                  <div class="sec-finding-file">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                    {{ finding.fileName }}
-                    <span class="sec-line-ref" *ngIf="finding.lineStart">
-                      Line {{ finding.lineStart }}<span *ngIf="finding.lineEnd && finding.lineEnd !== finding.lineStart">–{{ finding.lineEnd }}</span>
-                    </span>
-                  </div>
-
-                  <div class="sec-finding-body" *ngIf="isFindingExpanded(finding.id)">
-                    <div class="sec-finding-section">
-                      <div class="sec-section-label">Issue</div>
-                      <p>{{ finding.issueDescription }}</p>
-                    </div>
-                    <div class="sec-finding-section sec-why-matters">
-                      <div class="sec-section-label sec-label-why">Why It Matters</div>
-                      <p>{{ finding.riskExplanation }}</p>
-                    </div>
-                    <div class="sec-finding-section" *ngIf="finding.affectedComponents.length > 0">
-                      <div class="sec-section-label">Affected Components</div>
-                      <div class="sec-chip-list">
-                        <span class="sec-chip" *ngFor="let c of finding.affectedComponents">{{ c }}</span>
-                      </div>
-                    </div>
+              <!-- Findings skeleton -->
+              <div class="sec-card sec-skeleton-card">
+                <div class="sec-card-header">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  Security Findings
+                  <span class="sec-skeleton-label">AI is reviewing security evidence…</span>
+                </div>
+                <div class="sec-skeleton-list">
+                  <div class="sec-skeleton-row" *ngFor="let _ of [0,1,2]">
+                    <div class="sec-skeleton-badge"></div>
+                    <div class="sec-skeleton-badge sec-skeleton-badge--wide"></div>
+                    <div class="sec-skeleton-line"></div>
                   </div>
                 </div>
               </div>
 
-              <ng-template #emptyTab>
-                <div class="sec-tab-empty-state">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <!-- Verification checks skeleton -->
+              <div class="sec-card sec-skeleton-card">
+                <div class="sec-card-header">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     <polyline points="9 12 11 14 15 10"/>
                   </svg>
-                  <p>No {{ severityLabel(activeTab).toLowerCase() }} severity findings</p>
+                  Security Verification
                 </div>
-              </ng-template>
-            </div>
-
-            <div class="sec-card sec-no-findings" *ngIf="!hasFindings">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                <polyline points="9 12 11 14 15 10"/>
-              </svg>
-              <p>No security findings detected.</p>
-            </div>
-
-            <!-- Hotspots -->
-            <div class="sec-card sec-hotspots" *ngIf="hotspots.length > 0">
-              <div class="sec-card-header">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                </svg>
-                Risk Hotspots
-                <span class="sec-count-badge">{{ hotspots.length }}</span>
-              </div>
-              <p class="sec-hotspots-note">Files with multiple findings that warrant focused review.</p>
-              <div class="sec-hotspot-list">
-                <div class="sec-hotspot-item" *ngFor="let spot of hotspots" [class]="hotspotRiskClass(spot.riskLevel)">
-                  <div class="sec-hotspot-header">
-                    <span class="sec-hotspot-name">{{ spot.name }}</span>
-                    <span class="sec-hotspot-count">{{ spot.findingCount }} finding{{ spot.findingCount !== 1 ? 's' : '' }}</span>
-                    <span class="sec-hotspot-level" [class]="'sev-badge-' + spot.riskLevel">{{ spot.riskLevel | titlecase }}</span>
+                <div class="sec-skeleton-list">
+                  <div class="sec-skeleton-row" *ngFor="let _ of [0,1,2,3]">
+                    <div class="sec-skeleton-icon"></div>
+                    <div class="sec-skeleton-line"></div>
                   </div>
-                  <p class="sec-hotspot-explanation">{{ spot.explanation }}</p>
                 </div>
               </div>
-            </div>
 
-            <!-- Next Steps -->
-            <div class="sec-card sec-next-steps" *ngIf="hasNextSteps">
-              <div class="sec-card-header">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-                Next Steps
-              </div>
-              <div class="sec-steps-list">
-                <div class="sec-step" *ngFor="let step of security!.nextSteps" [class]="'sec-step--' + step.priority">
-                  <div class="sec-step-header">
-                    <span class="sec-step-priority" [class]="'sec-priority--' + step.priority">{{ step.priority | titlecase }}</span>
-                    <span class="sec-step-title">{{ step.title }}</span>
+            </ng-container>
+
+            <!-- ── LLM complete state ──────────────────────────────────────── -->
+            <ng-container *ngIf="isLlmComplete">
+
+              <!-- Security Findings -->
+              <div class="sec-card">
+                <div class="sec-card-header">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  Security Findings
+                  <span class="sec-count-badge" *ngIf="hasFindings">{{ findings.length }}</span>
+                </div>
+
+                <ng-container *ngIf="hasFindings; else noFindings">
+                  <div class="sec-findings-list">
+                    <div
+                      class="sec-finding-card"
+                      *ngFor="let finding of findings"
+                      [class.expanded]="isFindingExpanded(finding.id)"
+                      (click)="toggleFinding(finding)"
+                    >
+                      <div class="sec-finding-header">
+                        <span class="sec-sev-badge" [class]="severityClass(finding.severity)">{{ finding.severity | uppercase }}</span>
+                        <span class="sec-cat-badge">{{ categoryLabel(finding.category) }}</span>
+                        <span class="sec-finding-title">{{ finding.title }}</span>
+                        <svg class="sec-finding-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                      </div>
+
+                      <div class="sec-finding-file" *ngIf="finding.fileName">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                          <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        {{ finding.fileName }}
+                        <span class="sec-line-ref" *ngIf="finding.lineStart">
+                          Line {{ finding.lineStart }}<span *ngIf="finding.lineEnd && finding.lineEnd !== finding.lineStart">–{{ finding.lineEnd }}</span>
+                        </span>
+                      </div>
+
+                      <div class="sec-finding-body" *ngIf="isFindingExpanded(finding.id)">
+                        <div class="sec-finding-section">
+                          <div class="sec-section-label">Issue</div>
+                          <p>{{ finding.issueDescription }}</p>
+                        </div>
+                        <div class="sec-finding-section sec-why-matters">
+                          <div class="sec-section-label sec-label-why">Why It Matters</div>
+                          <p>{{ finding.riskExplanation }}</p>
+                        </div>
+                        <div class="sec-finding-section sec-remediation">
+                          <div class="sec-section-label sec-label-remediation">Remediation</div>
+                          <p>{{ finding.remediation }}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <p class="sec-step-detail">{{ step.detail }}</p>
+                </ng-container>
+
+                <ng-template #noFindings>
+                  <div class="sec-no-findings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                      <polyline points="9 12 11 14 15 10"/>
+                    </svg>
+                    <p>No security issues detected.</p>
+                  </div>
+                </ng-template>
+              </div>
+
+              <!-- Verification Checks -->
+              <div class="sec-card sec-verification" *ngIf="hasVerificationChecks">
+                <div class="sec-card-header">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <polyline points="9 12 11 14 15 10"/>
+                  </svg>
+                  Security Verification
+                </div>
+                <p class="sec-verification-subtitle">Domains assessed based on detected patterns.</p>
+
+                <div class="sec-checks-list">
+                  <div
+                    class="sec-check-row"
+                    *ngFor="let check of verificationChecks"
+                    [class.sec-check--pass]="check.status === 'pass'"
+                    [class.sec-check--warn]="check.status === 'warn'"
+                    [class.sec-check--fail]="check.status === 'fail'"
+                    [class.sec-check--expandable]="!!check.detail"
+                    [class.sec-check--expanded]="isCheckExpanded(check.domain)"
+                    (click)="toggleCheck(check)"
+                  >
+                    <div class="sec-check-main">
+                      <span class="sec-check-icon" [class]="'sec-icon--' + check.status">{{ checkStatusIcon(check.status) }}</span>
+                      <span class="sec-check-domain">{{ domainLabel(check.domain) }}</span>
+                      <span class="sec-check-summary">{{ check.summary }}</span>
+                      <svg *ngIf="check.detail" class="sec-check-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </div>
+                    <div class="sec-check-detail" *ngIf="check.detail && isCheckExpanded(check.domain)">
+                      {{ check.detail }}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+
+            </ng-container>
 
           </div>
         </div>

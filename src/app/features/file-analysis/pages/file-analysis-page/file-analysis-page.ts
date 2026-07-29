@@ -580,9 +580,19 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   get aiInsightsState(): 'complete' | 'partial' | 'running' | 'failed' | 'idle' {
     if (this.aiPipeline.noProvider) return 'failed';
+    const ai = this.model?.ai;
+    const summaryKeys: LLMSummaryKey[] = ['understanding', 'dataFlow', 'security', 'recommendations', 'learningPath'];
+    const statuses = summaryKeys.map(k => ai?.summaries?.[k]?.status);
+    const allSettled = statuses.every(s => s === 'complete' || s === 'failed');
+    const anyComplete = statuses.some(s => s === 'complete');
+    const anyFailed = statuses.some(s => s === 'failed');
+    if (allSettled && anyComplete && !anyFailed) return 'complete';
+    if (allSettled && anyFailed && !anyComplete) return 'failed';
+    if (allSettled) return 'partial';
     const gen = this.aiPipeline.stages.find(s => s.id === 'generate');
-    if (!gen) return 'idle';
-    return gen.state as any;
+    if (gen?.state === 'running') return 'running';
+    if (anyComplete || anyFailed) return 'partial';
+    return gen?.state as any ?? 'idle';
   }
 
   get aiInsightsLabel(): string {
@@ -596,20 +606,26 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     }
   }
 
-  get pipelineStages(): { label: string; stage: AIStage; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
+  get pipelineStages(): { key: string; label: string; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
     const ai = this.model?.ai;
     const running = this.manager.getActiveStages(this.workspace?.id ?? '');
     const generateRunning = running.has('generate');
-    const stages: AIStage[] = ['understanding', 'dataFlow', 'security', 'recommendations', 'learningPath'];
-    return stages.map(s => {
-      const label = STAGE_LABELS[s] ?? s;
-      const summaryKey = s as LLMSummaryKey;
-      const summaryStatus = ai?.summaries?.[summaryKey]?.status;
-      if (summaryStatus === 'complete') return { label, stage: s, state: 'complete' as const };
-      if (summaryStatus === 'failed')   return { label, stage: s, state: 'failed' as const };
-      if (generateRunning)              return { label, stage: s, state: 'running' as const };
-      return { label, stage: s, state: 'pending' as const };
-    });
+
+    const summaryState = (k: LLMSummaryKey): 'complete' | 'failed' | 'running' | 'pending' => {
+      const status = ai?.summaries?.[k]?.status;
+      if (status === 'complete') return 'complete';
+      if (status === 'failed')   return 'failed';
+      if (generateRunning)       return 'running';
+      return 'pending';
+    };
+
+    return [
+      { key: 'understanding',   label: 'Understanding',   state: summaryState('understanding') },
+      { key: 'dataFlow',        label: 'Data Flow',       state: summaryState('dataFlow') },
+      { key: 'security',        label: 'Security Review', state: summaryState('security') },
+      { key: 'recommendations', label: 'Recommendations', state: summaryState('recommendations') },
+      { key: 'learningPath',    label: 'Learning Path',   state: summaryState('learningPath') },
+    ];
   }
 
   // ── Detected role tags ─────────────────────────────────────────
@@ -755,9 +771,6 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     return this.formatBytes(new TextEncoder().encode(src).length);
   }
 
-  get issueCount(): number {
-    return this.model?.insights.risks?.length ?? 0;
-  }
 
   private get symbolTotal(): number | null {
     if (!this.model) return null;

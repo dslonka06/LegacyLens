@@ -16,11 +16,12 @@ const { ResponsibilitiesNarrativeEngine } = require('../engines/narrative/respon
 const { DataFlowPatternEngine } = require('../engines/narrative/data-flow-pattern.engine');
 const { DataFlowStepsNarrativeEngine } = require('../engines/narrative/data-flow-steps-narrative.engine');
 const { WorkflowExplorerEngine } = require('../engines/analysis/workflow-explorer.engine');
-const { LearningPathAnalysisEngine } = require('../engines/analysis/learning-path-analysis.engine');
+const { LearningConceptEngine } = require('../engines/narrative/learning-concept.engine');
 const { DataFlowDiscoveryEngine } = require('../engines/analysis/data-flow-discovery.engine');
 const { RecommendationAnalysisEngine } = require('../engines/analysis/recommendation-analysis.engine');
-const { SecurityAnalysisEngine } = require('../engines/analysis/security-analysis.engine');
-const { SecurityNextStepsEngine } = require('../engines/narrative/security-next-steps-narrative.engine');
+const { SecurityEvidenceEngine } = require('../engines/security/security-evidence.engine');
+const fs = require('fs');
+const nodePath = require('path');
 const { ArchitectureAnalysisEngine } = require('../engines/analysis/architecture-analysis.engine');
 const { DataFlowAnalysisEngine } = require('../engines/analysis/data-flow-analysis.engine');
 const { RepositoryInsightsEngine } = require('../engines/analysis/repository-insights.engine');
@@ -54,11 +55,10 @@ const responsibilitiesNarrative = new ResponsibilitiesNarrativeEngine();
 const dataFlowPattern = new DataFlowPatternEngine();
 const dataFlowStepsNarrative = new DataFlowStepsNarrativeEngine();
 const workflowExplorer = new WorkflowExplorerEngine();
-const learningPath = new LearningPathAnalysisEngine();
+const learningConcept = new LearningConceptEngine();
 const dataFlowDiscovery = new DataFlowDiscoveryEngine();
 const recommendations = new RecommendationAnalysisEngine();
-const securityAnalysis = new SecurityAnalysisEngine();
-const securityNextSteps = new SecurityNextStepsEngine();
+const securityEvidence = new SecurityEvidenceEngine();
 const architectureAnalysis = new ArchitectureAnalysisEngine();
 const dataFlowAnalysis = new DataFlowAnalysisEngine();
 const repositoryInsights = new RepositoryInsightsEngine();
@@ -334,8 +334,8 @@ function registerIntelligenceHandlers() {
     const understanding = model.ai?.understanding ?? null;
     const scope = model.targetType ?? 'repository';
     return knowledge
-      ? learningPath.analyzeKnowledge(knowledge, session, understanding, scope)
-      : learningPath.analyzeFile(session, understanding);
+      ? learningConcept.analyzeKnowledge(knowledge, session, understanding, scope)
+      : learningConcept.analyzeFile(session, understanding);
   }));
 
   // intelligence:discoverDataFlows — discover data/workflow flows from knowledge + structure
@@ -355,26 +355,59 @@ function registerIntelligenceHandlers() {
     return result;
   }));
 
-  // intelligence:security — accepts KnowledgeModel, adapts to engine's expected shape
+  // intelligence:security — gather evidence for LLM-driven findings.
+  // The derive stage produces a SecurityEvidenceReport; the generate tier (LLMSummaryService)
+  // sends it to the LLM and writes confirmed findings back into model.ai.security.
   ipcMain.handle('intelligence:security', wrapHandler(async (_event, model) => {
     if (!model) throw new Error('model is required');
     console.log('[IPC] intelligence:security targetType=' + model.targetType);
-    const { knowledge, session } = adaptModelForEngines(model);
+
     const scope = model.targetType ?? 'repository';
-    const result = await (knowledge
-      ? securityAnalysis.analyzeKnowledge(knowledge, session)
-      : securityAnalysis.analyzeFile(session));
-    if (result) {
-      result.nextSteps = securityNextSteps.build({
-        findings: result.findings,
-        overallRisk: result.overallRisk,
-        securityMaturity: result.securityMaturity,
-        scope,
-        name: model.name ?? '',
-      });
+    const languages = model.structure?.languages ?? [];
+
+    // ── Build source file list with content ──────────────────────────────────
+    let sourceFiles = [];
+
+    if (model.targetType === 'file' && model.structure?.sourceCode) {
+      sourceFiles = [{ path: model.structure.filePath ?? 'file', content: model.structure.sourceCode }];
+    } else {
+      // For folder/repository: read files from disk using repositoryPath + symbol keys
+      const repositoryPath = model.metadata?.repositoryPath;
+      const symbolPaths = Object.keys(model.structure?.symbols ?? {});
+
+      if (repositoryPath && symbolPaths.length > 0) {
+        for (const relPath of symbolPaths) {
+          try {
+            const absPath = nodePath.join(repositoryPath, relPath);
+            const content = fs.readFileSync(absPath, 'utf8');
+            sourceFiles.push({ path: relPath, content });
+          } catch {
+            // Skip unreadable files — the engine handles empty content gracefully
+          }
+        }
+      }
     }
-    console.log('[IPC] intelligence:security done result=' + (result ? 'ok' : 'null'));
-    return result;
+
+    const evidence = securityEvidence.gatherEvidence(sourceFiles, null, scope, languages);
+
+    console.log('[IPC] intelligence:security evidence gathered candidates=' + evidence.candidates.length);
+
+    return {
+      evidence,
+      findings: [],
+      verificationChecks: [],
+      overallRisk: 'low',
+      securityMaturity: 'High',
+      executiveSummary: '',
+      summary: '',
+      maturityContext: '',
+      riskContext: '',
+      hotspots: [],
+      relevantComponents: [],
+      recommendationThemes: [],
+      readinessAssessment: '',
+      generatedAt: new Date().toISOString(),
+    };
   }));
 
   // intelligence:architectureAnalysis — AI-tier architecture analysis from KnowledgeModel
