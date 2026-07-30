@@ -64,37 +64,6 @@
   overflow: hidden;
 }
 
-// ── Flow pattern overview block ───────────────────────────────────────────────
-
-.df-pattern-block {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.df-pattern-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--text-primary);
-}
-
-.df-pattern-overview {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.7;
-  margin: 0;
-}
-
-// ── IO framing sentence ───────────────────────────────────────────────────────
-
-.df-io-frame {
-  font-size: 12px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin: 0 0 6px;
-}
 
 .flow-narrative {
   font-size: 14px;

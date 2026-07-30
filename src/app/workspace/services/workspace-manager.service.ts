@@ -178,6 +178,11 @@ export class WorkspaceManagerService {
   activate(id: string): void {
     const ws = this.getById(id);
     if (!ws) return;
+    // Briefly emit null so distinctUntilChanged always sees a change, even
+    // when re-activating the same workspace (e.g. reopening from home page).
+    if (this._activeId$.value === id) {
+      this._activeId$.next(null);
+    }
     this._activeId$.next(id);
     this.router.navigate([this.routeForType(ws.type)]);
   }

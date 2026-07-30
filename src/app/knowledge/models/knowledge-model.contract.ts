@@ -211,8 +211,6 @@ export interface KnowledgeAIResults {
   dataFlowFileNarrative?: {
     pattern: { label: string; overview: string };
     stepNarrative: string[];
-    inputsFrame: string | null;
-    outputsFrame: string | null;
   } | null;
 
   // ── Generate tier ─────────────────────────────────────────────────────────────

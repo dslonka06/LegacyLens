@@ -122,44 +122,8 @@
           </div>
         </div>
 
-        <!-- ── Tier 3: Workflows (folder + repo only) ─────────────────────── -->
-        <div class="su-tier" *ngIf="understanding!.scope !== 'file'">
-
-          <!-- Folder scope: key workflows -->
-          <div class="su-card" *ngIf="understanding!.scope === 'folder' && understanding!.keyWorkflows?.length">
-            <div class="su-card-header">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-              </svg>
-              Key Workflows
-            </div>
-            <div class="su-numbered-list">
-              <div class="su-numbered-item" *ngFor="let wf of understanding!.keyWorkflows; let i = index">
-                <span class="su-number-circle">{{ i + 1 }}</span>
-                <span class="su-numbered-text">{{ wf }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Repo scope: most important workflows -->
-          <div class="su-card" *ngIf="understanding!.scope === 'repository' && understanding!.mostImportantWorkflows?.length">
-            <div class="su-card-header">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-              </svg>
-              Most Important Workflows
-            </div>
-            <div class="su-workflow-list">
-              <div class="su-workflow-item" *ngFor="let wf of understanding!.mostImportantWorkflows">
-                <div class="su-workflow-name">{{ wf.name }}</div>
-                <div class="su-workflow-desc">{{ wf.description }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── Tier 4: Responsibilities + Components (file only) ─────────── -->
-        <div class="su-tier su-tier--two-col su-tier--bottom" *ngIf="understanding!.scope === 'file'">
+        <!-- ── Tier 3: Responsibilities + Components ────────────────────────── -->
+        <div class="su-tier su-tier--two-col su-tier--bottom">
 
           <!-- Responsibilities -->
           <div class="su-card su-card--stretch">
@@ -277,46 +241,39 @@
 
         </div>
 
-        <!-- ── Tier 5: Areas of Concern (repo only) ───────────────────────── -->
-        <div class="su-tier" *ngIf="understanding!.scope === 'repository'">
-          <div class="su-card" *ngIf="(understanding!.criticalAreas?.length || understanding!.technicalDebtHotspots?.length || understanding!.highRiskAreas?.length)">
+        <!-- ── Tier 4: Workflows ──────────────────────────────────────────── -->
+        <div class="su-tier" *ngIf="understanding!.keyWorkflows?.length || understanding!.mostImportantWorkflows?.length">
+
+          <div class="su-card" *ngIf="understanding!.keyWorkflows?.length">
             <div class="su-card-header">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
               </svg>
-              Areas of Concern
+              Key Workflows
             </div>
-            <div class="su-concern-list">
-
-              <!-- Critical areas -->
-              <div class="su-concern-item" *ngFor="let area of understanding!.criticalAreas">
-                <div class="su-concern-header">
-                  <span class="su-concern-badge su-concern-badge--critical">Critical</span>
-                  <span class="su-concern-name">{{ area }}</span>
-                </div>
+            <div class="su-numbered-list">
+              <div class="su-numbered-item" *ngFor="let wf of understanding!.keyWorkflows; let i = index">
+                <span class="su-number-circle">{{ i + 1 }}</span>
+                <span class="su-numbered-text">{{ wf }}</span>
               </div>
-
-              <!-- Technical debt hotspots -->
-              <div class="su-concern-item" *ngFor="let hotspot of understanding!.technicalDebtHotspots">
-                <div class="su-concern-header">
-                  <span class="su-concern-badge su-concern-badge--debt">Debt</span>
-                  <span class="su-concern-name">{{ hotspot.name }}</span>
-                </div>
-                <p class="su-concern-detail">{{ hotspot.reason }}</p>
-                <p class="su-concern-impact">{{ hotspot.impact }}</p>
-              </div>
-
-              <!-- High-risk areas -->
-              <div class="su-concern-item" *ngFor="let risk of understanding!.highRiskAreas">
-                <div class="su-concern-header">
-                  <span class="su-concern-badge su-concern-badge--risk">Risk</span>
-                  <span class="su-concern-name">{{ risk }}</span>
-                </div>
-              </div>
-
             </div>
           </div>
+
+          <div class="su-card" *ngIf="understanding!.mostImportantWorkflows?.length">
+            <div class="su-card-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+              Most Important Workflows
+            </div>
+            <div class="su-workflow-list">
+              <div class="su-workflow-item" *ngFor="let wf of understanding!.mostImportantWorkflows">
+                <div class="su-workflow-name">{{ wf.name }}</div>
+                <div class="su-workflow-desc">{{ wf.description }}</div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </div>

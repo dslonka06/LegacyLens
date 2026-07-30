@@ -194,7 +194,19 @@ export class LLMSummaryService {
       if (ai.recommendations) tasks.push({ key: 'recommendations', prompt: this.recommendationsPrompt.build({ workspaceName, scope, recommendations: ai.recommendations, architecture: ai.architecture ?? null, totalFiles, languages }) });
       if (ai.learningPath)  tasks.push({ key: 'learningPath', prompt: this.learningPathPrompt.build({ workspaceName, scope, learningPath: ai.learningPath, understanding: ai.understanding ?? null, totalFiles, languages }) });
       if (ai.architecture)  tasks.push({ key: 'architecture', prompt: this.architecturePrompt.build({ workspaceName, scope, architecture: ai.architecture, structuralPatterns, totalFiles, languages, technologies }) });
-      if (ai.dataFlow)      tasks.push({ key: 'dataFlow', prompt: this.dataFlowPrompt.build({ workspaceName, scope, dataFlow: ai.dataFlow, architecture: ai.architecture ?? null, totalFiles, languages }) });
+
+      const fileInsightFlow = model.insights?.dataFlow;
+      const hasDataFlow = scope === 'file' ? !!fileInsightFlow?.steps.length : !!ai.dataFlow;
+      if (hasDataFlow) {
+        const fileDataFlow = scope === 'file' && fileInsightFlow ? {
+          patternLabel: ai.dataFlowFileNarrative?.pattern.label ?? 'Data Processing',
+          steps:         fileInsightFlow.steps,
+          inputs:        fileInsightFlow.inputs,
+          outputs:       fileInsightFlow.outputs,
+          stepNarratives: ai.dataFlowFileNarrative?.stepNarrative ?? [],
+        } : null;
+        tasks.push({ key: 'dataFlow', prompt: this.dataFlowPrompt.build({ workspaceName, scope, dataFlow: ai.dataFlow ?? null, fileDataFlow, architecture: ai.architecture ?? null, totalFiles, languages }) });
+      }
     } catch (err) {
       console.error('[LLMSummary] error during prompt building:', err);
     }
