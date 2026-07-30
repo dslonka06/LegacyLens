@@ -9,7 +9,6 @@ import { ExplanationCard } from '@app/shared/components/explanation-card/explana
 import type {
   KnowledgeModel,
   ArchitecturePattern,
-  DependencyHub,
 } from '@app/knowledge/models/knowledge-model.contract';
 import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
@@ -46,30 +45,6 @@ export class ArchitecturePage implements OnInit, OnDestroy {
     return this.model?.relationships.architecture?.patterns ?? [];
   }
 
-  get hubs(): DependencyHub[] {
-    return (this.model?.relationships.dependencies?.hubs ?? []).slice(0, 8);
-  }
-
-  get nodeCount(): number {
-    return this.model?.relationships.dependencies?.graph.nodes.length ?? 0;
-  }
-
-  get edgeCount(): number {
-    return this.model?.relationships.dependencies?.graph.edges.length ?? 0;
-  }
-
-  get topDependencies(): string[] {
-    const graph = this.model?.relationships.dependencies?.graph;
-    if (!graph) return [];
-    const nodeMap = new Map(graph.nodes.map((n) => [n.id, n.name]));
-    const counts = new Map<string, number>();
-    graph.edges.forEach((e) => counts.set(e.target, (counts.get(e.target) ?? 0) + 1));
-    return [...counts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([id]) => nodeMap.get(id) ?? id);
-  }
-
   get workspaceName(): string {
     return this.model?.workspaceName ?? 'Workspace';
   }
@@ -87,10 +62,7 @@ export class ArchitecturePage implements OnInit, OnDestroy {
     if (!pts.length) return '';
     const names = pts.slice(0, 3).map((p) => p.name).join(', ');
     const topConf = this.confidencePercent(pts[0]);
-    const hubNote = this.hubs.length > 0
-      ? ` ${this.hubs.length} central hub module${this.hubs.length > 1 ? 's' : ''} act as primary integration points.`
-      : '';
-    return `Detected pattern${pts.length > 1 ? 's' : ''}: ${names} (${topConf}% confidence). ${this.nodeCount} modules, ${this.edgeCount} dependency connections.${hubNote}`;
+    return `Detected pattern${pts.length > 1 ? 's' : ''}: ${names} (${topConf}% confidence).`;
   }
 
   confidencePercent(p: ArchitecturePattern): number {

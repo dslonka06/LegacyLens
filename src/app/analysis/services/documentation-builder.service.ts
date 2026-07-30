@@ -212,7 +212,7 @@ export class DocumentationBuilderService {
     switch (id) {
       case 'executive-summary':
         return isFile
-          ? !!ai?.summaries?.understanding?.content
+          ? !!ai?.understanding
           : !!ai?.understanding?.executiveSummary;
 
       case 'repository-overview':
@@ -220,13 +220,13 @@ export class DocumentationBuilderService {
 
       case 'architecture-overview':
         return isFile
-          ? !!ai?.summaries?.architecture?.content
+          ? !!(ai?.fileComponentsNarrative?.items?.length || ai?.summaries?.architecture?.content)
           : caps.includes('architectureDiscovery') &&
               (model.relationships.architecture?.patterns.length ?? 0) > 0;
 
       case 'data-flow':
         return isFile
-          ? !!ai?.summaries?.dataFlow?.content
+          ? !!(ai?.dataFlowFileNarrative || ai?.summaries?.dataFlow?.content)
           : caps.includes('dependencyResolution') &&
               (model.relationships.dependencies?.graph.nodes.length ?? 0) >= 3;
 
@@ -238,12 +238,12 @@ export class DocumentationBuilderService {
 
       case 'risk-assessment':
         return isFile
-          ? !!ai?.summaries?.security?.content
+          ? !!ai?.security
           : (ai?.security?.findings.length ?? 0) > 0;
 
       case 'modernization':
         return isFile
-          ? !!ai?.summaries?.recommendations?.content
+          ? !!(ai?.recommendations?.recommendations.length || ai?.summaries?.recommendations?.content)
           : (ai?.recommendations?.recommendations.length ?? 0) > 0;
 
       case 'key-files':
@@ -263,7 +263,7 @@ export class DocumentationBuilderService {
 
       case 'onboarding-guide':
         return isFile
-          ? !!ai?.summaries?.learningPath?.content
+          ? !!(ai?.learningPath || ai?.summaries?.learningPath?.content)
           : !!ai?.learningPath;
     }
   }
@@ -279,9 +279,8 @@ export class DocumentationBuilderService {
 
     switch (id) {
       case 'executive-summary':
-        return isFile
-          ? (ai?.summaries?.understanding?.content ?? '')
-          : (ai?.understanding?.executiveSummary ?? '');
+        if (!isFile) return ai?.understanding?.executiveSummary ?? '';
+        return this._renderFileUnderstanding(ai);
 
       case 'repository-overview': {
         const lines = [
@@ -301,7 +300,7 @@ export class DocumentationBuilderService {
       }
 
       case 'architecture-overview': {
-        if (isFile) return ai?.summaries?.architecture?.content ?? '';
+        if (isFile) return this._renderFileArchitecture(ai);
         const patterns = rel.architecture?.patterns ?? [];
         return patterns
           .map((p) => `• ${p.name} (${Math.round((p.confidence ?? 0) * 100)}%) — ${p.indicators.join(', ')}`)
@@ -309,7 +308,7 @@ export class DocumentationBuilderService {
       }
 
       case 'data-flow': {
-        if (isFile) return ai?.summaries?.dataFlow?.content ?? '';
+        if (isFile) return this._renderFileDataFlow(ai);
         const graph = rel.dependencies?.graph;
         if (!graph) return '';
         const nodeMap = new Map(graph.nodes.map((n) => [n.id, n.name]));
@@ -336,7 +335,7 @@ export class DocumentationBuilderService {
       }
 
       case 'risk-assessment': {
-        if (isFile) return ai?.summaries?.security?.content ?? '';
+        if (isFile) return this._renderFileSecurity(ai);
         return (ai?.security?.findings ?? [])
           .slice(0, 10)
           .map((f) => `[${f.severity.toUpperCase()}] ${f.title}: ${f.issueDescription}`)
@@ -344,7 +343,7 @@ export class DocumentationBuilderService {
       }
 
       case 'modernization': {
-        if (isFile) return ai?.summaries?.recommendations?.content ?? '';
+        if (isFile) return this._renderFileRecommendations(ai);
         return (ai?.recommendations?.recommendations ?? [])
           .filter((r) => r.category === 'modernization' || r.category === 'technical-debt')
           .slice(0, 10)
@@ -379,7 +378,7 @@ export class DocumentationBuilderService {
           .join('\n');
 
       case 'onboarding-guide': {
-        if (isFile) return ai?.summaries?.learningPath?.content ?? '';
+        if (isFile) return this._renderFileLearningPath(ai);
         const lp = ai?.learningPath;
         if (!lp) return '';
         const steps = (lp.roadmap ?? [])
@@ -390,5 +389,194 @@ export class DocumentationBuilderService {
           .join('\n');
       }
     }
+  }
+
+  // ── File-scope section renderers ──────────────────────────────────────────────
+
+  private _renderFileUnderstanding(ai: KnowledgeModel['ai']): string {
+    const u = ai?.understanding;
+    const llm = ai?.summaries?.understanding?.content;
+    const parts: string[] = [];
+
+    if (llm) {
+      parts.push(llm);
+      parts.push('');
+    }
+
+    if (u?.executiveSummary && u.executiveSummary !== llm) {
+      parts.push(u.executiveSummary);
+      parts.push('');
+    }
+
+    if (u?.businessPurpose) parts.push(u.businessPurpose);
+    if (u?.whyItMatters)    parts.push(u.whyItMatters);
+    if (u?.businessPurpose || u?.whyItMatters) parts.push('');
+
+    if (u?.keyResponsibilities?.length) {
+      parts.push('Responsibilities:');
+      u.keyResponsibilities.forEach(r => parts.push(`  • ${r}`));
+      parts.push('');
+    }
+
+    if (u?.businessCriticalityReason) {
+      parts.push(`Business Criticality: ${u.businessCriticalityReason}`);
+      parts.push('');
+    }
+
+    if (u?.health?.interpretation) {
+      parts.push(`Code Health: ${u.health.interpretation}`);
+    }
+
+    return parts.join('\n').trim();
+  }
+
+  private _renderFileArchitecture(ai: KnowledgeModel['ai']): string {
+    const llm = ai?.summaries?.architecture?.content;
+    const components = ai?.fileComponentsNarrative;
+    const parts: string[] = [];
+
+    if (llm) {
+      parts.push(llm);
+      parts.push('');
+    }
+
+    if (components?.items?.length) {
+      parts.push('Components:');
+      for (const item of components.items) {
+        const exported = item.isExported ? ', exported' : '';
+        parts.push(`  ${item.name} (${item.kind}${exported})`);
+        if (item.description) parts.push(`    ${item.description}`);
+      }
+      parts.push('');
+    }
+
+    const imports = components?.imports?.filter(Boolean) ?? [];
+    const exports = components?.exports?.filter(Boolean) ?? [];
+    if (imports.length > 2) {
+      parts.push(`Imports from: ${imports.slice(0, 8).join(', ')}${imports.length > 8 ? ` and ${imports.length - 8} more` : ''}.`);
+    }
+    if (exports.length > 0) {
+      parts.push(`Exports: ${exports.join(', ')}.`);
+    }
+
+    return parts.join('\n').trim();
+  }
+
+  private _renderFileDataFlow(ai: KnowledgeModel['ai']): string {
+    const llm = ai?.summaries?.dataFlow?.content;
+    const narrative = ai?.dataFlowFileNarrative;
+    const parts: string[] = [];
+
+    if (llm) {
+      parts.push(llm);
+      parts.push('');
+    }
+
+    if (narrative?.stepNarrative?.length) {
+      parts.push('Processing steps:');
+      narrative.stepNarrative.forEach((step, i) => {
+        parts.push(`  ${i + 1}. ${step}`);
+      });
+    }
+
+    return parts.join('\n').trim();
+  }
+
+  private _renderFileSecurity(ai: KnowledgeModel['ai']): string {
+    const llm = ai?.summaries?.security?.content;
+    const security = ai?.security;
+    const parts: string[] = [];
+
+    if (llm) {
+      parts.push(llm);
+      parts.push('');
+    }
+
+    const actionableChecks = (security?.verificationChecks ?? []).filter(c => c.status !== 'pass');
+    if (actionableChecks.length) {
+      parts.push('Security Domain Assessment:');
+      for (const check of actionableChecks) {
+        const prefix = check.status === 'fail' ? 'FAIL' : 'WARN';
+        parts.push(`  [${prefix}] ${check.summary}`);
+        if (check.detail) parts.push(`    ${check.detail}`);
+      }
+      parts.push('');
+    }
+
+    const findings = security?.findings ?? [];
+    if (findings.length) {
+      parts.push('Findings:');
+      for (const f of findings) {
+        parts.push(`  [${f.severity.toUpperCase()}] ${f.title}`);
+        parts.push(`    ${f.issueDescription}`);
+        if (f.remediation) parts.push(`    Remediation: ${f.remediation}`);
+      }
+    } else if (security) {
+      parts.push('No security findings were identified in this file.');
+    }
+
+    return parts.join('\n').trim();
+  }
+
+  private _renderFileRecommendations(ai: KnowledgeModel['ai']): string {
+    const llm = ai?.summaries?.recommendations?.content;
+    const recs = ai?.recommendations;
+    const parts: string[] = [];
+
+    if (llm) {
+      parts.push(llm);
+      parts.push('');
+    }
+
+    if (recs?.debtContext) {
+      parts.push(`Technical Debt: ${recs.debtContext}`);
+      parts.push('');
+    }
+
+    const items = recs?.recommendations ?? [];
+    if (items.length) {
+      parts.push('Recommendations:');
+      for (const r of items) {
+        parts.push(`  ${r.priorityRank}. [${r.priority.toUpperCase()}] ${r.title}`);
+        parts.push(`    ${r.issueDescription}`);
+        if (r.recommendedImprovement) parts.push(`    Improvement: ${r.recommendedImprovement}`);
+      }
+    } else if (recs) {
+      parts.push('No structural improvements were identified for this file.');
+    }
+
+    return parts.join('\n').trim();
+  }
+
+  private _renderFileLearningPath(ai: KnowledgeModel['ai']): string {
+    const llm = ai?.summaries?.learningPath?.content;
+    const lp = ai?.learningPath;
+    const parts: string[] = [];
+
+    if (llm) {
+      parts.push(llm);
+      parts.push('');
+    }
+
+    if (lp?.welcomeSummary && lp.welcomeSummary !== llm) {
+      parts.push(lp.welcomeSummary);
+      parts.push('');
+    }
+
+    if (lp?.focusFirst) {
+      parts.push(`Start here: ${lp.focusFirst}`);
+      parts.push('');
+    }
+
+    if (lp?.roadmap?.length) {
+      parts.push('Reading order:');
+      for (const step of lp.roadmap) {
+        parts.push(`  Step ${step.stepNumber}: ${step.title}`);
+        if (step.description) parts.push(`    ${step.description}`);
+        if (step.whyHere)     parts.push(`    Why here: ${step.whyHere}`);
+      }
+    }
+
+    return parts.join('\n').trim();
   }
 }

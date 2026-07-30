@@ -255,8 +255,6 @@ export class AIAnalysisService {
           fileNarrative?: {
             pattern: { label: string; overview: string };
             stepNarrative: string[];
-            inputsFrame: string | null;
-            outputsFrame: string | null;
           } | null;
         };
         return {

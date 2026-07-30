@@ -76,6 +76,9 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   pipelineStatusText: Record<string, string> = {};
   private statusTimers: Record<string, ReturnType<typeof setInterval>> = {};
 
+  // Animated count display — counts up from 0 to actual value when cards appear
+  displayedCounts: Record<string, number> = {};
+
   uploadError: string | null = null;
   isDragging = false;
 
@@ -83,6 +86,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   private stagesSub: Subscription | null = null;
   private limitSub: Subscription | null = null;
   private animTimer: ReturnType<typeof setTimeout> | null = null;
+  private countTimers: ReturnType<typeof setInterval>[] = [];
 
   constructor(
     private readonly manager: WorkspaceManagerService,
@@ -100,18 +104,25 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
       const prevId = this.workspace?.id;
       const prevStatus = this.workspace?.status;
       const prevModel = this.workspace?.knowledgeModel;
+      const prevAi = this.workspace?.knowledgeModel?.ai;
       this.workspace = ws;
       this.model = ws?.knowledgeModel ?? null;
 
       const switched = prevId !== ws?.id;
       const modelArrived = !prevModel && !!ws?.knowledgeModel;
       const processingStarted = prevStatus !== 'processing' && ws?.status === 'processing';
+      const aiUpdated = !switched && !modelArrived && !!ws?.knowledgeModel &&
+        ws.knowledgeModel.ai !== prevAi;
 
       if (switched || modelArrived) {
         this.isReturning = switched && !!ws?.knowledgeModel;
         this.runAnimations();
       } else if (processingStarted) {
         this.runInfoCardAnimation();
+      }
+
+      if (modelArrived || aiUpdated) {
+        this.animateCountsTo(this.metricCards);
       }
       this.cdr.detectChanges();
     });
@@ -140,6 +151,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     this.stagesSub?.unsubscribe();
     this.limitSub?.unsubscribe();
     if (this.animTimer) clearTimeout(this.animTimer);
+    this.clearCountTimers();
     this.stopAllStatusCycles();
   }
 
@@ -221,6 +233,35 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
     run(() => { this.showInfoCards = true; }, 150);
     run(() => { this.showArcDraw = true; }, 280);
+  }
+
+  private animateCountsTo(cards: HubMetricCard[]): void {
+    this.clearCountTimers();
+    for (const card of cards) {
+      if (card.count === null || card.count === 0) {
+        this.displayedCounts[card.id] = card.count ?? 0;
+        continue;
+      }
+      const target = card.count;
+      const duration = 600;
+      const steps = Math.min(target, 30);
+      const intervalMs = duration / steps;
+      let current = 0;
+      const timer = setInterval(() => {
+        this.zone.run(() => {
+          current = Math.min(current + Math.ceil(target / steps), target);
+          this.displayedCounts[card.id] = current;
+          this.cdr.detectChanges();
+          if (current >= target) clearInterval(timer);
+        });
+      }, intervalMs);
+      this.countTimers.push(timer);
+    }
+  }
+
+  private clearCountTimers(): void {
+    this.countTimers.forEach((t) => clearInterval(t));
+    this.countTimers = [];
   }
 
   // ── Upload ─────────────────────────────────────────────────────────────────
@@ -590,6 +631,12 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     return this.model?.ai?.understanding?.executiveSummary ?? '';
   }
 
+  get hubNarrative(): string {
+    const hn = this.model?.ai?.hubNarrative;
+    if (!hn) return '';
+    return [hn.structural, hn.directive].filter(Boolean).join(' ');
+  }
+
   // ── Metric cards ───────────────────────────────────────────────────────────
 
   get metricCards(): HubMetricCard[] {
@@ -602,6 +649,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
         id: 'dependencies',
         icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
         count: this.dependencyCount > 0 ? this.dependencyCount : null,
+        subtitle: 'Dependencies & Relations',
         label: 'Dependencies & Relations',
         route: `${base}/data-flow`,
         suggested: false,
@@ -611,7 +659,8 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
         id: 'security',
         icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
         count: ai?.security?.findings?.length ?? null,
-        label: 'Security Issues',
+        subtitle: 'Security Issues',
+        label: 'Security',
         route: `${base}/security`,
         suggested: suggested === 'security',
         pending: !ai?.completedStages?.includes('security'),
@@ -620,6 +669,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
         id: 'recommendations',
         icon: 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
         count: ai?.recommendations?.recommendations?.length ?? null,
+        subtitle: 'Recommendations',
         label: 'Recommendations',
         route: `${base}/code-recommendations`,
         suggested: suggested === 'recommendations',
@@ -629,7 +679,8 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
         id: 'architecture',
         icon: 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
         count: this.model?.relationships.architecture?.patterns.length ?? null,
-        label: 'Arch Patterns',
+        subtitle: 'Architecture Patterns',
+        label: 'Architecture',
         route: `${base}/architecture`,
         suggested: false,
         pending: !this.model?.capabilities.includes('architectureDiscovery'),
@@ -639,10 +690,21 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
         icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
         count: null,
         tags: ai?.understanding?.coreCapabilities?.slice(0, 2).map((c) => c.name),
+        subtitle: 'System Understanding',
         label: 'Key Elements',
         route: `${base}/system-understanding`,
         suggested: suggested === 'understanding',
         pending: !ai?.completedStages?.includes('understanding'),
+      },
+      {
+        id: 'learning',
+        icon: 'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
+        count: null,
+        subtitle: 'Personalized roadmap for this folder',
+        label: 'Learning Path',
+        route: `${base}/learning-path`,
+        suggested: false,
+        pending: !ai?.completedStages?.includes('learningPath'),
       },
     ];
   }

@@ -100,19 +100,6 @@ function adaptModelForEngines(model) {
         complexity:            ins.complexity      ?? 'Low',
         maintainability:       ins.maintainability ?? 'High',
       },
-      aiAnalysis: model.ai ? {
-        summary:         model.ai.understanding?.executiveSummary ?? '',
-        businessPurpose: model.ai.understanding?.businessPurpose  ?? '',
-        risks:           (model.ai.security?.findings ?? []).map(f => ({
-          title:       f.title,
-          description: f.issueDescription,
-          severity:    f.severity,
-        })),
-        modernizations: (model.ai.recommendations?.recommendations ?? []).slice(0, 5).map(r => ({
-          title:       r.title,
-          description: r.recommendedImprovement,
-        })),
-      } : undefined,
     };
     return { session, knowledge: null };
   }
@@ -131,33 +118,11 @@ function adaptModelForEngines(model) {
     builtAt:         model.metadata?.builtAt  ?? new Date().toISOString(),
   };
 
-  const session = model.ai ? {
-    aiAnalysis: {
-      summary:         model.ai.understanding?.executiveSummary ?? '',
-      businessPurpose: model.ai.understanding?.businessPurpose  ?? '',
-      risks:           (model.ai.security?.findings ?? []).map(f => ({
-        title:       f.title,
-        description: f.issueDescription,
-        severity:    f.severity,
-      })),
-      modernizations: (model.ai.recommendations?.recommendations ?? []).slice(0, 5).map(r => ({
-        title:       r.title,
-        description: r.recommendedImprovement,
-      })),
-    },
-  } : null;
+  const session = null;
 
   return { knowledge, session };
 }
 
-function _buildIOFrame(items, direction, fileType) {
-  if (items.length === 0) return null;
-  const listed = items.slice(0, 3).join(', ') + (items.length > 3 ? ` and ${items.length - 3} more` : '');
-  if (direction === 'input') {
-    return `This ${fileType.toLowerCase()} receives ${listed} as ${items.length === 1 ? 'its entry point' : 'entry points'} into the flow.`;
-  }
-  return `The flow produces ${listed}${items.length === 1 ? '' : ` as its ${items.length} outputs`}.`;
-}
 
 function registerIntelligenceHandlers() {
   // intelligence:analyzeCode — analyze a single source file string
@@ -347,10 +312,10 @@ function registerIntelligenceHandlers() {
   ipcMain.handle('intelligence:recommendations', wrapHandler(async (_event, model) => {
     if (!model) throw new Error('model is required');
     console.log('[IPC] intelligence:recommendations targetType=' + model.targetType);
-    const { knowledge, session } = adaptModelForEngines(model);
+    const { knowledge } = adaptModelForEngines(model);
     const result = await (knowledge
-      ? recommendations.analyzeKnowledge(knowledge, session)
-      : recommendations.analyzeFile(session));
+      ? recommendations.analyzeKnowledge(knowledge)
+      : recommendations.analyzeFile());
     console.log('[IPC] intelligence:recommendations done result=' + (result ? 'ok' : 'null'));
     return result;
   }));
@@ -439,14 +404,10 @@ function registerIntelligenceHandlers() {
 
       const flowData = { steps, inputs, outputs, language, fileType };
 
-      const pattern      = dataFlowPattern.build(flowData);
+      const pattern       = dataFlowPattern.build(flowData);
       const stepNarrative = dataFlowStepsNarrative.build(flowData);
 
-      // Inline framing sentences for inputs and outputs
-      const inputsFrame  = _buildIOFrame(inputs,  'input',  fileType);
-      const outputsFrame = _buildIOFrame(outputs, 'output', fileType);
-
-      return { ...result, fileNarrative: { pattern, stepNarrative, inputsFrame, outputsFrame } };
+      return { ...result, fileNarrative: { pattern, stepNarrative } };
     }
 
     return result;
