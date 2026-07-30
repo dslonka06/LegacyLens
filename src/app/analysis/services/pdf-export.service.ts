@@ -48,39 +48,48 @@ export class PdfExportService {
     this.renderDocumentationCover(ctx, model);
 
     const rendered = this.builder.renderPreview(model, selectedIds);
-    const sections = rendered.split('\n\n').filter(Boolean);
 
-    for (const block of sections) {
-      const lines = block.split('\n');
-      const headerLine = lines[0];
-      const bodyLines = lines.slice(2);
+    // Each section is "N. Title\n\nbody paragraphs" separated by \n\n
+    const SECTION_RE = /^(\d+)\.\s+(.+)$/m;
+    const rawSections = rendered.split(/\n(?=\d+\.\s)/);
 
-      if (!/^\d+\.\s/.test(headerLine)) continue;
+    for (const block of rawSections) {
+      if (!block.trim()) continue;
+      const firstNewline = block.indexOf('\n');
+      const headerLine = firstNewline === -1 ? block : block.slice(0, firstNewline);
+      const bodyText   = firstNewline === -1 ? '' : block.slice(firstNewline + 1).trim();
 
-      ctx.sectionHeader(headerLine.replace(/^\d+\.\s*/, ''));
-      for (const line of bodyLines) {
-        if (!line.trim()) {
-          ctx.spacer(3);
-          continue;
+      const match = SECTION_RE.exec(headerLine);
+      if (!match) continue;
+
+      ctx.sectionHeader(match[2]);
+
+      for (const para of bodyText.split('\n\n')) {
+        const trimmed = para.trim();
+        if (!trimmed) continue;
+        for (const line of trimmed.split('\n')) {
+          if (!line.trim()) {
+            ctx.spacer(2);
+            continue;
+          }
+          if (/^\[(\w+)\]/.test(line)) {
+            const sev = (line.match(/^\[(\w+)\]/) ?? [])[1]?.toLowerCase() ?? 'low';
+            const sevColor: [number, number, number] =
+              sev === 'critical' || sev === 'high'
+                ? [C.high[0], C.high[1], C.high[2]]
+                : sev === 'medium'
+                  ? [C.medium[0], C.medium[1], C.medium[2]]
+                  : [C.lowGreen[0], C.lowGreen[1], C.lowGreen[2]];
+            ctx.coloredLabel(line.replace(/^\[\w+\]\s*/, ''), sevColor);
+          } else if (line.startsWith('  ')) {
+            ctx.body(line.trim(), 9);
+          } else {
+            ctx.body(line, 9.5);
+          }
         }
-        if (line.startsWith('•')) {
-          ctx.bulletList([line.replace(/^•\s*/, '')]);
-        } else if (/^\[(\w+)\]/.test(line)) {
-          const sev = (line.match(/^\[(\w+)\]/) ?? [])[1]?.toLowerCase() ?? 'low';
-          const sevColor: [number, number, number] =
-            sev === 'critical' || sev === 'high'
-              ? [C.high[0], C.high[1], C.high[2]]
-              : sev === 'medium'
-                ? [C.medium[0], C.medium[1], C.medium[2]]
-                : [C.lowGreen[0], C.lowGreen[1], C.lowGreen[2]];
-          ctx.coloredLabel(line.replace(/^\[\w+\]\s*/, ''), sevColor);
-        } else if (line.startsWith('  ')) {
-          ctx.body(line.trim(), 9);
-        } else {
-          ctx.body(line, 9.5);
-        }
+        ctx.spacer(3);
       }
-      ctx.spacer(4);
+      ctx.spacer(2);
     }
 
     this.renderDocumentationMetadata(ctx, model);

@@ -287,6 +287,10 @@
   padding: 20px 16px 40px; // extra bottom padding for the arrow
   border: 1px solid var(--panel-pcard-border);
   border-radius: 16px;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
   text-decoration: none;
   overflow: hidden;
   transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;

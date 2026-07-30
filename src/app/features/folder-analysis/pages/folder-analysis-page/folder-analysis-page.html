@@ -232,7 +232,7 @@
           <span class="info-card-title">AI Analysis</span>
         </div>
 
-        <ng-container *ngIf="model; else aiCardEmpty">
+        <ng-container *ngIf="isAnalyzing || model; else aiCardEmpty">
 
           <!-- Pipeline bubble track -->
           <div class="pipeline-track">

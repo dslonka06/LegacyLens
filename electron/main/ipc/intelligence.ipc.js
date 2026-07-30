@@ -312,10 +312,10 @@ function registerIntelligenceHandlers() {
   ipcMain.handle('intelligence:recommendations', wrapHandler(async (_event, model) => {
     if (!model) throw new Error('model is required');
     console.log('[IPC] intelligence:recommendations targetType=' + model.targetType);
-    const { knowledge } = adaptModelForEngines(model);
+    const { knowledge, session } = adaptModelForEngines(model);
     const result = await (knowledge
       ? recommendations.analyzeKnowledge(knowledge)
-      : recommendations.analyzeFile());
+      : recommendations.analyzeFile(session));
     console.log('[IPC] intelligence:recommendations done result=' + (result ? 'ok' : 'null'));
     return result;
   }));
