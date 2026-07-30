@@ -186,20 +186,19 @@ export class DocumentationBuilderService {
   renderPreview(model: KnowledgeModel, selectedIds: DocumentationSectionId[]): string {
     const scope = model.targetType as DocumentationScope;
     const catalogue = sectionsForScope(scope);
-    const lines: string[] = [];
+    const sections: string[] = [];
     let n = 1;
 
     for (const id of selectedIds) {
       const section = catalogue.find((s) => s.id === id);
       if (!section || !this.isSectionAvailable(id, model)) continue;
-      lines.push(`${n}. ${section.title}`);
-      lines.push('─'.repeat(section.title.length + 4));
-      lines.push(this.renderSectionContent(id, model));
-      lines.push('');
+      const content = this.renderSectionContent(id, model).trim();
+      if (!content) continue;
+      sections.push(`${n}. ${section.title}\n\n${content}`);
       n++;
     }
 
-    return lines.join('\n');
+    return sections.join('\n\n');
   }
 
   // ── Availability ─────────────────────────────────────────────────────────────
@@ -220,7 +219,7 @@ export class DocumentationBuilderService {
 
       case 'architecture-overview':
         return isFile
-          ? !!(ai?.fileComponentsNarrative?.items?.length || ai?.summaries?.architecture?.content)
+          ? false
           : caps.includes('architectureDiscovery') &&
               (model.relationships.architecture?.patterns.length ?? 0) > 0;
 
@@ -300,7 +299,6 @@ export class DocumentationBuilderService {
       }
 
       case 'architecture-overview': {
-        if (isFile) return this._renderFileArchitecture(ai);
         const patterns = rel.architecture?.patterns ?? [];
         return patterns
           .map((p) => `• ${p.name} (${Math.round((p.confidence ?? 0) * 100)}%) — ${p.indicators.join(', ')}`)
@@ -308,7 +306,7 @@ export class DocumentationBuilderService {
       }
 
       case 'data-flow': {
-        if (isFile) return this._renderFileDataFlow(ai);
+        if (isFile) return this._renderFileDataFlow(ai, ins.dataFlow);
         const graph = rel.dependencies?.graph;
         if (!graph) return '';
         const nodeMap = new Map(graph.nodes.map((n) => [n.id, n.name]));
@@ -396,187 +394,133 @@ export class DocumentationBuilderService {
   private _renderFileUnderstanding(ai: KnowledgeModel['ai']): string {
     const u = ai?.understanding;
     const llm = ai?.summaries?.understanding?.content;
-    const parts: string[] = [];
+    const paras: string[] = [];
 
-    if (llm) {
-      parts.push(llm);
-      parts.push('');
-    }
+    if (llm) paras.push(llm);
 
-    if (u?.executiveSummary && u.executiveSummary !== llm) {
-      parts.push(u.executiveSummary);
-      parts.push('');
-    }
+    if (u?.executiveSummary && u.executiveSummary !== llm) paras.push(u.executiveSummary);
 
-    if (u?.businessPurpose) parts.push(u.businessPurpose);
-    if (u?.whyItMatters)    parts.push(u.whyItMatters);
-    if (u?.businessPurpose || u?.whyItMatters) parts.push('');
+    const purposeParts: string[] = [];
+    if (u?.businessPurpose) purposeParts.push(u.businessPurpose);
+    if (u?.whyItMatters)    purposeParts.push(u.whyItMatters);
+    if (purposeParts.length) paras.push(purposeParts.join(' '));
 
     if (u?.keyResponsibilities?.length) {
-      parts.push('Responsibilities:');
-      u.keyResponsibilities.forEach(r => parts.push(`  • ${r}`));
-      parts.push('');
+      const respNarratives = ai?.fileResponsibilitiesNarrative ?? [];
+      const respParas = u.keyResponsibilities.map((r, i) => {
+        const desc = respNarratives[i];
+        return desc ? `${r}: ${desc}` : r;
+      });
+      paras.push(respParas.join('\n\n'));
     }
 
-    if (u?.businessCriticalityReason) {
-      parts.push(`Business Criticality: ${u.businessCriticalityReason}`);
-      parts.push('');
-    }
+    if (u?.businessCriticalityReason) paras.push(u.businessCriticalityReason);
+    if (u?.health?.interpretation)    paras.push(u.health.interpretation);
 
-    if (u?.health?.interpretation) {
-      parts.push(`Code Health: ${u.health.interpretation}`);
-    }
-
-    return parts.join('\n').trim();
+    return paras.join('\n\n');
   }
 
-  private _renderFileArchitecture(ai: KnowledgeModel['ai']): string {
-    const llm = ai?.summaries?.architecture?.content;
-    const components = ai?.fileComponentsNarrative;
-    const parts: string[] = [];
-
-    if (llm) {
-      parts.push(llm);
-      parts.push('');
-    }
-
-    if (components?.items?.length) {
-      parts.push('Components:');
-      for (const item of components.items) {
-        const exported = item.isExported ? ', exported' : '';
-        parts.push(`  ${item.name} (${item.kind}${exported})`);
-        if (item.description) parts.push(`    ${item.description}`);
-      }
-      parts.push('');
-    }
-
-    const imports = components?.imports?.filter(Boolean) ?? [];
-    const exports = components?.exports?.filter(Boolean) ?? [];
-    if (imports.length > 2) {
-      parts.push(`Imports from: ${imports.slice(0, 8).join(', ')}${imports.length > 8 ? ` and ${imports.length - 8} more` : ''}.`);
-    }
-    if (exports.length > 0) {
-      parts.push(`Exports: ${exports.join(', ')}.`);
-    }
-
-    return parts.join('\n').trim();
-  }
-
-  private _renderFileDataFlow(ai: KnowledgeModel['ai']): string {
-    const llm = ai?.summaries?.dataFlow?.content;
+  private _renderFileDataFlow(ai: KnowledgeModel['ai'], insight?: KnowledgeModel['insights']['dataFlow']): string {
+    const llm       = ai?.summaries?.dataFlow?.content;
     const narrative = ai?.dataFlowFileNarrative;
-    const parts: string[] = [];
+    const paras: string[] = [];
 
-    if (llm) {
-      parts.push(llm);
-      parts.push('');
-    }
+    if (llm) paras.push(llm);
+
+    const summaryParts: string[] = [];
+    if (narrative?.pattern?.label) summaryParts.push(`This is a ${narrative.pattern.label} flow.`);
+    if (insight?.inputs?.length)   summaryParts.push(`It receives ${insight.inputs.join(', ')} as input.`);
+    if (insight?.steps?.length)    summaryParts.push(`Processing moves through ${insight.steps.join(' → ')}.`);
+    if (insight?.outputs?.length)  summaryParts.push(`The flow produces ${insight.outputs.join(', ')}.`);
+    if (summaryParts.length) paras.push(summaryParts.join(' '));
 
     if (narrative?.stepNarrative?.length) {
-      parts.push('Processing steps:');
-      narrative.stepNarrative.forEach((step, i) => {
-        parts.push(`  ${i + 1}. ${step}`);
+      const stepParas = narrative.stepNarrative.map((desc, i) => {
+        const stepName = insight?.steps?.[i];
+        return stepName ? `${stepName}: ${desc}` : desc;
       });
+      paras.push(stepParas.join('\n\n'));
     }
 
-    return parts.join('\n').trim();
+    return paras.join('\n\n');
   }
 
   private _renderFileSecurity(ai: KnowledgeModel['ai']): string {
-    const llm = ai?.summaries?.security?.content;
+    const llm      = ai?.summaries?.security?.content;
     const security = ai?.security;
-    const parts: string[] = [];
+    const paras: string[] = [];
 
-    if (llm) {
-      parts.push(llm);
-      parts.push('');
-    }
+    if (llm) paras.push(llm);
 
     const actionableChecks = (security?.verificationChecks ?? []).filter(c => c.status !== 'pass');
     if (actionableChecks.length) {
-      parts.push('Security Domain Assessment:');
-      for (const check of actionableChecks) {
-        const prefix = check.status === 'fail' ? 'FAIL' : 'WARN';
-        parts.push(`  [${prefix}] ${check.summary}`);
-        if (check.detail) parts.push(`    ${check.detail}`);
-      }
-      parts.push('');
+      const checkParas = actionableChecks.map(c => {
+        const prefix = c.status === 'fail' ? 'Fail' : 'Warning';
+        return c.detail ? `${prefix} — ${c.summary} ${c.detail}` : `${prefix} — ${c.summary}`;
+      });
+      paras.push(checkParas.join('\n\n'));
     }
 
     const findings = security?.findings ?? [];
     if (findings.length) {
-      parts.push('Findings:');
-      for (const f of findings) {
-        parts.push(`  [${f.severity.toUpperCase()}] ${f.title}`);
-        parts.push(`    ${f.issueDescription}`);
-        if (f.remediation) parts.push(`    Remediation: ${f.remediation}`);
-      }
+      const findingParas = findings.map(f => {
+        const parts = [`[${f.severity.toUpperCase()}] ${f.title}. ${f.issueDescription}`];
+        if (f.remediation) parts.push(`Remediation: ${f.remediation}`);
+        return parts.join(' ');
+      });
+      paras.push(findingParas.join('\n\n'));
     } else if (security) {
-      parts.push('No security findings were identified in this file.');
+      paras.push('No security findings were identified in this file.');
     }
 
-    return parts.join('\n').trim();
+    return paras.join('\n\n');
   }
 
   private _renderFileRecommendations(ai: KnowledgeModel['ai']): string {
-    const llm = ai?.summaries?.recommendations?.content;
+    const llm  = ai?.summaries?.recommendations?.content;
     const recs = ai?.recommendations;
-    const parts: string[] = [];
+    const paras: string[] = [];
 
-    if (llm) {
-      parts.push(llm);
-      parts.push('');
-    }
+    if (llm) paras.push(llm);
 
-    if (recs?.debtContext) {
-      parts.push(`Technical Debt: ${recs.debtContext}`);
-      parts.push('');
-    }
+    if (recs?.debtContext) paras.push(recs.debtContext);
 
     const items = recs?.recommendations ?? [];
     if (items.length) {
-      parts.push('Recommendations:');
-      for (const r of items) {
-        parts.push(`  ${r.priorityRank}. [${r.priority.toUpperCase()}] ${r.title}`);
-        parts.push(`    ${r.issueDescription}`);
-        if (r.recommendedImprovement) parts.push(`    Improvement: ${r.recommendedImprovement}`);
-      }
+      const recParas = items.map(r => {
+        const parts = [`[${r.priority.toUpperCase()}] ${r.title}. ${r.issueDescription}`];
+        if (r.recommendedImprovement) parts.push(r.recommendedImprovement);
+        return parts.join(' ');
+      });
+      paras.push(recParas.join('\n\n'));
     } else if (recs) {
-      parts.push('No structural improvements were identified for this file.');
+      paras.push('No structural improvements were identified for this file.');
     }
 
-    return parts.join('\n').trim();
+    return paras.join('\n\n');
   }
 
   private _renderFileLearningPath(ai: KnowledgeModel['ai']): string {
     const llm = ai?.summaries?.learningPath?.content;
-    const lp = ai?.learningPath;
-    const parts: string[] = [];
+    const lp  = ai?.learningPath;
+    const paras: string[] = [];
 
-    if (llm) {
-      parts.push(llm);
-      parts.push('');
-    }
+    if (llm) paras.push(llm);
 
-    if (lp?.welcomeSummary && lp.welcomeSummary !== llm) {
-      parts.push(lp.welcomeSummary);
-      parts.push('');
-    }
+    if (lp?.welcomeSummary && lp.welcomeSummary !== llm) paras.push(lp.welcomeSummary);
 
-    if (lp?.focusFirst) {
-      parts.push(`Start here: ${lp.focusFirst}`);
-      parts.push('');
-    }
+    if (lp?.focusFirst) paras.push(`Start here: ${lp.focusFirst}`);
 
     if (lp?.roadmap?.length) {
-      parts.push('Reading order:');
-      for (const step of lp.roadmap) {
-        parts.push(`  Step ${step.stepNumber}: ${step.title}`);
-        if (step.description) parts.push(`    ${step.description}`);
-        if (step.whyHere)     parts.push(`    Why here: ${step.whyHere}`);
-      }
+      const stepParas = lp.roadmap.map(step => {
+        const parts = [`Step ${step.stepNumber}: ${step.title}.`];
+        if (step.description) parts.push(step.description);
+        if (step.whyHere)     parts.push(step.whyHere);
+        return parts.join(' ');
+      });
+      paras.push(stepParas.join('\n\n'));
     }
 
-    return parts.join('\n').trim();
+    return paras.join('\n\n');
   }
 }

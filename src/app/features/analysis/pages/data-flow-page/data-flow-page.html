@@ -89,11 +89,6 @@
 
       <!-- Multi-file scope: dependency graph based flow -->
       <ng-container *ngIf="!isFileScope">
-        <div class="doc-block" *ngIf="dataFlowNarrative">
-          <div class="doc-block-label">Data Flow Analysis</div>
-          <p class="flow-narrative">{{ dataFlowNarrative }}</p>
-        </div>
-
         <div class="arch-empty-state" *ngIf="!hasDataFlow">
           No dependency data available. Upload a folder or repository with multiple interconnected
           files.
