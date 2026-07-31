@@ -79,6 +79,7 @@ class KnowledgeModelEngine {
     // ── Insights ───────────────────────────────────────────────────────────────
     // Deterministic conclusions from code analysis.
     // For file targets the PatternParser produces structured analysis results.
+    // For multi-file targets health is derived from the dependency graph structure.
     const insights = {};
 
     if (isFile && pipelineResult.parsedFiles?.[0]) {
@@ -87,14 +88,6 @@ class KnowledgeModelEngine {
 
       if (ar.complexity)      insights.complexity      = ar.complexity;
       if (ar.maintainability) insights.maintainability = ar.maintainability;
-
-      if (ar.risks?.length) {
-        insights.risks = ar.risks.map(r => ({
-          severity:    r.severity    ?? 'low',
-          description: r.description ?? String(r),
-          location:    r.location    ?? undefined,
-        }));
-      }
 
       // Structured data flow — steps + inputs + outputs
       const rawDataFlow = ar.dataFlow;
@@ -110,6 +103,22 @@ class KnowledgeModelEngine {
       }
 
       if (ar.hotspots?.length) insights.hotspots = ar.hotspots;
+      if (ar.responsibilities?.length) insights.responsibilities = ar.responsibilities;
+    }
+
+    if (isMultiFile) {
+      const graph = pipelineResult.dependencyGraph;
+      const nodeCount = graph?.nodes?.length ?? 0;
+      const edgeCount = graph?.edges?.length ?? 0;
+      const fileCount = pipelineResult.parsedFiles?.length ?? 0;
+      const couplingRatio = nodeCount > 0 ? edgeCount / nodeCount : 0;
+
+      // High coupling ratio = high complexity (more interconnected = harder to reason about)
+      insights.complexity = couplingRatio > 4 ? 'High' : couplingRatio > 2 ? 'Medium' : 'Low';
+
+      // Large codebases with high coupling are harder to maintain
+      insights.maintainability = (fileCount > 100 && couplingRatio > 3) ? 'Low'
+        : (fileCount > 50 || couplingRatio > 2) ? 'Medium' : 'High';
     }
 
     // ── Metadata ───────────────────────────────────────────────────────────────
@@ -117,6 +126,9 @@ class KnowledgeModelEngine {
       builtAt:       new Date().toISOString(),
       schemaVersion: '2',
     };
+    if (isMultiFile && options.repositoryPath) {
+      metadata.repositoryPath = options.repositoryPath;
+    }
 
     return {
       // Identity

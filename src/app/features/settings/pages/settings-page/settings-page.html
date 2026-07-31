@@ -1,29 +1,20 @@
 <div class="insight-page">
   <div class="page-header">
     <div class="page-title">
-      <div class="page-icon slate">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <circle cx="12" cy="12" r="3" />
-          <path
-            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-          />
-        </svg>
+      <div class="page-breadcrumb">
+        <span>Application</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>Settings</span>
       </div>
-      <div>
-        <h1>Settings</h1>
-        <p class="page-subtitle">Application preferences and configuration</p>
-      </div>
+      <h1>Settings</h1>
+      <p class="page-subtitle">Application preferences and configuration</p>
     </div>
+    <app-theme-toggle></app-theme-toggle>
   </div>
 
   <div class="page-content">
+
+    <!-- ─── Appearance ─────────────────────────────────────────────────────── -->
     <div class="settings-group">
       <div class="settings-group-label">Appearance</div>
       <div class="settings-row">
@@ -32,81 +23,459 @@
           <span class="settings-desc">Application color scheme</span>
         </div>
         <div class="settings-control">
-          <button class="select-pill" [class.active]="theme.isDark" (click)="theme.toggle()">
-            Dark
-          </button>
-          <button class="select-pill" [class.active]="!theme.isDark" (click)="theme.toggle()">
-            Light
-          </button>
+          <button class="select-pill" [class.active]="theme.isDark" (click)="theme.toggle()">Dark</button>
+          <button class="select-pill" [class.active]="!theme.isDark" (click)="theme.toggle()">Light</button>
         </div>
       </div>
     </div>
 
+    <!-- ─── AI ────────────────────────────────────────────────────────────── -->
     <div class="settings-group" *ngIf="electron.isElectron">
-      <div class="settings-group-label">AI Provider</div>
-      <div class="settings-row">
-        <div class="settings-info">
-          <span class="settings-name">Provider</span>
-          <span class="settings-desc">AI service used for analysis (e.g. openai, anthropic)</span>
+      <div class="settings-group-label">AI</div>
+
+      <!-- Configured status card -->
+      <div class="ai-status-card" *ngIf="isConfigured">
+        <div class="ai-status-header">
+          <div class="ai-status-dot ai-status-dot--ok"></div>
+          <span class="ai-status-name">{{ activePreset?.displayName ?? activeStatus?.id }}</span>
+          <span class="ai-status-category">{{ activePreset?.category === 'local' ? 'Local' : 'Cloud' }}</span>
         </div>
-        <div class="settings-control">
-          <input
-            class="settings-input"
-            type="text"
-            [(ngModel)]="aiProvider"
-            placeholder="e.g. anthropic"
-          />
+        <div class="ai-status-meta">
+          <div class="ai-status-meta-row" *ngIf="activeModel">
+            <span class="ai-meta-label">Model</span>
+            <span class="ai-meta-val">{{ activeModel }}</span>
+          </div>
+          <div class="ai-status-meta-row" *ngIf="activeStatus?.lastTestedAt">
+            <span class="ai-meta-label">Last tested</span>
+            <span class="ai-meta-val">{{ activeStatus!.lastTestedAt | date:'short' }}</span>
+          </div>
+          <div class="ai-status-meta-row" *ngIf="activeStatus?.available === false">
+            <span class="ai-meta-label ai-meta-label--warn">Connection failed</span>
+            <span class="ai-meta-val ai-meta-val--warn">{{ activeStatus?.reason }}</span>
+          </div>
         </div>
-      </div>
-      <div class="settings-row">
-        <div class="settings-info">
-          <span class="settings-name">Model</span>
-          <span class="settings-desc">Model identifier for AI requests</span>
+        <div class="ai-status-caps">
+          <span class="ai-cap">Repository Analysis</span>
+          <span class="ai-cap">AI Chat</span>
+          <span class="ai-cap">Documentation</span>
         </div>
-        <div class="settings-control">
-          <input
-            class="settings-input"
-            type="text"
-            [(ngModel)]="aiModel"
-            placeholder="e.g. claude-sonnet-4-6"
-          />
+        <div class="ai-status-actions">
+          <button class="btn-secondary" (click)="testConnection()" [disabled]="testState === 'testing'">
+            {{ testState === 'testing' ? 'Testing…' : 'Retest Connection' }}
+          </button>
         </div>
-      </div>
-      <div class="settings-row">
-        <div class="settings-info">
-          <span class="settings-name">Provider URL</span>
-          <span class="settings-desc"
-            >Base URL for the AI backend (e.g. http://localhost:5000)</span
-          >
-        </div>
-        <div class="settings-control">
-          <input
-            class="settings-input"
-            type="text"
-            [(ngModel)]="aiProviderUrl"
-            placeholder="http://localhost:5000"
-          />
+        <div class="test-result" *ngIf="testState !== 'idle'" [class.ok]="testState === 'ok'" [class.fail]="testState === 'fail'">
+          <span *ngIf="testState === 'testing'">Testing connection…</span>
+          <span *ngIf="testState === 'ok'">Connection successful</span>
+          <span *ngIf="testState === 'fail'">Connection failed<ng-container *ngIf="testReason"> — {{ testReason }}</ng-container></span>
         </div>
       </div>
-      <div class="settings-row settings-row--action">
-        <button class="btn-save" (click)="saveAiSettings()">
-          {{ saved ? 'Saved' : 'Save' }}
+
+      <!-- Welcome banner -->
+      <div class="ai-welcome" *ngIf="!isConfigured">
+        <div class="ai-welcome-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 8v4l3 3"/>
+          </svg>
+        </div>
+        <div class="ai-welcome-text">
+          <span class="ai-welcome-title">Configure AI to unlock analysis</span>
+          <span class="ai-welcome-desc">Choose a local or cloud provider to enable repository explanations, AI chat, learning paths, and documentation generation.</span>
+        </div>
+      </div>
+
+      <!-- Configure provider — collapsible -->
+      <div class="config-collapse">
+        <button class="config-collapse-toggle" (click)="showProviderConfig = !showProviderConfig">
+          <svg class="config-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               [class.config-collapse-chevron--open]="showProviderConfig">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+          <span>Configure Provider</span>
+          <span class="config-collapse-hint" *ngIf="!showProviderConfig && selectedPreset">{{ selectedPreset.displayName }}</span>
         </button>
+
+        <div class="config-collapse-body" *ngIf="showProviderConfig">
+
+          <!-- Provider selection -->
+          <div class="provider-categories">
+            <div class="provider-category">
+              <div class="provider-category-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                Local
+                <span class="provider-category-hint">Free · Private · Works offline</span>
+              </div>
+              <div class="provider-grid">
+                <button
+                  *ngFor="let p of localPresets"
+                  class="provider-card"
+                  [class.provider-card--selected]="selectedPresetId === p.id"
+                  (click)="selectPreset(p.id)"
+                >
+                  <span class="provider-card-name">{{ p.displayName }}</span>
+                  <span class="provider-card-desc">{{ p.description }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="provider-category">
+              <div class="provider-category-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+                </svg>
+                Cloud
+                <span class="provider-category-hint">Requires API key · Strongest models</span>
+              </div>
+              <div class="provider-grid">
+                <button
+                  *ngFor="let p of cloudPresets"
+                  class="provider-card"
+                  [class.provider-card--selected]="selectedPresetId === p.id"
+                  (click)="selectPreset(p.id)"
+                >
+                  <span class="provider-card-name">{{ p.displayName }}</span>
+                  <span class="provider-card-desc">{{ p.description }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Configuration fields -->
+          <ng-container *ngIf="selectedPreset">
+            <div class="config-panel">
+              <div class="config-panel-title">Configure {{ selectedPreset.displayName }}</div>
+
+              <!-- Ollama -->
+              <ng-container *ngIf="isOllama">
+                <div class="config-field">
+                  <div class="ollama-discover-row">
+                    <button class="btn-secondary" (click)="discoverOllamaModels()" [disabled]="discoveringModels">
+                      {{ discoveringModels ? 'Checking…' : 'Check for installed models' }}
+                    </button>
+                    <span class="ollama-status ollama-status--warn" *ngIf="ollamaSetupState === 'no-models'">No models found</span>
+                    <span class="ollama-status ollama-status--ok" *ngIf="ollamaSetupState === 'ready'">
+                      {{ discoveredModels.length }} model{{ discoveredModels.length === 1 ? '' : 's' }} found
+                    </span>
+                  </div>
+                </div>
+                <div class="config-field" *ngIf="ollamaSetupState === 'ready'">
+                  <label class="config-label">Model</label>
+                  <div class="model-chips">
+                    <button
+                      class="model-chip"
+                      *ngFor="let m of discoveredModels"
+                      [class.active]="aiModel === m"
+                      (click)="selectModel(m)"
+                    >{{ m }}</button>
+                  </div>
+                </div>
+                <div class="config-field config-field--secondary">
+                  <label class="config-label">Host <span class="config-label-hint">optional — default: http://localhost:11434</span></label>
+                  <input class="settings-input" type="text" [(ngModel)]="hostInput" placeholder="http://localhost:11434" />
+                </div>
+              </ng-container>
+
+              <!-- Cloud / custom -->
+              <ng-container *ngIf="!isOllama">
+                <div class="config-field" *ngIf="selectedPreset.requiresHostInput">
+                  <label class="config-label">Base URL</label>
+                  <input class="settings-input settings-input--wide" type="text" [(ngModel)]="hostInput" [placeholder]="hostPlaceholder" />
+                </div>
+                <div class="config-field" *ngIf="selectedPreset.requiresApiKey">
+                  <label class="config-label">API Key</label>
+                  <div class="key-input-wrap">
+                    <input
+                      class="settings-input settings-input--wide"
+                      type="password"
+                      [(ngModel)]="apiKeyInput"
+                      [placeholder]="apiKeyConfigured ? '••••••••••••••••' : 'Enter API key'"
+                      autocomplete="off"
+                    />
+                    <span class="key-badge" *ngIf="apiKeyConfigured">Configured</span>
+                  </div>
+                </div>
+                <div class="config-field">
+                  <label class="config-label">Model</label>
+                  <input
+                    class="settings-input settings-input--wide"
+                    type="text"
+                    [(ngModel)]="aiModel"
+                    [placeholder]="selectedPreset.suggestedModels[0] || 'Enter model name'"
+                  />
+                  <div class="model-chips" *ngIf="modelChoices.length">
+                    <button
+                      class="model-chip"
+                      *ngFor="let m of modelChoices"
+                      [class.active]="aiModel === m"
+                      (click)="selectModel(m)"
+                    >{{ m }}</button>
+                  </div>
+                </div>
+              </ng-container>
+
+              <!-- Setup help -->
+              <div class="setup-help">
+                <button class="setup-help-toggle" (click)="showSetupHelp = !showSetupHelp">
+                  <svg class="setup-help-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round"
+                       [class.setup-help-chevron--open]="showSetupHelp">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                  How do I set this up?
+                </button>
+                <div class="setup-help-body" *ngIf="showSetupHelp">
+                  <ng-container *ngIf="isOllama">
+                    <p class="setup-help-step">1. <a class="setup-help-link" (click)="openDownloadUrl()">Download and install Ollama</a></p>
+                    <p class="setup-help-step">2. Open a terminal and pull a model:</p>
+                    <div class="recommended-models">
+                      <div class="copy-command" *ngFor="let m of selectedPreset.suggestedModels">
+                        <code>ollama pull {{ m }}</code>
+                        <button class="btn-copy" (click)="copyToClipboard('ollama pull ' + m)" title="Copy">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    <p class="setup-help-step">3. Click <strong>Check for installed models</strong> above.</p>
+                  </ng-container>
+                  <ng-container *ngIf="!isOllama && selectedPreset.requiresApiKey">
+                    <p class="setup-help-step">1. <a class="setup-help-link" (click)="openApiKeyUrl()">Get an API key from {{ selectedPreset.displayName }} ↗</a></p>
+                    <p class="setup-help-step">2. Paste it into the API Key field above.</p>
+                    <p class="setup-help-step">3. Pick a model and click <strong>Save</strong>.</p>
+                  </ng-container>
+                  <ng-container *ngIf="isCustomEndpoint">
+                    <p class="setup-help-step">Enter the base URL of any OpenAI-compatible server, e.g. <code>http://localhost:8080/v1</code>.</p>
+                    <p class="setup-help-step">Add an API key only if your server requires one.</p>
+                  </ng-container>
+                </div>
+              </div>
+
+              <!-- Test result + actions -->
+              <div class="test-result" *ngIf="testState !== 'idle'" [class.ok]="testState === 'ok'" [class.fail]="testState === 'fail'">
+                <span *ngIf="testState === 'testing'">Testing connection…</span>
+                <span *ngIf="testState === 'ok'">Connection successful</span>
+                <span *ngIf="testState === 'fail'">Failed<ng-container *ngIf="testReason"> — {{ testReason }}</ng-container></span>
+              </div>
+              <div class="config-actions">
+                <button class="btn-secondary" *ngIf="canTestConnection" [disabled]="testState === 'testing'" (click)="testConnection()">
+                  {{ testState === 'testing' ? 'Testing…' : 'Test Connection' }}
+                </button>
+                <button class="btn-save" [disabled]="!canSave" (click)="saveSettings()">
+                  {{ saved ? 'Saved ✓' : 'Save' }}
+                </button>
+              </div>
+            </div>
+          </ng-container>
+
+        </div>
       </div>
     </div>
 
+    <!-- ─── AI Analysis Behavior ───────────────────────────────────────────── -->
+    <div class="settings-group" *ngIf="electron.isElectron">
+      <div class="settings-group-label">AI Analysis Behavior</div>
+
+      <div class="settings-row">
+        <div class="settings-info">
+          <span class="settings-name">Derive stage timeout</span>
+          <span class="settings-desc">How long each local analysis stage (security, architecture, data flow, etc.) may run before being marked failed</span>
+        </div>
+        <div class="settings-control settings-control--inline">
+          <input class="settings-input settings-input--sm" type="number" min="5" max="300" [(ngModel)]="deriveTimeoutSec" />
+          <span class="settings-unit">seconds</span>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div class="settings-info">
+          <span class="settings-name">Generate stage timeout</span>
+          <span class="settings-desc">How long each AI summary generation call may run before timing out</span>
+        </div>
+        <div class="settings-control settings-control--inline">
+          <input class="settings-input settings-input--sm" type="number" min="30" max="600" [(ngModel)]="generateTimeoutSec" />
+          <span class="settings-unit">seconds</span>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div class="settings-info">
+          <span class="settings-name">Provider request timeout</span>
+          <span class="settings-desc">Maximum wall-clock time for a single HTTP request to the AI provider</span>
+        </div>
+        <div class="settings-control settings-control--inline">
+          <input class="settings-input settings-input--sm" type="number" min="30" max="600" [(ngModel)]="providerTimeoutSec" />
+          <span class="settings-unit">seconds</span>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div class="settings-info">
+          <span class="settings-name">Max tokens per summary</span>
+          <span class="settings-desc">Maximum response size for each AI-generated summary. Larger values allow more detailed output but take longer</span>
+        </div>
+        <div class="settings-control settings-control--inline">
+          <input class="settings-input settings-input--sm" type="number" min="512" max="16384" step="256" [(ngModel)]="maxTokensGenerate" />
+          <span class="settings-unit">tokens</span>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div class="settings-info">
+          <span class="settings-name">Run summaries in parallel</span>
+          <span class="settings-desc">Generate all AI summaries concurrently. Faster on powerful hardware, but may overload slower local models</span>
+        </div>
+        <div class="settings-control">
+          <button class="select-pill" [class.active]="parallelSummaries" (click)="parallelSummaries = true">On</button>
+          <button class="select-pill" [class.active]="!parallelSummaries" (click)="parallelSummaries = false">Off</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Storage Management ─────────────────────────────────────────────── -->
+    <div class="settings-group" *ngIf="electron.isElectron">
+      <div class="settings-group-label">Storage Management</div>
+
+      <!-- DB location -->
+      <div class="settings-row">
+        <div class="settings-info">
+          <span class="settings-name">Database location</span>
+          <span class="settings-desc settings-desc--mono">{{ dbPath || 'userData/legacylens.db' }}</span>
+        </div>
+        <div class="settings-control">
+          <button class="btn-secondary" (click)="openDbFolder()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;margin-right:5px;">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            Open Folder
+          </button>
+        </div>
+      </div>
+
+      <!-- Storage stats -->
+      <div class="storage-stats" *ngIf="storageStats">
+        <div class="storage-stat">
+          <span class="storage-stat-val">{{ storageStats.repositories }}</span>
+          <span class="storage-stat-label">Repositories</span>
+        </div>
+        <div class="storage-stat">
+          <span class="storage-stat-val">{{ storageStats.workspaces }}</span>
+          <span class="storage-stat-label">Workspaces</span>
+        </div>
+        <div class="storage-stat">
+          <span class="storage-stat-val">{{ storageStats.analyses }}</span>
+          <span class="storage-stat-label">Analyses</span>
+        </div>
+        <div class="storage-stat">
+          <span class="storage-stat-val">{{ storageStats.files }}</span>
+          <span class="storage-stat-label">File records</span>
+        </div>
+        <div class="storage-stat">
+          <span class="storage-stat-val">{{ (storageStats.dbSizeKb / 1024).toFixed(1) }} MB</span>
+          <span class="storage-stat-label">Database size</span>
+        </div>
+      </div>
+
+      <!-- Destructive actions -->
+      <div class="danger-rows">
+
+        <div class="settings-row settings-row--danger">
+          <div class="settings-info">
+            <span class="settings-name">Clear analysis cache</span>
+            <span class="settings-desc">Deletes all stored analyses and file records. Repositories and workspaces are kept.</span>
+          </div>
+          <button class="btn-danger" (click)="requestConfirm('clearCache')" [disabled]="storageActionBusy">Clear Cache</button>
+        </div>
+
+        <div class="settings-row settings-row--danger">
+          <div class="settings-info">
+            <span class="settings-name">Clear all workspaces</span>
+            <span class="settings-desc">Removes all saved workspace sessions.</span>
+          </div>
+          <button class="btn-danger" (click)="requestConfirm('clearWorkspaces')" [disabled]="storageActionBusy">Clear Workspaces</button>
+        </div>
+
+        <div class="settings-row settings-row--danger">
+          <div class="settings-info">
+            <span class="settings-name">Remove all repositories</span>
+            <span class="settings-desc">Deletes all registered repositories and their associated analyses and file records.</span>
+          </div>
+          <button class="btn-danger" (click)="requestConfirm('removeRepos')" [disabled]="storageActionBusy">Remove All</button>
+        </div>
+
+        <div class="settings-row settings-row--danger settings-row--factory">
+          <div class="settings-info">
+            <span class="settings-name">Factory reset</span>
+            <span class="settings-desc">Wipes the entire database. All repositories, workspaces, analyses, and settings are permanently deleted.</span>
+          </div>
+          <button class="btn-danger btn-danger--critical" (click)="requestConfirm('factoryReset')" [disabled]="storageActionBusy">Factory Reset</button>
+        </div>
+
+      </div>
+
+      <!-- Confirm overlay -->
+      <div class="confirm-panel" *ngIf="confirmAction">
+        <div class="confirm-panel-body">
+          <p class="confirm-msg" *ngIf="confirmAction === 'clearCache'">This will permanently delete all analyses and file records. Continue?</p>
+          <p class="confirm-msg" *ngIf="confirmAction === 'clearWorkspaces'">This will permanently delete all workspaces. Continue?</p>
+          <p class="confirm-msg" *ngIf="confirmAction === 'removeRepos'">This will permanently remove all repositories, their analyses, and file records. Continue?</p>
+          <div *ngIf="confirmAction === 'factoryReset'" class="confirm-factory">
+            <p class="confirm-msg confirm-msg--critical">This will wipe the entire database and cannot be undone. Type <strong>RESET</strong> to confirm.</p>
+            <input class="settings-input" type="text" [(ngModel)]="confirmInput" placeholder="Type RESET" autocomplete="off" />
+          </div>
+          <div class="confirm-actions">
+            <button class="btn-secondary" (click)="cancelConfirm()">Cancel</button>
+            <button class="btn-danger" [disabled]="!confirmReady || storageActionBusy" (click)="executeConfirmedAction()">
+              {{ storageActionBusy ? 'Working…' : 'Confirm' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Application Information ────────────────────────────────────────── -->
     <div class="settings-group">
       <div class="settings-group-label">Application Information</div>
       <div class="settings-about">
-        <div class="about-row"><span>Version</span><span>1.0.0</span></div>
         <div class="about-row">
-          <span>Storage</span
-          ><span>{{ electron.isElectron ? 'SQLite' : 'Browser localStorage' }}</span>
+          <span>Version</span>
+          <span>{{ appVersion || '—' }}</span>
         </div>
         <div class="about-row">
-          <span>Framework</span><span>Angular 21 · Standalone Components</span>
+          <span>Storage</span>
+          <span>SQLite</span>
+        </div>
+        <div class="about-row">
+          <span>Framework</span>
+          <span>Angular 21 · Standalone Components</span>
+        </div>
+        <div class="about-row" *ngIf="dbPath">
+          <span>Database</span>
+          <span class="about-val--mono">{{ dbPath }}</span>
         </div>
       </div>
     </div>
+
+    <!-- ─── How SystemLens Works ───────────────────────────────────────────── -->
+    <div class="settings-group">
+      <div class="settings-group-label">About</div>
+      <div class="how-it-works">
+        <button class="how-it-works-toggle" (click)="showHowItWorks = !showHowItWorks">
+          <svg class="how-it-works-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               [class.how-it-works-chevron--open]="showHowItWorks">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+          How SystemLens Works
+        </button>
+        <div class="how-it-works-body" *ngIf="showHowItWorks">
+          <p class="how-it-works-placeholder">Documentation coming soon.</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>

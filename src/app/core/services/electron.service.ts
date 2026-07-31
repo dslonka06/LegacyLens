@@ -17,6 +17,39 @@ import type {
   PersistedWorkspace,
 } from '../../../electron';
 
+export interface AiProviderStatus {
+  id: string;
+  displayName: string;
+  category: 'cloud' | 'local';
+  configured: boolean;
+  active: boolean;
+  available: boolean | null;
+  lastTestedAt: string | null;
+  reason?: string;
+}
+
+export interface AiProviderCapabilities {
+  supportsModelDiscovery: boolean;
+  supportedModels: string[];
+  requiresApiKey: boolean;
+  requiresHost: boolean;
+}
+
+export interface AiPreset {
+  id: string;
+  displayName: string;
+  category: 'cloud' | 'local';
+  protocol: 'anthropic' | 'ollama' | 'openai-compat';
+  defaultBaseUrl: string | null;
+  requiresApiKey: boolean;
+  requiresHostInput: boolean;
+  supportsModelDiscovery: boolean;
+  suggestedModels: string[];
+  apiKeyUrl: string | null;
+  downloadUrl: string | null;
+  description: string | null;
+}
+
 export interface OpenDialogOptions {
   title?: string;
   defaultPath?: string;
@@ -39,6 +72,11 @@ export class ElectronService {
   async getAppVersion(): Promise<string> {
     if (!this.api) return '';
     try { return await this.api.app.getVersion(); } catch { return ''; }
+  }
+
+  async openExternal(url: string): Promise<void> {
+    if (!this.api) return;
+    await this.api.app.openExternal(url);
   }
 
   // ── Repositories ──────────────────────────────────────────────────────────
@@ -141,6 +179,11 @@ export class ElectronService {
     return this.api.filesystem.readDirectory(dirPath);
   }
 
+  async readFile(filePath: string): Promise<string | null> {
+    if (!this.api) return null;
+    return this.api.filesystem.readFile(filePath);
+  }
+
   async cancelScan(scanId: string): Promise<void> {
     if (!this.api) return;
     return this.api.filesystem.cancelScan(scanId);
@@ -180,9 +223,9 @@ export class ElectronService {
 
   // ── AI ────────────────────────────────────────────────────────────────────
 
-  async aiExplain(prompt: string): Promise<string | null> {
+  async aiExplain(prompt: string, maxTokens?: number): Promise<string | null> {
     if (!this.api) return null;
-    return this.api.ai.explain(prompt);
+    return this.api.ai.explain(prompt, maxTokens);
   }
 
   async aiAnalyze(fileName: string, sourceCode: string): Promise<unknown> {
@@ -190,14 +233,44 @@ export class ElectronService {
     return this.api.ai.analyze(fileName, sourceCode);
   }
 
-  async getAiProviderUrl(): Promise<string | null> {
+  async aiChat(messages: Array<{ role: string; content: string }>, knowledgeModel?: unknown): Promise<string | null> {
     if (!this.api) return null;
-    return this.api.ai.getProviderUrl();
+    return this.api.ai.chat(messages, knowledgeModel ?? null);
   }
 
-  async setAiProviderUrl(url: string | null): Promise<void> {
+  async aiGetProviders(): Promise<AiProviderStatus[]> {
+    if (!this.api) return [];
+    return this.api.ai.getProviders();
+  }
+
+  async aiGetPresets(): Promise<AiPreset[]> {
+    if (!this.api) return [];
+    return this.api.ai.getPresets();
+  }
+
+  async aiGetCapabilities(presetId?: string): Promise<AiProviderCapabilities | null> {
+    if (!this.api) return null;
+    return this.api.ai.getCapabilities(presetId ?? undefined);
+  }
+
+  async aiDiscoverModels(presetId?: string): Promise<string[]> {
+    if (!this.api) return [];
+    return this.api.ai.discoverModels(presetId);
+  }
+
+  async aiTestConnection(): Promise<{ ok: boolean; reason?: string }> {
+    if (!this.api) return { ok: false, reason: 'Not running in Electron' };
+    return this.api.ai.testConnection();
+  }
+
+  async aiSetApiKey(presetId: string, plainKey: string): Promise<void> {
     if (!this.api) return;
-    return this.api.ai.setProviderUrl(url);
+    return this.api.ai.setApiKey(presetId, plainKey);
+  }
+
+  async aiIsKeyConfigured(presetId: string): Promise<boolean> {
+    if (!this.api) return false;
+    return this.api.ai.isKeyConfigured(presetId);
   }
 
   // ── Intelligence Engine ───────────────────────────────────────────────────
@@ -244,9 +317,20 @@ export class ElectronService {
     return this.api.intelligence.classifyWorkspace(files);
   }
 
-  async intelligenceSystemUnderstanding(model: KnowledgeModel, _ignored: null): Promise<unknown> {
+  async intelligenceSystemUnderstanding(model: KnowledgeModel): Promise<unknown> {
     if (!this.api) return null;
     return this.api.intelligence.systemUnderstanding(model);
+  }
+
+  async intelligenceHubDirective(data: {
+    securityCount: number;
+    securityHasCritical: boolean;
+    securityHasHigh: boolean;
+    recommendationCount: number;
+    scope: string;
+  }): Promise<string> {
+    if (!this.api) return '';
+    return this.api.intelligence.hubDirective(data);
   }
 
   async intelligenceExploreWorkflows(flows: unknown[]): Promise<unknown[]> {
@@ -256,7 +340,6 @@ export class ElectronService {
 
   async intelligenceLearningPath(
     model: KnowledgeModel,
-    _ignored: null,
     understanding: unknown,
     scope: string,
   ): Promise<unknown> {
@@ -269,12 +352,12 @@ export class ElectronService {
     return this.api.intelligence.discoverDataFlows(knowledge, structure);
   }
 
-  async intelligenceRecommendations(model: KnowledgeModel, _ignored: null): Promise<unknown> {
+  async intelligenceRecommendations(model: KnowledgeModel): Promise<unknown> {
     if (!this.api) return null;
     return this.api.intelligence.recommendations(model);
   }
 
-  async intelligenceSecurity(model: KnowledgeModel, _ignored: null): Promise<unknown> {
+  async intelligenceSecurity(model: KnowledgeModel): Promise<unknown> {
     if (!this.api) return null;
     return this.api.intelligence.security(model);
   }

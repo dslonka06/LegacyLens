@@ -1,15 +1,16 @@
 # IPC Handlers
 
-This directory contains all Electron IPC channel registrations.
+All Electron IPC channel registrations live here. Each file covers one domain
+and registers `ipcMain.handle()` calls that Angular invokes via `window.electronAPI`.
 
-Each file corresponds to a domain and registers `ipcMain.handle()` calls
-that Angular invokes via the contextBridge-exposed `window.electronAPI`.
+## Files
 
-Files:
-- `repository.ipc.ts` — repository library: add, get, remove
-- `workspace.ipc.ts` — workspace lifecycle: create, activate, delete
-- `analysis.ipc.ts` — run analysis engines, retrieve results
-- `filesystem.ipc.ts` — file reads, PDF export, native file dialogs
-- `settings.ipc.ts` — read/write application settings
+- `repository.ipc.js` — repository library: add, get, update, remove, touch
+- `analysis.ipc.js` — save/retrieve analysis results
+- `filesystem.ipc.js` — file reads, directory scanning, PDF export, native dialogs
+- `settings.ipc.js` — read/write application settings
+- `intelligence.ipc.js` — all analysis engine calls (repository scan, knowledge build, AI stages)
+- `ai.ipc.js` — AI provider calls: explain, analyze, chat, provider management, key storage
+- `workspace.ipc.js` — workspace persistence: save, get, delete
 
 All channel name strings live in `electron/shared/contracts/ipc-channels.ts`.

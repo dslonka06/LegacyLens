@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import type { LLMSummaryEntry } from '@app/knowledge/models/llm-summaries.model';
 
 @Component({
   selector: 'app-explanation-card',
@@ -10,19 +11,29 @@ import { CommonModule } from '@angular/common';
 })
 export class ExplanationCard {
   @Input() title = '';
-  @Input() content: string | null = null;
-  @Input() isLoading = false;
-  @Input() error: string | null = null;
+  @Input() entry: LLMSummaryEntry | null = null;
+  @Input() isGenerating = false;
   @Input() noProvider = false;
+
+  @Output() readonly regenerate = new EventEmitter<void>();
   @Output() readonly dismiss = new EventEmitter<void>();
 
+  get status(): 'loading' | 'no-provider' | 'ready' | 'complete' | 'stale' | 'failed' {
+    if (this.isGenerating) return 'loading';
+    if (this.noProvider)   return 'no-provider';
+    if (!this.entry)       return 'ready';
+    return this.entry.status === 'complete' ? 'complete'
+         : this.entry.status === 'stale'    ? 'stale'
+         : 'failed';
+  }
+
   get paragraphs(): string[] {
-    if (!this.content) return [];
-    // Split on double newline or markdown heading to produce readable paragraphs
-    return this.content
+    const text = this.entry?.content;
+    if (!text) return [];
+    return text
       .split(/\n{2,}/)
-      .map((p) => p.trim())
-      .filter((p) => p.length > 0);
+      .map(p => p.trim())
+      .filter(p => p.length > 0);
   }
 
   isHeading(para: string): boolean {

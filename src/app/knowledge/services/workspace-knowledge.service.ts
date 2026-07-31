@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { ElectronService } from '@app/core/services/electron.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
@@ -44,6 +44,7 @@ export class WorkspaceKnowledgeService {
     private readonly electron: ElectronService,
     private readonly manager: WorkspaceManagerService,
     private readonly aiAnalysis: AIAnalysisService,
+    private readonly ngZone: NgZone,
   ) {}
 
   /**
@@ -62,6 +63,10 @@ export class WorkspaceKnowledgeService {
     options: ProcessWorkspaceOptions,
   ): Observable<KnowledgeModel> {
     this._inputCache.set(options.workspaceId, { targetType, files, options });
+    // Clear any existing model so stale AI state (completedStages, generate bubble)
+    // isn't visible during the new scan phase.
+    this.manager.clearAllStages(options.workspaceId);
+    this.manager.clearKnowledgeModel(options.workspaceId);
     return this.runPipeline(targetType, files, options);
   }
 
@@ -75,7 +80,6 @@ export class WorkspaceKnowledgeService {
     if (!cached) return null;
 
     // Cancel any in-flight AI results from the previous run
-    this.manager.nextGeneration(workspaceId);
     this.manager.clearAllStages(workspaceId);
     this.manager.clearKnowledgeModel(workspaceId);
 
@@ -105,7 +109,9 @@ export class WorkspaceKnowledgeService {
   }
 
   canReanalyze(workspaceId: string): boolean {
-    return this._inputCache.has(workspaceId);
+    if (this._inputCache.has(workspaceId)) return true;
+    const ws = this.manager.getById(workspaceId);
+    return !!(ws?.path);
   }
 
   // ── Private pipeline ──────────────────────────────────────────────────────
@@ -157,7 +163,7 @@ export class WorkspaceKnowledgeService {
 
       // Discard if a re-analyze was triggered while the structural phase was running
       if (this.manager.getGeneration(options.workspaceId) !== generation) {
-        subject.complete();
+        this.ngZone.run(() => subject.complete());
         return;
       }
 
@@ -166,9 +172,13 @@ export class WorkspaceKnowledgeService {
         this.manager.setRepositoryId(options.workspaceId, options.repositoryId);
       }
 
-      this.manager.setKnowledgeModel(options.workspaceId, model);
-      subject.next(model);
-      subject.complete();
+      // Run inside NgZone so that setKnowledgeModel's patch() triggers Angular CD,
+      // ensuring components subscribed to activeWorkspace$ re-render immediately.
+      this.ngZone.run(() => {
+        this.manager.setKnowledgeModel(options.workspaceId, model);
+        subject.next(model);
+        subject.complete();
+      });
 
       // Kick off AI pipeline in the background — results merge into the workspace
       // via WorkspaceManagerService.mergeAIResults() as each stage completes.
@@ -178,8 +188,10 @@ export class WorkspaceKnowledgeService {
         // only for unexpected errors in the orchestration itself.
       });
     } catch (err) {
-      this.manager.setError(options.workspaceId);
-      subject.error(err);
+      this.ngZone.run(() => {
+        this.manager.setError(options.workspaceId);
+        subject.error(err);
+      });
     }
   }
 

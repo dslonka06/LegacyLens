@@ -13,138 +13,78 @@
     <app-theme-toggle></app-theme-toggle>
   </div>
 
-  <div
-    class="df-layout"
-    [class.df-layout--has-tree]="folderTree && !isFileScope"
-    *ngIf="hasWorkspace; else noWorkspace"
-  >
-    <!-- File tree rail (folder/repo, non-file-scope only) -->
-    <div class="df-tree-rail" *ngIf="folderTree && !isFileScope">
-      <app-file-tree-panel
-        [folderTree]="folderTree"
-        [highlightPath]="selectedFilePath"
-        (fileSelected)="onTreeFileSelected($event)"
-      >
-      </app-file-tree-panel>
-    </div>
+  <div class="page-content" *ngIf="hasWorkspace; else noWorkspace">
+    <app-explanation-card
+      title="AI Analysis"
+      [entry]="llmSummaryEntry"
+    ></app-explanation-card>
 
-    <div class="page-content">
-      <app-explanation-card
-        *ngIf="llmSummary || isGenerating || isNoProvider"
-        title="AI Analysis"
-        [content]="llmSummary"
-        [isLoading]="isGenerating"
-        [error]="null"
-        [noProvider]="isNoProvider"
-      ></app-explanation-card>
+    <!-- File scope: structured deterministic data flow -->
+    <ng-container *ngIf="isFileScope">
 
-      <!-- File scope: structured deterministic data flow -->
-      <ng-container *ngIf="isFileScope">
-        <div class="doc-block" *ngIf="fileDataFlow; else noFileFlow">
-          <div class="doc-block-label">Data Flow</div>
+      <div class="doc-block" *ngIf="fileDataFlow; else noFileFlow">
 
-          <div class="flow-section" *ngIf="fileDataFlow!.inputs.length">
-            <div class="flow-section-label">Inputs</div>
-            <div class="flow-tag-list">
-              <span class="flow-tag flow-tag-input" *ngFor="let inp of fileDataFlow!.inputs">{{
-                inp
-              }}</span>
-            </div>
+        <!-- Inputs -->
+        <div class="flow-section" *ngIf="fileDataFlow!.inputs.length">
+          <div class="flow-section-label">Inputs</div>
+          <div class="flow-tag-list">
+            <span class="flow-tag flow-tag-input" *ngFor="let inp of fileDataFlow!.inputs">{{ inp }}</span>
           </div>
+        </div>
 
-          <div class="flow-section" *ngIf="fileDataFlow!.steps.length">
-            <div class="flow-section-label">Flow Steps</div>
-            <div class="flow-steps">
-              <div
-                class="flow-step"
-                *ngFor="let step of fileDataFlow!.steps; let i = index; let last = last"
-                [ngClass]="getStepClass(i, fileDataFlow!.steps.length)"
-              >
-                <div class="step-badge">{{ i + 1 }}</div>
+        <!-- Flow Steps -->
+        <div class="flow-section" *ngIf="fileDataFlow!.steps.length">
+          <div class="flow-section-label">Flow Steps</div>
+          <div class="flow-steps">
+            <div
+              class="flow-step"
+              *ngFor="let step of fileDataFlow!.steps; let i = index"
+              [ngClass]="getStepClass(i, fileDataFlow!.steps.length)"
+              [class.flow-step--expanded]="isStepExpanded(i)"
+              (click)="toggleStep(i)"
+            >
+              <div class="step-badge">{{ i + 1 }}</div>
+              <div class="step-body">
                 <div class="step-label">{{ step }}</div>
+                <div class="step-desc" *ngIf="isStepExpanded(i) && fileStepNarrative[i]">
+                  {{ fileStepNarrative[i] }}
+                </div>
               </div>
-            </div>
-          </div>
-
-          <div class="flow-section" *ngIf="fileDataFlow!.outputs.length">
-            <div class="flow-section-label">Outputs</div>
-            <div class="flow-tag-list">
-              <span class="flow-tag flow-tag-output" *ngFor="let out of fileDataFlow!.outputs">{{
-                out
-              }}</span>
+              <svg class="step-chevron" [class.step-chevron--open]="isStepExpanded(i)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
             </div>
           </div>
         </div>
 
-        <ng-template #noFileFlow>
-          <div class="arch-empty-state">No data flow information available for this file.</div>
-        </ng-template>
-      </ng-container>
-
-      <!-- Multi-file scope: dependency graph based flow -->
-      <ng-container *ngIf="!isFileScope">
-        <div class="doc-block" *ngIf="dataFlowNarrative">
-          <div class="doc-block-label">Data Flow Analysis</div>
-          <p class="flow-narrative">{{ dataFlowNarrative }}</p>
-        </div>
-
-        <div class="doc-block" *ngIf="hasDataFlow">
-          <div class="doc-block-label">Flow Summary</div>
-          <div class="metrics-strip">
-            <div class="strip-item">
-              <span class="strip-label">Modules</span>
-              <span class="strip-val accent">{{ totalNodes }}</span>
-            </div>
-            <div class="strip-item">
-              <span class="strip-label">Connections</span>
-              <span class="strip-val">{{ totalConnections }}</span>
-            </div>
-            <div class="strip-item">
-              <span class="strip-label">Hubs</span>
-              <span class="strip-val" [class.strip-val-warn]="hubCount > 5">{{ hubCount }}</span>
-            </div>
+        <!-- Outputs -->
+        <div class="flow-section" *ngIf="fileDataFlow!.outputs.length">
+          <div class="flow-section-label">Outputs</div>
+          <div class="flow-tag-list">
+            <span class="flow-tag flow-tag-output" *ngFor="let out of fileDataFlow!.outputs">{{ out }}</span>
           </div>
         </div>
 
-        <div class="doc-block" *ngIf="flowNodes.length > 0">
-          <div class="doc-block-label">Module Dependency Flow</div>
-          <div class="flow-node-list">
-            <div class="flow-node-row" *ngFor="let node of flowNodes">
-              <div class="flow-node-name" [class.flow-node-hub]="node.isHub">
-                <span *ngIf="node.isHub" class="hub-dot"></span>
-                {{ node.name }}
-              </div>
-              <div class="flow-node-bar-wrap">
-                <div class="flow-node-bar" [style.width.%]="flowBarWidth(node)"></div>
-              </div>
-              <div class="flow-node-counts">
-                <span>{{ node.dependents }} in</span>
-                <span class="sep">/</span>
-                <span>{{ node.dependencies }} out</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      </div>
 
-        <div class="doc-block" *ngIf="keyWorkflows.length > 0">
-          <div class="doc-block-label">Key Workflows</div>
-          <div class="flow-workflow-list">
-            <div class="flow-workflow-item" *ngFor="let wf of keyWorkflows">
-              <div class="flow-workflow-name">{{ wf.name }}</div>
-              <div class="flow-workflow-desc">{{ wf.description }}</div>
-            </div>
-          </div>
-        </div>
+      <ng-template #noFileFlow>
+        <div class="arch-empty-state">No data flow information available for this file.</div>
+      </ng-template>
+    </ng-container>
 
-        <div class="arch-empty-state" *ngIf="!hasDataFlow && !keyWorkflows.length">
-          No dependency data available. Upload a folder or repository with multiple interconnected
-          files.
-        </div>
-      </ng-container>
-    </div>
-    <!-- /page-content -->
+    <!-- Multi-file scope: dependency graph based flow -->
+    <ng-container *ngIf="!isFileScope">
+      <div class="arch-empty-state" *ngIf="!hasDataFlow">
+        No dependency data available. Upload a folder or repository with multiple interconnected
+        files.
+      </div>
+
+      <div class="doc-block" *ngIf="hasDataFlow && dataFlowDiagram">
+        <div class="doc-block-label">Workflow Diagram</div>
+        <app-mermaid-diagram [diagram]="dataFlowDiagram"></app-mermaid-diagram>
+      </div>
+    </ng-container>
   </div>
-  <!-- /df-layout -->
 
   <ng-template #noWorkspace>
     <div class="no-session">

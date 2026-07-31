@@ -13,6 +13,7 @@ import {
   buildAIPipelineState,
   type AIPipelineState,
 } from '@app/shared/utils/ai-pipeline-state';
+import type { LLMSummaryKey } from '@app/knowledge/models/llm-summaries.model';
 
 export type HealthTier = 'healthy' | 'fair' | 'needs-attention' | 'critical' | 'unknown';
 
@@ -63,6 +64,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   model: KnowledgeModel | null = null;
   showSwitcher = false;
   switcherLimitReached = false;
+  showHealthInfo = false;
 
   showIdentity = false;
   showInfoCards = false;
@@ -74,6 +76,9 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   pipelineStatusText: Record<string, string> = {};
   private statusTimers: Record<string, ReturnType<typeof setInterval>> = {};
 
+  // Animated count display — counts up from 0 to actual value when cards appear
+  displayedCounts: Record<string, number> = {};
+
   uploadError: string | null = null;
   isDragging = false;
 
@@ -81,6 +86,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   private stagesSub: Subscription | null = null;
   private limitSub: Subscription | null = null;
   private animTimer: ReturnType<typeof setTimeout> | null = null;
+  private countTimers: ReturnType<typeof setInterval>[] = [];
 
   constructor(
     private readonly manager: WorkspaceManagerService,
@@ -94,16 +100,22 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     const init = this.manager.getActive();
     this.workspace = init ?? null;
     this.model = init?.knowledgeModel ?? null;
+    // Returning to an existing analysis — use fast animation variant
+    this.isReturning = !!init?.knowledgeModel;
+
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       const prevId = this.workspace?.id;
       const prevStatus = this.workspace?.status;
       const prevModel = this.workspace?.knowledgeModel;
+      const prevAi = this.workspace?.knowledgeModel?.ai;
       this.workspace = ws;
       this.model = ws?.knowledgeModel ?? null;
 
       const switched = prevId !== ws?.id;
       const modelArrived = !prevModel && !!ws?.knowledgeModel;
       const processingStarted = prevStatus !== 'processing' && ws?.status === 'processing';
+      const aiUpdated = !switched && !modelArrived && !!ws?.knowledgeModel &&
+        ws.knowledgeModel.ai !== prevAi;
 
       if (switched || modelArrived) {
         this.isReturning = switched && !!ws?.knowledgeModel;
@@ -111,20 +123,21 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
       } else if (processingStarted) {
         this.runInfoCardAnimation();
       }
+
+      if (modelArrived || aiUpdated) {
+        this.animateCountsTo(this.metricCards);
+      }
+
       this.cdr.detectChanges();
     });
 
     this.stagesSub = this.manager.activeStages$.subscribe(() => {
-      // Update status cycling — start/stop per stage
-      const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
+      const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath', 'architecture', 'dataFlow'];
       stages.forEach((stage) => {
         const running = this.manager.getActiveStages(this.workspace?.id ?? '').has(stage);
         const hasTimer = !!this.statusTimers[stage];
-        if (running && !hasTimer) {
-          this.startStatusCycle(stage);
-        } else if (!running && hasTimer) {
-          this.stopStatusCycle(stage);
-        }
+        if (running && !hasTimer) this.startStatusCycle(stage);
+        else if (!running && hasTimer) this.stopStatusCycle(stage);
       });
       this.cdr.detectChanges();
     });
@@ -138,6 +151,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     this.stagesSub?.unsubscribe();
     this.limitSub?.unsubscribe();
     if (this.animTimer) clearTimeout(this.animTimer);
+    this.clearCountTimers();
     this.stopAllStatusCycles();
   }
 
@@ -148,11 +162,9 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     let idx = 0;
     this.pipelineStatusText[stage] = messages[0];
     this.statusTimers[stage] = setInterval(() => {
-      this.zone.run(() => {
-        idx = (idx + 1) % messages.length;
-        this.pipelineStatusText[stage] = messages[idx];
-        this.cdr.detectChanges();
-      });
+      idx = (idx + 1) % messages.length;
+      this.pipelineStatusText[stage] = messages[idx];
+      this.cdr.detectChanges();
     }, 2000);
   }
 
@@ -168,6 +180,75 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
       clearInterval(this.statusTimers[stage]);
     });
     this.statusTimers = {};
+  }
+
+  // ── Animation sequence ─────────────────────────────────────────
+
+  private runAnimations(): void {
+    if (this.animTimer) clearTimeout(this.animTimer);
+    this.showIdentity = false;
+    this.showInfoCards = false;
+    this.showArcDraw = false;
+    this.showMetricCards = false;
+    this.cdr.detectChanges();
+
+    const fast = this.isReturning;
+    const t = (ms: number) => (fast ? Math.round(ms * 0.4) : ms);
+
+    const run = (fn: () => void, delay: number) =>
+      setTimeout(() => this.zone.run(() => { fn(); this.cdr.detectChanges(); }), delay);
+
+    run(() => { this.showIdentity = true; }, t(80));
+    run(() => { this.showInfoCards = true; }, t(220));
+    // Double-rAF ensures the arc element is painted with dashoffset:283 before
+    // --draw is applied, so the CSS transition has a "from" state to animate from.
+    run(() => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        this.zone.run(() => { this.showArcDraw = true; this.cdr.detectChanges(); });
+      }));
+    }, t(220));
+    this.animTimer = run(() => { this.showMetricCards = true; }, t(380));
+  }
+
+  private runInfoCardAnimation(): void {
+    const run = (fn: () => void, delay: number) =>
+      setTimeout(() => this.zone.run(() => { fn(); this.cdr.detectChanges(); }), delay);
+
+    run(() => { this.showInfoCards = true; }, 150);
+    run(() => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        this.zone.run(() => { this.showArcDraw = true; this.cdr.detectChanges(); });
+      }));
+    }, 150);
+  }
+
+  private animateCountsTo(cards: HubMetricCard[]): void {
+    this.clearCountTimers();
+    for (const card of cards) {
+      if (card.count === null || card.count === 0) {
+        this.displayedCounts[card.id] = card.count ?? 0;
+        continue;
+      }
+      const target = card.count;
+      const duration = 600;
+      const steps = Math.min(target, 30);
+      const intervalMs = duration / steps;
+      let current = 0;
+      const timer = setInterval(() => {
+        this.zone.run(() => {
+          current = Math.min(current + Math.ceil(target / steps), target);
+          this.displayedCounts[card.id] = current;
+          this.cdr.detectChanges();
+          if (current >= target) clearInterval(timer);
+        });
+      }, intervalMs);
+      this.countTimers.push(timer);
+    }
+  }
+
+  private clearCountTimers(): void {
+    this.countTimers.forEach((t) => clearInterval(t));
+    this.countTimers = [];
   }
 
   stageOutcome(stage: AIStage): string {
@@ -190,35 +271,6 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
       default:
         return '';
     }
-  }
-
-  // ── Animation ──────────────────────────────────────────────────────────────
-
-  private runAnimations(): void {
-    if (this.animTimer) clearTimeout(this.animTimer);
-    this.showIdentity = false;
-    this.showInfoCards = false;
-    this.showArcDraw = false;
-    this.showMetricCards = false;
-    this.cdr.detectChanges();
-
-    const fast = this.isReturning;
-    const t = (ms: number) => (fast ? Math.round(ms * 0.4) : ms);
-    const run = (fn: () => void, delay: number) =>
-      setTimeout(() => this.zone.run(() => { fn(); this.cdr.detectChanges(); }), delay);
-
-    run(() => { this.showIdentity = true; }, t(80));
-    run(() => { this.showInfoCards = true; }, t(220));
-    run(() => { this.showArcDraw = true; }, t(320));
-    this.animTimer = run(() => { this.showMetricCards = true; }, t(380));
-  }
-
-  private runInfoCardAnimation(): void {
-    const run = (fn: () => void, delay: number) =>
-      setTimeout(() => this.zone.run(() => { fn(); this.cdr.detectChanges(); }), delay);
-
-    run(() => { this.showInfoCards = true; }, 150);
-    run(() => { this.showArcDraw = true; }, 280);
   }
 
   // ── Upload ─────────────────────────────────────────────────────────────────
@@ -325,6 +377,10 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
   deleteWorkspace(): void {
     if (this.workspace) this.manager.delete(this.workspace.id);
+  }
+
+  switchWorkspace(id: string): void {
+    this.manager.activate(id);
   }
 
   openSwitcher(): void {
@@ -497,9 +553,19 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
   get aiInsightsState(): 'complete' | 'partial' | 'running' | 'failed' | 'idle' {
     if (this.aiPipeline.noProvider) return 'failed';
+    const ai = this.model?.ai;
+    const summaryKeys: LLMSummaryKey[] = ['understanding', 'security', 'recommendations', 'learningPath'];
+    const statuses = summaryKeys.map(k => ai?.summaries?.[k]?.status);
+    const allSettled = statuses.every(s => s === 'complete' || s === 'failed');
+    const anyComplete = statuses.some(s => s === 'complete');
+    const anyFailed = statuses.some(s => s === 'failed');
+    if (allSettled && anyComplete && !anyFailed) return 'complete';
+    if (allSettled && anyFailed && !anyComplete) return 'failed';
+    if (allSettled) return 'partial';
     const gen = this.aiPipeline.stages.find(s => s.id === 'generate');
-    if (!gen) return 'idle';
-    return gen.state as any;
+    if (gen?.state === 'running') return 'running';
+    if (anyComplete || anyFailed) return 'partial';
+    return gen?.state as any ?? 'idle';
   }
 
   get aiInsightsLabel(): string {
@@ -513,21 +579,26 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     }
   }
 
-  get issueCount(): number {
-    return this.model?.insights.risks?.length ?? 0;
-  }
 
-  get pipelineStages(): { label: string; stage: AIStage; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
+  get pipelineStages(): { key: string; label: string; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
     const ai = this.model?.ai;
     const running = this.manager.getActiveStages(this.workspace?.id ?? '');
-    const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
-    return stages.map(s => {
-      const label = STAGE_LABELS[s] ?? s;
-      if (ai?.failedStages?.includes(s)) return { label, stage: s, state: 'failed' as const };
-      if (ai?.completedStages?.includes(s)) return { label, stage: s, state: 'complete' as const };
-      if (running.has(s)) return { label, stage: s, state: 'running' as const };
-      return { label, stage: s, state: 'pending' as const };
-    });
+    const generateRunning = running.has('generate');
+
+    const summaryState = (k: LLMSummaryKey): 'complete' | 'failed' | 'running' | 'pending' => {
+      const status = ai?.summaries?.[k]?.status;
+      if (status === 'complete') return 'complete';
+      if (status === 'failed')   return 'failed';
+      if (generateRunning)       return 'running';
+      return 'pending';
+    };
+
+    return [
+      { key: 'understanding',   label: 'Understanding',   state: summaryState('understanding') },
+      { key: 'security',        label: 'Security Review', state: summaryState('security') },
+      { key: 'recommendations', label: 'Recommendations', state: summaryState('recommendations') },
+      { key: 'learningPath',    label: 'Learning Path',   state: summaryState('learningPath') },
+    ];
   }
 
   // ── Identity metrics ─────────────────────────────────────────
@@ -569,19 +640,47 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     return this.model?.ai?.understanding?.executiveSummary ?? '';
   }
 
+  get hubNarrative(): string {
+    const hn = this.model?.ai?.hubNarrative;
+    if (!hn) return '';
+    return [hn.structural, hn.directive].filter(Boolean).join(' ');
+  }
+
   // ── Metric cards ───────────────────────────────────────────────────────────
 
   get metricCards(): HubMetricCard[] {
     const ai = this.model?.ai;
     const base = '/folder-analysis';
     const suggested = this.suggestedRoute;
+    const flowSteps = this.model?.insights.dataFlow?.steps?.length ?? 0;
 
     return [
       {
         id: 'dependencies',
         icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
         count: this.dependencyCount > 0 ? this.dependencyCount : null,
+        subtitle: 'Dependencies & Relations',
         label: 'Dependencies & Relations',
+        route: `${base}/data-flow`,
+        suggested: false,
+        pending: !this.model?.capabilities.includes('dependencyResolution'),
+      },
+      {
+        id: 'architecture',
+        icon: 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
+        count: this.model?.relationships.architecture?.patterns.length ?? null,
+        subtitle: 'Architecture Patterns',
+        label: 'Architecture',
+        route: `${base}/architecture`,
+        suggested: false,
+        pending: !this.model?.capabilities.includes('architectureDiscovery'),
+      },
+      {
+        id: 'dataflow',
+        icon: 'M22 12H18L15 21 9 3 6 12 2 12',
+        count: flowSteps,
+        subtitle: 'Data Flow Steps',
+        label: 'Data Flow',
         route: `${base}/data-flow`,
         suggested: false,
         pending: !this.model?.capabilities.includes('dependencyResolution'),
@@ -590,7 +689,8 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
         id: 'security',
         icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
         count: ai?.security?.findings?.length ?? null,
-        label: 'Security Issues',
+        subtitle: 'Security Issues',
+        label: 'Security',
         route: `${base}/security`,
         suggested: suggested === 'security',
         pending: !ai?.completedStages?.includes('security'),
@@ -599,29 +699,21 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
         id: 'recommendations',
         icon: 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
         count: ai?.recommendations?.recommendations?.length ?? null,
+        subtitle: 'Recommendations',
         label: 'Recommendations',
         route: `${base}/code-recommendations`,
         suggested: suggested === 'recommendations',
         pending: !ai?.completedStages?.includes('recommendations'),
       },
       {
-        id: 'architecture',
-        icon: 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
-        count: this.model?.relationships.architecture?.patterns.length ?? null,
-        label: 'Arch Patterns',
-        route: `${base}/architecture`,
-        suggested: false,
-        pending: !this.model?.capabilities.includes('architectureDiscovery'),
-      },
-      {
-        id: 'key-elements',
-        icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
+        id: 'learning',
+        icon: 'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
         count: null,
-        tags: ai?.understanding?.coreCapabilities?.slice(0, 2).map((c) => c.name),
-        label: 'Key Elements',
-        route: `${base}/system-understanding`,
-        suggested: suggested === 'understanding',
-        pending: !ai?.completedStages?.includes('understanding'),
+        subtitle: 'Personalized roadmap for this folder',
+        label: 'Learning Path',
+        route: `${base}/learning-path`,
+        suggested: false,
+        pending: !ai?.completedStages?.includes('learningPath'),
       },
     ];
   }

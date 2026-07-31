@@ -1,35 +1,121 @@
 const { ipcMain } = require('electron');
 const { AiKnowledgeEngine } = require('../engines/ai/knowledge.engine');
 const { AiAnalysisEngine } = require('../engines/ai/analysis.engine');
+const { buildChatContext } = require('../engines/ai/chat-context-builder');
+const { ProviderRegistry } = require('../providers/provider-registry');
 const { SettingsService } = require('../services/settings/settings.service');
+const { getPresetById } = require('../providers/provider-presets');
 const { wrapHandler } = require('./ipc-utils');
 
+// Maps a preset id to the settings key that holds its encrypted API key.
+// Presets sharing a protocol share the same encrypted key storage.
+function apiKeySettingsKey(presetId) {
+  const preset = getPresetById(presetId);
+  if (!preset) return null;
+  switch (preset.protocol) {
+    case 'anthropic':     return 'anthropicApiKeyEncrypted';
+    case 'openai-compat': return 'openaiCompatApiKeyEncrypted';
+    default:              return null;
+  }
+}
+
 const settingsService = new SettingsService();
-const knowledgeEngine = new AiKnowledgeEngine(settingsService);
-const analysisEngine = new AiAnalysisEngine(settingsService);
+const registry = new ProviderRegistry(settingsService);
+const knowledgeEngine = new AiKnowledgeEngine(registry);
+const analysisEngine = new AiAnalysisEngine(registry);
+
+const CHAT_SYSTEM_PROMPT =
+  'You are an expert software analyst embedded inside SystemLens, a codebase intelligence tool. ' +
+  'Answer questions about the analyzed workspace based on the context provided. ' +
+  'Be specific when referencing files, classes, or components. ' +
+  'Format all responses using Markdown: use bullet lists for enumerations, ' +
+  'code blocks (with language hint) for any code or file paths, ' +
+  'bold for key terms, and headings only when the answer has clearly distinct sections. ' +
+  'Keep answers focused — avoid generic advice unless no specific context is available.';
 
 function registerAiHandlers() {
-  // ai:explain — send a pre-built prompt, get an explanation string back
-  ipcMain.handle('ai:explain', wrapHandler(async (_event, prompt) => {
+
+  // ── ai:explain — knowledge pipeline (single-turn) ─────────────────────────
+  ipcMain.handle('ai:explain', wrapHandler(async (_event, prompt, maxTokens) => {
     if (!prompt || typeof prompt !== 'string') throw new Error('prompt is required');
-    return knowledgeEngine.explain(prompt);
+    if (!registry.isConfigured()) throw new Error('No AI provider configured');
+    return knowledgeEngine.explain(prompt, maxTokens ?? undefined);
   }));
 
-  // ai:analyze — send fileName + sourceCode, get AiAnalysisResult back
+  // ── ai:analyze — single-file code analysis ────────────────────────────────
   ipcMain.handle('ai:analyze', wrapHandler(async (_event, fileName, sourceCode) => {
     if (!fileName || typeof fileName !== 'string') throw new Error('fileName is required');
     if (!sourceCode || typeof sourceCode !== 'string') throw new Error('sourceCode is required');
+    if (!registry.isConfigured()) throw new Error('No AI provider configured');
     return analysisEngine.analyze(fileName, sourceCode);
   }));
 
-  // ai:getProviderUrl — returns the current configured provider URL
-  ipcMain.handle('ai:getProviderUrl', wrapHandler(() => {
-    return settingsService.get('aiProviderUrl');
+  // ── ai:chat — multi-turn chat with workspace context ──────────────────────
+  ipcMain.handle('ai:chat', wrapHandler(async (_event, messages, knowledgeModel) => {
+    if (!Array.isArray(messages) || messages.length === 0) throw new Error('messages array is required');
+    if (!registry.isConfigured()) throw new Error('No AI provider configured');
+
+    const contextBlock = knowledgeModel ? buildChatContext(knowledgeModel) : '';
+    const systemPrompt = contextBlock
+      ? `${CHAT_SYSTEM_PROMPT}\n\nWorkspace context:\n${contextBlock}`
+      : CHAT_SYSTEM_PROMPT;
+
+    const provider = registry.getActiveProvider();
+    return provider.chat(messages, { systemPrompt, maxTokens: 4096 });
   }));
 
-  // ai:setProviderUrl — updates the configured provider URL
-  ipcMain.handle('ai:setProviderUrl', wrapHandler((_event, url) => {
-    settingsService.set('aiProviderUrl', url || null);
+  // ── ai:getProviders — provider status list (no network calls) ────────────
+  ipcMain.handle('ai:getProviders', wrapHandler(() => {
+    return registry.getProviderStatuses();
+  }));
+
+  // ── ai:getPresets — full preset registry (no network calls) ──────────────
+  ipcMain.handle('ai:getPresets', wrapHandler(() => {
+    return registry.getPresets();
+  }));
+
+  // ── ai:getCapabilities — capabilities for a given provider id ────────────
+  ipcMain.handle('ai:getCapabilities', wrapHandler((_event, providerId) => {
+    return registry.getCapabilities(providerId ?? undefined);
+  }));
+
+  // ── ai:discoverModels — Ollama: fetch installed models from /api/tags ─────
+  ipcMain.handle('ai:discoverModels', wrapHandler((_event, presetId) => {
+    return registry.discoverModels(presetId ?? undefined);
+  }));
+
+  // ── ai:testConnection — test the active provider (makes a real API call) ─
+  ipcMain.handle('ai:testConnection', wrapHandler(() => {
+    return registry.testActiveProvider();
+  }));
+
+  // ── ai:setApiKey — encrypt and store an API key via safeStorage ──────────
+  // presetId identifies which preset's key to store (determines the storage key).
+  ipcMain.handle('ai:setApiKey', wrapHandler((_event, presetId, plainKey) => {
+    if (!presetId || typeof presetId !== 'string') throw new Error('presetId is required');
+
+    const storageKey = apiKeySettingsKey(presetId);
+    if (!storageKey) throw new Error(`Preset "${presetId}" does not use an API key`);
+
+    if (!plainKey) {
+      settingsService.set(storageKey, null);
+      return;
+    }
+
+    const { safeStorage } = require('electron');
+    if (!safeStorage.isEncryptionAvailable()) {
+      throw new Error('Secure storage is not available on this system');
+    }
+    const cipher = safeStorage.encryptString(plainKey);
+    settingsService.set(storageKey, cipher.toString('base64'));
+  }));
+
+  // ── ai:isKeyConfigured — returns true/false without decrypting ───────────
+  ipcMain.handle('ai:isKeyConfigured', wrapHandler((_event, presetId) => {
+    if (!presetId) return false;
+    const storageKey = apiKeySettingsKey(presetId);
+    if (!storageKey) return false;
+    return !!settingsService.get(storageKey);
   }));
 }
 

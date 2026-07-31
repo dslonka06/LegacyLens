@@ -14,14 +14,6 @@
   overflow: hidden;
 }
 
-.code-panel {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-}
-
 .page-main {
   flex: 1;
   min-width: 0;
@@ -29,6 +21,30 @@
   display: flex;
   flex-direction: column;
 }
+
+// ── Tier layout ───────────────────────────────────────────────────────────────
+
+.page-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 20px 24px;
+}
+
+.su-tier {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.su-tier--two-col {
+  display: grid;
+  grid-template-columns: 640px 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+// ── Card base ─────────────────────────────────────────────────────────────────
 
 .su-card {
   background: var(--panel-bg);
@@ -39,20 +55,19 @@
   padding: 14px 16px;
 }
 
-.su-card-prose {
+.su-card--stretch {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  height: 100%;
+}
 
-  .su-prose-section {
-    padding: 14px 16px;
-    & + .su-prose-section {
-      border-top: 1px solid var(--border);
-    }
-    &.su-prose-accent {
-      border-left: 3px solid color-mix(in srgb, var(--accent) 60%, transparent);
-    }
-  }
+.su-card--health {
+  border-top: 2px solid var(--border);
+
+  &.su-health-healthy      { border-top-color: var(--success); }
+  &.su-health-fair         { border-top-color: var(--warning); }
+  &.su-health-needs-attention { border-top-color: #f97316; }
+  &.su-health-critical     { border-top-color: var(--error); }
 }
 
 .su-card-header {
@@ -63,8 +78,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--text-muted);
+  color: var(--text-primary);
   margin-bottom: 10px;
+
   svg {
     width: 13px;
     height: 13px;
@@ -75,61 +91,220 @@
 
 .su-body-text {
   font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin: 0;
+
+  &--narrative {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+}
+
+// ── Card header with info icon ────────────────────────────────────────────────
+
+.su-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+
+  .su-card-header {
+    margin-bottom: 0;
+  }
+}
+
+.su-info-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: inherit;
+  line-height: 1;
+  transition: border-color 0.15s, color 0.15s;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+.su-info-popup-wrap {
+  position: relative;
+}
+
+.su-info-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-card);
+
+  p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+
+    strong {
+      color: var(--text-content);
+      font-weight: 600;
+    }
+  }
+}
+
+// ── Code Health ───────────────────────────────────────────────────────────────
+
+.su-health-body {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  min-height: 0;
+}
+
+.su-health-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex-shrink: 0;
+  width: 50%;
+}
+
+.su-health-divider {
+  width: 1px;
+  background: var(--border);
+  margin: 0 16px;
+  flex-shrink: 0;
+}
+
+.su-health-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.su-health-tier-row {
+  margin-bottom: 12px;
+}
+
+.su-health-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.su-health-metric {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.su-health-metric-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.su-health-metric-val {
+  font-size: 12px;
+  font-weight: 700;
+
+  &.complexity-Low  { color: var(--success); }
+  &.complexity-Medium { color: var(--warning); }
+  &.complexity-High { color: var(--error); }
+
+  &.maint-High   { color: var(--success); }
+  &.maint-Medium { color: var(--warning); }
+  &.maint-Low    { color: var(--error); }
+
+  &.stat-error { color: var(--error); }
+}
+
+.su-health-detail-text {
+  font-size: 12px;
   color: var(--text-secondary);
   line-height: 1.7;
   margin: 0;
+
+  &--pending {
+    color: var(--text-muted);
+    font-style: italic;
+  }
 }
 
-.su-body-text-spaced {
-  margin-bottom: 6px;
-}
+// ── Numbered list (key workflows) ─────────────────────────────────────────────
 
-.su-columns {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 16px;
-  align-items: start;
-}
-
-.su-col-left,
-.su-col-right {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.su-item-list {
+.su-numbered-list {
   display: flex;
   flex-direction: column;
   gap: 1px;
 }
 
-.su-item {
+.su-numbered-item {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 10px;
   padding: 6px 0;
   border-bottom: 1px solid var(--border);
-  &:last-child {
-    border-bottom: none;
+
+  &:last-child { border-bottom: none; }
+}
+
+.su-number-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  box-shadow: 0 0 0 3px var(--panel-bg);
+  z-index: 1;
+  position: relative;
+
+  &.su-number-circle--supporting {
+    background: color-mix(in srgb, var(--text-muted) 10%, transparent);
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1;
   }
 }
 
-.su-item-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-content);
-  font-family: 'JetBrains Mono', Consolas, monospace;
-  flex-shrink: 0;
-}
-
-.su-item-reason {
-  font-size: 11px;
-  color: var(--text-muted);
+.su-numbered-text {
+  font-size: 13px;
+  color: var(--text-secondary);
   line-height: 1.5;
   flex: 1;
-  min-width: 0;
 }
+
+// ── Workflows ─────────────────────────────────────────────────────────────────
 
 .su-workflow-list {
   display: flex;
@@ -143,9 +318,8 @@
   gap: 8px;
   padding: 6px 0;
   border-bottom: 1px solid var(--border);
-  &:last-child {
-    border-bottom: none;
-  }
+
+  &:last-child { border-bottom: none; }
 }
 
 .su-workflow-name {
@@ -163,53 +337,266 @@
   min-width: 0;
 }
 
-.su-dep-bar {
+// ── Bottom two-col tier alignment ────────────────────────────────────────────
+
+.su-tier--bottom {
+  align-items: start;
+  grid-template-columns: 1fr 1fr;
 }
 
-.su-dep-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 0;
-}
+// ── Responsibilities panel ────────────────────────────────────────────────────
 
-.su-dep-grid .su-dep-item {
+.su-resp-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 10px 14px;
-  border-right: 1px solid var(--border);
-  &:last-child {
-    border-right: none;
+}
+
+.su-resp-item {
+  border-bottom: 1px solid var(--border);
+
+  &:last-child { border-bottom: none; }
+}
+
+.su-resp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 4px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.12s;
+
+  &:hover { background: var(--bg-hover); }
+}
+
+.su-resp-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.su-resp-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0;
+  padding: 0 8px 12px 8px;
+}
+
+// ── Components panel ──────────────────────────────────────────────────────────
+
+.su-comp-section {
+  border-bottom: 1px solid var(--border);
+
+  &:last-child { border-bottom: none; }
+}
+
+.su-comp-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 4px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.12s;
+
+  &:hover { background: var(--bg-hover); }
+}
+
+.su-comp-section-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.su-comp-section-count {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.su-accordion-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 200ms ease;
+
+  &.su-accordion-chevron--open {
+    transform: rotate(90deg);
   }
 }
 
-.su-dep-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.su-accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 220ms ease;
+
+  &.su-accordion-body--open {
+    max-height: 2000px;
+  }
 }
 
-.su-dep-name {
+.su-comp-list {
+  display: flex;
+  flex-direction: column;
+
+  &--indented {
+    padding: 2px 0 10px 8px;
+  }
+}
+
+.su-comp-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+
+  &:last-child { border-bottom: none; }
+  &:first-child { padding-top: 0; }
+}
+
+.su-comp-item-name {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-content);
   font-family: 'JetBrains Mono', Consolas, monospace;
 }
 
-.su-dep-type {
+.su-comp-kind-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+
+  &--class {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+
+  &--method {
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+  }
+
+  &--io {
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+  }
+}
+
+.su-comp-io {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 10px;
+}
+
+.su-comp-io-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.su-comp-io-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.su-comp-item-name {
+  &--import {
+    color: var(--text-muted);
+  }
+}
+
+// ── Areas of Concern ──────────────────────────────────────────────────────────
+
+.su-concern-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.su-concern-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+
+.su-concern-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.su-concern-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-content);
+  font-family: 'JetBrains Mono', Consolas, monospace;
+}
+
+.su-concern-detail {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.su-concern-impact {
+  font-size: 11px;
+  color: var(--warning);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.su-concern-badge {
   font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   padding: 2px 6px;
   border-radius: 5px;
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  color: var(--accent);
-  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
-}
+  flex-shrink: 0;
 
-.su-dep-reason {
-  font-size: 11px;
-  color: var(--text-muted);
-  line-height: 1.5;
+  &.su-concern-badge--critical {
+    color: var(--error);
+    background: color-mix(in srgb, var(--error) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--error) 25%, transparent);
+  }
+
+  &.su-concern-badge--debt {
+    color: var(--warning);
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--warning) 25%, transparent);
+  }
+
+  &.su-concern-badge--risk {
+    color: var(--severity-high);
+    background: color-mix(in srgb, var(--severity-high) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--severity-high) 25%, transparent);
+  }
 }

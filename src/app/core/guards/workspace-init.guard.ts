@@ -15,7 +15,7 @@ export const workspaceInitGuard: CanActivateFn = async (route, state) => {
   const manager = inject(WorkspaceManagerService);
   const router = inject(Router);
 
-  const segments = state.url.split('/').filter(Boolean);
+  const segments = state.url.split('?')[0].split('/').filter(Boolean);
   const type = typeFromSegments(segments);
   if (!type) return true;
 

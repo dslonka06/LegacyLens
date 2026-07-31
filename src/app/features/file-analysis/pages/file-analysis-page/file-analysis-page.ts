@@ -4,10 +4,12 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { WorkspaceKnowledgeService } from '@app/knowledge/services/workspace-knowledge.service';
+import { ElectronService } from '@app/core/services/electron.service';
 import { WorkspaceSwitcherModal } from '@app/workspace/components/workspace-switcher-modal/workspace-switcher-modal';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { Workspace, WorkspaceStatus } from '@app/workspace/models/workspace-entity.model';
 import type { KnowledgeModel, AIStage } from '@app/knowledge/models/knowledge-model.contract';
+import type { LLMSummaryKey } from '@app/knowledge/models/llm-summaries.model';
 import type { ElectronDirectoryEntry } from '../../../../../electron';
 import {
   buildAIPipelineState,
@@ -67,6 +69,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   showIdentity = false;
   showInfoCards = false;
   showArcDraw = false;
+  showHealthInfo = false;
   showMetricCards = false;
   isReturning = false;
 
@@ -90,6 +93,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   constructor(
     private readonly manager: WorkspaceManagerService,
     private readonly knowledge: WorkspaceKnowledgeService,
+    private readonly electron: ElectronService,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
     private readonly zone: NgZone,
@@ -99,6 +103,9 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     const init = this.manager.getActive();
     this.workspace = init ?? null;
     this.model = init?.knowledgeModel ?? null;
+    // Returning to an existing analysis — use fast animation variant
+    this.isReturning = !!init?.knowledgeModel;
+
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       const prevId = this.workspace?.id;
       const prevStatus = this.workspace?.status;
@@ -140,7 +147,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     // Re-render when stage running state changes so pipeline rows update live
     this.stagesSub = this.manager.activeStages$.subscribe((stagesMap) => {
       // Update status cycling — start/stop per stage
-      const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
+      const stages: AIStage[] = ['understanding', 'dataFlow', 'security', 'recommendations', 'learningPath'];
       stages.forEach((stage) => {
         const running = this.manager.getActiveStages(this.workspace?.id ?? '').has(stage);
         const hasTimer = !!this.statusTimers[stage];
@@ -364,8 +371,32 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   // ── Workspace actions ────────────────────────────────────────
 
   reanalyze(): void {
-    const obs = this.knowledge.reanalyze(this.workspace!.id);
-    if (obs) obs.subscribe({ error: () => {} });
+    const ws = this.workspace;
+    if (!ws) return;
+
+    // Hot path: cache still warm from this session
+    const obs = this.knowledge.reanalyze(ws.id);
+    if (obs) { obs.subscribe({ error: () => {} }); return; }
+
+    // Cold path: app was reloaded — re-read the file from disk using the stored path
+    const path = ws.path;
+    if (!path) return;
+    const name = ws.name;
+
+    this.electron.readFile(path).then((content) => {
+      const entry: ElectronDirectoryEntry = {
+        name,
+        relativePath: name,
+        content: content ?? null,
+        size: 0,
+        modifiedAt: new Date().toISOString(),
+      };
+      this.knowledge.process('file', [entry], {
+        workspaceId: ws.id,
+        workspaceName: name,
+        persist: false,
+      }).subscribe({ error: () => {} });
+    });
   }
 
   newWorkspace(): void {
@@ -378,6 +409,10 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   deleteWorkspace(): void {
     if (this.workspace) this.manager.delete(this.workspace.id);
+  }
+
+  switchWorkspace(id: string): void {
+    this.manager.activate(id);
   }
 
   openSwitcher(): void {
@@ -548,9 +583,19 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   get aiInsightsState(): 'complete' | 'partial' | 'running' | 'failed' | 'idle' {
     if (this.aiPipeline.noProvider) return 'failed';
+    const ai = this.model?.ai;
+    const summaryKeys: LLMSummaryKey[] = ['understanding', 'dataFlow', 'security', 'recommendations', 'learningPath'];
+    const statuses = summaryKeys.map(k => ai?.summaries?.[k]?.status);
+    const allSettled = statuses.every(s => s === 'complete' || s === 'failed');
+    const anyComplete = statuses.some(s => s === 'complete');
+    const anyFailed = statuses.some(s => s === 'failed');
+    if (allSettled && anyComplete && !anyFailed) return 'complete';
+    if (allSettled && anyFailed && !anyComplete) return 'failed';
+    if (allSettled) return 'partial';
     const gen = this.aiPipeline.stages.find(s => s.id === 'generate');
-    if (!gen) return 'idle';
-    return gen.state as any;
+    if (gen?.state === 'running') return 'running';
+    if (anyComplete || anyFailed) return 'partial';
+    return gen?.state as any ?? 'idle';
   }
 
   get aiInsightsLabel(): string {
@@ -564,17 +609,26 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     }
   }
 
-  get pipelineStages(): { label: string; stage: AIStage; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
+  get pipelineStages(): { key: string; label: string; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
     const ai = this.model?.ai;
     const running = this.manager.getActiveStages(this.workspace?.id ?? '');
-    const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
-    return stages.map(s => {
-      const label = STAGE_LABELS[s] ?? s;
-      if (ai?.failedStages?.includes(s)) return { label, stage: s, state: 'failed' as const };
-      if (ai?.completedStages?.includes(s)) return { label, stage: s, state: 'complete' as const };
-      if (running.has(s)) return { label, stage: s, state: 'running' as const };
-      return { label, stage: s, state: 'pending' as const };
-    });
+    const generateRunning = running.has('generate');
+
+    const summaryState = (k: LLMSummaryKey): 'complete' | 'failed' | 'running' | 'pending' => {
+      const status = ai?.summaries?.[k]?.status;
+      if (status === 'complete') return 'complete';
+      if (status === 'failed')   return 'failed';
+      if (generateRunning)       return 'running';
+      return 'pending';
+    };
+
+    return [
+      { key: 'understanding',   label: 'Understanding',   state: summaryState('understanding') },
+      { key: 'dataFlow',        label: 'Data Flow',       state: summaryState('dataFlow') },
+      { key: 'security',        label: 'Security Review', state: summaryState('security') },
+      { key: 'recommendations', label: 'Recommendations', state: summaryState('recommendations') },
+      { key: 'learningPath',    label: 'Learning Path',   state: summaryState('learningPath') },
+    ];
   }
 
   // ── Detected role tags ─────────────────────────────────────────
@@ -611,34 +665,17 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
     const importCount = this.importCount !== '—' ? Number(this.importCount) : 0;
     const refBy = this.referencedByCount;
-    const depSubtitle = importCount > 0 || refBy > 0
-      ? `${importCount} import${importCount !== 1 ? 's' : ''}${refBy > 0 ? ` · ${refBy} referenced by` : ''}`
-      : 'No dependencies found';
-
     const secCount = ai?.security?.findings?.length ?? 0;
-    const secSubtitle = secCount === 0 ? 'No issues detected'
-      : ai?.security?.findings?.some(f => f.severity === 'critical') ? `${ai!.security!.findings.filter(f => f.severity === 'critical').length} critical`
-      : ai?.security?.findings?.some(f => f.severity === 'high') ? `${ai!.security!.findings.filter(f => f.severity === 'high').length} high priority`
-      : `${secCount} issue${secCount !== 1 ? 's' : ''}`;
-
     const recCount = ai?.recommendations?.recommendations?.length ?? 0;
-    const highRec = ai?.recommendations?.recommendations?.filter((r: any) => r.priority === 'high').length ?? 0;
-    const recSubtitle = recCount === 0 ? 'No suggestions'
-      : highRec > 0 ? `${highRec} high priority`
-      : `${recCount} suggestion${recCount !== 1 ? 's' : ''}`;
-
     const flowSteps = this.model?.insights.dataFlow?.steps?.length ?? 0;
-    const flowSubtitle = flowSteps > 0 ? 'Flow steps detected' : 'No flow data';
-
     const syms = this.symbolTotal;
-    const symSubtitle = syms !== null && syms > 0 ? 'Functions, classes & exports' : 'No symbols extracted';
 
     return [
       {
         id: 'dependencies',
         icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
-        count: importCount > 0 ? importCount : null,
-        subtitle: depSubtitle,
+        count: importCount + refBy,
+        subtitle: 'Dependencies & Relations',
         label: 'Dependencies & Relations',
         route: `${base}/data-flow`,
         suggested: false,
@@ -647,8 +684,8 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       {
         id: 'security',
         icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
-        count: secCount > 0 ? secCount : null,
-        subtitle: secSubtitle,
+        count: secCount,
+        subtitle: 'Security Issues',
         label: 'Security',
         route: `${base}/security`,
         suggested: suggested === 'security',
@@ -657,8 +694,8 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       {
         id: 'recommendations',
         icon: 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
-        count: recCount > 0 ? recCount : null,
-        subtitle: recSubtitle,
+        count: recCount,
+        subtitle: 'Recommendations',
         label: 'Recommendations',
         route: `${base}/code-recommendations`,
         suggested: suggested === 'recommendations',
@@ -667,8 +704,8 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       {
         id: 'dataflow',
         icon: 'M22 12H18L15 21 9 3 6 12 2 12',
-        count: flowSteps > 0 ? flowSteps : null,
-        subtitle: flowSubtitle,
+        count: flowSteps,
+        subtitle: 'Data Flow Steps',
         label: 'Data Flow',
         route: `${base}/data-flow`,
         suggested: false,
@@ -677,8 +714,8 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       {
         id: 'symbols',
         icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
-        count: syms,
-        subtitle: symSubtitle,
+        count: syms ?? 0,
+        subtitle: 'Key Symbols',
         label: 'Key Symbols',
         route: `${base}/system-understanding`,
         suggested: false,
@@ -688,7 +725,6 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
         id: 'learning',
         icon: 'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
         count: null,
-        tags: ['Next'],
         subtitle: 'Personalized roadmap for this file',
         label: 'Learning Path',
         route: `${base}/learning-path`,
@@ -738,9 +774,6 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     return this.formatBytes(new TextEncoder().encode(src).length);
   }
 
-  get issueCount(): number {
-    return this.model?.insights.risks?.length ?? 0;
-  }
 
   private get symbolTotal(): number | null {
     if (!this.model) return null;
@@ -771,5 +804,11 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   get executiveSummary(): string {
     return this.model?.ai?.understanding?.executiveSummary ?? '';
+  }
+
+  get hubNarrative(): string {
+    const hn = this.model?.ai?.hubNarrative;
+    if (!hn) return '';
+    return [hn.structural, hn.directive].filter(Boolean).join(' ');
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import {
   BehaviorSubject,
   Observable,
@@ -20,9 +20,41 @@ import type {
   KnowledgeAIResults,
   AIStage,
 } from '@app/knowledge/models/knowledge-model.contract';
-import type { LLMSummaryKey } from '@app/knowledge/models/llm-summaries.model';
+import type { LLMSummaryKey, LLMSummaryEntry, LLMSummaries } from '@app/knowledge/models/llm-summaries.model';
 import { ElectronService } from '@app/core/services/electron.service';
 import type { PersistedWorkspace } from '../../../electron';
+
+// ── Module-level helpers ──────────────────────────────────────────────────────
+
+function markSummariesStale(summaries: LLMSummaries): LLMSummaries {
+  const result: LLMSummaries = {};
+  for (const key of Object.keys(summaries) as LLMSummaryKey[]) {
+    const entry = summaries[key];
+    if (entry) result[key] = { ...entry, status: 'stale' };
+  }
+  return result;
+}
+
+// Coerces persisted workspaces saved before the LLMSummaryEntry schema (v2 → v3).
+// Plain string summaries become complete entries with unknown provenance.
+function coerceSummaries(model: KnowledgeModel): KnowledgeModel {
+  const summaries = model.ai?.summaries;
+  if (!summaries) return model;
+
+  const coerced: LLMSummaries = {};
+  let changed = false;
+  for (const key of Object.keys(summaries) as LLMSummaryKey[]) {
+    const val = summaries[key];
+    if (typeof val === 'string') {
+      coerced[key] = { content: val, status: 'complete', provider: 'unknown', model: 'unknown', generatedAt: '' };
+      changed = true;
+    } else if (val) {
+      coerced[key] = val;
+    }
+  }
+  if (!changed) return model;
+  return { ...model, ai: { ...model.ai!, summaries: coerced } };
+}
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceManagerService {
@@ -66,6 +98,7 @@ export class WorkspaceManagerService {
   constructor(
     private readonly router: Router,
     private readonly electronService: ElectronService,
+    private readonly ngZone: NgZone,
   ) {
     this.ready = this.restoreFromStorage();
   }
@@ -94,6 +127,14 @@ export class WorkspaceManagerService {
 
   canCreate(): boolean {
     return this._workspaces$.value.length < MAX_WORKSPACES;
+  }
+
+  createNew(type: WorkspaceType): Workspace | null {
+    if (!this.canCreate()) {
+      this._limitReached$.next();
+      return null;
+    }
+    return this.create(type);
   }
 
   workspace$(id: string): Observable<Workspace | null> {
@@ -138,6 +179,11 @@ export class WorkspaceManagerService {
   activate(id: string): void {
     const ws = this.getById(id);
     if (!ws) return;
+    // Briefly emit null so distinctUntilChanged always sees a change, even
+    // when re-activating the same workspace (e.g. reopening from home page).
+    if (this._activeId$.value === id) {
+      this._activeId$.next(null);
+    }
     this._activeId$.next(id);
     this.router.navigate([this.routeForType(ws.type)]);
   }
@@ -213,11 +259,15 @@ export class WorkspaceManagerService {
 
   /** Set the structural KnowledgeModel after the Code Intelligence Engine completes. */
   setKnowledgeModel(id: string, model: KnowledgeModel): void {
-    // Stay in 'processing' — AI stages are about to start. Status flips to 'ready'
-    // in markAIPipelineComplete() once all stages finish, so the hub pipeline
-    // shows running dots during AI analysis instead of going green immediately.
+    // Preserve existing summaries as stale so they stay visible during regeneration.
+    const existingSummaries = this.getById(id)?.knowledgeModel?.ai?.summaries;
+    const staleSummaries = existingSummaries ? markSummariesStale(existingSummaries) : undefined;
+    const ai = staleSummaries
+      ? { ...(model.ai ?? { completedStages: [], failedStages: [] }), summaries: staleSummaries }
+      : model.ai;
+
     this.patch(id, {
-      knowledgeModel: model,
+      knowledgeModel: { ...model, ai },
       status: 'processing',
       lastModifiedAt: new Date().toISOString(),
     });
@@ -281,14 +331,14 @@ export class WorkspaceManagerService {
   }
 
   /**
-   * Merge a single LLM-generated summary key into model.ai.summaries.
+   * Merge a single LLM-generated summary entry into model.ai.summaries.
    * Reads the current summaries inside patch() scope so concurrent calls
-   * cannot overwrite each other's key — each call reads the latest state.
+   * cannot overwrite each other's key.
    *
    * Does NOT add the key to completedStages — the caller is responsible for
    * calling mergeAIResults({}, 'generate', generation) once all keys are done.
    */
-  mergeSummaryKey(id: string, key: LLMSummaryKey, text: string, generation?: number): void {
+  mergeSummaryKey(id: string, key: LLMSummaryKey, entry: LLMSummaryEntry, generation?: number): void {
     const currentGen = this.getGeneration(id);
     if (generation !== undefined && currentGen !== generation) {
       console.warn(`[Manager] mergeSummaryKey DROPPED gen=${generation} currentGen=${currentGen} key=${key}`);
@@ -301,7 +351,7 @@ export class WorkspaceManagerService {
     }
 
     const existing = ws.knowledgeModel.ai ?? { completedStages: [], failedStages: [] };
-    const summaries = { ...(existing.summaries ?? {}), [key]: text };
+    const summaries = { ...(existing.summaries ?? {}), [key]: entry };
     this.patch(id, {
       knowledgeModel: { ...ws.knowledgeModel, ai: { ...existing, summaries } },
       lastModifiedAt: new Date().toISOString(),
@@ -442,7 +492,13 @@ export class WorkspaceManagerService {
         };
       });
 
-      this._workspaces$.next(restored);
+      const hydrated = restored.map(ws => ({
+        ...ws,
+        knowledgeModel: ws.knowledgeModel ? coerceSummaries(ws.knowledgeModel) : null,
+      }));
+      // Run inside NgZone so that subscribers (sidebar, hub pages) trigger
+      // Angular CD when the restored workspaces land.
+      this.ngZone.run(() => this._workspaces$.next(hydrated));
     } catch {
       // Storage unavailable — start fresh, no user-visible error needed
     }

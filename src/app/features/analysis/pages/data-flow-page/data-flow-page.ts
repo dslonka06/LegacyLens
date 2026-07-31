@@ -1,80 +1,46 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
-import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
+import type { LLMSummaryEntry } from '@app/knowledge/models/llm-summaries.model';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
-import type {
-  KnowledgeModel,
-  DataFlowInsight,
-} from '@app/knowledge/models/knowledge-model.contract';
-import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
-
-interface FlowNode {
-  name: string;
-  dependents: number;
-  dependencies: number;
-  isHub: boolean;
-}
+import { MermaidDiagram } from '@app/shared/components/mermaid-diagram/mermaid-diagram';
+import type { KnowledgeModel, DataFlowInsight } from '@app/knowledge/models/knowledge-model.contract';
 
 @Component({
   selector: 'app-data-flow-page',
   standalone: true,
-  imports: [CommonModule, FileTreePanel, ThemeToggle, ExplanationCard],
+  imports: [CommonModule, ThemeToggle, ExplanationCard, MermaidDiagram],
   templateUrl: './data-flow-page.html',
   styleUrl: './data-flow-page.scss',
 })
 export class DataFlowPage implements OnInit, OnDestroy {
   model: KnowledgeModel | null = null;
   hasWorkspace = false;
-  flowNodes: FlowNode[] = [];
-  expandedWorkflowIndex: number | null = null;
-  selectedFilePath: string | null = null;
+  expandedStepIndex: number | null = null;
 
   private sub: Subscription | null = null;
 
-  constructor(private readonly manager: WorkspaceManagerService) {}
+  constructor(
+    private readonly manager: WorkspaceManagerService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.model = this.manager.getActive()?.knowledgeModel ?? null;
     this.hasWorkspace = this.model != null;
-    this.buildFlow(this.model);
 
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       this.model = ws?.knowledgeModel ?? null;
       this.hasWorkspace = this.model != null;
-      this.buildFlow(this.model);
+      this.expandedStepIndex = null;
+      this.cdr.detectChanges();
     });
   }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
-  }
-
-  private buildFlow(model: KnowledgeModel | null): void {
-    const graph = model?.relationships.dependencies?.graph;
-    if (!graph) {
-      this.flowNodes = [];
-      return;
-    }
-
-    const inbound = new Map<string, number>();
-    const outbound = new Map<string, number>();
-    graph.edges.forEach((e) => {
-      outbound.set(e.source, (outbound.get(e.source) ?? 0) + 1);
-      inbound.set(e.target, (inbound.get(e.target) ?? 0) + 1);
-    });
-
-    this.flowNodes = graph.nodes
-      .map((n) => ({
-        name: n.name,
-        dependents: inbound.get(n.id) ?? 0,
-        dependencies: outbound.get(n.id) ?? 0,
-        isHub: (inbound.get(n.id) ?? 0) >= 3,
-      }))
-      .sort((a, b) => b.dependents - a.dependents)
-      .slice(0, 30);
   }
 
   // ── File-scope: structured deterministic data flow from insights ────────────
@@ -87,65 +53,35 @@ export class DataFlowPage implements OnInit, OnDestroy {
     return this.model?.targetType === 'file';
   }
 
+  get fileStepNarrative(): string[] {
+    return this.model?.ai?.dataFlowFileNarrative?.stepNarrative ?? [];
+  }
+
+  toggleStep(index: number): void {
+    this.expandedStepIndex = this.expandedStepIndex === index ? null : index;
+  }
+
+  isStepExpanded(index: number): boolean {
+    return this.expandedStepIndex === index;
+  }
+
   // ── Multi-file: dependency graph based flow ─────────────────────────────────
 
   get workspaceName(): string {
     return this.model?.workspaceName ?? 'Workspace';
   }
 
-  get totalNodes(): number {
-    return this.model?.relationships.dependencies?.graph.nodes.length ?? 0;
-  }
-
-  get totalConnections(): number {
-    return this.model?.relationships.dependencies?.graph.edges.length ?? 0;
-  }
-
-  get hubCount(): number {
-    return this.flowNodes.filter((n) => n.isHub).length;
-  }
-
-  get topTargets(): string[] {
-    const graph = this.model?.relationships.dependencies?.graph;
-    if (!graph) return [];
-    const nodeMap = new Map(graph.nodes.map((n) => [n.id, n.name]));
-    const counts = new Map<string, number>();
-    graph.edges.forEach((e) => counts.set(e.target, (counts.get(e.target) ?? 0) + 1));
-    return [...counts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([id]) => nodeMap.get(id) ?? id);
-  }
-
-  get folderTree(): FolderNode | undefined {
-    return this.model?.structure.folderTree;
-  }
-
-  onTreeFileSelected(file: FileNode): void {
-    this.selectedFilePath = file.path;
-  }
-
   get hasDataFlow(): boolean {
     return this.isFileScope
       ? (this.fileDataFlow?.steps.length ?? 0) > 0
-      : this.flowNodes.length > 0;
-  }
-
-  get keyWorkflows(): { name: string; description: string }[] {
-    return this.model?.ai?.understanding?.mostImportantWorkflows ?? [];
+      : (this.model?.relationships.dependencies?.graph.nodes.length ?? 0) > 0;
   }
 
   get dataFlowNarrative(): string | null {
-    if (!this.hasDataFlow) return null;
-    if (this.isFileScope) return null;
-    const nodes = this.flowNodes.length;
-    const hubs = this.hubCount;
-    const conns = this.totalConnections;
-    const hubDesc =
-      hubs > 0
-        ? ` ${hubs} hub module${hubs > 1 ? 's' : ''} act as central integration points.`
-        : '';
-    return `${nodes} modules with ${conns} dependency connections.${hubDesc} The most depended-upon modules drive the core data flow.`;
+    if (!this.hasDataFlow || this.isFileScope) return null;
+    const nodes = this.model?.relationships.dependencies?.graph.nodes.length ?? 0;
+    const conns = this.model?.relationships.dependencies?.graph.edges.length ?? 0;
+    return `${nodes} modules with ${conns} dependency connections. The most depended-upon modules drive the core data flow.`;
   }
 
   getStepClass(index: number, total: number): string {
@@ -154,30 +90,12 @@ export class DataFlowPage implements OnInit, OnDestroy {
     return 'step-mid';
   }
 
-  flowBarWidth(node: FlowNode): number {
-    const max = this.flowNodes[0]?.dependents ?? 1;
-    return max > 0 ? Math.round((node.dependents / max) * 100) : 0;
-  }
-
-  toggleWorkflow(i: number): void {
-    this.expandedWorkflowIndex = this.expandedWorkflowIndex === i ? null : i;
-  }
-
-  isWorkflowExpanded(i: number): boolean {
-    return this.expandedWorkflowIndex === i;
-  }
-
-  get llmSummary(): string | null {
+  get llmSummaryEntry(): LLMSummaryEntry | null {
     return this.model?.ai?.summaries?.dataFlow ?? null;
   }
 
-  get isGenerating(): boolean {
-    const wsId = this.manager.getActive()?.id ?? '';
-    return this.manager.getActiveStages(wsId).has('generate');
+  get dataFlowDiagram(): string | null {
+    return this.model?.ai?.dataFlow?.dataFlowDiagram ?? null;
   }
 
-  get isNoProvider(): boolean {
-    const ai = this.model?.ai;
-    return ai?.failedStages.includes('generate') === true && ai?.stageErrors?.['generate'] === 'no-provider';
-  }
 }

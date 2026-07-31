@@ -2,8 +2,15 @@ const { getDatabase } = require('../../database/database');
 
 const DEFAULTS = {
   theme: 'dark',
-  aiProvider: null,
+  // Active preset id — maps to a preset in provider-presets.js
+  activePresetId: null,
   aiModel: null,
+  // Encrypted API keys — stored as base64 via safeStorage, never plain text
+  anthropicApiKeyEncrypted: null,
+  openaiCompatApiKeyEncrypted: null,
+  // Host/base URL overrides
+  ollamaHost: null,
+  openaiCompatBaseUrl: null,
   defaultExportPath: null,
 };
 

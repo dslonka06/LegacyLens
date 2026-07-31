@@ -171,6 +171,8 @@ export interface KnowledgeInsights {
   risks?: RiskInsight[];
   /** Files/areas flagged as hotspots by structural analysis. */
   hotspots?: string[];
+  /** Key responsibilities extracted from structural analysis (file scope). */
+  responsibilities?: string[];
 }
 
 // ── AI results ─────────────────────────────────────────────────────────────────
@@ -182,6 +184,23 @@ export interface KnowledgeAIResults {
   // ── Derive tier ──────────────────────────────────────────────────────────────
   /** Full AI understanding: executive summary, business purpose, health, key areas. */
   understanding?: SystemUnderstanding;
+  /** Heuristic hub header narrative. Structural pass available after derive; directive
+   *  sentence appended once security + recommendations stages complete. */
+  hubNarrative?: { structural: string; directive: string };
+  businessPurposeNarrative?: string;
+  codeHealthNarrative?: string;
+  /** File scope only: per-responsibility descriptions from heuristic engine. */
+  fileResponsibilitiesNarrative?: string[] | null;
+  /** File scope only: per-component descriptions from heuristic engine. */
+  fileComponentsNarrative?: {
+    items: Array<{ name: string; kind: 'class' | 'method'; description: string; isExported: boolean }>;
+    imports: string[];
+    exports: string[];
+  } | null;
+  /** Folder scope only: per-responsibility descriptions from heuristic engine. */
+  folderResponsibilitiesNarrative?: string[] | null;
+  /** Folder scope only: per-workflow descriptions from heuristic engine. */
+  folderWorkflowsNarrative?: string[] | null;
   /** Security findings and risk surface produced by heuristic scanning. */
   security?: SecurityAnalysis;
   /** Actionable improvement recommendations from structural analysis. */
@@ -192,6 +211,11 @@ export interface KnowledgeAIResults {
   architecture?: ArchitectureAIAnalysis;
   /** Data flow workflow analysis with entry points, bottlenecks, and risk profiles. */
   dataFlow?: DataFlowAIAnalysis;
+  /** File scope only: heuristic narrative for the data flow page. */
+  dataFlowFileNarrative?: {
+    pattern: { label: string; overview: string };
+    stepNarrative: string[];
+  } | null;
 
   // ── Generate tier ─────────────────────────────────────────────────────────────
   /** LLM-generated narrative summaries, one per page. Populated after the generate stage. */
@@ -214,13 +238,15 @@ export interface KnowledgeMetadata {
   /** ISO timestamp of last full or partial structural build. */
   builtAt: string;
   /** Schema version — increment when shape changes incompatibly. */
-  schemaVersion: '2';
+  schemaVersion: '2' | '3';
   /** Opaque ID linking this model to its SQLite persistence row. */
   buildId?: string;
   /** True when this model was restored from cache without a fresh scan. */
   fromCache?: boolean;
   /** True when only changed files were re-processed (incremental update). */
   partialRebuild?: boolean;
+  /** Absolute path to the repository root. Present for folder/repository targets only. */
+  repositoryPath?: string;
 }
 
 // ── Root contract ──────────────────────────────────────────────────────────────

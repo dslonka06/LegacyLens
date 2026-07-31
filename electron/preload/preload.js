@@ -63,10 +63,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ── AI ────────────────────────────────────────────────────────────────────
   ai: {
-    explain:         (prompt)              => invoke('ai:explain', prompt),
-    analyze:         (fileName, sourceCode) => invoke('ai:analyze', fileName, sourceCode),
-    getProviderUrl:  ()                    => invoke('ai:getProviderUrl'),
-    setProviderUrl:  (url)                 => invoke('ai:setProviderUrl', url),
+    explain:          (prompt, maxTokens)          => invoke('ai:explain', prompt, maxTokens),
+    analyze:          (fileName, sourceCode)       => invoke('ai:analyze', fileName, sourceCode),
+    chat:             (messages, knowledgeModel)   => invoke('ai:chat', messages, knowledgeModel),
+    getProviders:     ()                           => invoke('ai:getProviders'),
+    getPresets:       ()                           => invoke('ai:getPresets'),
+    getCapabilities:  (presetId)                   => invoke('ai:getCapabilities', presetId),
+    discoverModels:   (presetId)                    => invoke('ai:discoverModels', presetId),
+    testConnection:   ()                           => invoke('ai:testConnection'),
+    setApiKey:        (presetId, plainKey)         => invoke('ai:setApiKey', presetId, plainKey),
+    isKeyConfigured:  (presetId)                   => invoke('ai:isKeyConfigured', presetId),
   },
 
   // ── Intelligence Engine ───────────────────────────────────────────────────
@@ -80,6 +86,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     scanRepository:       (files)                             => invoke('intelligence:scanRepository', files),
     classifyWorkspace:    (files)                             => invoke('intelligence:classifyWorkspace', files),
     systemUnderstanding:  (model)                             => invoke('intelligence:systemUnderstanding', model),
+    hubDirective:         (data)                              => invoke('intelligence:hubDirective', data),
     exploreWorkflows:     (flows)                             => invoke('intelligence:exploreWorkflows', flows),
     learningPath:         (model)                             => invoke('intelligence:learningPath', model),
     discoverDataFlows:    (knowledge, structure)              => invoke('intelligence:discoverDataFlows', knowledge, structure),
@@ -112,7 +119,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ── App info ──────────────────────────────────────────────────────────────
   app: {
-    getVersion: () => invoke('app:getVersion'),
+    getVersion:   () => invoke('app:getVersion'),
+    openExternal: (url) => invoke('app:openExternal', url),
   },
 
   // ── Auto-updater ──────────────────────────────────────────────────────────

@@ -1,22 +1,19 @@
-# AI Engine — Phase 3 Placeholder
+# AI Engine
 
-This engine is NOT implemented in Phase 1 or Phase 2.
+Handles all AI provider interactions and prompt execution.
 
-Phase 3 target responsibilities:
-- Local AI provider integration (Ollama, llama.cpp, etc.)
-- Prompt construction and context assembly
-- Single-file analysis via LLM
-- Repository explanation generation
-- Security overview narrative generation
-- Workflow explanation generation
+## Files
 
-Current state (Phase 1): Angular calls http://localhost:5000 directly via
-AiAnalysisService and AiKnowledgeService. Those services remain in Angular
-until Phase 3 migrates them here.
+- `analysis.engine.js` (`AiAnalysisEngine`) — builds the single-file code analysis prompt, calls the active provider, parses the structured JSON response
+- `knowledge.engine.js` (`AiKnowledgeEngine`) — executes fully-assembled prompts from Angular's prompt builders via the active provider
+- `chat-context-builder.js` — distils a `KnowledgeModel` into a compact context block injected into AI chat system prompts
 
-When Phase 3 arrives:
-- AiAnalysisService → ai/analysis.engine.ts
-- AiKnowledgeService → ai/knowledge.engine.ts
-- ai/prompts/* → ai/prompts/
+## Provider abstraction
 
-The IPC channel for AI will be: ai:analyze, ai:explain
+The engines delegate all provider concerns to `ProviderRegistry` (`electron/main/providers/`). Engines have no knowledge of which provider is active — they only call `provider.generate()` or `provider.chat()`.
+
+## IPC channels served
+
+- `ai:analyze` → `AiAnalysisEngine.analyze()`
+- `ai:explain` → `AiKnowledgeEngine.explain()`
+- `ai:chat` → chat handler in `ai.ipc.js` using `buildChatContext` + provider directly

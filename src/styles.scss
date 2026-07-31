@@ -262,8 +262,8 @@ ol {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 20px 36px 6px;
-  min-height: 88px;
+  padding: 28px 36px 10px;
+  min-height: 110px;
   flex-shrink: 0;
   gap: 16px;
 }
@@ -275,12 +275,12 @@ ol {
   min-width: 0;
 
   h1 {
-    font-size: 22px;
+    font-size: 30px;
     font-weight: 700;
     color: var(--text-heading);
-    letter-spacing: -0.4px;
+    letter-spacing: -0.6px;
     margin: 0;
-    line-height: 1.2;
+    line-height: 1.15;
   }
 }
 
@@ -288,25 +288,25 @@ ol {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 
   span {
-    font-size: 11px;
-    color: var(--text-muted);
+    font-size: 13px;
+    color: var(--text-secondary);
     white-space: nowrap;
   }
 
   svg {
-    width: 12px;
-    height: 12px;
-    color: var(--text-muted);
+    width: 13px;
+    height: 13px;
+    color: var(--text-secondary);
     flex-shrink: 0;
   }
 }
 
 .page-subtitle {
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.4;
 }

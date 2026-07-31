@@ -9,15 +9,27 @@ const { ProjectDiscoveryEngine } = require('../engines/knowledge/project-discove
 const { RepositoryScannerEngine } = require('../engines/knowledge/repository-scanner.engine');
 const { WorkspaceClassifierEngine } = require('../engines/knowledge/workspace-classifier.engine');
 const { SystemUnderstandingEngine } = require('../engines/analysis/system-understanding.engine');
+const { HubNarrativeEngine } = require('../engines/narrative/hub-narrative.engine');
+const { BusinessPurposeNarrativeEngine } = require('../engines/narrative/business-purpose-narrative.engine');
+const { CodeHealthNarrativeEngine } = require('../engines/narrative/code-health-narrative.engine');
+const { ResponsibilitiesNarrativeEngine } = require('../engines/narrative/responsibilities-narrative.engine');
+const { FolderResponsibilitiesNarrativeEngine } = require('../engines/narrative/folder-responsibilities-narrative.engine');
+const { FolderWorkflowsNarrativeEngine } = require('../engines/narrative/folder-workflows-narrative.engine');
+const { DataFlowPatternEngine } = require('../engines/narrative/data-flow-pattern.engine');
+const { DataFlowStepsNarrativeEngine } = require('../engines/narrative/data-flow-steps-narrative.engine');
 const { WorkflowExplorerEngine } = require('../engines/analysis/workflow-explorer.engine');
-const { LearningPathAnalysisEngine } = require('../engines/analysis/learning-path-analysis.engine');
+const { LearningConceptEngine } = require('../engines/narrative/learning-concept.engine');
 const { DataFlowDiscoveryEngine } = require('../engines/analysis/data-flow-discovery.engine');
 const { RecommendationAnalysisEngine } = require('../engines/analysis/recommendation-analysis.engine');
-const { SecurityAnalysisEngine } = require('../engines/analysis/security-analysis.engine');
+const { SecurityEvidenceEngine } = require('../engines/security/security-evidence.engine');
+const fs = require('fs');
+const nodePath = require('path');
 const { ArchitectureAnalysisEngine } = require('../engines/analysis/architecture-analysis.engine');
 const { DataFlowAnalysisEngine } = require('../engines/analysis/data-flow-analysis.engine');
 const { RepositoryInsightsEngine } = require('../engines/analysis/repository-insights.engine');
 const { RepositorySummaryEngine } = require('../engines/analysis/repository-summary.engine');
+const { ArchitectureDiagramEngine } = require('../engines/diagram/architecture-diagram.engine');
+const { DataFlowDiagramEngine } = require('../engines/diagram/data-flow-diagram.engine');
 const { CapabilityPipelineEngine, CAPABILITY_MAP } = require('../engines/core/capability-pipeline.engine');
 const { KnowledgeModelEngine } = require('../engines/core/knowledge-model.engine');
 const { KnowledgeModelService } = require('../services/knowledge/knowledge-model.service');
@@ -40,15 +52,25 @@ const projectDiscovery = new ProjectDiscoveryEngine();
 const repositoryScanner = new RepositoryScannerEngine();
 const workspaceClassifier = new WorkspaceClassifierEngine();
 const systemUnderstanding = new SystemUnderstandingEngine();
+const hubNarrative = new HubNarrativeEngine();
+const businessPurposeNarrative = new BusinessPurposeNarrativeEngine();
+const codeHealthNarrative = new CodeHealthNarrativeEngine();
+const responsibilitiesNarrative = new ResponsibilitiesNarrativeEngine();
+const folderResponsibilitiesNarrative = new FolderResponsibilitiesNarrativeEngine();
+const folderWorkflowsNarrative = new FolderWorkflowsNarrativeEngine();
+const dataFlowPattern = new DataFlowPatternEngine();
+const dataFlowStepsNarrative = new DataFlowStepsNarrativeEngine();
 const workflowExplorer = new WorkflowExplorerEngine();
-const learningPath = new LearningPathAnalysisEngine();
+const learningConcept = new LearningConceptEngine();
 const dataFlowDiscovery = new DataFlowDiscoveryEngine();
 const recommendations = new RecommendationAnalysisEngine();
-const securityAnalysis = new SecurityAnalysisEngine();
+const securityEvidence = new SecurityEvidenceEngine();
 const architectureAnalysis = new ArchitectureAnalysisEngine();
 const dataFlowAnalysis = new DataFlowAnalysisEngine();
 const repositoryInsights = new RepositoryInsightsEngine();
 const repositorySummary = new RepositorySummaryEngine();
+const architectureDiagram = new ArchitectureDiagramEngine();
+const dataFlowDiagram = new DataFlowDiagramEngine();
 
 /**
  * Adapts the new KnowledgeModel contract shape to the legacy {knowledge, session}
@@ -74,7 +96,7 @@ function adaptModelForEngines(model) {
         type:                  'file',
         summary:               '',
         risks:                 (ins.risks ?? []).map(r => r.description),
-        responsibilities:      [],
+        responsibilities:      ins.responsibilities ?? model.ai?.understanding?.keyResponsibilities ?? [],
         dependencies:          [],
         architectureLayers:    [],
         patterns:              [],
@@ -86,50 +108,29 @@ function adaptModelForEngines(model) {
         complexity:            ins.complexity      ?? 'Low',
         maintainability:       ins.maintainability ?? 'High',
       },
-      aiAnalysis: model.ai ? {
-        summary:         model.ai.understanding?.executiveSummary ?? '',
-        businessPurpose: model.ai.understanding?.businessPurpose  ?? '',
-        risks:           (model.ai.security?.findings ?? []).map(f => ({
-          title:       f.title,
-          description: f.issueDescription,
-          severity:    f.severity,
-        })),
-        modernizations: (model.ai.recommendations?.recommendations ?? []).slice(0, 5).map(r => ({
-          title:       r.title,
-          description: r.recommendedImprovement,
-        })),
-      } : undefined,
     };
     return { session, knowledge: null };
   }
 
   // folder / repository — translate new shape to old RepositoryKnowledge shape
   const rel = model.relationships ?? {};
+  const symbols = model.structure?.symbols ?? {};
   const knowledge = {
-    sourceFiles:     [],
+    sourceFiles:     Object.keys(symbols).map(path => ({
+      path,
+      extension: path.split('.').pop() ?? '',
+      content:   '',
+    })),
     dependencyGraph: rel.dependencies?.graph  ?? null,
     architecture:    rel.architecture         ? { patterns: rel.architecture.patterns } : null,
     builtAt:         model.metadata?.builtAt  ?? new Date().toISOString(),
   };
 
-  const session = model.ai ? {
-    aiAnalysis: {
-      summary:         model.ai.understanding?.executiveSummary ?? '',
-      businessPurpose: model.ai.understanding?.businessPurpose  ?? '',
-      risks:           (model.ai.security?.findings ?? []).map(f => ({
-        title:       f.title,
-        description: f.issueDescription,
-        severity:    f.severity,
-      })),
-      modernizations: (model.ai.recommendations?.recommendations ?? []).slice(0, 5).map(r => ({
-        title:       r.title,
-        description: r.recommendedImprovement,
-      })),
-    },
-  } : null;
+  const session = null;
 
   return { knowledge, session };
 }
+
 
 function registerIntelligenceHandlers() {
   // intelligence:analyzeCode — analyze a single source file string
@@ -182,11 +183,147 @@ function registerIntelligenceHandlers() {
     if (!model) throw new Error('model is required');
     console.log('[IPC] intelligence:systemUnderstanding targetType=' + model.targetType);
     const { knowledge, session } = adaptModelForEngines(model);
-    const result = await (knowledge
+    const understanding = await (knowledge
       ? systemUnderstanding.analyzeKnowledge(knowledge, session)
       : systemUnderstanding.analyzeFile(session));
-    console.log('[IPC] intelligence:systemUnderstanding done result=' + (result ? 'ok' : 'null'));
-    return result;
+    console.log('[IPC] intelligence:systemUnderstanding done result=' + (understanding ? 'ok' : 'null'));
+
+    // Build structural hub narrative pass (pass 2 directive is appended by a later stage)
+    const ins = model.insights ?? {};
+    const rel = model.relationships ?? {};
+    const graph = rel.dependencies?.graph ?? null;
+    const isFile = model.targetType === 'file';
+    const symbols = model.structure?.symbols ?? {};
+
+    const inboundMap = new Map();
+    const outboundMap = new Map();
+    if (graph) {
+      for (const e of graph.edges ?? []) {
+        inboundMap.set(e.target, (inboundMap.get(e.target) ?? 0) + 1);
+        outboundMap.set(e.source, (outboundMap.get(e.source) ?? 0) + 1);
+      }
+    }
+
+    const narrativeData = {
+      scope:               isFile ? 'file' : (Object.keys(symbols).length > 20 ? 'repository' : 'folder'),
+      fileName:            model.structure?.filePath?.split(/[\\/]/).pop() ?? model.workspaceName ?? 'this',
+      inboundDeps:         isFile
+                             ? (ins.dataFlow?.inputs?.length ?? 0)
+                             : (graph?.nodes?.reduce((max, n) => Math.max(max, inboundMap.get(n.id) ?? 0), 0) ?? 0),
+      outboundDeps:        isFile
+                             ? (ins.dataFlow?.outputs?.length ?? 0)
+                             : (graph?.edges?.length ?? 0),
+      complexity:          ins.complexity ?? understanding?.health?.complexity ?? 'Medium',
+      maintainability:     ins.maintainability ?? understanding?.health?.maintainability ?? 'Medium',
+      riskCount:           (ins.risks ?? []).length,
+      symbolCount:         Object.keys(symbols).length,
+      flowSteps:           ins.dataFlow?.steps?.length ?? 0,
+      fileCount:           Object.keys(symbols).length,
+      couplingRatio:       graph && graph.nodes?.length > 0
+                             ? (graph.edges?.length ?? 0) / graph.nodes.length
+                             : 0,
+      architecturePatterns: (rel.architecture?.patterns ?? []).map(p => p.name),
+    };
+
+    const structural = hubNarrative.buildStructural(narrativeData);
+
+    const purposeData = {
+      scope:                     narrativeData.scope,
+      name:                      narrativeData.fileName,
+      businessCriticality:       understanding?.businessCriticality ?? 'Medium',
+      businessCriticalityReason: understanding?.businessCriticalityReason ?? '',
+      responsibilityCount:       (understanding?.responsibilityGroups ?? []).length,
+      capabilityCount:           (understanding?.coreCapabilities ?? []).length,
+      complexity:                narrativeData.complexity,
+      maintainability:           narrativeData.maintainability,
+      riskCount:                 narrativeData.riskCount,
+    };
+
+    const healthData = {
+      scope:           narrativeData.scope,
+      name:            narrativeData.fileName,
+      complexity:      narrativeData.complexity,
+      maintainability: narrativeData.maintainability,
+      riskCount:       narrativeData.riskCount,
+      fileCount:       narrativeData.fileCount,
+    };
+
+    // ── File-scope narrative engines ─────────────────────────────────────────
+    let fileResponsibilitiesNarrativeResult = null;
+    let fileComponentsNarrative = null;
+
+    // ── Folder-scope narrative engines ────────────────────────────────────────
+    let folderResponsibilitiesNarrativeResult = null;
+    let folderWorkflowsNarrativeResult = null;
+
+    if (!isFile && model.targetType === 'folder') {
+      const ins = model.insights ?? {};
+      const rel = model.relationships ?? {};
+      const graphNodes = rel.dependencies?.graph?.nodes ?? [];
+      const graphEdges = rel.dependencies?.graph?.edges ?? [];
+      const folderFileCount = Object.keys(model.structure?.symbols ?? {}).length;
+      const couplingRatio = graphNodes.length > 0 ? graphEdges.length / graphNodes.length : 0;
+      const architecturePatterns = (rel.architecture?.patterns ?? []).map(p => p.name);
+
+      folderResponsibilitiesNarrativeResult = folderResponsibilitiesNarrative.build({
+        responsibilities:     understanding?.keyResponsibilities ?? [],
+        responsibilityGroups: understanding?.responsibilityGroups ?? [],
+        complexity:           ins.complexity      ?? 'Medium',
+        maintainability:      ins.maintainability ?? 'Medium',
+        fileCount:            folderFileCount,
+      });
+
+      folderWorkflowsNarrativeResult = folderWorkflowsNarrative.build({
+        workflows:            understanding?.keyWorkflows ?? [],
+        architecturePatterns,
+        fileCount:            folderFileCount,
+        couplingRatio,
+      });
+    }
+
+    if (isFile) {
+      const s        = model.structure ?? {};
+      const filePath = s.filePath ?? '';
+      const symbolEntry = s.symbols?.[filePath] ?? Object.values(s.symbols ?? {})[0] ?? {};
+
+      const respData = {
+        responsibilities: ins.responsibilities ?? understanding?.keyResponsibilities ?? [],
+        language:         s.fileLanguage ?? s.languages?.[0] ?? 'Unknown',
+        fileType:         symbolEntry.type ?? 'file',
+        complexity:       ins.complexity      ?? 'Medium',
+        maintainability:  ins.maintainability ?? 'Medium',
+        inputs:           ins.dataFlow?.inputs  ?? [],
+        outputs:          ins.dataFlow?.outputs ?? [],
+        flowSteps:        ins.dataFlow?.steps   ?? [],
+        risks:            ins.risks ?? [],
+      };
+      fileResponsibilitiesNarrativeResult = responsibilitiesNarrative.build(respData);
+
+      fileComponentsNarrative = {
+        items: [
+          ...(symbolEntry.classes ?? []).map(name => ({ name, kind: 'class' })),
+          ...(symbolEntry.methods ?? []).map(name => ({ name, kind: 'method' })),
+        ],
+        imports: symbolEntry.imports ?? [],
+        exports: symbolEntry.exports ?? [],
+      };
+    }
+
+    return {
+      understanding,
+      hubNarrative:                      { structural, directive: '' },
+      businessPurposeNarrative:          businessPurposeNarrative.build(purposeData),
+      codeHealthNarrative:               codeHealthNarrative.build(healthData),
+      fileResponsibilitiesNarrative:     fileResponsibilitiesNarrativeResult,
+      fileComponentsNarrative,
+      folderResponsibilitiesNarrative:   folderResponsibilitiesNarrativeResult,
+      folderWorkflowsNarrative:          folderWorkflowsNarrativeResult,
+    };
+  }));
+
+  // intelligence:hubDirective — pass 2 narrative, called after security + recommendations complete
+  ipcMain.handle('intelligence:hubDirective', wrapHandler(async (_event, data) => {
+    return hubNarrative.buildDirective(data);
   }));
 
   // intelligence:exploreWorkflows — build summaries from discovered workflow flows
@@ -201,8 +338,8 @@ function registerIntelligenceHandlers() {
     const understanding = model.ai?.understanding ?? null;
     const scope = model.targetType ?? 'repository';
     return knowledge
-      ? learningPath.analyzeKnowledge(knowledge, session, understanding, scope)
-      : learningPath.analyzeFile(session, understanding);
+      ? learningConcept.analyzeKnowledge(knowledge, session, understanding, scope)
+      : learningConcept.analyzeFile(session, understanding);
   }));
 
   // intelligence:discoverDataFlows — discover data/workflow flows from knowledge + structure
@@ -216,22 +353,65 @@ function registerIntelligenceHandlers() {
     console.log('[IPC] intelligence:recommendations targetType=' + model.targetType);
     const { knowledge, session } = adaptModelForEngines(model);
     const result = await (knowledge
-      ? recommendations.analyzeKnowledge(knowledge, session)
+      ? recommendations.analyzeKnowledge(knowledge)
       : recommendations.analyzeFile(session));
     console.log('[IPC] intelligence:recommendations done result=' + (result ? 'ok' : 'null'));
     return result;
   }));
 
-  // intelligence:security — accepts KnowledgeModel, adapts to engine's expected shape
+  // intelligence:security — gather evidence for LLM-driven findings.
+  // The derive stage produces a SecurityEvidenceReport; the generate tier (LLMSummaryService)
+  // sends it to the LLM and writes confirmed findings back into model.ai.security.
   ipcMain.handle('intelligence:security', wrapHandler(async (_event, model) => {
     if (!model) throw new Error('model is required');
     console.log('[IPC] intelligence:security targetType=' + model.targetType);
-    const { knowledge, session } = adaptModelForEngines(model);
-    const result = await (knowledge
-      ? securityAnalysis.analyzeKnowledge(knowledge, session)
-      : securityAnalysis.analyzeFile(session));
-    console.log('[IPC] intelligence:security done result=' + (result ? 'ok' : 'null'));
-    return result;
+
+    const scope = model.targetType ?? 'repository';
+    const languages = model.structure?.languages ?? [];
+
+    // ── Build source file list with content ──────────────────────────────────
+    let sourceFiles = [];
+
+    if (model.targetType === 'file' && model.structure?.sourceCode) {
+      sourceFiles = [{ path: model.structure.filePath ?? 'file', content: model.structure.sourceCode }];
+    } else {
+      // For folder/repository: read files from disk using repositoryPath + symbol keys
+      const repositoryPath = model.metadata?.repositoryPath;
+      const symbolPaths = Object.keys(model.structure?.symbols ?? {});
+
+      if (repositoryPath && symbolPaths.length > 0) {
+        for (const relPath of symbolPaths) {
+          try {
+            const absPath = nodePath.join(repositoryPath, relPath);
+            const content = fs.readFileSync(absPath, 'utf8');
+            sourceFiles.push({ path: relPath, content });
+          } catch {
+            // Skip unreadable files — the engine handles empty content gracefully
+          }
+        }
+      }
+    }
+
+    const evidence = securityEvidence.gatherEvidence(sourceFiles, null, scope, languages);
+
+    console.log('[IPC] intelligence:security evidence gathered candidates=' + evidence.candidates.length);
+
+    return {
+      evidence,
+      findings: [],
+      verificationChecks: [],
+      overallRisk: 'low',
+      securityMaturity: 'High',
+      executiveSummary: '',
+      summary: '',
+      maturityContext: '',
+      riskContext: '',
+      hotspots: [],
+      relevantComponents: [],
+      recommendationThemes: [],
+      readinessAssessment: '',
+      generatedAt: new Date().toISOString(),
+    };
   }));
 
   // intelligence:architectureAnalysis — AI-tier architecture analysis from KnowledgeModel
@@ -240,7 +420,9 @@ function registerIntelligenceHandlers() {
     console.log('[IPC] intelligence:architectureAnalysis targetType=' + model.targetType);
     const result = architectureAnalysis.analyze(model);
     console.log('[IPC] intelligence:architectureAnalysis done result=' + (result ? 'ok' : 'null'));
-    return result;
+    let diagram = '';
+    try { diagram = architectureDiagram.build(model); } catch (e) { /* non-fatal */ }
+    return { ...result, architectureDiagram: diagram };
   }));
 
   // intelligence:dataFlowAnalysis — AI-tier data flow analysis from KnowledgeModel
@@ -249,7 +431,33 @@ function registerIntelligenceHandlers() {
     console.log('[IPC] intelligence:dataFlowAnalysis targetType=' + model.targetType);
     const result = dataFlowAnalysis.analyze(model);
     console.log('[IPC] intelligence:dataFlowAnalysis done result=' + (result ? 'ok' : 'null'));
-    return result;
+
+    // ── File-scope narrative enrichment ──────────────────────────────────────
+    if (model.targetType === 'file') {
+      const ins = model.insights ?? {};
+      const s   = model.structure ?? {};
+      const steps   = ins.dataFlow?.steps   ?? [];
+      const inputs  = ins.dataFlow?.inputs  ?? [];
+      const outputs = ins.dataFlow?.outputs ?? [];
+      const language = s.fileLanguage ?? s.languages?.[0] ?? 'Unknown';
+      const symbolEntry = Object.values(s.symbols ?? {})[0] ?? {};
+      const fileType = symbolEntry.type ?? 'file';
+
+      const flowData = { steps, inputs, outputs, language, fileType };
+
+      const pattern       = dataFlowPattern.build(flowData);
+      const stepNarrative = dataFlowStepsNarrative.build(flowData);
+
+      return { ...result, fileNarrative: { pattern, stepNarrative } };
+    }
+
+    // ── Folder/repo: generate workflow diagram ────────────────────────────────
+    let diagram = '';
+    try {
+      diagram = dataFlowDiagram.build(result, model.relationships?.dependencies?.graph ?? null);
+    } catch (e) { /* non-fatal */ }
+
+    return { ...result, dataFlowDiagram: diagram };
   }));
 
   // intelligence:insights — derive repository-level insights from aggregated knowledge

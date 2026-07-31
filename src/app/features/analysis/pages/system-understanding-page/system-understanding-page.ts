@@ -1,92 +1,168 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
+import type { LLMSummaryEntry } from '@app/knowledge/models/llm-summaries.model';
 import { SystemUnderstanding } from '@app/analysis/models/system-understanding.model';
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
-import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
-import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
-import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 
 @Component({
   selector: 'app-system-understanding-page',
   standalone: true,
-  imports: [CommonModule, ExplanationCard, CodeEditor, ResizeDividerComponent, ThemeToggle],
+  imports: [CommonModule, ExplanationCard, ThemeToggle],
   templateUrl: './system-understanding-page.html',
   styleUrl: './system-understanding-page.scss',
 })
 export class SystemUnderstandingPage implements OnInit, OnDestroy {
   understanding: SystemUnderstanding | null = null;
   hasWorkspace = false;
-  codeEditorWidth = 420;
+  showHealthInfo = false;
+  showCompClasses = false;
+  showCompMethods = false;
+  showCompImportsExports = false;
+  expandedResponsibilityIndex: number | null = null;
 
   private sub: Subscription | null = null;
 
   constructor(
     private readonly manager: WorkspaceManagerService,
-    private readonly layoutService: PanelLayoutService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
-    this.codeEditorWidth = this.layoutService.load('understanding-code')?.[0] ?? 420;
     const active = this.manager.getActive();
     this.hasWorkspace = active !== null;
     this.understanding = active?.knowledgeModel?.ai?.understanding ?? null;
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       this.hasWorkspace = ws !== null;
       this.understanding = ws?.knowledgeModel?.ai?.understanding ?? null;
+      this.showCompClasses = false;
+      this.showCompMethods = false;
+      this.showCompImportsExports = false;
+      this.expandedResponsibilityIndex = null;
+      this.cdr.detectChanges();
     });
   }
 
-  get llmSummary(): string | null {
+  // ── Knowledge model access ────────────────────────────────────────────────
+
+  private get knowledgeModel() {
+    return this.manager.getActive()?.knowledgeModel ?? null;
+  }
+
+  // ── Code Health ───────────────────────────────────────────────────────────
+
+  get complexity(): string {
+    return this.knowledgeModel?.insights.complexity ?? '—';
+  }
+
+  get maintainability(): string {
+    return this.knowledgeModel?.insights.maintainability ?? '—';
+  }
+
+
+  get healthTier(): 'healthy' | 'fair' | 'needs-attention' | 'critical' | 'unknown' {
+    const c = this.knowledgeModel?.insights.complexity;
+    const m = this.knowledgeModel?.insights.maintainability;
+    if (!c || !m) return 'unknown';
+    if (c === 'High' || m === 'Low') return 'critical';
+    if (c === 'Low' && m === 'High') return 'healthy';
+    if (c === 'Medium' || m === 'Medium') return 'fair';
+    return 'needs-attention';
+  }
+
+  get healthTierLabel(): string {
+    const map: Record<string, string> = {
+      healthy: 'Healthy',
+      fair: 'Fair',
+      'needs-attention': 'Needs Attention',
+      critical: 'Critical',
+      unknown: 'Pending',
+    };
+    return map[this.healthTier];
+  }
+
+  // ── Responsibility accordion ──────────────────────────────────────────────
+
+  toggleResponsibility(index: number): void {
+    this.expandedResponsibilityIndex = this.expandedResponsibilityIndex === index ? null : index;
+  }
+
+  isResponsibilityExpanded(index: number): boolean {
+    return this.expandedResponsibilityIndex === index;
+  }
+
+  // ── Heuristic narratives ──────────────────────────────────────────────────
+
+  get businessPurposeNarrative(): string {
+    return this.knowledgeModel?.ai?.businessPurposeNarrative ?? '';
+  }
+
+  get codeHealthNarrative(): string {
+    return this.knowledgeModel?.ai?.codeHealthNarrative ?? '';
+  }
+
+  get fileResponsibilities(): Array<{ text: string; description: string }> {
+    const responsibilities = this.understanding?.keyResponsibilities ?? [];
+    const descriptions = this.knowledgeModel?.ai?.fileResponsibilitiesNarrative ?? [];
+    return responsibilities.map((text, i) => ({
+      text,
+      description: descriptions[i] ?? '',
+    }));
+  }
+
+  get folderResponsibilities(): Array<{ text: string; description: string }> {
+    const responsibilities = this.understanding?.keyResponsibilities ?? [];
+    const descriptions = this.knowledgeModel?.ai?.folderResponsibilitiesNarrative ?? [];
+    return responsibilities.map((text, i) => ({
+      text,
+      description: descriptions[i] ?? '',
+    }));
+  }
+
+  get folderWorkflows(): Array<{ text: string; description: string }> {
+    const workflows = this.understanding?.keyWorkflows ?? [];
+    const descriptions = this.knowledgeModel?.ai?.folderWorkflowsNarrative ?? [];
+    return workflows.map((text, i) => ({
+      text,
+      description: descriptions[i] ?? '',
+    }));
+  }
+
+  get fileComponentClasses(): string[] {
+    return (this.knowledgeModel?.ai?.fileComponentsNarrative?.items ?? [])
+      .filter(i => i.kind === 'class')
+      .map(i => i.name);
+  }
+
+  get fileComponentMethods(): string[] {
+    return (this.knowledgeModel?.ai?.fileComponentsNarrative?.items ?? [])
+      .filter(i => i.kind === 'method')
+      .map(i => i.name);
+  }
+
+  get fileComponentImports(): string[] {
+    return this.knowledgeModel?.ai?.fileComponentsNarrative?.imports ?? [];
+  }
+
+  get fileComponentExports(): string[] {
+    return this.knowledgeModel?.ai?.fileComponentsNarrative?.exports ?? [];
+  }
+
+  // ── LLM summary ───────────────────────────────────────────────────────────
+
+  get llmSummaryEntry(): LLMSummaryEntry | null {
     return this.manager.getActive()?.knowledgeModel?.ai?.summaries?.understanding ?? null;
   }
 
-  get isGenerating(): boolean {
-    const wsId = this.manager.getActive()?.id ?? '';
-    return this.manager.getActiveStages(wsId).has('generate');
-  }
-
-  get isNoProvider(): boolean {
-    const ai = this.manager.getActive()?.knowledgeModel?.ai;
-    return ai?.failedStages.includes('generate') === true && ai?.stageErrors?.['generate'] === 'no-provider';
-  }
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }
 
-  onCodePanelResize(width: number): void {
-    this.codeEditorWidth = width;
-    this.layoutService.save('understanding-code', [width]);
-  }
-
-  get sourceCode(): string | undefined {
-    return this.manager.getActive()?.knowledgeModel?.structure.sourceCode;
-  }
-
-  get sourceFileName(): string | undefined {
-    return (
-      this.manager.getActive()?.knowledgeModel?.structure.filePath ??
-      this.manager.getActive()?.knowledgeModel?.workspaceName ??
-      undefined
-    );
-  }
-
   get showExplanationCard(): boolean {
     return this.hasWorkspace && this.understanding !== null;
-  }
-
-  depTypeLabel(type: string): string {
-    const map: Record<string, string> = {
-      framework: 'Framework',
-      database: 'Database',
-      queue: 'Queue',
-      storage: 'Storage',
-      external: 'External',
-      internal: 'Internal',
-    };
-    return map[type] ?? type;
   }
 }

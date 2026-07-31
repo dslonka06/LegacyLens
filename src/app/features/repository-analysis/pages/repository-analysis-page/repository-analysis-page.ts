@@ -25,6 +25,7 @@ import {
   buildAIPipelineState,
   type AIPipelineState,
 } from '@app/shared/utils/ai-pipeline-state';
+import type { LLMSummaryKey } from '@app/knowledge/models/llm-summaries.model';
 
 export type HealthTier = 'healthy' | 'fair' | 'needs-attention' | 'critical' | 'unknown';
 
@@ -79,6 +80,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   showIdentity = false;
   showInfoCards = false;
   showArcDraw = false;
+  showHealthInfo = false;
   showMetricCards = false;
   isReturning = false;
 
@@ -115,6 +117,9 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     const init = this.manager.getActive();
     this.workspace = init ?? null;
     this.model = init?.knowledgeModel ?? null;
+    // Returning to an existing analysis — use fast animation variant
+    this.isReturning = !!init?.knowledgeModel;
+
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       const prevId = this.workspace?.id;
       const prevStatus = this.workspace?.status;
@@ -448,6 +453,10 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     if (this.workspace) this.manager.delete(this.workspace.id);
   }
 
+  switchWorkspace(id: string): void {
+    this.manager.activate(id);
+  }
+
   openSwitcher(): void {
     this.switcherLimitReached = !this.manager.canCreate();
     this.showSwitcher = true;
@@ -631,9 +640,19 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   get aiInsightsState(): 'complete' | 'partial' | 'running' | 'failed' | 'idle' {
     if (this.aiPipeline.noProvider) return 'failed';
+    const ai = this.model?.ai;
+    const summaryKeys: LLMSummaryKey[] = ['understanding', 'security', 'recommendations', 'learningPath'];
+    const statuses = summaryKeys.map(k => ai?.summaries?.[k]?.status);
+    const allSettled = statuses.every(s => s === 'complete' || s === 'failed');
+    const anyComplete = statuses.some(s => s === 'complete');
+    const anyFailed = statuses.some(s => s === 'failed');
+    if (allSettled && anyComplete && !anyFailed) return 'complete';
+    if (allSettled && anyFailed && !anyComplete) return 'failed';
+    if (allSettled) return 'partial';
     const gen = this.aiPipeline.stages.find(s => s.id === 'generate');
-    if (!gen) return 'idle';
-    return gen.state as any;
+    if (gen?.state === 'running') return 'running';
+    if (anyComplete || anyFailed) return 'partial';
+    return gen?.state as any ?? 'idle';
   }
 
   get aiInsightsLabel(): string {
@@ -647,21 +666,26 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     }
   }
 
-  get issueCount(): number {
-    return this.model?.insights.risks?.length ?? 0;
-  }
 
-  get pipelineStages(): { label: string; stage: AIStage; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
+  get pipelineStages(): { key: string; label: string; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
     const ai = this.model?.ai;
     const running = this.manager.getActiveStages(this.workspace?.id ?? '');
-    const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
-    return stages.map(s => {
-      const label = STAGE_LABELS[s] ?? s;
-      if (ai?.failedStages?.includes(s)) return { label, stage: s, state: 'failed' as const };
-      if (ai?.completedStages?.includes(s)) return { label, stage: s, state: 'complete' as const };
-      if (running.has(s)) return { label, stage: s, state: 'running' as const };
-      return { label, stage: s, state: 'pending' as const };
-    });
+    const generateRunning = running.has('generate');
+
+    const summaryState = (k: LLMSummaryKey): 'complete' | 'failed' | 'running' | 'pending' => {
+      const status = ai?.summaries?.[k]?.status;
+      if (status === 'complete') return 'complete';
+      if (status === 'failed')   return 'failed';
+      if (generateRunning)       return 'running';
+      return 'pending';
+    };
+
+    return [
+      { key: 'understanding',   label: 'Understanding',   state: summaryState('understanding') },
+      { key: 'security',        label: 'Security Review', state: summaryState('security') },
+      { key: 'recommendations', label: 'Recommendations', state: summaryState('recommendations') },
+      { key: 'learningPath',    label: 'Learning Path',   state: summaryState('learningPath') },
+    ];
   }
 
   // ── Identity metrics ─────────────────────────────────────────
@@ -712,6 +736,16 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
     return [
       {
+        id: 'key-areas',
+        icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
+        count: null,
+        tags: ai?.understanding?.coreCapabilities?.slice(0, 2).map((c) => c.name),
+        label: 'Key Areas',
+        route: `${base}/system-understanding`,
+        suggested: suggested === 'understanding',
+        pending: !ai?.completedStages?.includes('understanding'),
+      },
+      {
         id: 'dependencies',
         icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
         count: this.dependencyCount > 0 ? this.dependencyCount : null,
@@ -746,16 +780,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
         route: `${base}/architecture`,
         suggested: false,
         pending: !this.model?.capabilities.includes('architectureDiscovery'),
-      },
-      {
-        id: 'key-areas',
-        icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
-        count: null,
-        tags: ai?.understanding?.coreCapabilities?.slice(0, 2).map((c) => c.name),
-        label: 'Key Areas',
-        route: `${base}/system-understanding`,
-        suggested: suggested === 'understanding',
-        pending: !ai?.completedStages?.includes('understanding'),
       },
     ];
   }

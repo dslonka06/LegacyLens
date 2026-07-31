@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { ElectronService } from '@app/core/services/electron.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { LLMSummaryService } from './llm-summary.service';
@@ -30,6 +30,7 @@ export class AIAnalysisService {
     private readonly electron: ElectronService,
     private readonly manager: WorkspaceManagerService,
     private readonly llmSummary: LLMSummaryService,
+    private readonly ngZone: NgZone,
   ) {}
 
   /**
@@ -45,13 +46,22 @@ export class AIAnalysisService {
     // ── Derive tier ─────────────────────────────────────────────────────────────
     // Five of six derive stages run concurrently — they have no interdependencies.
     // learningPath depends on understanding completing first, so it runs after.
-    await Promise.all([
-      this.runStage(workspaceId, model, 'security',         generation),
-      this.runStage(workspaceId, model, 'understanding',    generation),
-      this.runStage(workspaceId, model, 'recommendations',  generation),
-      this.runStage(workspaceId, model, 'architecture',     generation),
-      this.runStage(workspaceId, model, 'dataFlow',         generation),
-    ]);
+    const concurrentStages: Promise<void>[] = [
+      this.runStage(workspaceId, model, 'security',        generation),
+      this.runStage(workspaceId, model, 'understanding',   generation),
+      this.runStage(workspaceId, model, 'recommendations', generation),
+      this.runStage(workspaceId, model, 'dataFlow',        generation),
+    ];
+    // Architecture is not meaningful for a single file — skip it for file scope
+    if (model.targetType !== 'file') {
+      concurrentStages.push(this.runStage(workspaceId, model, 'architecture', generation));
+    }
+    await Promise.all(concurrentStages);
+
+    // ── Hub narrative pass 2 — directive sentence ────────────────────────────
+    // Security + recommendations are now resolved. Build the directive sentence
+    // and patch it onto the existing hubNarrative (preserving structural).
+    await this.runHubDirective(workspaceId, model.targetType ?? 'file', generation);
 
     // learningPath reads model.ai.understanding — fetch the updated model after the concurrent batch
     const wsAfterDerive = this.manager.getById(workspaceId);
@@ -67,7 +77,7 @@ export class AIAnalysisService {
     await this.llmSummary.runAll(workspaceId, modelForGenerate, generation);
 
     // All stages done — flip status to ready so the hub shows the final state.
-    this.manager.markAIPipelineComplete(workspaceId);
+    this.ngZone.run(() => this.manager.markAIPipelineComplete(workspaceId));
   }
 
   /**
@@ -84,7 +94,7 @@ export class AIAnalysisService {
     generation: number,
   ): Promise<void> {
     console.log(`[AI] stage start: ${stage} gen=${generation}`);
-    this.manager.setStageRunning(workspaceId, stage);
+    this.ngZone.run(() => this.manager.setStageRunning(workspaceId, stage));
     try {
       const result = await this.callStage(model, stage);
       console.log(`[AI] stage done: ${stage} result=${result === null ? 'NULL' : result === undefined ? 'UNDEFINED' : 'ok'}`);
@@ -93,27 +103,60 @@ export class AIAnalysisService {
         const currentGen = this.manager.getGeneration(workspaceId);
         console.log(`[AI] stage merge: ${stage} gen=${generation} currentGen=${currentGen} match=${currentGen === generation}`);
 
-        // Pass the stage result and let mergeAIResults union completedStages atomically
-        // inside the same patch call. Reading completedStages here and passing a pre-built
-        // list creates a race when concurrent stages finish at the same time.
-        this.manager.mergeAIResults(
-          workspaceId,
-          this.stageResultToPartial(stage, result),
-          stage,
-          generation,
-        );
+        this.ngZone.run(() => {
+          this.manager.mergeAIResults(
+            workspaceId,
+            this.stageResultToPartial(stage, result),
+            stage,
+            generation,
+          );
+        });
         console.log(`[AI] stage merged: ${stage}`);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[AI] stage FAILED: ${stage}`, message);
-      this.manager.markAIStageFailed(workspaceId, stage, generation, message);
+      this.ngZone.run(() => this.manager.markAIStageFailed(workspaceId, stage, generation, message));
     } finally {
-      this.manager.clearStageRunning(workspaceId, stage);
+      this.ngZone.run(() => this.manager.clearStageRunning(workspaceId, stage));
     }
   }
 
   // ── Private ───────────────────────────────────────────────────────────────
+
+  private async runHubDirective(workspaceId: string, scope: string, generation: number): Promise<void> {
+    try {
+      const ws = this.manager.getById(workspaceId);
+      const ai = ws?.knowledgeModel?.ai;
+      if (!ai) return;
+
+      const security = ai.security as { findings?: { severity?: string }[] } | undefined;
+      const recommendations = ai.recommendations as { recommendations?: unknown[] } | undefined;
+
+      const securityFindings = security?.findings ?? [];
+      const directive = await this.electron.intelligenceHubDirective({
+        securityCount:       securityFindings.length,
+        securityHasCritical: securityFindings.some(f => f.severity === 'critical'),
+        securityHasHigh:     securityFindings.some(f => f.severity === 'high'),
+        recommendationCount: recommendations?.recommendations?.length ?? 0,
+        scope,
+      });
+
+      if (!directive) return;
+
+      const existingNarrative = ai.hubNarrative;
+      if (!existingNarrative) return;
+
+      this.ngZone.run(() => this.manager.mergeAIResults(
+        workspaceId,
+        { hubNarrative: { structural: existingNarrative.structural, directive } },
+        'understanding',
+        generation,
+      ));
+    } catch (err) {
+      console.error('[AI] hub directive FAILED', err instanceof Error ? err.message : String(err));
+    }
+  }
 
   private withTimeout<T>(promise: Promise<T>, stage: AIStage, ms = 30_000): Promise<T> {
     return new Promise<T>((resolve, reject) => {
@@ -130,19 +173,19 @@ export class AIAnalysisService {
     switch (stage) {
       case 'security':
         return this.withTimeout(
-          this.electron.intelligenceSecurity(model, null) as Promise<SecurityAnalysis>,
+          this.electron.intelligenceSecurity(model) as Promise<SecurityAnalysis>,
           stage,
         );
 
       case 'understanding':
         return this.withTimeout(
-          this.electron.intelligenceSystemUnderstanding(model, null) as Promise<SystemUnderstanding>,
+          this.electron.intelligenceSystemUnderstanding(model) as Promise<SystemUnderstanding>,
           stage,
         );
 
       case 'recommendations':
         return this.withTimeout(
-          this.electron.intelligenceRecommendations(model, null) as Promise<RecommendationAnalysis>,
+          this.electron.intelligenceRecommendations(model) as Promise<RecommendationAnalysis>,
           stage,
         );
 
@@ -151,7 +194,6 @@ export class AIAnalysisService {
         return this.withTimeout(
           this.electron.intelligenceLearningPath(
             model,
-            null,
             understanding,
             model.targetType,
           ) as Promise<LearningPathAnalysis>,
@@ -180,16 +222,50 @@ export class AIAnalysisService {
     switch (stage) {
       case 'security':
         return { security: result as SecurityAnalysis };
-      case 'understanding':
-        return { understanding: result as SystemUnderstanding };
+      case 'understanding': {
+        const r = result as {
+          understanding: SystemUnderstanding;
+          hubNarrative: { structural: string; directive: string };
+          businessPurposeNarrative?: string;
+          codeHealthNarrative?: string;
+          fileResponsibilitiesNarrative?: string[] | null;
+          fileComponentsNarrative?: {
+            items: Array<{ name: string; kind: 'class' | 'method'; description: string; isExported: boolean }>;
+            imports: string[];
+            exports: string[];
+          } | null;
+          folderResponsibilitiesNarrative?: string[] | null;
+          folderWorkflowsNarrative?: string[] | null;
+        };
+        return {
+          understanding: r.understanding,
+          hubNarrative: r.hubNarrative,
+          businessPurposeNarrative: r.businessPurposeNarrative,
+          codeHealthNarrative: r.codeHealthNarrative,
+          fileResponsibilitiesNarrative: r.fileResponsibilitiesNarrative ?? null,
+          fileComponentsNarrative: r.fileComponentsNarrative ?? null,
+          folderResponsibilitiesNarrative: r.folderResponsibilitiesNarrative ?? null,
+          folderWorkflowsNarrative: r.folderWorkflowsNarrative ?? null,
+        };
+      }
       case 'recommendations':
         return { recommendations: result as RecommendationAnalysis };
       case 'learningPath':
         return { learningPath: result as LearningPathAnalysis };
       case 'architecture':
         return { architecture: result as ArchitectureAIAnalysis };
-      case 'dataFlow':
-        return { dataFlow: result as DataFlowAIAnalysis };
+      case 'dataFlow': {
+        const r = result as DataFlowAIAnalysis & {
+          fileNarrative?: {
+            pattern: { label: string; overview: string };
+            stepNarrative: string[];
+          } | null;
+        };
+        return {
+          dataFlow: r as DataFlowAIAnalysis,
+          dataFlowFileNarrative: r.fileNarrative ?? null,
+        };
+      }
       default:
         return {};
     }

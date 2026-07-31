@@ -5,7 +5,6 @@ export interface SystemHealthSummary {
   complexity: HealthLevel;
   maintainability: HealthLevel;
   riskLevel: HealthLevel;
-  modernizationReadiness: HealthLevel;
   interpretation: string;
 }
 
@@ -38,6 +37,18 @@ export interface CoreCapability {
   businessValue: string;
 }
 
+export interface ResponsibilityComponent {
+  name: string;
+  path: string;
+  whyImportant: string;
+  blastRadius: 'High' | 'Medium' | 'Low';
+}
+
+export interface ResponsibilityGroup {
+  responsibility: string;
+  components: ResponsibilityComponent[];
+}
+
 export interface SystemUnderstanding {
   scope: 'file' | 'folder' | 'repository';
 
@@ -63,6 +74,8 @@ export interface SystemUnderstanding {
   health: SystemHealthSummary;
 
   understandingNarrative: string;
+
+  responsibilityGroups: ResponsibilityGroup[];
 
   // Repository-only (null for file/folder)
   technicalDebtHotspots: TechDebtHotspot[] | null;

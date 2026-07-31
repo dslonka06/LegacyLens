@@ -121,12 +121,12 @@ const FOLDER_SECTIONS: SectionDef[] = [
 const FILE_SECTIONS: SectionDef[] = [
   {
     id: 'executive-summary',
-    title: 'Executive Summary',
+    title: 'System Understanding',
     description: 'What this file is and what it is responsible for.',
   },
   {
     id: 'architecture-overview',
-    title: 'Architecture Overview',
+    title: 'Architecture',
     description: 'Detected patterns, responsibilities, and structural role of this file.',
   },
   {
@@ -136,22 +136,17 @@ const FILE_SECTIONS: SectionDef[] = [
   },
   {
     id: 'risk-assessment',
-    title: 'Risk Assessment',
+    title: 'Security',
     description: 'Identified risks and code quality concerns in this file.',
   },
   {
     id: 'modernization',
-    title: 'Modernization Opportunities',
+    title: 'Recommendations',
     description: 'Recommended improvements for this file.',
   },
   {
-    id: 'key-files',
-    title: 'Key Dependencies',
-    description: 'Files this code directly depends on.',
-  },
-  {
     id: 'onboarding-guide',
-    title: 'Onboarding Guide',
+    title: 'Learning Path',
     description: 'How to get up to speed with this file quickly.',
   },
 ];
@@ -191,20 +186,19 @@ export class DocumentationBuilderService {
   renderPreview(model: KnowledgeModel, selectedIds: DocumentationSectionId[]): string {
     const scope = model.targetType as DocumentationScope;
     const catalogue = sectionsForScope(scope);
-    const lines: string[] = [];
+    const sections: string[] = [];
     let n = 1;
 
     for (const id of selectedIds) {
       const section = catalogue.find((s) => s.id === id);
       if (!section || !this.isSectionAvailable(id, model)) continue;
-      lines.push(`${n}. ${section.title}`);
-      lines.push('─'.repeat(section.title.length + 4));
-      lines.push(this.renderSectionContent(id, model));
-      lines.push('');
+      const content = this.renderSectionContent(id, model).trim();
+      if (!content) continue;
+      sections.push(`${n}. ${section.title}\n\n${content}`);
       n++;
     }
 
-    return lines.join('\n');
+    return sections.join('\n\n');
   }
 
   // ── Availability ─────────────────────────────────────────────────────────────
@@ -212,24 +206,26 @@ export class DocumentationBuilderService {
   private isSectionAvailable(id: DocumentationSectionId, model: KnowledgeModel): boolean {
     const caps = model.capabilities;
     const ai = model.ai;
+    const isFile = model.targetType === 'file';
 
     switch (id) {
       case 'executive-summary':
-        return !!ai?.understanding?.executiveSummary;
+        return isFile
+          ? !!ai?.understanding
+          : !!ai?.understanding?.executiveSummary;
 
       case 'repository-overview':
         return model.structure.totalFiles > 0;
 
       case 'architecture-overview':
-        return (
-          caps.includes('architectureDiscovery') &&
-          (model.relationships.architecture?.patterns.length ?? 0) > 0
-        );
+        return isFile
+          ? false
+          : caps.includes('architectureDiscovery') &&
+              (model.relationships.architecture?.patterns.length ?? 0) > 0;
 
       case 'data-flow':
-        // File: deterministic data flow steps; multi-file: dependency graph
-        return model.targetType === 'file'
-          ? (model.insights.dataFlow?.steps.length ?? 0) > 0
+        return isFile
+          ? !!(ai?.dataFlowFileNarrative || ai?.summaries?.dataFlow?.content)
           : caps.includes('dependencyResolution') &&
               (model.relationships.dependencies?.graph.nodes.length ?? 0) >= 3;
 
@@ -240,10 +236,14 @@ export class DocumentationBuilderService {
         );
 
       case 'risk-assessment':
-        return (model.insights.risks?.length ?? 0) > 0 || (ai?.security?.findings.length ?? 0) > 0;
+        return isFile
+          ? !!ai?.security
+          : (ai?.security?.findings.length ?? 0) > 0;
 
       case 'modernization':
-        return (ai?.recommendations?.recommendations.length ?? 0) > 0;
+        return isFile
+          ? !!(ai?.recommendations?.recommendations.length || ai?.summaries?.recommendations?.content)
+          : (ai?.recommendations?.recommendations.length ?? 0) > 0;
 
       case 'key-files':
         return (
@@ -261,7 +261,9 @@ export class DocumentationBuilderService {
         );
 
       case 'onboarding-guide':
-        return !!ai?.learningPath;
+        return isFile
+          ? !!(ai?.learningPath || ai?.summaries?.learningPath?.content)
+          : !!ai?.learningPath;
     }
   }
 
@@ -272,10 +274,12 @@ export class DocumentationBuilderService {
     const rel = model.relationships;
     const ins = model.insights;
     const ai = model.ai;
+    const isFile = model.targetType === 'file';
 
     switch (id) {
       case 'executive-summary':
-        return ai?.understanding?.executiveSummary ?? '';
+        if (!isFile) return ai?.understanding?.executiveSummary ?? '';
+        return this._renderFileUnderstanding(ai);
 
       case 'repository-overview': {
         const lines = [
@@ -297,23 +301,12 @@ export class DocumentationBuilderService {
       case 'architecture-overview': {
         const patterns = rel.architecture?.patterns ?? [];
         return patterns
-          .map(
-            (p) =>
-              `• ${p.name} (${Math.round((p.confidence ?? 0) * 100)}%) — ${p.indicators.join(', ')}`,
-          )
+          .map((p) => `- ${p.name} (${Math.round((p.confidence ?? 0) * 100)}%) - ${p.indicators.join(', ')}`)
           .join('\n');
       }
 
       case 'data-flow': {
-        if (model.targetType === 'file') {
-          const df = ins.dataFlow;
-          if (!df) return '';
-          const parts: string[] = [];
-          if (df.inputs.length) parts.push(`Inputs: ${df.inputs.join(', ')}`);
-          if (df.steps.length) parts.push(`Flow: ${df.steps.join(' → ')}`);
-          if (df.outputs.length) parts.push(`Outputs: ${df.outputs.join(', ')}`);
-          return parts.join('\n');
-        }
+        if (isFile) return this._renderFileDataFlow(ai, ins.dataFlow);
         const graph = rel.dependencies?.graph;
         if (!graph) return '';
         const nodeMap = new Map(graph.nodes.map((n) => [n.id, n.name]));
@@ -322,7 +315,7 @@ export class DocumentationBuilderService {
         const top = [...counts.entries()]
           .sort((a, b) => b[1] - a[1])
           .slice(0, 8)
-          .map(([id, c]) => `• ${nodeMap.get(id) ?? id} (${c} dependents)`);
+          .map(([id, c]) => `- ${nodeMap.get(id) ?? id} (${c} dependents)`);
         return [`Top dependency targets:`, ...top].join('\n');
       }
 
@@ -332,29 +325,29 @@ export class DocumentationBuilderService {
         const avgConn =
           graph.nodes.length > 0 ? (graph.edges.length / graph.nodes.length).toFixed(1) : '0';
         return [
-          `Nodes: ${graph.nodes.length} · Edges: ${graph.edges.length} · Avg connectivity: ${avgConn}`,
+          `Nodes: ${graph.nodes.length} | Edges: ${graph.edges.length} | Avg connectivity: ${avgConn}`,
           ...(rel.dependencies?.hubs
             .slice(0, 5)
-            .map((h) => `• Hub: ${h.name} (${h.inboundCount} inbound)`) ?? []),
+            .map((h) => `- Hub: ${h.name} (${h.inboundCount} inbound)`) ?? []),
         ].join('\n');
       }
 
       case 'risk-assessment': {
-        const detRisks = (ins.risks ?? []).map(
-          (r) => `[${r.severity.toUpperCase()}] ${r.description}`,
-        );
-        const aiRisks = (ai?.security?.findings ?? [])
+        if (isFile) return this._renderFileSecurity(ai);
+        return (ai?.security?.findings ?? [])
           .slice(0, 10)
-          .map((f) => `[${f.severity.toUpperCase()}] ${f.title}: ${f.issueDescription}`);
-        return [...detRisks, ...aiRisks].join('\n');
+          .map((f) => `[${f.severity.toUpperCase()}] ${f.title}: ${f.issueDescription}`)
+          .join('\n');
       }
 
-      case 'modernization':
+      case 'modernization': {
+        if (isFile) return this._renderFileRecommendations(ai);
         return (ai?.recommendations?.recommendations ?? [])
           .filter((r) => r.category === 'modernization' || r.category === 'technical-debt')
           .slice(0, 10)
-          .map((r) => `• ${r.title}\n  ${r.recommendedImprovement}`)
+          .map((r) => `- ${r.title}\n  ${r.recommendedImprovement}`)
           .join('\n');
+      }
 
       case 'key-files': {
         const ranks = rel.dependencies?.ranks ?? [];
@@ -366,32 +359,168 @@ export class DocumentationBuilderService {
         }
         return Object.keys(s.symbols)
           .slice(0, 10)
-          .map((p) => `• ${p}`)
+          .map((p) => `- ${p}`)
           .join('\n');
       }
 
       case 'key-projects':
         return (s.projects ?? [])
-          .map((p) => `• ${p.name} (${p.type}) — ${p.framework} / ${p.language}`)
+          .map((p) => `- ${p.name} (${p.type}) - ${p.framework} / ${p.language}`)
           .join('\n');
 
       case 'repository-insights':
         return (rel.dependencies?.hubs ?? [])
           .filter((h) => h.isHub)
           .slice(0, 10)
-          .map((h) => `• ${h.name} — ${h.inboundCount} inbound connections`)
+          .map((h) => `- ${h.name} - ${h.inboundCount} inbound connections`)
           .join('\n');
 
       case 'onboarding-guide': {
+        if (isFile) return this._renderFileLearningPath(ai);
         const lp = ai?.learningPath;
         if (!lp) return '';
         const steps = (lp.roadmap ?? [])
           .slice(0, 5)
-          .map((step) => `${step.stepNumber}. ${step.title}\n   ${step.goal}`);
+          .map((step) => `${step.stepNumber}. ${step.title}\n   ${step.description}`);
         return [lp.focusFirst ? `Start here: ${lp.focusFirst}` : '', ...steps]
           .filter(Boolean)
           .join('\n');
       }
     }
+  }
+
+  // ── File-scope section renderers ──────────────────────────────────────────────
+
+  private _renderFileUnderstanding(ai: KnowledgeModel['ai']): string {
+    const u = ai?.understanding;
+    const llm = ai?.summaries?.understanding?.content;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    if (u?.executiveSummary && u.executiveSummary !== llm) paras.push(u.executiveSummary);
+
+    const purposeParts: string[] = [];
+    if (u?.businessPurpose) purposeParts.push(u.businessPurpose);
+    if (u?.whyItMatters)    purposeParts.push(u.whyItMatters);
+    if (purposeParts.length) paras.push(purposeParts.join(' '));
+
+    if (u?.keyResponsibilities?.length) {
+      const respNarratives = ai?.fileResponsibilitiesNarrative ?? [];
+      const respParas = u.keyResponsibilities.map((r, i) => {
+        const desc = respNarratives[i];
+        return desc ? `${r}: ${desc}` : r;
+      });
+      paras.push(respParas.join('\n\n'));
+    }
+
+    if (u?.businessCriticalityReason) paras.push(u.businessCriticalityReason);
+    if (u?.health?.interpretation)    paras.push(u.health.interpretation);
+
+    return paras.join('\n\n');
+  }
+
+  private _renderFileDataFlow(ai: KnowledgeModel['ai'], insight?: KnowledgeModel['insights']['dataFlow']): string {
+    const llm       = ai?.summaries?.dataFlow?.content;
+    const narrative = ai?.dataFlowFileNarrative;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    const summaryParts: string[] = [];
+    if (narrative?.pattern?.label) summaryParts.push(`This is a ${narrative.pattern.label} flow.`);
+    if (insight?.inputs?.length)   summaryParts.push(`It receives ${insight.inputs.join(', ')} as input.`);
+    if (insight?.steps?.length)    summaryParts.push(`Processing moves through ${insight.steps.join(' -> ')}.`);
+    if (insight?.outputs?.length)  summaryParts.push(`The flow produces ${insight.outputs.join(', ')}.`);
+    if (summaryParts.length) paras.push(summaryParts.join(' '));
+
+    if (narrative?.stepNarrative?.length) {
+      const stepParas = narrative.stepNarrative.map((desc, i) => {
+        const stepName = insight?.steps?.[i];
+        return stepName ? `${stepName}: ${desc}` : desc;
+      });
+      paras.push(stepParas.join('\n\n'));
+    }
+
+    return paras.join('\n\n');
+  }
+
+  private _renderFileSecurity(ai: KnowledgeModel['ai']): string {
+    const llm      = ai?.summaries?.security?.content;
+    const security = ai?.security;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    const actionableChecks = (security?.verificationChecks ?? []).filter(c => c.status !== 'pass');
+    if (actionableChecks.length) {
+      const checkParas = actionableChecks.map(c => {
+        const prefix = c.status === 'fail' ? 'Fail' : 'Warning';
+        return c.detail ? `${prefix} - ${c.summary} ${c.detail}` : `${prefix} - ${c.summary}`;
+      });
+      paras.push(checkParas.join('\n\n'));
+    }
+
+    const findings = security?.findings ?? [];
+    if (findings.length) {
+      const findingParas = findings.map(f => {
+        const parts = [`[${f.severity.toUpperCase()}] ${f.title}. ${f.issueDescription}`];
+        if (f.remediation) parts.push(`Remediation: ${f.remediation}`);
+        return parts.join(' ');
+      });
+      paras.push(findingParas.join('\n\n'));
+    } else if (security) {
+      paras.push('No security findings were identified in this file.');
+    }
+
+    return paras.join('\n\n');
+  }
+
+  private _renderFileRecommendations(ai: KnowledgeModel['ai']): string {
+    const llm  = ai?.summaries?.recommendations?.content;
+    const recs = ai?.recommendations;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    if (recs?.debtContext) paras.push(recs.debtContext);
+
+    const items = recs?.recommendations ?? [];
+    if (items.length) {
+      const recParas = items.map(r => {
+        const parts = [`[${r.priority.toUpperCase()}] ${r.title}. ${r.issueDescription}`];
+        if (r.recommendedImprovement) parts.push(r.recommendedImprovement);
+        return parts.join(' ');
+      });
+      paras.push(recParas.join('\n\n'));
+    } else if (recs) {
+      paras.push('No structural improvements were identified for this file.');
+    }
+
+    return paras.join('\n\n');
+  }
+
+  private _renderFileLearningPath(ai: KnowledgeModel['ai']): string {
+    const llm = ai?.summaries?.learningPath?.content;
+    const lp  = ai?.learningPath;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    if (lp?.welcomeSummary && lp.welcomeSummary !== llm) paras.push(lp.welcomeSummary);
+
+    if (lp?.focusFirst) paras.push(`Start here: ${lp.focusFirst}`);
+
+    if (lp?.roadmap?.length) {
+      const stepParas = lp.roadmap.map(step => {
+        const parts = [`Step ${step.stepNumber}: ${step.title}.`];
+        if (step.description) parts.push(step.description);
+        if (step.whyHere)     parts.push(step.whyHere);
+        return parts.join(' ');
+      });
+      paras.push(stepParas.join('\n\n'));
+    }
+
+    return paras.join('\n\n');
   }
 }

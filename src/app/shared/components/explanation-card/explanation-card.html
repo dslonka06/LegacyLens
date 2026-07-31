@@ -3,14 +3,7 @@
   <div class="ec-header">
     <div class="ec-header-left">
       <div class="ec-ai-badge">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
           <path d="M12 8v4l3 3" />
         </svg>
@@ -19,34 +12,26 @@
       <span class="ec-title">{{ title }}</span>
     </div>
     <div class="ec-header-actions">
-      <button class="ec-btn-icon ec-btn-dismiss" (click)="dismiss.emit()" title="Dismiss">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
+      <!-- Stale / failed: show regenerate button in header -->
+      <button
+        class="ec-btn-regenerate"
+        *ngIf="status === 'stale' || status === 'failed'"
+        (click)="regenerate.emit()"
+        title="Regenerate"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
         </svg>
+        {{ status === 'stale' ? 'Regenerate' : 'Retry' }}
       </button>
     </div>
   </div>
 
-  <!-- Loading state -->
-  <div class="ec-loading" *ngIf="isLoading">
+  <!-- Loading -->
+  <div class="ec-loading" *ngIf="status === 'loading'">
     <div class="ec-loading-row">
-      <svg
-        class="ec-spinner"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
+      <svg class="ec-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 12a9 9 0 1 1-6.219-8.56" />
       </svg>
       <span>Generating explanation from repository knowledge…</span>
@@ -59,53 +44,48 @@
     </div>
   </div>
 
-  <!-- No provider state -->
-  <div class="ec-no-provider" *ngIf="noProvider && !isLoading">
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="8" x2="12" y2="12" />
-      <line x1="12" y1="16" x2="12.01" y2="16" />
+  <!-- No provider -->
+  <div class="ec-no-provider" *ngIf="status === 'no-provider'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
     </svg>
     <div class="ec-no-provider-body">
       <span class="ec-no-provider-title">AI analysis unavailable</span>
-      <span class="ec-no-provider-desc">Configure an AI provider to generate an explanation of this page.</span>
+      <span class="ec-no-provider-desc">Configure an AI provider in Settings to generate an explanation of this page.</span>
     </div>
   </div>
 
-  <!-- Error state -->
-  <div class="ec-error" *ngIf="error && !isLoading && !noProvider">
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path
-        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-      />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
+  <!-- Ready — provider configured, never generated -->
+  <div class="ec-ready" *ngIf="status === 'ready'">
+    <span class="ec-ready-label">No explanation generated yet</span>
+    <button class="ec-btn-generate" (click)="regenerate.emit()">Generate</button>
+  </div>
+
+  <!-- Failed -->
+  <div class="ec-error" *ngIf="status === 'failed'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
     </svg>
     <div class="ec-error-body">
-      <span class="ec-error-title">Explanation unavailable</span>
-      <span class="ec-error-desc">{{ error }}</span>
+      <span class="ec-error-title">Generation failed</span>
+      <span class="ec-error-desc">{{ entry?.error ?? 'An unknown error occurred.' }}</span>
     </div>
   </div>
 
-  <!-- Content -->
-  <div class="ec-body" *ngIf="content && !isLoading && !error">
+  <!-- Stale banner + content -->
+  <div class="ec-stale-banner" *ngIf="status === 'stale'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+    </svg>
+    Generated before the most recent analysis — may not reflect current state
+  </div>
+
+  <!-- Content (complete or stale) -->
+  <div class="ec-body" *ngIf="status === 'complete' || status === 'stale'">
     <ng-container *ngFor="let para of paragraphs">
       <h4 class="ec-heading" *ngIf="isHeading(para)">{{ headingText(para) }}</h4>
-      <p class="ec-para" *ngIf="!isHeading(para)">{{ para }}</p>
+      <p  class="ec-para"    *ngIf="!isHeading(para)">{{ para }}</p>
     </ng-container>
   </div>
 </div>

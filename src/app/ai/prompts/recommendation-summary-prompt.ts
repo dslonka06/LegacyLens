@@ -23,7 +23,6 @@ export class RecommendationSummaryPromptBuilder {
     const dominantCategory = this._dominantCategory(byCategory);
     const top3 = recs.recommendations.slice(0, 3);
 
-    // ── Persona ───────────────────────────────────────────────────────────────
     parts.push(
       `You are a senior software architect who has just completed a structural analysis of a codebase.`,
       `You are writing a brief for the development team that owns this system.`,
@@ -37,7 +36,6 @@ export class RecommendationSummaryPromptBuilder {
       ``,
     );
 
-    // ── Output format ─────────────────────────────────────────────────────────
     if (scope === 'file') {
       parts.push(`Output: 1–2 sentences. What does the recommendation profile of this single file suggest about it?`);
     } else if (scope === 'folder') {
@@ -53,21 +51,15 @@ export class RecommendationSummaryPromptBuilder {
 
     parts.push(``);
 
-    // ── Evidence block ────────────────────────────────────────────────────────
     parts.push(`System: ${ctx.workspaceName}`);
     parts.push(`Size: ${ctx.totalFiles} files | Languages: ${ctx.languages.join(', ')}`);
     parts.push(``);
     parts.push(`Technical debt level: ${recs.technicalDebtLevel}`);
-    parts.push(`Modernization readiness: ${recs.modernizationReadiness}`);
     parts.push(`Total recommendations: ${recs.recommendations.length} (${recs.criticalCount} critical, ${recs.highCount} high)`);
     parts.push(``);
 
     if (dominantCategory) {
       parts.push(`Dominant recommendation category: ${dominantCategory.category} (${dominantCategory.count} of ${recs.recommendations.length} items)`);
-    }
-
-    if (recs.improvementThemes.length > 0) {
-      parts.push(`Recurring improvement themes: ${recs.improvementThemes.join(', ')}`);
     }
 
     if (architecture) {
@@ -87,10 +79,7 @@ export class RecommendationSummaryPromptBuilder {
       parts.push(`Affected areas with critical/high issues: ${urgentAreas.join(', ')}`);
     }
 
-    parts.push(
-      ``,
-      `Do not reproduce the recommendation list. Reason about what the pattern means.`,
-    );
+    parts.push(``, `Do not reproduce the recommendation list. Reason about what the pattern means.`);
 
     return parts.join('\n');
   }

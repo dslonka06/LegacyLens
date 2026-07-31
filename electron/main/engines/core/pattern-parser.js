@@ -84,6 +84,7 @@ class PatternParser extends ICodeParser {
         imports,
         exports,
         lineCount: content.split('\n').length,
+        content,
         parseError: null,
         _analysisResult: ar,
       };

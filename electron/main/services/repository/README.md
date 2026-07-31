@@ -1,14 +1,14 @@
 # Repository Library Service
 
-Manages the user's known repository library.
+Manages the user's known repository library, backed by SQLite.
 
-Responsibilities:
-- Add repositories to the library (by path)
+## Responsibilities
+
+- Add repositories to the library by path
 - List all known repositories
 - Remove repositories
-- Store last-opened timestamp
+- Track last-opened timestamp (`touch`)
 
-Phase 2: backed by SQLite. Phase 1: in-memory array.
+## IPC channels served
 
-This is the Phase 1 IPC proof-of-concept target.
-IPC channels: repositories:getAll, repositories:add
+`repositories:getAll`, `repositories:add`, `repositories:update`, `repositories:remove`, `repositories:touch`

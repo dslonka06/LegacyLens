@@ -224,7 +224,7 @@ class SecurityAnalysisEngine {
     // Hardcoded secrets
     for (const pattern of SECRET_PATTERNS) {
       if (pattern.test(content)) {
-        const snippet = this.extractSnippet(content, pattern);
+        const loc = this.extractSnippet(content, pattern);
         findings.push({
           id: `secret-${findings.length}`,
           title: `Potential Hardcoded Secret in ${fileName}`,
@@ -232,7 +232,9 @@ class SecurityAnalysisEngine {
           category: 'secrets-management',
           fileName,
           filePath,
-          codeSnippet: snippet ?? undefined,
+          lineStart: loc?.lineStart,
+          lineEnd: loc?.lineEnd,
+          codeSnippet: loc?.snippet ?? undefined,
           issueDescription: 'A pattern consistent with a hardcoded credential, secret, or connection string was detected.',
           riskExplanation: 'Hardcoded secrets are exposed in source control, build logs, and any environment where the code runs. They cannot be rotated without a code change and deployment.',
           remediation: 'Move secrets to environment variables, a secrets manager (Azure Key Vault, AWS Secrets Manager, HashiCorp Vault), or a configuration service. Never commit credentials to source control.',
@@ -252,7 +254,7 @@ class SecurityAnalysisEngine {
     if (hasSqlContext) {
       for (const pattern of SQL_INJECTION_PATTERNS) {
         if (pattern.test(content)) {
-          const snippet = this.extractSnippet(content, pattern);
+          const loc = this.extractSnippet(content, pattern);
           findings.push({
             id: `sqli-${findings.length}`,
             title: `Potential SQL Injection Pattern in ${fileName}`,
@@ -260,7 +262,9 @@ class SecurityAnalysisEngine {
             category: 'sql-injection',
             fileName,
             filePath,
-            codeSnippet: snippet ?? undefined,
+            lineStart: loc?.lineStart,
+            lineEnd: loc?.lineEnd,
+            codeSnippet: loc?.snippet ?? undefined,
             issueDescription: 'String concatenation was detected in what appears to be a SQL query context. This is a common SQL injection pattern.',
             riskExplanation: 'SQL injection allows attackers to manipulate database queries, potentially reading, modifying, or deleting data — and in some configurations, executing system commands.',
             remediation: 'Replace all string-concatenated queries with parameterized queries or an ORM. In C#, use SqlParameter or Entity Framework. In TypeScript, use a parameterized query builder.',
@@ -273,7 +277,8 @@ class SecurityAnalysisEngine {
     }
 
     // Unsafe file operations (writing user input to file paths)
-    if (/File\.(WriteAll|Create|Open|Copy|Move)/i.test(content) && /Request\.|input\.|param\./i.test(content)) {
+    const fileOpLoc = this.extractSnippet(content, /File\.(WriteAll|Create|Open|Copy|Move)/i);
+    if (fileOpLoc && /Request\.|input\.|param\./i.test(content)) {
       findings.push({
         id: `fileop-${findings.length}`,
         title: `Unsafe File Operation in ${fileName}`,
@@ -281,6 +286,9 @@ class SecurityAnalysisEngine {
         category: 'file-access',
         fileName,
         filePath,
+        lineStart: fileOpLoc.lineStart,
+        lineEnd: fileOpLoc.lineEnd,
+        codeSnippet: fileOpLoc.snippet,
         issueDescription: 'A file operation was detected in proximity to request parameters or user input, suggesting that file paths or content may be user-controlled.',
         riskExplanation: 'Allowing user-controlled file paths enables path traversal attacks. Attackers can read or write files outside the intended directory using patterns like ../../etc/passwd.',
         remediation: 'Validate and sanitize all file paths. Use a whitelist of allowed directories. Never use user input directly as a file path.',
@@ -290,9 +298,9 @@ class SecurityAnalysisEngine {
     }
 
     // Missing authorization on controllers/endpoints
+    const httpVerbLoc = this.extractSnippet(content, /\[(HttpGet|HttpPost|HttpPut|HttpDelete)\]/i);
     if (
-      (content.includes('[HttpGet]') || content.includes('[HttpPost]') ||
-       content.includes('[HttpPut]') || content.includes('[HttpDelete]')) &&
+      httpVerbLoc &&
       !content.includes('[Authorize]') &&
       !content.includes('[AllowAnonymous]') &&
       (content.includes('Controller') || content.includes('controller'))
@@ -304,6 +312,9 @@ class SecurityAnalysisEngine {
         category: 'authorization',
         fileName,
         filePath,
+        lineStart: httpVerbLoc.lineStart,
+        lineEnd: httpVerbLoc.lineEnd,
+        codeSnippet: httpVerbLoc.snippet,
         issueDescription: 'HTTP endpoints were detected in a controller that has no [Authorize] or [AllowAnonymous] attributes.',
         riskExplanation: 'Without explicit authorization, all endpoints are effectively public. This can expose sensitive operations to unauthenticated callers.',
         remediation: 'Add [Authorize] to the controller class to secure all endpoints by default. Add [AllowAnonymous] explicitly only to endpoints that should be publicly accessible.',
@@ -313,8 +324,8 @@ class SecurityAnalysisEngine {
     }
 
     // Sensitive data in logs
-    if (/log\.(info|warn|error|debug|trace|write)/i.test(content) &&
-        /password|secret|token|ssn|creditcard|credit_card/i.test(content)) {
+    const logLoc = this.extractSnippet(content, /log\.(info|warn|error|debug|trace|write)/i);
+    if (logLoc && /password|secret|token|ssn|creditcard|credit_card/i.test(content)) {
       findings.push({
         id: `logdata-${findings.length}`,
         title: `Sensitive Data May Be Written to Logs in ${fileName}`,
@@ -322,6 +333,9 @@ class SecurityAnalysisEngine {
         category: 'configuration',
         fileName,
         filePath,
+        lineStart: logLoc.lineStart,
+        lineEnd: logLoc.lineEnd,
+        codeSnippet: logLoc.snippet,
         issueDescription: 'Logging statements are present in the same file as references to sensitive fields (password, token, secret, SSN, credit card). Sensitive data may be inadvertently logged.',
         riskExplanation: 'Log files are often stored, forwarded to log aggregators, and accessed by operations staff. Logging sensitive data violates data minimization principles and may breach compliance requirements.',
         remediation: 'Review all log statements. Redact or omit sensitive fields. Use structured logging with field-level redaction policies.',
@@ -587,11 +601,15 @@ class SecurityAnalysisEngine {
       if (pos + lines[i].length >= idx) {
         const start = Math.max(0, i - 1);
         const end = Math.min(lines.length - 1, i + 2);
-        return lines.slice(start, end + 1).join('\n');
+        return {
+          snippet: lines.slice(start, end + 1).join('\n'),
+          lineStart: start + 1,
+          lineEnd: end + 1,
+        };
       }
       pos += lines[i].length + 1;
     }
-    return match[0].slice(0, 120);
+    return { snippet: match[0].slice(0, 120), lineStart: 1, lineEnd: 1 };
   }
 
   deduplicateRelevant(relevant) {

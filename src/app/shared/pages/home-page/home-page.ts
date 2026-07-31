@@ -1,9 +1,8 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
-import { ElectronService } from '@app/core/services/electron.service';
+import { ElectronService, AiProviderStatus } from '@app/core/services/electron.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { Workspace } from '@app/workspace/models/workspace-entity.model';
 
@@ -15,8 +14,9 @@ import { Workspace } from '@app/workspace/models/workspace-entity.model';
   styleUrl: './home-page.scss',
 })
 export class HomePage implements OnInit, OnDestroy {
-  aiProviderStatus: 'checking' | 'configured' | 'not-configured' = 'checking';
-  aiProviderLabel = 'Claude Sonnet';
+  aiStatus: 'checking' | 'configured' | 'not-configured' = 'checking';
+  aiProvider: AiProviderStatus | null = null;
+  aiModel = '';
   appVersion = '';
 
   recentAnalyses: Workspace[] = [];
@@ -26,12 +26,11 @@ export class HomePage implements OnInit, OnDestroy {
   constructor(
     readonly electronService: ElectronService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly http: HttpClient,
     private readonly manager: WorkspaceManagerService,
   ) {}
 
   ngOnInit(): void {
-    this.checkAiProvider();
+    this.loadAiStatus();
     if (this.electronService.isElectron) {
       this.electronService.getAppVersion().then((v) => {
         this.appVersion = v ? `v${v}` : '';
@@ -96,17 +95,19 @@ export class HomePage implements OnInit, OnDestroy {
     this.manager.activate(ws.id);
   }
 
-  private checkAiProvider(): void {
-    this.http
-      .get<{ available: boolean; model?: string }>('http://localhost:5000/api/ai/status', {})
-      .subscribe({
-        next: (res) => {
-          this.aiProviderStatus = res.available ? 'configured' : 'not-configured';
-          if (res.model) this.aiProviderLabel = res.model;
-        },
-        error: () => {
-          this.aiProviderStatus = 'not-configured';
-        },
-      });
+  private async loadAiStatus(): Promise<void> {
+    try {
+      const [providers, settings] = await Promise.all([
+        this.electronService.aiGetProviders(),
+        this.electronService.getAllSettings(),
+      ]);
+      const active = providers.find(p => p.active && p.configured) ?? null;
+      this.aiProvider = active;
+      this.aiStatus = active ? 'configured' : 'not-configured';
+      this.aiModel = (settings['aiModel'] as string) ?? '';
+    } catch {
+      this.aiStatus = 'not-configured';
+    }
+    this.cdr.detectChanges();
   }
 }

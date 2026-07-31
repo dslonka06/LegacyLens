@@ -215,8 +215,14 @@ interface ElectronSettingsAPI {
 interface ElectronAiAPI {
   explain(prompt: string): Promise<string>;
   analyze(fileName: string, sourceCode: string): Promise<unknown>;
-  getProviderUrl(): Promise<string | null>;
-  setProviderUrl(url: string | null): Promise<void>;
+  chat(messages: unknown[], knowledgeModel: unknown): Promise<string>;
+  getProviders(): Promise<unknown[]>;
+  getPresets(): Promise<unknown[]>;
+  getCapabilities(presetId?: string): Promise<unknown>;
+  discoverModels(presetId?: string): Promise<string[]>;
+  testConnection(): Promise<{ ok: boolean; reason?: string }>;
+  setApiKey(presetId: string, plainKey: string): Promise<void>;
+  isKeyConfigured(presetId: string): Promise<boolean>;
 }
 
 type _KM = import('@app/knowledge/models/knowledge-model.contract').KnowledgeModel;
@@ -243,6 +249,7 @@ interface ElectronIntelligenceAPI {
 
   // ── AI analysis — accept KnowledgeModel, return typed result ─────────────────
   systemUnderstanding(model: _KM): Promise<unknown>;
+  hubDirective(data: unknown): Promise<string>;
   learningPath(model: _KM): Promise<unknown>;
   recommendations(model: _KM): Promise<unknown>;
   security(model: _KM): Promise<unknown>;
@@ -333,6 +340,11 @@ interface ElectronUpdaterAPI {
   onUpdateDownloaded(cb: (payload: UpdateDownloadedPayload) => void): () => void;
 }
 
+interface ElectronAppAPI {
+  getVersion(): Promise<string>;
+  openExternal(url: string): Promise<void>;
+}
+
 interface ElectronAPI {
   repositories: ElectronRepositoriesAPI;
   analysis: ElectronAnalysisAPI;
@@ -344,6 +356,7 @@ interface ElectronAPI {
   validation: ElectronValidationAPI;
   workspaces: ElectronWorkspacesAPI;
   updater: ElectronUpdaterAPI;
+  app: ElectronAppAPI;
 }
 
 declare global {

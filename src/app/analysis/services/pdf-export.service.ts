@@ -17,17 +17,18 @@ const SMALL_LH = 5.2;
 
 // ─── Colour palette ──────────────────────────────────────
 const C = {
-  brand: [108, 76, 255] as const,
-  brandDark: [80, 55, 200] as const,
-  text: [17, 24, 39] as const,
-  muted: [75, 85, 99] as const,
-  subtle: [156, 163, 175] as const,
-  border: [226, 232, 240] as const,
-  pageBg: [248, 250, 252] as const,
-  high: [220, 38, 38] as const,
-  medium: [217, 119, 6] as const,
-  lowGreen: [22, 163, 74] as const,
-  white: [255, 255, 255] as const,
+  brand:     [141, 99, 255] as const,   // --accent #8d63ff
+  brandDark: [108, 76, 220] as const,
+  text:      [244, 245, 248] as const,  // --text-primary
+  muted:     [165, 176, 194] as const,  // --text-secondary
+  subtle:    [100, 110, 130] as const,  // footer / de-emphasised
+  border:    [45, 54, 78] as const,     // ~rgba(255,255,255,0.08) on dark
+  pageBg:    [21, 25, 39] as const,     // --bg-primary #151927
+  cardBg:    [27, 32, 50] as const,     // --bg-secondary #1b2032
+  high:      [239, 91, 99] as const,    // --error on dark
+  medium:    [244, 181, 68] as const,   // --warning on dark
+  lowGreen:  [84, 209, 122] as const,   // --success on dark
+  white:     [255, 255, 255] as const,
 };
 
 @Injectable({ providedIn: 'root' })
@@ -42,42 +43,53 @@ export class PdfExportService {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const ctx = new RenderContext(doc);
 
+    // Fill page 1 background before any drawing
+    ctx.fillPageBackground();
     this.renderDocumentationCover(ctx, model);
 
     const rendered = this.builder.renderPreview(model, selectedIds);
-    const sections = rendered.split('\n\n').filter(Boolean);
 
-    for (const block of sections) {
-      const lines = block.split('\n');
-      const headerLine = lines[0];
-      const bodyLines = lines.slice(2);
+    // Each section is "N. Title\n\nbody paragraphs" separated by \n\n
+    const SECTION_RE = /^(\d+)\.\s+(.+)$/m;
+    const rawSections = rendered.split(/\n(?=\d+\.\s)/);
 
-      if (!/^\d+\.\s/.test(headerLine)) continue;
+    for (const block of rawSections) {
+      if (!block.trim()) continue;
+      const firstNewline = block.indexOf('\n');
+      const headerLine = firstNewline === -1 ? block : block.slice(0, firstNewline);
+      const bodyText   = firstNewline === -1 ? '' : block.slice(firstNewline + 1).trim();
 
-      ctx.sectionHeader(headerLine.replace(/^\d+\.\s*/, ''));
-      for (const line of bodyLines) {
-        if (!line.trim()) {
-          ctx.spacer(3);
-          continue;
+      const match = SECTION_RE.exec(headerLine);
+      if (!match) continue;
+
+      ctx.sectionHeader(match[2]);
+
+      for (const para of bodyText.split('\n\n')) {
+        const trimmed = para.trim();
+        if (!trimmed) continue;
+        for (const line of trimmed.split('\n')) {
+          if (!line.trim()) {
+            ctx.spacer(2);
+            continue;
+          }
+          if (/^\[(\w+)\]/.test(line)) {
+            const sev = (line.match(/^\[(\w+)\]/) ?? [])[1]?.toLowerCase() ?? 'low';
+            const sevColor: [number, number, number] =
+              sev === 'critical' || sev === 'high'
+                ? [C.high[0], C.high[1], C.high[2]]
+                : sev === 'medium'
+                  ? [C.medium[0], C.medium[1], C.medium[2]]
+                  : [C.lowGreen[0], C.lowGreen[1], C.lowGreen[2]];
+            ctx.coloredLabel(line.replace(/^\[\w+\]\s*/, ''), sevColor);
+          } else if (line.startsWith('  ')) {
+            ctx.body(line.trim(), 9);
+          } else {
+            ctx.body(line, 9.5);
+          }
         }
-        if (line.startsWith('•')) {
-          ctx.bulletList([line.replace(/^•\s*/, '')]);
-        } else if (/^\[(\w+)\]/.test(line)) {
-          const sev = (line.match(/^\[(\w+)\]/) ?? [])[1]?.toLowerCase() ?? 'low';
-          const sevColor: [number, number, number] =
-            sev === 'critical' || sev === 'high'
-              ? [C.high[0], C.high[1], C.high[2]]
-              : sev === 'medium'
-                ? [C.medium[0], C.medium[1], C.medium[2]]
-                : [C.lowGreen[0], C.lowGreen[1], C.lowGreen[2]];
-          ctx.coloredLabel(line.replace(/^\[\w+\]\s*/, ''), sevColor);
-        } else if (line.startsWith('  ')) {
-          ctx.body(line.trim(), 9);
-        } else {
-          ctx.body(line, 9.5);
-        }
+        ctx.spacer(3);
       }
-      ctx.spacer(4);
+      ctx.spacer(2);
     }
 
     this.renderDocumentationMetadata(ctx, model);
@@ -109,7 +121,7 @@ export class PdfExportService {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(20);
     doc.setTextColor(...C.white);
-    doc.text(`LEGACYLENS — ${scopeLabel}`, cx, 22, { align: 'center' });
+    doc.text(`SYSTEMLENS — ${scopeLabel}`, cx, 22, { align: 'center' });
 
     doc.setDrawColor(160, 140, 255);
     doc.setLineWidth(0.4);
@@ -181,6 +193,7 @@ export class PdfExportService {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
     const ctx = new RenderContext(doc);
+    ctx.fillPageBackground();
     this.renderCover(ctx, session);
     this.renderSummary(ctx, session);
     this.renderArchitecture(ctx, session);
@@ -213,7 +226,7 @@ export class PdfExportService {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(22);
     doc.setTextColor(...C.white);
-    doc.text('LEGACYLENS ANALYSIS REPORT', cx, 22, { align: 'center' });
+    doc.text('SYSTEMLENS ANALYSIS REPORT', cx, 22, { align: 'center' });
 
     // ── Thin rule beneath title ──
     doc.setDrawColor(160, 140, 255);
@@ -282,7 +295,7 @@ export class PdfExportService {
     const labelX = MARGIN + 5;
     const valueX = MARGIN + 52;
 
-    doc.setFillColor(...C.pageBg);
+    doc.setFillColor(...C.cardBg);
     doc.setDrawColor(...C.border);
     doc.roundedRect(MARGIN, ctx.y, CONTENT_W, boxH, 2, 2, 'FD');
 
@@ -556,6 +569,12 @@ class RenderContext {
 
   constructor(readonly doc: JsPDF) {}
 
+  // Fill current page with the dark background — must be called before drawing any content
+  fillPageBackground(): void {
+    this.doc.setFillColor(...C.pageBg);
+    this.doc.rect(0, 0, PAGE_W, PAGE_H, 'F');
+  }
+
   // Remaining printable height on current page
   private remaining(): number {
     return PAGE_H - FOOTER_H - this.y;
@@ -564,6 +583,7 @@ class RenderContext {
   checkPage(neededMm: number): void {
     if (this.remaining() < neededMm) {
       this.doc.addPage();
+      this.fillPageBackground();
       this.y = MARGIN;
     }
   }
