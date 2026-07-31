@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
@@ -30,12 +30,16 @@ export class LearningPathPage implements OnInit, OnDestroy {
 
   private sub: Subscription | null = null;
 
-  constructor(private readonly manager: WorkspaceManagerService) {}
+  constructor(
+    private readonly manager: WorkspaceManagerService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.workspace = this.manager.getActive();
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       this.workspace = ws;
+      this.cdr.detectChanges();
     });
   }
 

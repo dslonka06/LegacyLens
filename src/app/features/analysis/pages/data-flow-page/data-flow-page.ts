@@ -1,18 +1,17 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import type { LLMSummaryEntry } from '@app/knowledge/models/llm-summaries.model';
-import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
+import { MermaidDiagram } from '@app/shared/components/mermaid-diagram/mermaid-diagram';
 import type { KnowledgeModel, DataFlowInsight } from '@app/knowledge/models/knowledge-model.contract';
-import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
 @Component({
   selector: 'app-data-flow-page',
   standalone: true,
-  imports: [CommonModule, FileTreePanel, ThemeToggle, ExplanationCard],
+  imports: [CommonModule, ThemeToggle, ExplanationCard, MermaidDiagram],
   templateUrl: './data-flow-page.html',
   styleUrl: './data-flow-page.scss',
 })
@@ -20,11 +19,13 @@ export class DataFlowPage implements OnInit, OnDestroy {
   model: KnowledgeModel | null = null;
   hasWorkspace = false;
   expandedStepIndex: number | null = null;
-  selectedFilePath: string | null = null;
 
   private sub: Subscription | null = null;
 
-  constructor(private readonly manager: WorkspaceManagerService) {}
+  constructor(
+    private readonly manager: WorkspaceManagerService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.model = this.manager.getActive()?.knowledgeModel ?? null;
@@ -34,6 +35,7 @@ export class DataFlowPage implements OnInit, OnDestroy {
       this.model = ws?.knowledgeModel ?? null;
       this.hasWorkspace = this.model != null;
       this.expandedStepIndex = null;
+      this.cdr.detectChanges();
     });
   }
 
@@ -69,14 +71,6 @@ export class DataFlowPage implements OnInit, OnDestroy {
     return this.model?.workspaceName ?? 'Workspace';
   }
 
-  get folderTree(): FolderNode | undefined {
-    return this.model?.structure.folderTree;
-  }
-
-  onTreeFileSelected(file: FileNode): void {
-    this.selectedFilePath = file.path;
-  }
-
   get hasDataFlow(): boolean {
     return this.isFileScope
       ? (this.fileDataFlow?.steps.length ?? 0) > 0
@@ -98,6 +92,10 @@ export class DataFlowPage implements OnInit, OnDestroy {
 
   get llmSummaryEntry(): LLMSummaryEntry | null {
     return this.model?.ai?.summaries?.dataFlow ?? null;
+  }
+
+  get dataFlowDiagram(): string | null {
+    return this.model?.ai?.dataFlow?.dataFlowDiagram ?? null;
   }
 
 }

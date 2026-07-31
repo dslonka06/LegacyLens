@@ -52,7 +52,7 @@
           <span class="rec-summary-label">High</span>
         </div>
         <div class="rec-summary-divider"></div>
-        <div class="rec-summary-stat" [class]="debtClass(recs!.technicalDebtLevel)">
+        <div class="rec-summary-stat" [ngClass]="debtClass(recs!.technicalDebtLevel)">
           <span class="rec-summary-value">{{ recs!.technicalDebtLevel }}</span>
           <span class="rec-summary-label">Technical Debt</span>
         </div>

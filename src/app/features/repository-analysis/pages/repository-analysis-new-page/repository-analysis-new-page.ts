@@ -72,12 +72,6 @@ export class RepositoryAnalysisNewPage implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.limitSub?.unsubscribe();
     this.scanProgressUnsub?.();
-    if (this.workspaceId) {
-      const ws = this.manager.getById(this.workspaceId);
-      if (ws?.status === 'empty') {
-        this.manager.delete(this.workspaceId);
-      }
-    }
   }
 
   async pickAndLoadFolder(): Promise<void> {

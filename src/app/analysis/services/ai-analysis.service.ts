@@ -234,6 +234,8 @@ export class AIAnalysisService {
             imports: string[];
             exports: string[];
           } | null;
+          folderResponsibilitiesNarrative?: string[] | null;
+          folderWorkflowsNarrative?: string[] | null;
         };
         return {
           understanding: r.understanding,
@@ -242,6 +244,8 @@ export class AIAnalysisService {
           codeHealthNarrative: r.codeHealthNarrative,
           fileResponsibilitiesNarrative: r.fileResponsibilitiesNarrative ?? null,
           fileComponentsNarrative: r.fileComponentsNarrative ?? null,
+          folderResponsibilitiesNarrative: r.folderResponsibilitiesNarrative ?? null,
+          folderWorkflowsNarrative: r.folderWorkflowsNarrative ?? null,
         };
       }
       case 'recommendations':

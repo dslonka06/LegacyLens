@@ -1,32 +1,33 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import type { LLMSummaryEntry } from '@app/knowledge/models/llm-summaries.model';
-import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
+import { MermaidDiagram } from '@app/shared/components/mermaid-diagram/mermaid-diagram';
 import type {
   KnowledgeModel,
   ArchitecturePattern,
 } from '@app/knowledge/models/knowledge-model.contract';
-import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
 @Component({
   selector: 'app-architecture-page',
   standalone: true,
-  imports: [CommonModule, FileTreePanel, ThemeToggle, ExplanationCard],
+  imports: [CommonModule, ThemeToggle, ExplanationCard, MermaidDiagram],
   templateUrl: './architecture-page.html',
   styleUrl: './architecture-page.scss',
 })
 export class ArchitecturePage implements OnInit, OnDestroy {
   model: KnowledgeModel | null = null;
   hasWorkspace = false;
-  selectedFile: FileNode | null = null;
 
   private sub: Subscription | null = null;
 
-  constructor(private readonly manager: WorkspaceManagerService) {}
+  constructor(
+    private readonly manager: WorkspaceManagerService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.model = this.manager.getActive()?.knowledgeModel ?? null;
@@ -34,6 +35,7 @@ export class ArchitecturePage implements OnInit, OnDestroy {
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       this.model = ws?.knowledgeModel ?? null;
       this.hasWorkspace = this.model != null;
+      this.cdr.detectChanges();
     });
   }
 
@@ -47,14 +49,6 @@ export class ArchitecturePage implements OnInit, OnDestroy {
 
   get workspaceName(): string {
     return this.model?.workspaceName ?? 'Workspace';
-  }
-
-  get folderTree(): FolderNode | undefined {
-    return this.model?.structure.folderTree;
-  }
-
-  onFileSelected(file: FileNode): void {
-    this.selectedFile = file;
   }
 
   get architectureNarrative(): string {
@@ -71,6 +65,10 @@ export class ArchitecturePage implements OnInit, OnDestroy {
 
   get llmSummaryEntry(): LLMSummaryEntry | null {
     return this.model?.ai?.summaries?.architecture ?? null;
+  }
+
+  get architectureDiagram(): string | null {
+    return this.model?.ai?.architecture?.architectureDiagram ?? null;
   }
 
   architectureDescription(name: string): string {

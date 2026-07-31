@@ -103,6 +103,9 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     const init = this.manager.getActive();
     this.workspace = init ?? null;
     this.model = init?.knowledgeModel ?? null;
+    // Returning to an existing analysis — use fast animation variant
+    this.isReturning = !!init?.knowledgeModel;
+
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       const prevId = this.workspace?.id;
       const prevStatus = this.workspace?.status;

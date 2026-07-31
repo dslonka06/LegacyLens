@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import {
@@ -11,18 +11,16 @@ import {
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { LLMSummaryService } from '@app/analysis/services/llm-summary.service';
 import type { LLMSummaryEntry } from '@app/knowledge/models/llm-summaries.model';
-import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
 import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
 import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
 import { PanelLayoutService } from '@app/core/services/panel-layout.service';
-import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
 @Component({
   selector: 'app-security-page',
   standalone: true,
-  imports: [CommonModule, FileTreePanel, CodeEditor, ResizeDividerComponent, ThemeToggle, ExplanationCard],
+  imports: [CommonModule, CodeEditor, ResizeDividerComponent, ThemeToggle, ExplanationCard],
   templateUrl: './security-page.html',
   styleUrl: './security-page.scss',
 })
@@ -32,7 +30,6 @@ export class SecurityPage implements OnInit, OnDestroy {
   expandedFindingId: string | null = null;
   expandedCheckDomain: SecurityVerificationDomain | null = null;
   highlightLines: { start: number; end: number } | null = null;
-  highlightedFilePath: string | null = null;
   codeEditorWidth = 420;
   codeCollapsed = false;
   private _preCollapseWidth = 420;
@@ -43,6 +40,7 @@ export class SecurityPage implements OnInit, OnDestroy {
     private readonly manager: WorkspaceManagerService,
     private readonly layoutService: PanelLayoutService,
     private readonly llmSummary: LLMSummaryService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -58,7 +56,7 @@ export class SecurityPage implements OnInit, OnDestroy {
       this.expandedFindingId = null;
       this.expandedCheckDomain = null;
       this.highlightLines = null;
-      this.highlightedFilePath = null;
+      this.cdr.detectChanges();
     });
   }
 
@@ -87,9 +85,6 @@ export class SecurityPage implements OnInit, OnDestroy {
       this.highlightLines = null;
     } else {
       this.expandedFindingId = finding.id;
-      if (finding.filePath || finding.fileName) {
-        this.highlightedFilePath = finding.filePath ?? finding.fileName;
-      }
       if (this.isFileScope && finding.lineStart) {
         this.highlightLines = {
           start: finding.lineStart,
@@ -162,17 +157,9 @@ export class SecurityPage implements OnInit, OnDestroy {
     );
   }
 
-  get folderTree(): FolderNode | undefined {
-    return this.manager.getActive()?.knowledgeModel?.structure.folderTree;
-  }
-
   onRegenerate(): void {
     const wsId = this.manager.getActive()?.id;
     if (wsId) this.llmSummary.regenerate(wsId, 'security');
-  }
-
-  onTreeFileSelected(file: FileNode): void {
-    this.highlightedFilePath = file.path;
   }
 
   severityClass(s: SecuritySeverity): string {

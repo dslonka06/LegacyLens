@@ -19,44 +19,41 @@
       [entry]="llmSummaryEntry"
     ></app-explanation-card>
 
-    <div class="arch-cols" [class.arch-cols--has-tree]="folderTree">
-      <!-- File tree (folder/repo workspaces only) -->
-      <div class="arch-col-tree" *ngIf="folderTree">
-        <app-file-tree-panel [folderTree]="folderTree" (fileSelected)="onFileSelected($event)">
-        </app-file-tree-panel>
+    <div class="arch-col-main">
+      <div class="doc-block" *ngIf="architectureNarrative">
+        <div class="doc-block-label">Architecture Summary</div>
+        <p class="arch-narrative">{{ architectureNarrative }}</p>
       </div>
 
-      <div class="arch-col-main">
-        <div class="doc-block" *ngIf="architectureNarrative">
-          <div class="doc-block-label">Architecture Summary</div>
-          <p class="arch-narrative">{{ architectureNarrative }}</p>
+      <div class="doc-block">
+        <div class="doc-block-label">Architectural Layers</div>
+        <div class="arch-empty-state" *ngIf="!patterns.length">
+          No architectural patterns detected. Upload a repository to begin analysis.
         </div>
-
-        <div class="doc-block">
-          <div class="doc-block-label">Architectural Layers</div>
-          <div class="arch-empty-state" *ngIf="!patterns.length">
-            No architectural patterns detected. Upload a repository to begin analysis.
-          </div>
-          <div class="arch-pattern-grid" *ngIf="patterns.length">
-            <div class="arch-pattern-card" *ngFor="let p of patterns">
-              <div class="arch-pattern-info">
-                <span class="arch-pattern-name">{{ p.name }}</span>
+        <div class="arch-pattern-grid" *ngIf="patterns.length">
+          <div class="arch-pattern-card" *ngFor="let p of patterns">
+            <div class="arch-pattern-info">
+              <span class="arch-pattern-name">{{ p.name }}</span>
+            </div>
+            <div class="arch-confidence-row">
+              <div class="arch-confidence-bar">
+                <div class="arch-confidence-fill" [style.width.%]="confidencePercent(p)"></div>
               </div>
-              <div class="arch-confidence-row">
-                <div class="arch-confidence-bar">
-                  <div class="arch-confidence-fill" [style.width.%]="confidencePercent(p)"></div>
-                </div>
-                <span class="arch-confidence-pct">{{ confidencePercent(p) }}%</span>
-              </div>
-              <p class="arch-pattern-summary">{{ architectureDescription(p.name) }}</p>
-              <div class="arch-indicators" *ngIf="p.indicators.length">
-                <span class="arch-indicator-tag" *ngFor="let ind of p.indicators.slice(0, 5)">{{
-                  ind
-                }}</span>
-              </div>
+              <span class="arch-confidence-pct">{{ confidencePercent(p) }}%</span>
+            </div>
+            <p class="arch-pattern-summary">{{ architectureDescription(p.name) }}</p>
+            <div class="arch-indicators" *ngIf="p.indicators.length">
+              <span class="arch-indicator-tag" *ngFor="let ind of p.indicators.slice(0, 5)">{{
+                ind
+              }}</span>
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="doc-block" *ngIf="architectureDiagram">
+        <div class="doc-block-label">Layer Diagram</div>
+        <app-mermaid-diagram [diagram]="architectureDiagram"></app-mermaid-diagram>
       </div>
     </div>
   </div>

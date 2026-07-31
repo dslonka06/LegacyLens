@@ -15,4 +15,6 @@ export interface DataFlowAIAnalysis {
   mostReferenced: string[];
   dataAccessNodes: string[];
   generatedAt: string;
+  /** Mermaid flowchart LR syntax for the data flow workflow diagram. */
+  dataFlowDiagram?: string;
 }

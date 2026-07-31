@@ -301,7 +301,7 @@ export class DocumentationBuilderService {
       case 'architecture-overview': {
         const patterns = rel.architecture?.patterns ?? [];
         return patterns
-          .map((p) => `• ${p.name} (${Math.round((p.confidence ?? 0) * 100)}%) — ${p.indicators.join(', ')}`)
+          .map((p) => `- ${p.name} (${Math.round((p.confidence ?? 0) * 100)}%) - ${p.indicators.join(', ')}`)
           .join('\n');
       }
 
@@ -315,7 +315,7 @@ export class DocumentationBuilderService {
         const top = [...counts.entries()]
           .sort((a, b) => b[1] - a[1])
           .slice(0, 8)
-          .map(([id, c]) => `• ${nodeMap.get(id) ?? id} (${c} dependents)`);
+          .map(([id, c]) => `- ${nodeMap.get(id) ?? id} (${c} dependents)`);
         return [`Top dependency targets:`, ...top].join('\n');
       }
 
@@ -325,10 +325,10 @@ export class DocumentationBuilderService {
         const avgConn =
           graph.nodes.length > 0 ? (graph.edges.length / graph.nodes.length).toFixed(1) : '0';
         return [
-          `Nodes: ${graph.nodes.length} · Edges: ${graph.edges.length} · Avg connectivity: ${avgConn}`,
+          `Nodes: ${graph.nodes.length} | Edges: ${graph.edges.length} | Avg connectivity: ${avgConn}`,
           ...(rel.dependencies?.hubs
             .slice(0, 5)
-            .map((h) => `• Hub: ${h.name} (${h.inboundCount} inbound)`) ?? []),
+            .map((h) => `- Hub: ${h.name} (${h.inboundCount} inbound)`) ?? []),
         ].join('\n');
       }
 
@@ -345,7 +345,7 @@ export class DocumentationBuilderService {
         return (ai?.recommendations?.recommendations ?? [])
           .filter((r) => r.category === 'modernization' || r.category === 'technical-debt')
           .slice(0, 10)
-          .map((r) => `• ${r.title}\n  ${r.recommendedImprovement}`)
+          .map((r) => `- ${r.title}\n  ${r.recommendedImprovement}`)
           .join('\n');
       }
 
@@ -359,20 +359,20 @@ export class DocumentationBuilderService {
         }
         return Object.keys(s.symbols)
           .slice(0, 10)
-          .map((p) => `• ${p}`)
+          .map((p) => `- ${p}`)
           .join('\n');
       }
 
       case 'key-projects':
         return (s.projects ?? [])
-          .map((p) => `• ${p.name} (${p.type}) — ${p.framework} / ${p.language}`)
+          .map((p) => `- ${p.name} (${p.type}) - ${p.framework} / ${p.language}`)
           .join('\n');
 
       case 'repository-insights':
         return (rel.dependencies?.hubs ?? [])
           .filter((h) => h.isHub)
           .slice(0, 10)
-          .map((h) => `• ${h.name} — ${h.inboundCount} inbound connections`)
+          .map((h) => `- ${h.name} - ${h.inboundCount} inbound connections`)
           .join('\n');
 
       case 'onboarding-guide': {
@@ -430,7 +430,7 @@ export class DocumentationBuilderService {
     const summaryParts: string[] = [];
     if (narrative?.pattern?.label) summaryParts.push(`This is a ${narrative.pattern.label} flow.`);
     if (insight?.inputs?.length)   summaryParts.push(`It receives ${insight.inputs.join(', ')} as input.`);
-    if (insight?.steps?.length)    summaryParts.push(`Processing moves through ${insight.steps.join(' → ')}.`);
+    if (insight?.steps?.length)    summaryParts.push(`Processing moves through ${insight.steps.join(' -> ')}.`);
     if (insight?.outputs?.length)  summaryParts.push(`The flow produces ${insight.outputs.join(', ')}.`);
     if (summaryParts.length) paras.push(summaryParts.join(' '));
 
@@ -456,7 +456,7 @@ export class DocumentationBuilderService {
     if (actionableChecks.length) {
       const checkParas = actionableChecks.map(c => {
         const prefix = c.status === 'fail' ? 'Fail' : 'Warning';
-        return c.detail ? `${prefix} — ${c.summary} ${c.detail}` : `${prefix} — ${c.summary}`;
+        return c.detail ? `${prefix} - ${c.summary} ${c.detail}` : `${prefix} - ${c.summary}`;
       });
       paras.push(checkParas.join('\n\n'));
     }
