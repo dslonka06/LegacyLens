@@ -134,12 +134,14 @@ export class DocumentationPage implements OnInit, OnDestroy {
 
   get previewSections(): Array<{ title: string; content: string }> {
     if (!this.previewText) return [];
-    return this.previewText
-      .split('\n\n')
-      .filter(Boolean)
-      .map((block) => {
-        const lines = block.split('\n');
-        return { title: lines[0].replace(/^\d+\.\s*/, ''), content: lines.slice(2).join('\n') };
-      });
+    // Split on lines that start a new numbered section (e.g. "1. Executive Summary").
+    // Using a lookahead keeps the delimiter line inside each chunk.
+    const chunks = this.previewText.split(/(?=^\d+\. )/m).filter(Boolean);
+    return chunks.map((chunk) => {
+      const newline = chunk.indexOf('\n');
+      const title = (newline === -1 ? chunk : chunk.slice(0, newline)).replace(/^\d+\.\s*/, '').trim();
+      const content = newline === -1 ? '' : chunk.slice(newline + 1).trim();
+      return { title, content };
+    });
   }
 }

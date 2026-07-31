@@ -335,6 +335,18 @@
   white-space: nowrap;
 }
 
+.rec-file-hint {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  color: var(--text-muted);
+  margin-left: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+  flex-shrink: 0;
+}
+
 .rec-caret {
   width: 14px;
   height: 14px;

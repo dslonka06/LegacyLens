@@ -25,54 +25,6 @@
   </ng-container>
 
   <!-- ══════════════════════════════════════════════════════
-       EMPTY STATE — no repo loaded, show prompt
-  ═══════════════════════════════════════════════════════ -->
-  <ng-container *ngIf="isEmpty && !isAnalyzing && !isScanning">
-    <div class="upload-zone">
-      <div class="upload-card" [class.upload-card--animate]="showIdentity">
-        <div class="upload-icon-ring">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="12" cy="18" r="3" />
-            <circle cx="6" cy="6" r="3" />
-            <circle cx="18" cy="6" r="3" />
-            <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" />
-            <line x1="12" y1="12" x2="12" y2="15" />
-          </svg>
-        </div>
-
-        <h2 class="upload-title">Repository Analysis</h2>
-        <p class="upload-desc">
-          Select a local repository folder. SystemLens will scan all files,
-          resolve dependencies, detect architecture patterns, and run a full AI analysis.
-        </p>
-
-        <button class="upload-browse-btn" (click)="pickAndLoadFolder()">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          </svg>
-          Select Repository Folder
-        </button>
-
-        <div class="upload-hint">Your selection is remembered — next time this workspace opens automatically</div>
-      </div>
-    </div>
-  </ng-container>
-
-  <!-- ══════════════════════════════════════════════════════
        ANALYZING STATE — pipeline running
   ═══════════════════════════════════════════════════════ -->
   <ng-container *ngIf="isAnalyzing && !isScanning">

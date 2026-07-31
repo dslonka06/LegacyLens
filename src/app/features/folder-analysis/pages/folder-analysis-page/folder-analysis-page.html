@@ -24,53 +24,9 @@
     <!-- ── Row 1: Identity card (full width) ───────────────────── -->
     <div class="hub-first-row" [class.hub-section--animate]="showIdentity">
 
-      <!-- Identity card — morphs between upload / analyzing / ready -->
+      <!-- Identity card — morphs between analyzing / ready -->
       <div class="hub-identity-card"
-           [class.hub-identity-card--upload]="isEmpty"
            [class.hub-identity-card--analyzing]="isAnalyzing">
-
-        <!-- ── EMPTY: upload zone ── -->
-        <ng-container *ngIf="isEmpty">
-          <div
-            class="upload-zone upload-zone--inline"
-            [class.upload-zone--drag]="isDragging"
-            (dragover)="onDragOver($event)"
-            (dragleave)="onDragLeave()"
-            (drop)="onDrop($event)"
-          >
-            <div class="upload-icon-ring">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                <line x1="12" y1="18" x2="12" y2="12" />
-                <line x1="9" y1="15" x2="15" y2="15" />
-              </svg>
-            </div>
-            <h2 class="upload-title">Analyze a Folder</h2>
-            <p class="upload-desc">Drop a folder here or browse to select one. SystemLens will scan all files, map dependencies, detect architecture patterns, and run a full AI analysis.</p>
-            <div class="upload-error" *ngIf="uploadError">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              {{ uploadError }}
-            </div>
-            <div class="upload-actions">
-              <button class="upload-browse-btn" (click)="browseFolder()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>
-                Browse Folder
-              </button>
-              <button class="upload-workspace-btn" (click)="openSwitcher()" title="Switch workspace">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="3" width="20" height="14" rx="2" />
-                  <polyline points="8 21 12 17 16 21" />
-                </svg>
-                {{ folderName }}
-              </button>
-            </div>
-            <div class="upload-hint">Drag an entire folder from your file explorer</div>
-          </div>
-        </ng-container>
 
         <!-- ── ANALYZING or READY: shared identity layout ── -->
         <ng-container *ngIf="isAnalyzing || hasModel">

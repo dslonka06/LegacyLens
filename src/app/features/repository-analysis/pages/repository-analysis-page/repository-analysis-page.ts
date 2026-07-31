@@ -733,6 +733,16 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
     return [
       {
+        id: 'key-areas',
+        icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
+        count: null,
+        tags: ai?.understanding?.coreCapabilities?.slice(0, 2).map((c) => c.name),
+        label: 'Key Areas',
+        route: `${base}/system-understanding`,
+        suggested: suggested === 'understanding',
+        pending: !ai?.completedStages?.includes('understanding'),
+      },
+      {
         id: 'dependencies',
         icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
         count: this.dependencyCount > 0 ? this.dependencyCount : null,
@@ -767,16 +777,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
         route: `${base}/architecture`,
         suggested: false,
         pending: !this.model?.capabilities.includes('architectureDiscovery'),
-      },
-      {
-        id: 'key-areas',
-        icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
-        count: null,
-        tags: ai?.understanding?.coreCapabilities?.slice(0, 2).map((c) => c.name),
-        label: 'Key Areas',
-        route: `${base}/system-understanding`,
-        suggested: suggested === 'understanding',
-        pending: !ai?.completedStages?.includes('understanding'),
       },
     ];
   }

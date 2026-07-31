@@ -1,0 +1,308 @@
+// Shared styles for the new-analysis landing pages (file, folder, repository).
+// These pages render inside app-body alongside the sidebar.
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.new-analysis-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-window);
+
+  // Subtle background texture matching the hub pages
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('/assets/HomepageBackground.png') top center / cover no-repeat;
+    opacity: 0.18;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      160deg,
+      rgba(141, 99, 255, 0.04) 0%,
+      transparent 55%
+    );
+    z-index: 0;
+    pointer-events: none;
+  }
+}
+
+// ─── Top bar ──────────────────────────────────────────────────
+
+.new-analysis-topbar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  flex-shrink: 0;
+}
+
+.new-analysis-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+// ─── Body — upper-centered content ────────────────────────────
+
+.new-analysis-body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  // Sit in the upper third rather than dead center
+  justify-content: flex-start;
+  padding: 48px 32px 80px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+}
+
+// ─── Hero label ───────────────────────────────────────────────
+
+.new-analysis-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 32px;
+
+  svg {
+    width: 26px;
+    height: 26px;
+    color: var(--accent);
+    opacity: 0.85;
+  }
+}
+
+.new-analysis-label-text {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-heading);
+  letter-spacing: -0.4px;
+}
+
+// ─── Drop zone card ───────────────────────────────────────────
+
+.drop-zone {
+  width: 100%;
+  max-width: 520px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px dashed rgba(141, 99, 255, 0.28);
+  border-radius: 22px;
+  padding: 48px 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+
+  &--drag {
+    border-color: rgba(141, 99, 255, 0.65);
+    background: rgba(141, 99, 255, 0.07);
+    box-shadow: 0 0 0 1px rgba(141, 99, 255, 0.18), 0 16px 48px rgba(141, 99, 255, 0.1);
+  }
+}
+
+.drop-zone-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+
+  svg {
+    width: 26px;
+    height: 26px;
+    color: var(--accent);
+  }
+}
+
+.drop-zone-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.drop-zone-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 360px;
+}
+
+.drop-zone-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: color-mix(in srgb, var(--error) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--error) 25%, transparent);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--error);
+  text-align: left;
+  width: 100%;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+}
+
+.drop-zone-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.drop-zone-browse-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-btn);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: var(--accent-hover);
+    box-shadow: var(--shadow-glow);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.drop-zone-hint {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+// ─── Scanning overlay (repository only) ──────────────────────
+
+.new-analysis-scanning {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: rgba(15, 17, 23, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.scanning-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(141, 99, 255, 0.2);
+  border-radius: 22px;
+  padding: 44px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.scanning-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid rgba(141, 99, 255, 0.15);
+  border-top-color: var(--accent);
+  animation: new-analysis-spin 0.85s linear infinite;
+}
+
+.scanning-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.scanning-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.scan-progress-bar {
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.scan-progress-fill {
+  height: 100%;
+  width: 50%;
+  background: var(--accent);
+  border-radius: 2px;
+  animation: new-analysis-scan-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes new-analysis-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes new-analysis-scan-pulse {
+  0%   { transform: translateX(-150%); }
+  100% { transform: translateX(350%); }
+}
