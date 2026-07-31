@@ -1,7 +1,7 @@
 <div class="hub-page" [class.hub-page--has-model]="hasModel">
 
   <!-- ── Topbar — floats on background, no panel ───────────────── -->
-  <div class="hub-topbar" [class.hub-topbar--animate]="showIdentity">
+  <div class="hub-topbar">
     <div class="hub-topbar-left">
       <div class="hub-breadcrumb">
         <span class="hub-breadcrumb-root">Folder Analysis</span>
@@ -188,7 +188,7 @@
           <span class="info-card-title">AI Analysis</span>
         </div>
 
-        <ng-container *ngIf="isAnalyzing || model; else aiCardEmpty">
+        <ng-container *ngIf="model; else aiCardEmpty">
 
           <!-- Pipeline bubble track -->
           <div class="pipeline-track">
@@ -335,7 +335,7 @@
     <!-- ── Row 3: Metric / nav cards ─────────────────────────────── -->
     <ng-container *ngIf="hasModel">
       <div class="hub-section-label" *ngIf="showMetricCards">Explore This Folder</div>
-      <div class="hub-metric-row"
+      <div class="hub-metric-row hub-metric-row--6"
            [class.hub-metric-row--animate]="showMetricCards && !isReturning"
            [class.hub-metric-row--animate-fast]="showMetricCards && isReturning">
         <button
@@ -356,15 +356,11 @@
               <span class="metric-card-subtitle">{{ card.subtitle }}</span>
             </ng-container>
             <ng-template #countBlock>
-              <ng-container *ngIf="card.tags?.length; else numBlock">
-                <div class="metric-card-tags">
-                  <span class="metric-card-tag" *ngFor="let tag of card.tags">{{ tag }}</span>
-                </div>
-              </ng-container>
-              <ng-template #numBlock>
-                <span class="metric-card-count" *ngIf="card.count !== null && !card.pending">{{ displayedCounts[card.id] ?? card.count }}</span>
-                <span class="metric-card-count metric-card-count--pending" *ngIf="card.pending">…</span>
-              </ng-template>
+              <div class="metric-card-tags" *ngIf="card.tags?.length">
+                <span class="metric-card-tag" *ngFor="let tag of card.tags">{{ tag }}</span>
+              </div>
+              <span class="metric-card-count" *ngIf="card.count !== null && !card.pending">{{ displayedCounts[card.id] ?? card.count }}</span>
+              <span class="metric-card-count metric-card-count--pending" *ngIf="card.pending">…</span>
               <span class="metric-card-subtitle">{{ card.subtitle }}</span>
             </ng-template>
           </div>

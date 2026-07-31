@@ -69,7 +69,7 @@ export class MermaidDiagram implements OnChanges, AfterViewInit {
       const id = `mermaid-${Math.random().toString(36).slice(2)}`;
       const { svg } = await mermaid.render(id, text);
 
-      this.svgHtml = this.sanitizer.bypassSecurityTrustHtml(this._normaliseSvg(svg));
+      this.svgHtml = this.sanitizer.bypassSecurityTrustHtml(svg);
       this.renderError = false;
     } catch (err) {
       this.svgHtml = null;
@@ -79,42 +79,5 @@ export class MermaidDiagram implements OnChanges, AfterViewInit {
     }
 
     this.cdr.markForCheck();
-  }
-
-  /**
-   * Post-process Mermaid's SVG output so it scales responsively.
-   * Mermaid sets explicit width/height px attributes; we preserve them as
-   * viewBox then replace with 100%/auto so CSS can control the size.
-   */
-  private _normaliseSvg(svg: string): string {
-    // Extract existing width/height attributes to build a viewBox if absent
-    const wMatch = svg.match(/\bwidth="([^"]+)"/);
-    const hMatch = svg.match(/\bheight="([^"]+)"/);
-    const w = wMatch?.[1];
-    const h = hMatch?.[1];
-
-    // If there's already a viewBox, just remove the fixed dimensions
-    const hasViewBox = /viewBox=/.test(svg);
-
-    let out = svg;
-
-    if (!hasViewBox && w && h) {
-      // Insert viewBox using the pixel dimensions
-      const wPx = parseFloat(w);
-      const hPx = parseFloat(h);
-      if (!isNaN(wPx) && !isNaN(hPx)) {
-        out = out.replace(/<svg /, `<svg viewBox="0 0 ${wPx} ${hPx}" `);
-      }
-    }
-
-    // Replace fixed width/height with responsive values
-    out = out
-      .replace(/\bwidth="[^"]*"/, 'width="100%"')
-      .replace(/\bheight="[^"]*"/, 'height="auto"');
-
-    // Inject inline style so it always wins over Mermaid's own style block
-    out = out.replace(/<svg /, '<svg style="max-width:100%;height:auto;display:block;" ');
-
-    return out;
   }
 }

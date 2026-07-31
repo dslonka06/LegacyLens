@@ -122,8 +122,10 @@
           </div>
         </div>
 
-        <!-- ── Tier 3: Responsibilities + Components ────────────────────────── -->
-        <div class="su-tier su-tier--two-col su-tier--bottom">
+        <!-- ── Tier 3: Responsibilities + Components (file) / Responsibilities (folder) ── -->
+
+        <!-- File scope: two-column layout with components panel -->
+        <div class="su-tier su-tier--two-col su-tier--bottom" *ngIf="understanding!.scope === 'file'">
 
           <!-- Responsibilities -->
           <div class="su-card su-card--stretch">
@@ -152,7 +154,7 @@
             </ng-template>
           </div>
 
-          <!-- Components -->
+          <!-- Components (file scope only) -->
           <div class="su-card su-card--stretch">
             <div class="su-card-header">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -241,30 +243,42 @@
 
         </div>
 
-        <!-- ── Tier 4: Workflows ──────────────────────────────────────────── -->
-        <div class="su-tier" *ngIf="understanding!.scope !== 'file' && (understanding!.keyWorkflows?.length || understanding!.mostImportantWorkflows?.length)">
+        <!-- Folder scope: full-width responsibilities with heuristic descriptions -->
+        <div class="su-tier su-tier--bottom" *ngIf="understanding!.scope === 'folder' && folderResponsibilities.length">
+          <div class="su-card">
+            <div class="su-card-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+                <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+              </svg>
+              Responsibilities
+            </div>
+            <div class="su-resp-list">
+              <div class="su-resp-item" *ngFor="let r of folderResponsibilities; let i = index">
+                <div class="su-resp-header" (click)="toggleResponsibility(i)">
+                  <span class="su-resp-label">{{ r.text }}</span>
+                  <svg class="su-accordion-chevron" [class.su-accordion-chevron--open]="isResponsibilityExpanded(i)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </div>
+                <div class="su-accordion-body" [class.su-accordion-body--open]="isResponsibilityExpanded(i)">
+                  <p class="su-resp-desc" *ngIf="r.description">{{ r.description }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          <div class="su-card" *ngIf="understanding!.keyWorkflows?.length">
+        <!-- ── Tier 4: Workflows ──────────────────────────────────────────── -->
+
+        <!-- Repository scope: structured workflows with name + description -->
+        <div class="su-tier" *ngIf="understanding!.scope === 'repository' && understanding!.mostImportantWorkflows?.length">
+          <div class="su-card">
             <div class="su-card-header">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
               </svg>
               Key Workflows
-            </div>
-            <div class="su-numbered-list">
-              <div class="su-numbered-item" *ngFor="let wf of understanding!.keyWorkflows; let i = index">
-                <span class="su-number-circle">{{ i + 1 }}</span>
-                <span class="su-numbered-text">{{ wf }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="su-card" *ngIf="understanding!.mostImportantWorkflows?.length">
-            <div class="su-card-header">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-              </svg>
-              Most Important Workflows
             </div>
             <div class="su-workflow-list">
               <div class="su-workflow-item" *ngFor="let wf of understanding!.mostImportantWorkflows">
@@ -273,7 +287,24 @@
               </div>
             </div>
           </div>
+        </div>
 
+        <!-- Folder scope: heuristic workflows with descriptions -->
+        <div class="su-tier" *ngIf="understanding!.scope === 'folder' && folderWorkflows.length">
+          <div class="su-card">
+            <div class="su-card-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+              Key Workflows
+            </div>
+            <div class="su-workflow-list">
+              <div class="su-workflow-item" *ngFor="let wf of folderWorkflows">
+                <div class="su-workflow-name">{{ wf.text }}</div>
+                <div class="su-workflow-desc" *ngIf="wf.description">{{ wf.description }}</div>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>

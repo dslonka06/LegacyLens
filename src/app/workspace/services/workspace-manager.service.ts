@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import {
   BehaviorSubject,
   Observable,
@@ -98,6 +98,7 @@ export class WorkspaceManagerService {
   constructor(
     private readonly router: Router,
     private readonly electronService: ElectronService,
+    private readonly ngZone: NgZone,
   ) {
     this.ready = this.restoreFromStorage();
   }
@@ -491,10 +492,13 @@ export class WorkspaceManagerService {
         };
       });
 
-      this._workspaces$.next(restored.map(ws => ({
+      const hydrated = restored.map(ws => ({
         ...ws,
         knowledgeModel: ws.knowledgeModel ? coerceSummaries(ws.knowledgeModel) : null,
-      })));
+      }));
+      // Run inside NgZone so that subscribers (sidebar, hub pages) trigger
+      // Angular CD when the restored workspaces land.
+      this.ngZone.run(() => this._workspaces$.next(hydrated));
     } catch {
       // Storage unavailable — start fresh, no user-visible error needed
     }

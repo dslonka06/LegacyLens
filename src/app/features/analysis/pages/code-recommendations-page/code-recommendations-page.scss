@@ -7,67 +7,6 @@
   height: 100%;
 }
 
-.page-split {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.code-panel {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: visible;
-  min-height: 0;
-  position: relative;
-  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-
-  app-code-editor {
-    overflow: hidden;
-    min-height: 0;
-    flex: 1;
-  }
-
-  &--collapsed {
-    background: var(--editor-bg);
-    border-right: 1px solid var(--border);
-    min-width: 6px;
-  }
-}
-
-.code-panel-collapse-tab {
-  position: absolute;
-  right: -20px;
-  top: 80px;
-  z-index: 100;
-  width: 20px;
-  height: 40px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-left: none;
-  border-radius: 0 10px 10px 0;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-
-  svg {
-    width: 12px;
-    height: 12px;
-    flex-shrink: 0;
-  }
-
-  &:hover {
-    background: var(--bg-card);
-    color: var(--accent);
-    border-color: rgba(141, 99, 255, 0.3);
-  }
-}
-
 .page-main {
   flex: 1;
   min-width: 0;
@@ -76,40 +15,7 @@
   flex-direction: column;
 }
 
-// ── Tree layout ───────────────────────────────────────────────
-.rec-layout {
-  display: contents;
-
-  &--has-tree {
-    display: grid;
-    grid-template-columns: 220px 1fr;
-    gap: 20px;
-    align-items: start;
-    height: 100%;
-
-    @media (max-width: 900px) {
-      grid-template-columns: 1fr;
-      .rec-tree-rail {
-        display: none;
-      }
-    }
-  }
-}
-
-.rec-tree-rail {
-  height: 100%;
-  min-height: 400px;
-  max-height: calc(100vh - 180px);
-  position: sticky;
-  top: 0;
-}
-
-.rec-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
+// ── Base card ─────────────────────────────────────────────────
 .rec-card {
   background: var(--panel-bg);
   backdrop-filter: blur(14px);
@@ -129,6 +35,7 @@
   letter-spacing: 0.06em;
   color: var(--text-muted);
   margin-bottom: 12px;
+
   svg {
     width: 14px;
     height: 14px;
@@ -137,79 +44,58 @@
   }
 }
 
-.rec-overview-text {
-  font-size: 14px;
-  color: var(--text-content);
-  line-height: 1.75;
-  margin: 0;
-}
-
-.rec-metrics {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.rec-metric {
+// ── Summary strip ─────────────────────────────────────────────
+.rec-summary-strip {
   background: var(--panel-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-card);
-  padding: 14px 16px;
+  padding: 16px 22px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 0;
 }
 
-.rec-metric-value {
+.rec-summary-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+
+  &.stat-error .rec-summary-value { color: var(--severity-critical); }
+  &.stat-warn  .rec-summary-value { color: var(--severity-high); }
+
+  &.debt-critical .rec-summary-value { color: var(--severity-critical); }
+  &.debt-high     .rec-summary-value { color: var(--severity-high); }
+  &.debt-moderate .rec-summary-value { color: var(--severity-medium); }
+  &.debt-low      .rec-summary-value { color: var(--success); }
+}
+
+.rec-summary-value {
   font-size: 20px;
   font-weight: 700;
   color: var(--text-content);
   line-height: 1;
 }
-.rec-metric-label {
-  font-size: 11px;
+
+.rec-summary-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--text-muted);
-  font-weight: 500;
-}
-.rec-metric-context {
-  font-size: 11px;
-  color: var(--text-muted);
-  line-height: 1.4;
-  margin-top: 2px;
 }
 
-.rec-metric-critical .rec-metric-value {
-  color: var(--severity-critical);
-}
-.rec-metric-high .rec-metric-value {
-  color: var(--severity-high);
-}
-
-.debt-critical .rec-metric-value {
-  color: var(--severity-critical);
-}
-.debt-high .rec-metric-value {
-  color: var(--severity-high);
-}
-.debt-moderate .rec-metric-value {
-  color: var(--severity-medium);
-}
-.debt-low .rec-metric-value {
-  color: var(--success);
+.rec-summary-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--border);
+  flex-shrink: 0;
 }
 
-.readiness-not-ready .rec-metric-value {
-  color: var(--severity-critical);
-}
-.readiness-partial .rec-metric-value {
-  color: var(--severity-medium);
-}
-.readiness-ready .rec-metric-value {
-  color: var(--success);
-}
-
+// ── Count badge ───────────────────────────────────────────────
 .rec-count-badge {
   margin-left: auto;
   font-size: 10px;
@@ -221,6 +107,7 @@
   color: var(--text-muted);
 }
 
+// ── Recommendation list ───────────────────────────────────────
 .rec-list {
   display: flex;
   flex-direction: column;
@@ -234,15 +121,9 @@
   overflow: hidden;
   cursor: pointer;
   transition: border-color 0.12s;
-  &:hover {
-    border-color: var(--text-muted);
-  }
-  &.expanded {
-    border-color: var(--accent);
-  }
-  &--highlighted {
-    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  }
+
+  &:hover { border-color: var(--text-muted); }
+  &.expanded { border-color: var(--accent); }
 }
 
 .rec-item-header {
@@ -275,12 +156,14 @@
   gap: 5px;
   min-width: 0;
 }
+
 .rec-item-title {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-content);
   line-height: 1.4;
 }
+
 .rec-item-tags {
   display: flex;
   flex-wrap: wrap;
@@ -295,22 +178,11 @@
   border-radius: 6px;
   flex-shrink: 0;
   white-space: nowrap;
-  &.priority-critical {
-    background: color-mix(in srgb, var(--severity-critical) 14%, transparent);
-    color: var(--severity-critical);
-  }
-  &.priority-high {
-    background: color-mix(in srgb, var(--severity-high) 14%, transparent);
-    color: var(--severity-high);
-  }
-  &.priority-medium {
-    background: color-mix(in srgb, var(--severity-medium) 14%, transparent);
-    color: var(--severity-medium);
-  }
-  &.priority-low {
-    background: color-mix(in srgb, var(--success) 14%, transparent);
-    color: var(--success);
-  }
+
+  &.priority-critical { background: color-mix(in srgb, var(--severity-critical) 14%, transparent); color: var(--severity-critical); }
+  &.priority-high     { background: color-mix(in srgb, var(--severity-high) 14%, transparent);     color: var(--severity-high); }
+  &.priority-medium   { background: color-mix(in srgb, var(--severity-medium) 14%, transparent);   color: var(--severity-medium); }
+  &.priority-low      { background: color-mix(in srgb, var(--success) 14%, transparent);           color: var(--success); }
 }
 
 .rec-category-badge {
@@ -355,41 +227,11 @@
   opacity: 0.5;
   margin-top: 2px;
   transition: transform 0.14s;
-  .expanded & {
-    transform: rotate(90deg);
-  }
+
+  .expanded & { transform: rotate(90deg); }
 }
 
-.rec-code-ref {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 0 12px 8px;
-  font-size: 11px;
-  font-family: 'JetBrains Mono', Consolas, monospace;
-  color: var(--text-muted);
-  svg {
-    width: 11px;
-    height: 11px;
-    flex-shrink: 0;
-    opacity: 0.5;
-  }
-}
-
-.rec-code-file {
-  font-weight: 600;
-}
-.rec-code-method {
-  color: var(--text-muted);
-}
-.rec-code-lines {
-  font-size: 10px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 0 5px;
-}
-
+// ── Expanded body ─────────────────────────────────────────────
 .rec-item-body {
   border-top: 1px solid var(--border);
   border-left: 3px solid var(--accent);
@@ -404,12 +246,13 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-.rec-section p {
-  font-size: 12px;
-  color: var(--text-secondary);
-  line-height: 1.65;
-  margin: 0;
+
+  p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    margin: 0;
+  }
 }
 
 .rec-section-label {
@@ -450,6 +293,7 @@
   font-family: 'JetBrains Mono', Consolas, monospace;
 }
 
+// ── No findings ───────────────────────────────────────────────
 .rec-none {
   display: flex;
   flex-direction: column;
@@ -457,25 +301,16 @@
   gap: 10px;
   padding: 32px 24px;
   text-align: center;
+
   svg {
     width: 40px;
     height: 40px;
     opacity: 0.2;
   }
+
   p {
     font-size: 13px;
     color: var(--text-secondary);
     margin: 0;
   }
-}
-
-.rec-assessment {
-  border-top: 2px solid color-mix(in srgb, var(--accent) 20%, transparent);
-}
-
-.rec-assessment-text {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.75;
-  margin: 0;
 }

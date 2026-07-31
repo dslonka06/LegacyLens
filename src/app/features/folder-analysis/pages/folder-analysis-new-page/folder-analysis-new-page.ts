@@ -48,12 +48,6 @@ export class FolderAnalysisNewPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.limitSub?.unsubscribe();
-    if (this.workspaceId) {
-      const ws = this.manager.getById(this.workspaceId);
-      if (ws?.status === 'empty') {
-        this.manager.delete(this.workspaceId);
-      }
-    }
   }
 
   browseFolder(): void {

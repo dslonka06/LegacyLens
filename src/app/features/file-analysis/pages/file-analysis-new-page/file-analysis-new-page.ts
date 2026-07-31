@@ -48,13 +48,6 @@ export class FileAnalysisNewPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.limitSub?.unsubscribe();
-    // If user leaves without starting an analysis, clean up the empty workspace
-    if (this.workspaceId) {
-      const ws = this.manager.getById(this.workspaceId);
-      if (ws?.status === 'empty') {
-        this.manager.delete(this.workspaceId);
-      }
-    }
   }
 
   browse(): void {

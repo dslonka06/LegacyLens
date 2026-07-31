@@ -69,45 +69,14 @@
   z-index: 1;
 }
 
-// ─── Animation helpers ────────────────────────────────────────
+// ─── Animation helpers (preserved for future use) ────────────────────────────────────────
 
 .hub-section--animate {
   animation: hub-fade-up 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-// Per-card stagger for metric cards — applied via nth-child
-.hub-metric-row {
-  .metric-card {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  &--animate {
-    .metric-card {
-      @for $i from 1 through 8 {
-        &:nth-child(#{$i}) {
-          animation: hub-fade-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-          animation-delay: #{($i - 1) * 60}ms;
-        }
-      }
-    }
-  }
-}
-
-// Faster variant for returning to an existing analysis
 .hub-section--animate-fast {
   animation: hub-fade-up 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.hub-metric-row--animate-fast {
-  .metric-card {
-    @for $i from 1 through 8 {
-      &:nth-child(#{$i}) {
-        animation: hub-fade-up 0.15s cubic-bezier(0.22, 1, 0.36, 1) both;
-        animation-delay: #{($i - 1) * 25}ms;
-      }
-    }
-  }
 }
 
 // ─── Upload zone ──────────────────────────────────────────────
@@ -386,14 +355,6 @@
   min-height: 130px;
   gap: 16px;
   flex-shrink: 0;
-  opacity: 0;
-  transform: translateY(-8px);
-  transition: opacity 0.3s, transform 0.3s;
-
-  &--animate {
-    opacity: 1;
-    transform: none;
-  }
 }
 
 .hub-topbar-left {

@@ -197,6 +197,10 @@ export interface KnowledgeAIResults {
     imports: string[];
     exports: string[];
   } | null;
+  /** Folder scope only: per-responsibility descriptions from heuristic engine. */
+  folderResponsibilitiesNarrative?: string[] | null;
+  /** Folder scope only: per-workflow descriptions from heuristic engine. */
+  folderWorkflowsNarrative?: string[] | null;
   /** Security findings and risk surface produced by heuristic scanning. */
   security?: SecurityAnalysis;
   /** Actionable improvement recommendations from structural analysis. */

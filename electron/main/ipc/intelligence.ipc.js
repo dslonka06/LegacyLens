@@ -13,6 +13,8 @@ const { HubNarrativeEngine } = require('../engines/narrative/hub-narrative.engin
 const { BusinessPurposeNarrativeEngine } = require('../engines/narrative/business-purpose-narrative.engine');
 const { CodeHealthNarrativeEngine } = require('../engines/narrative/code-health-narrative.engine');
 const { ResponsibilitiesNarrativeEngine } = require('../engines/narrative/responsibilities-narrative.engine');
+const { FolderResponsibilitiesNarrativeEngine } = require('../engines/narrative/folder-responsibilities-narrative.engine');
+const { FolderWorkflowsNarrativeEngine } = require('../engines/narrative/folder-workflows-narrative.engine');
 const { DataFlowPatternEngine } = require('../engines/narrative/data-flow-pattern.engine');
 const { DataFlowStepsNarrativeEngine } = require('../engines/narrative/data-flow-steps-narrative.engine');
 const { WorkflowExplorerEngine } = require('../engines/analysis/workflow-explorer.engine');
@@ -26,6 +28,8 @@ const { ArchitectureAnalysisEngine } = require('../engines/analysis/architecture
 const { DataFlowAnalysisEngine } = require('../engines/analysis/data-flow-analysis.engine');
 const { RepositoryInsightsEngine } = require('../engines/analysis/repository-insights.engine');
 const { RepositorySummaryEngine } = require('../engines/analysis/repository-summary.engine');
+const { ArchitectureDiagramEngine } = require('../engines/diagram/architecture-diagram.engine');
+const { DataFlowDiagramEngine } = require('../engines/diagram/data-flow-diagram.engine');
 const { CapabilityPipelineEngine, CAPABILITY_MAP } = require('../engines/core/capability-pipeline.engine');
 const { KnowledgeModelEngine } = require('../engines/core/knowledge-model.engine');
 const { KnowledgeModelService } = require('../services/knowledge/knowledge-model.service');
@@ -52,6 +56,8 @@ const hubNarrative = new HubNarrativeEngine();
 const businessPurposeNarrative = new BusinessPurposeNarrativeEngine();
 const codeHealthNarrative = new CodeHealthNarrativeEngine();
 const responsibilitiesNarrative = new ResponsibilitiesNarrativeEngine();
+const folderResponsibilitiesNarrative = new FolderResponsibilitiesNarrativeEngine();
+const folderWorkflowsNarrative = new FolderWorkflowsNarrativeEngine();
 const dataFlowPattern = new DataFlowPatternEngine();
 const dataFlowStepsNarrative = new DataFlowStepsNarrativeEngine();
 const workflowExplorer = new WorkflowExplorerEngine();
@@ -63,6 +69,8 @@ const architectureAnalysis = new ArchitectureAnalysisEngine();
 const dataFlowAnalysis = new DataFlowAnalysisEngine();
 const repositoryInsights = new RepositoryInsightsEngine();
 const repositorySummary = new RepositorySummaryEngine();
+const architectureDiagram = new ArchitectureDiagramEngine();
+const dataFlowDiagram = new DataFlowDiagramEngine();
 
 /**
  * Adapts the new KnowledgeModel contract shape to the legacy {knowledge, session}
@@ -241,8 +249,37 @@ function registerIntelligenceHandlers() {
     };
 
     // ── File-scope narrative engines ─────────────────────────────────────────
-    let fileResponsibilitiesNarrative = null;
+    let fileResponsibilitiesNarrativeResult = null;
     let fileComponentsNarrative = null;
+
+    // ── Folder-scope narrative engines ────────────────────────────────────────
+    let folderResponsibilitiesNarrativeResult = null;
+    let folderWorkflowsNarrativeResult = null;
+
+    if (!isFile && model.targetType === 'folder') {
+      const ins = model.insights ?? {};
+      const rel = model.relationships ?? {};
+      const graphNodes = rel.dependencies?.graph?.nodes ?? [];
+      const graphEdges = rel.dependencies?.graph?.edges ?? [];
+      const folderFileCount = Object.keys(model.structure?.symbols ?? {}).length;
+      const couplingRatio = graphNodes.length > 0 ? graphEdges.length / graphNodes.length : 0;
+      const architecturePatterns = (rel.architecture?.patterns ?? []).map(p => p.name);
+
+      folderResponsibilitiesNarrativeResult = folderResponsibilitiesNarrative.build({
+        responsibilities:     understanding?.keyResponsibilities ?? [],
+        responsibilityGroups: understanding?.responsibilityGroups ?? [],
+        complexity:           ins.complexity      ?? 'Medium',
+        maintainability:      ins.maintainability ?? 'Medium',
+        fileCount:            folderFileCount,
+      });
+
+      folderWorkflowsNarrativeResult = folderWorkflowsNarrative.build({
+        workflows:            understanding?.keyWorkflows ?? [],
+        architecturePatterns,
+        fileCount:            folderFileCount,
+        couplingRatio,
+      });
+    }
 
     if (isFile) {
       const s        = model.structure ?? {};
@@ -260,7 +297,7 @@ function registerIntelligenceHandlers() {
         flowSteps:        ins.dataFlow?.steps   ?? [],
         risks:            ins.risks ?? [],
       };
-      fileResponsibilitiesNarrative = responsibilitiesNarrative.build(respData);
+      fileResponsibilitiesNarrativeResult = responsibilitiesNarrative.build(respData);
 
       fileComponentsNarrative = {
         items: [
@@ -274,11 +311,13 @@ function registerIntelligenceHandlers() {
 
     return {
       understanding,
-      hubNarrative:                { structural, directive: '' },
-      businessPurposeNarrative:    businessPurposeNarrative.build(purposeData),
-      codeHealthNarrative:         codeHealthNarrative.build(healthData),
-      fileResponsibilitiesNarrative,
+      hubNarrative:                      { structural, directive: '' },
+      businessPurposeNarrative:          businessPurposeNarrative.build(purposeData),
+      codeHealthNarrative:               codeHealthNarrative.build(healthData),
+      fileResponsibilitiesNarrative:     fileResponsibilitiesNarrativeResult,
       fileComponentsNarrative,
+      folderResponsibilitiesNarrative:   folderResponsibilitiesNarrativeResult,
+      folderWorkflowsNarrative:          folderWorkflowsNarrativeResult,
     };
   }));
 
@@ -381,7 +420,9 @@ function registerIntelligenceHandlers() {
     console.log('[IPC] intelligence:architectureAnalysis targetType=' + model.targetType);
     const result = architectureAnalysis.analyze(model);
     console.log('[IPC] intelligence:architectureAnalysis done result=' + (result ? 'ok' : 'null'));
-    return result;
+    let diagram = '';
+    try { diagram = architectureDiagram.build(model); } catch (e) { /* non-fatal */ }
+    return { ...result, architectureDiagram: diagram };
   }));
 
   // intelligence:dataFlowAnalysis — AI-tier data flow analysis from KnowledgeModel
@@ -410,7 +451,13 @@ function registerIntelligenceHandlers() {
       return { ...result, fileNarrative: { pattern, stepNarrative } };
     }
 
-    return result;
+    // ── Folder/repo: generate workflow diagram ────────────────────────────────
+    let diagram = '';
+    try {
+      diagram = dataFlowDiagram.build(result, model.relationships?.dependencies?.graph ?? null);
+    } catch (e) { /* non-fatal */ }
+
+    return { ...result, dataFlowDiagram: diagram };
   }));
 
   // intelligence:insights — derive repository-level insights from aggregated knowledge

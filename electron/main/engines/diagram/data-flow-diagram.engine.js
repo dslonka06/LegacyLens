@@ -1,241 +1,211 @@
 'use strict';
 
 /**
- * DataFlowDiagramEngine — produces a Mermaid flowchart TD string
- * showing data flow roles across a codebase.
+ * DataFlowDiagramEngine — produces a Mermaid flowchart LR string
+ * representing the primary data flow workflows of a codebase.
  *
- * Strategy: mirror the ArchitectureDiagramEngine layout.
- * Each role (Entry, Processing, Data, External) becomes a layer-header node
- * with representative file nodes hanging beneath it. Layer-to-layer edges
- * drive the top-down flow. Bottleneck nodes get a distinct red style.
- *
- * Roles are inferred from the same name-based patterns used by
- * DataFlowDiscoveryEngine so classification stays consistent.
+ * Input: DataFlowAIAnalysis + DependencyGraph
+ * Output: string — valid Mermaid syntax, always renderable
  */
 
-const ROLE_ORDER = ['Entry', 'Processing', 'Data', 'External'];
+const MAX_WORKFLOWS   = 5;
+const MAX_NODES_PER_WF = 5;
 
-const ENTRY_PATTERNS    = [/controller/i, /handler/i, /endpoint/i, /api/i, /route/i, /-page$/i, /page\.(ts|js)$/i, /screen$/i, /view$/i, /component$/i, /presenter/i];
-const SERVICE_PATTERNS  = [/service/i, /manager/i, /processor/i, /calculator/i, /engine/i, /orchestrator/i, /workflow/i, /usecase/i, /command/i, /query/i];
-const REPO_PATTERNS     = [/repository/i, /repo\./i, /dao\./i, /store\./i, /storage/i, /persistence/i, /data\./i, /cache/i, /database/i];
-const DB_PATTERNS       = [/^table:/i, /db\./i, /sql/i, /migration/i];
-const EXTERNAL_PATTERNS = [/client/i, /gateway/i, /provider/i, /adapter/i, /proxy/i, /connector/i, /integration/i, /webhook/i, /http/i];
-
-const MAX_REPS_PER_ROLE = 4;
-
-function inferRole(node) {
-  const name = (node.name ?? '').toLowerCase();
-  const path = (node.path ?? node.id ?? '').replace(/\\/g, '/').toLowerCase();
-  const test = patterns => patterns.some(p => p.test(name) || p.test(path));
-
-  if (DB_PATTERNS.some(p => p.test(node.id) || p.test(name))) return 'Data';
-  if (test(REPO_PATTERNS))     return 'Data';
-  if (test(ENTRY_PATTERNS))    return 'Entry';
-  if (test(EXTERNAL_PATTERNS)) return 'External';
-  if (test(SERVICE_PATTERNS))  return 'Processing';
-  return null;
-}
-
-// Prefix with 'n_' to avoid Mermaid reserved keywords (end, style, classDef, etc.)
 function safeId(raw) {
-  return ('n_' + String(raw)).replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 48);
+  return ('n_' + raw).replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 40);
 }
 
-function safeLabel(name) {
-  const result = (name ?? '')
-    .replace(/\.(ts|js|tsx|jsx|vue|cs|py|java|kt)$/, '')
-    .replace(/[-_]/g, ' ')
-    .slice(0, 26)
-    .replace(/"/g, "'")
-    .replace(/[<>{}|]/g, ' ')
-    .trim();
-  return result || 'Node';
+function shortName(name) {
+  return (name ?? '').replace(/\.(ts|js|tsx|jsx|vue|cs|py|java|kt)$/, '').slice(0, 26);
+}
+
+// Risk badge suffix for workflow label
+function riskSuffix(risk) {
+  if (risk === 'High')     return ' ⚠';
+  if (risk === 'Moderate') return ' △';
+  return '';
+}
+
+// Node shape varies by role hint from name
+function nodeShape(name) {
+  const low = (name ?? '').toLowerCase();
+  if (/controller|page|component|handler|endpoint/.test(low)) return ['[', ']'];      // rect
+  if (/service|manager|engine|processor/.test(low))           return ['(', ')'];      // rounded
+  if (/repository|store|storage|cache|database|db/.test(low)) return ['[(', ')]'];    // cylinder
+  if (/client|gateway|provider|adapter|external/.test(low))   return ['([', '])'];    // stadium
+  return ['[', ']'];
 }
 
 class DataFlowDiagramEngine {
 
   build(dataFlowAnalysis, graph) {
-    if (graph?.nodes?.length >= 3) {
-      return this._roleDiagram(dataFlowAnalysis, graph);
+    const workflows = dataFlowAnalysis?.primaryWorkflows ?? [];
+    const entries   = dataFlowAnalysis?.entryPoints       ?? [];
+    const externals = dataFlowAnalysis?.externalDependencies ?? [];
+
+    if (!workflows.length && !entries.length) {
+      return this._emptyDiagram();
     }
 
-    // No meaningful graph — fall back to workflow chain summary
-    const workflows = dataFlowAnalysis?.primaryWorkflows ?? [];
-    const entries   = dataFlowAnalysis?.entryPoints      ?? [];
-    if (!workflows.length && !entries.length) {
-      return 'flowchart TD\n  A(["No workflow data available"])';
+    if (workflows.length) {
+      return this._workflowDiagram(workflows, graph, externals);
     }
-    return this._workflowSummaryDiagram(dataFlowAnalysis);
+
+    return this._entryPointDiagram(entries, externals, graph);
   }
 
-  // ── Primary path: role-layered diagram (mirrors ArchitectureDiagramEngine) ────
+  // ── Primary: workflow chain diagram ─────────────────────────────────────────
 
-  _roleDiagram(analysis, graph) {
-    const nodes = graph.nodes ?? [];
-    const edges = graph.edges ?? [];
+  _workflowDiagram(workflows, graph, externals) {
+    const lines     = ['flowchart LR'];
+    const extSet    = new Set((externals ?? []).map(e => (e ?? '').toLowerCase()));
+    const edgeSet   = new Set(); // deduplicate edges across workflows
 
-    // Assign each graph node to a role
-    const nodeRole = new Map();
-    for (const node of nodes) {
-      const role = inferRole(node);
-      if (role) nodeRole.set(node.id, role);
-    }
+    const limited = workflows.slice(0, MAX_WORKFLOWS);
 
-    // Promote unclassified nodes that participate in edges into Processing
-    for (const node of nodes) {
-      if (nodeRole.has(node.id)) continue;
-      const hasEdge = edges.some(e => e.source === node.id || e.target === node.id);
-      if (hasEdge) nodeRole.set(node.id, 'Processing');
-    }
+    for (let wi = 0; wi < limited.length; wi++) {
+      const wf      = limited[wi];
+      const wfLabel = (wf.workflowName ?? `Workflow ${wi + 1}`).slice(0, 32);
+      const suffix  = riskSuffix(wf.failureRisk);
+      const sgId    = `wf${wi}`;
 
-    // Count inbound edges per node — used to pick the most-referenced representatives
-    const inbound = new Map();
-    for (const e of edges) {
-      inbound.set(e.target, (inbound.get(e.target) ?? 0) + 1);
-    }
+      // Build the node chain for this workflow
+      // entryPoint is the first node; bottleneckNodes are notable stops
+      const chainNames = this._buildChain(wf, graph);
+      if (chainNames.length < 2) continue;
 
-    // Collect and rank representatives per role
-    const roleReps = new Map();
-    for (const role of ROLE_ORDER) roleReps.set(role, []);
+      lines.push(`  subgraph ${sgId}["${wfLabel}${suffix}"]`);
 
-    for (const node of nodes) {
-      const role = nodeRole.get(node.id);
-      if (!role) continue;
-      roleReps.get(role).push(node);
-    }
-
-    for (const [role, members] of roleReps) {
-      const sorted = members.sort((a, b) => (inbound.get(b.id) ?? 0) - (inbound.get(a.id) ?? 0));
-      roleReps.set(role, sorted.slice(0, MAX_REPS_PER_ROLE));
-    }
-
-    const activeRoles = ROLE_ORDER.filter(r => roleReps.get(r)?.length > 0);
-
-    if (activeRoles.length < 2) {
-      return this._workflowSummaryDiagram(analysis);
-    }
-
-    // Surface bottlenecks for distinct styling
-    const bottleneckSet = new Set(analysis?.bottlenecks ?? []);
-
-    const lines = ['flowchart TD'];
-    lines.push('');
-
-    const roleNodeId = new Map();
-    for (const role of activeRoles) {
-      const reps  = roleReps.get(role);
-      const rid   = `role_${role}`;
-      roleNodeId.set(role, rid);
-
-      const totalInRole = [...nodeRole.values()].filter(r => r === role).length;
-
-      lines.push(`  ${rid}(["${role} · ${totalInRole} module${totalInRole !== 1 ? 's' : ''}"])`);
-
-      for (const node of reps) {
-        const nid   = safeId(node.id);
-        const label = safeLabel(node.name ?? node.id);
-        lines.push(`  ${nid}["${label}"]`);
-        lines.push(`  ${rid} --> ${nid}`);
-      }
-      lines.push('');
-    }
-
-    // Role-to-role flow edges (TD direction)
-    for (let i = 0; i < activeRoles.length - 1; i++) {
-      const from = roleNodeId.get(activeRoles[i]);
-      const to   = roleNodeId.get(activeRoles[i + 1]);
-      lines.push(`  ${from} --> ${to}`);
-    }
-
-    // Direct cross-role edges between representative nodes (up to 12)
-    const keptIds = new Set([...roleReps.values()].flat().map(n => n.id));
-    let extraEdges = 0;
-    for (const edge of edges) {
-      if (extraEdges >= 12) break;
-      if (!keptIds.has(edge.source) || !keptIds.has(edge.target)) continue;
-      if (edge.source === edge.target) continue;
-      const srcRole = nodeRole.get(edge.source);
-      const tgtRole = nodeRole.get(edge.target);
-      if (!srcRole || !tgtRole || srcRole === tgtRole) continue;
-      lines.push(`  ${safeId(edge.source)} --> ${safeId(edge.target)}`);
-      extraEdges++;
-    }
-
-    lines.push('');
-
-    lines.push('  classDef roleHeader   fill:#7c3aed,stroke:#6d28d9,color:#fff,font-weight:bold');
-    lines.push('  classDef flowNode     fill:#1e1b4b,stroke:#4c1d95,color:#c4b5fd');
-    lines.push('  classDef extHeader    fill:#374151,stroke:#4b5563,color:#d1d5db,font-weight:bold');
-    lines.push('  classDef extNode      fill:#111827,stroke:#374151,color:#9ca3af');
-    lines.push('  classDef bottleneck   fill:#7f1d1d,stroke:#dc2626,color:#fca5a5');
-    lines.push('');
-
-    const bottleneckNodeIds = [];
-
-    for (const role of activeRoles) {
-      const rid   = roleNodeId.get(role);
-      const isExt = role === 'External';
-      lines.push(`  class ${rid} ${isExt ? 'extHeader' : 'roleHeader'}`);
-      for (const node of roleReps.get(role)) {
-        const nid = safeId(node.id);
-        if (bottleneckSet.has(node.name ?? node.id)) {
-          bottleneckNodeIds.push(nid);
+      for (const name of chainNames) {
+        const id     = safeId(`${wi}_${name}`);
+        const short  = shortName(name);
+        const [l, r] = nodeShape(name);
+        const isExt  = extSet.has(name.toLowerCase());
+        if (isExt) {
+          lines.push(`    ${id}(["${short}"])`);
         } else {
-          lines.push(`  class ${nid} ${isExt ? 'extNode' : 'flowNode'}`);
+          lines.push(`    ${id}${l}"${short}"${r}`);
+        }
+      }
+
+      // Chain edges within this workflow
+      for (let i = 0; i < chainNames.length - 1; i++) {
+        const fromId = safeId(`${wi}_${chainNames[i]}`);
+        const toId   = safeId(`${wi}_${chainNames[i + 1]}`);
+        const key    = `${fromId}-->${toId}`;
+        if (!edgeSet.has(key)) {
+          lines.push(`    ${fromId} --> ${toId}`);
+          edgeSet.add(key);
+        }
+      }
+
+      lines.push('  end');
+    }
+
+    // Style bottleneck nodes red across all workflows
+    const bottleneckIds = [];
+    for (let wi = 0; wi < limited.length; wi++) {
+      for (const bn of (limited[wi].bottleneckNodes ?? [])) {
+        bottleneckIds.push(safeId(`${wi}_${bn}`));
+      }
+    }
+    if (bottleneckIds.length) {
+      lines.push('  classDef bottleneck fill:#dc2626,stroke:#b91c1c,color:#fff');
+      for (const id of bottleneckIds) {
+        lines.push(`  class ${id} bottleneck`);
+      }
+    }
+
+    return lines.join('\n');
+  }
+
+  // ── Build a node-name chain for a workflow ───────────────────────────────────
+
+  _buildChain(wf, graph) {
+    const chain = [];
+
+    // Start with the known entry point
+    if (wf.entryPoint) chain.push(wf.entryPoint);
+
+    // If we have the dependency graph, trace forward from entry up to cap
+    if (graph?.edges?.length && wf.entryPoint) {
+      const edgeMap = new Map();
+      for (const e of graph.edges) {
+        const list = edgeMap.get(e.source) ?? [];
+        list.push(e.target);
+        edgeMap.set(e.source, list);
+      }
+
+      // Find the node id matching the entry point name
+      const entryNode = graph.nodes?.find(n =>
+        n.name === wf.entryPoint || n.id === wf.entryPoint
+      );
+
+      if (entryNode) {
+        const visited = new Set([entryNode.id]);
+        let current   = entryNode.id;
+
+        for (let step = 0; step < MAX_NODES_PER_WF - 1; step++) {
+          const targets = edgeMap.get(current) ?? [];
+          // Prefer bottleneck nodes first, then any unvisited
+          const next = targets.find(t => !visited.has(t) && (wf.bottleneckNodes ?? []).some(bn => {
+            const node = graph.nodes?.find(n => n.id === t);
+            return node?.name === bn;
+          })) ?? targets.find(t => !visited.has(t));
+
+          if (!next) break;
+          const nextNode = graph.nodes?.find(n => n.id === next);
+          if (nextNode) {
+            chain.push(nextNode.name ?? nextNode.id);
+            visited.add(next);
+            current = next;
+          }
         }
       }
     }
 
-    for (const nid of bottleneckNodeIds) {
-      lines.push(`  class ${nid} bottleneck`);
+    // Supplement with bottleneck nodes not already in chain
+    for (const bn of (wf.bottleneckNodes ?? [])) {
+      if (!chain.includes(bn)) chain.push(bn);
+    }
+
+    return [...new Set(chain)].slice(0, MAX_NODES_PER_WF);
+  }
+
+  // ── Fallback: entry points + externals only ──────────────────────────────────
+
+  _entryPointDiagram(entries, externals, graph) {
+    const lines = ['flowchart LR'];
+
+    for (const ep of entries.slice(0, 8)) {
+      const id    = safeId(ep);
+      const short = shortName(ep);
+      lines.push(`  ${id}["${short}"]`);
+    }
+
+    for (const ext of (externals ?? []).slice(0, 4)) {
+      const id    = safeId(`ext_${ext}`);
+      const short = shortName(ext);
+      lines.push(`  ${id}(["${short}"])`);
+    }
+
+    // Draw edges from graph where source is an entry point
+    if (graph?.edges?.length) {
+      const entrySet = new Set(entries);
+      for (const edge of graph.edges.slice(0, 20)) {
+        const srcNode = graph.nodes?.find(n => n.id === edge.source);
+        const tgtNode = graph.nodes?.find(n => n.id === edge.target);
+        if (srcNode && entrySet.has(srcNode.name)) {
+          lines.push(`  ${safeId(srcNode.name)} --> ${safeId(tgtNode?.name ?? edge.target)}`);
+        }
+      }
     }
 
     return lines.join('\n');
   }
 
-  // ── Fallback: compact workflow summary when no usable graph ──────────────────
-  // Shows each workflow as a single node with its risk rating, connected in sequence.
-  // Keeps the diagram readable for repos with sparse dependency data.
-
-  _workflowSummaryDiagram(analysis) {
-    const workflows = (analysis?.primaryWorkflows ?? []).slice(0, 6);
-    const entries   = analysis?.entryPoints ?? [];
-
-    if (!workflows.length && !entries.length) {
-      return 'flowchart TD\n  A(["No workflow data available"])';
-    }
-
-    const lines = ['flowchart TD'];
-    lines.push('');
-
-    if (workflows.length) {
-      const riskIcon = r => r === 'High' ? ' ⚠' : r === 'Moderate' ? ' △' : '';
-      let prev = null;
-      for (let i = 0; i < workflows.length; i++) {
-        const wf  = workflows[i];
-        const nid = `wf_${i}`;
-        const label = safeLabel(wf.workflowName ?? `Flow ${i + 1}`);
-        lines.push(`  ${nid}(["${label}${riskIcon(wf.failureRisk)}"])`);
-        if (prev !== null) lines.push(`  wf_${prev} --> ${nid}`);
-        prev = i;
-      }
-    } else {
-      // Entry-points only
-      for (let i = 0; i < Math.min(entries.length, 5); i++) {
-        const nid = `ep_${i}`;
-        lines.push(`  ${nid}["${safeLabel(entries[i])}"]`);
-      }
-    }
-
-    lines.push('');
-    lines.push('  classDef roleHeader fill:#7c3aed,stroke:#6d28d9,color:#fff,font-weight:bold');
-    if (workflows.length) {
-      for (let i = 0; i < workflows.length; i++) {
-        lines.push(`  class wf_${i} roleHeader`);
-      }
-    }
-
-    return lines.join('\n');
+  _emptyDiagram() {
+    return 'flowchart LR\n  A["No workflow data available"]';
   }
 }
 

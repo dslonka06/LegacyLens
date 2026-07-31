@@ -1,13 +1,24 @@
 .mermaid-diagram {
   width: 100%;
+  min-height: 120px;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  align-items: center;
+  justify-content: center;
 
   &__svg {
     width: 100%;
     overflow-x: auto;
-    overflow-y: hidden;
+
+    // Let the SVG scale to fit its container
+    :host ::ng-deep svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+
+      // Override mermaid's hardcoded font to inherit app font
+      font-family: inherit !important;
+    }
   }
 
   &__error {
@@ -16,7 +27,6 @@
     gap: 8px;
     color: var(--text-muted);
     font-size: 13px;
-    padding: 12px 0;
 
     svg {
       width: 16px;
@@ -41,16 +51,6 @@
     border-radius: 50%;
     animation: mermaid-spin 0.7s linear infinite;
   }
-}
-
-// The SVG Mermaid injects via innerHTML bypasses Angular view encapsulation,
-// so we target it globally here. The _normaliseSvg() method also inlines
-// max-width/height:auto directly on the element as a belt-and-suspenders fix.
-.mermaid-diagram__svg svg {
-  max-width: 100% !important;
-  height: auto !important;
-  display: block;
-  font-family: inherit !important;
 }
 
 @keyframes mermaid-spin {
