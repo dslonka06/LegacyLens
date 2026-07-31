@@ -242,7 +242,7 @@
         </div>
 
         <!-- ── Tier 4: Workflows ──────────────────────────────────────────── -->
-        <div class="su-tier" *ngIf="understanding!.keyWorkflows?.length || understanding!.mostImportantWorkflows?.length">
+        <div class="su-tier" *ngIf="understanding!.scope !== 'file' && (understanding!.keyWorkflows?.length || understanding!.mostImportantWorkflows?.length)">
 
           <div class="su-card" *ngIf="understanding!.keyWorkflows?.length">
             <div class="su-card-header">

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { BehaviorSubject, filter } from 'rxjs';
 
-export type ActiveWorkspace = 'file' | 'folder' | 'repository' | 'settings' | 'library' | null;
+export type ActiveWorkspace = 'file' | 'folder' | 'repository' | 'settings' | 'library' | 'new' | null;
 
 @Injectable({ providedIn: 'root' })
 export class ActiveWorkspaceService {
@@ -25,6 +25,7 @@ export class ActiveWorkspaceService {
   }
 
   private detectWorkspace(url: string): ActiveWorkspace {
+    if (url.endsWith('/new')) return 'new';
     if (url.startsWith('/file-analysis')) return 'file';
     if (url.startsWith('/folder-analysis')) return 'folder';
     if (url.startsWith('/repository-analysis')) return 'repository';

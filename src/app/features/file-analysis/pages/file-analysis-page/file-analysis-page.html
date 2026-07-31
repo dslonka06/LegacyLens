@@ -26,45 +26,7 @@
 
       <!-- Identity card — morphs between upload / analyzing / ready -->
       <div class="hub-identity-card"
-           [class.hub-identity-card--upload]="isEmpty"
            [class.hub-identity-card--analyzing]="isAnalyzing">
-
-        <!-- ── EMPTY: upload zone ── -->
-        <ng-container *ngIf="isEmpty">
-          <div
-            class="upload-zone upload-zone--inline"
-            [class.upload-zone--drag]="isDragging"
-            (dragover)="onDragOver($event)"
-            (dragleave)="onDragLeave()"
-            (drop)="onDrop($event)"
-          >
-            <div class="upload-icon-ring">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="12" y1="18" x2="12" y2="12" />
-                <line x1="9" y1="15" x2="15" y2="15" />
-              </svg>
-            </div>
-            <h2 class="upload-title">Analyze a File</h2>
-            <p class="upload-desc">Drop a source file here or browse to select one.</p>
-            <div class="upload-error" *ngIf="uploadError">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              {{ uploadError }}
-            </div>
-            <div class="upload-actions">
-              <button class="upload-browse-btn" (click)="browse()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>
-                Browse File
-              </button>
-            </div>
-            <div class="upload-hint">Supports .ts .js .py .java .cs .go .rs .cpp and more</div>
-          </div>
-        </ng-container>
 
         <!-- ── ANALYZING or READY: shared identity layout ── -->
         <ng-container *ngIf="isAnalyzing || hasModel">

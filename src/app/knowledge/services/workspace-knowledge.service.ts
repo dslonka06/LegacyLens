@@ -62,6 +62,11 @@ export class WorkspaceKnowledgeService {
     options: ProcessWorkspaceOptions,
   ): Observable<KnowledgeModel> {
     this._inputCache.set(options.workspaceId, { targetType, files, options });
+    // Clear any existing model so stale AI state (completedStages, generate bubble)
+    // isn't visible during the new scan phase.
+    this.manager.nextGeneration(options.workspaceId);
+    this.manager.clearAllStages(options.workspaceId);
+    this.manager.clearKnowledgeModel(options.workspaceId);
     return this.runPipeline(targetType, files, options);
   }
 

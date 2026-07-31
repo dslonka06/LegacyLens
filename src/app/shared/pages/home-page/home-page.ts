@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ElectronService, AiProviderStatus } from '@app/core/services/electron.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
-import { Workspace, WorkspaceType } from '@app/workspace/models/workspace-entity.model';
+import { Workspace } from '@app/workspace/models/workspace-entity.model';
 
 @Component({
   selector: 'app-home-page',
@@ -27,7 +27,6 @@ export class HomePage implements OnInit, OnDestroy {
     readonly electronService: ElectronService,
     private readonly cdr: ChangeDetectorRef,
     private readonly manager: WorkspaceManagerService,
-    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -94,13 +93,6 @@ export class HomePage implements OnInit, OnDestroy {
 
   openRecentAnalysis(ws: Workspace): void {
     this.manager.activate(ws.id);
-  }
-
-  startNew(type: WorkspaceType): void {
-    const ws = this.manager.createNew(type);
-    if (!ws) return;
-    const route = type === 'file' ? '/file-analysis' : type === 'folder' ? '/folder-analysis' : '/repository-analysis';
-    this.router.navigate([route]);
   }
 
   private async loadAiStatus(): Promise<void> {
