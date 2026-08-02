@@ -3,7 +3,7 @@ import {
   provideBrowserGlobalErrorListeners,
   APP_INITIALIZER,
 } from '@angular/core';
-import { provideRouter, withHashLocation, withRouterConfig } from '@angular/router';
+import { provideRouter, withHashLocation } from '@angular/router';
 import { AnalysisPersistenceService } from '@app/analysis/services/analysis-persistence.service';
 
 import { routes } from './app.routes';
@@ -11,7 +11,7 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withHashLocation(), withRouterConfig({ onSameUrlNavigation: 'reload' })),
+    provideRouter(routes, withHashLocation()),
     // Force instantiation of AnalysisPersistenceService at app startup so it
     // begins watching workspace state immediately, before any page loads.
     {

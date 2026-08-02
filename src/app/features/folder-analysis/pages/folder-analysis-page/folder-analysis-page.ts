@@ -142,14 +142,6 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
       this.workspace = ws;
       this.model     = ws?.knowledgeModel ?? null;
 
-      // If the subscription fires with the same workspace we already bootstrapped
-      // from getActive(), skip re-animating — we already rendered it above.
-      const sameAsBootstrap = prevId === ws?.id && prevModel === ws?.knowledgeModel;
-      if (sameAsBootstrap) {
-        this.cdr.detectChanges();
-        return;
-      }
-
       const switched          = prevId !== ws?.id;
       const modelArrived      = !prevModel && !!ws?.knowledgeModel;
       const processingStarted = prevStatus !== 'processing' && ws?.status === 'processing';
@@ -610,7 +602,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
   get fileCount(): number { return this.model?.structure.totalFiles ?? 0; }
 
-  get subfolderCount(): number { return this.model?.structure.folderTree?.children.length ?? 0; }
+  get subfolderCount(): number { return this.model?.structure.folderTree?.children?.length ?? 0; }
 
   get languageList(): string {
     const langs = this.model?.structure.languages ?? [];
