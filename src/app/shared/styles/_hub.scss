@@ -352,7 +352,6 @@
   align-items: flex-end;
   justify-content: space-between;
   padding: 36px 36px 14px;
-  min-height: 130px;
   gap: 16px;
   flex-shrink: 0;
 }
@@ -1586,6 +1585,10 @@
 
   &--6 {
     grid-template-columns: repeat(6, 1fr);
+  }
+
+  &--7 {
+    grid-template-columns: repeat(7, 1fr);
   }
 }
 

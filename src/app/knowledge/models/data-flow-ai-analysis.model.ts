@@ -4,6 +4,7 @@ export interface WorkflowRiskProfile {
   stepCount: number;
   bottleneckNodes: string[];
   failureRisk: 'Low' | 'Moderate' | 'High';
+  narrative?: string;
 }
 
 export interface DataFlowAIAnalysis {

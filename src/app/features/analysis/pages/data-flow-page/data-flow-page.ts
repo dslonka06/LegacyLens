@@ -7,6 +7,7 @@ import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
 import { MermaidDiagram } from '@app/shared/components/mermaid-diagram/mermaid-diagram';
 import type { KnowledgeModel, DataFlowInsight } from '@app/knowledge/models/knowledge-model.contract';
+import type { WorkflowRiskProfile } from '@app/knowledge/models/data-flow-ai-analysis.model';
 
 @Component({
   selector: 'app-data-flow-page',
@@ -50,7 +51,7 @@ export class DataFlowPage implements OnInit, OnDestroy {
   }
 
   get isFileScope(): boolean {
-    return this.model?.targetType === 'file';
+    return this.model?.capabilities?.includes('insightExtraction') ?? false;
   }
 
   get fileStepNarrative(): string[] {
@@ -77,13 +78,6 @@ export class DataFlowPage implements OnInit, OnDestroy {
       : (this.model?.relationships.dependencies?.graph.nodes.length ?? 0) > 0;
   }
 
-  get dataFlowNarrative(): string | null {
-    if (!this.hasDataFlow || this.isFileScope) return null;
-    const nodes = this.model?.relationships.dependencies?.graph.nodes.length ?? 0;
-    const conns = this.model?.relationships.dependencies?.graph.edges.length ?? 0;
-    return `${nodes} modules with ${conns} dependency connections. The most depended-upon modules drive the core data flow.`;
-  }
-
   getStepClass(index: number, total: number): string {
     if (index === 0) return 'step-first';
     if (index === total - 1) return 'step-last';
@@ -96,6 +90,42 @@ export class DataFlowPage implements OnInit, OnDestroy {
 
   get dataFlowDiagram(): string | null {
     return this.model?.ai?.dataFlow?.dataFlowDiagram ?? null;
+  }
+
+  // ── Folder/repo: structured workflow data ────────────────────────────────────
+
+  get primaryWorkflows(): WorkflowRiskProfile[] {
+    return this.model?.ai?.dataFlow?.primaryWorkflows ?? [];
+  }
+
+  get entryPoints(): string[] {
+    return this.model?.ai?.dataFlow?.entryPoints ?? [];
+  }
+
+  get bottlenecks(): string[] {
+    return this.model?.ai?.dataFlow?.bottlenecks ?? [];
+  }
+
+  get externalDependencies(): string[] {
+    return this.model?.ai?.dataFlow?.externalDependencies ?? [];
+  }
+
+  get workflowCount(): number {
+    return this.model?.ai?.dataFlow?.workflowCount ?? 0;
+  }
+
+  expandedWorkflowIndex: number | null = null;
+
+  toggleWorkflow(index: number): void {
+    this.expandedWorkflowIndex = this.expandedWorkflowIndex === index ? null : index;
+  }
+
+  isWorkflowExpanded(index: number): boolean {
+    return this.expandedWorkflowIndex === index;
+  }
+
+  riskClass(risk: string): string {
+    return { High: 'risk-high', Moderate: 'risk-moderate', Low: 'risk-low' }[risk] ?? 'risk-low';
   }
 
 }

@@ -25,35 +25,43 @@
         <p class="arch-narrative">{{ architectureNarrative }}</p>
       </div>
 
-      <div class="doc-block">
-        <div class="doc-block-label">Architectural Layers</div>
-        <div class="arch-empty-state" *ngIf="!patterns.length">
-          No architectural patterns detected. Upload a repository to begin analysis.
-        </div>
-        <div class="arch-pattern-grid" *ngIf="patterns.length">
-          <div class="arch-pattern-card" *ngFor="let p of patterns">
-            <div class="arch-pattern-info">
-              <span class="arch-pattern-name">{{ p.name }}</span>
-            </div>
-            <div class="arch-confidence-row">
-              <div class="arch-confidence-bar">
-                <div class="arch-confidence-fill" [style.width.%]="confidencePercent(p)"></div>
-              </div>
-              <span class="arch-confidence-pct">{{ confidencePercent(p) }}%</span>
-            </div>
-            <p class="arch-pattern-summary">{{ architectureDescription(p.name) }}</p>
-            <div class="arch-indicators" *ngIf="p.indicators.length">
-              <span class="arch-indicator-tag" *ngFor="let ind of p.indicators.slice(0, 5)">{{
-                ind
-              }}</span>
-            </div>
+      <div class="doc-block" *ngIf="architectureDiagram">
+        <div class="doc-block-label">Layer Diagram</div>
+        <app-mermaid-diagram [diagram]="architectureDiagram"></app-mermaid-diagram>
+      </div>
+
+      <!-- Structural Analysis -->
+      <div class="doc-block" *ngIf="hasStructuralAnalysis">
+        <div class="doc-block-label">Structural Analysis</div>
+        <div class="metrics-strip">
+          <div class="strip-item">
+            <span class="strip-label">Coupling</span>
+            <span class="strip-val" [class]="couplingClass(archAI!.couplingAssessment)">{{ archAI!.couplingAssessment }}</span>
+          </div>
+          <div class="strip-item">
+            <span class="strip-label">Hub Nodes</span>
+            <span class="strip-val" [class.strip-val-warn]="archAI!.hubCount > 2">{{ archAI!.hubCount }}</span>
+          </div>
+          <div class="strip-item">
+            <span class="strip-label">Circular Deps</span>
+            <span class="strip-val" [class.strip-val-warn]="archAI!.circularDependencyCount > 0">{{ archAI!.circularDependencyCount }}</span>
           </div>
         </div>
       </div>
 
-      <div class="doc-block" *ngIf="architectureDiagram">
-        <div class="doc-block-label">Layer Diagram</div>
-        <app-mermaid-diagram [diagram]="architectureDiagram"></app-mermaid-diagram>
+      <!-- Hub Nodes -->
+      <div class="doc-block" *ngIf="hubNodes.length > 0">
+        <div class="doc-block-label">Hub Nodes</div>
+        <div class="arch-component-list">
+          <div class="arch-component-item" *ngFor="let hub of hubNodes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.07 4.93l-1.41 1.41M12 2v2M4.93 4.93l1.41 1.41M2 12h2M4.93 19.07l1.41-1.41M12 20v2M19.07 19.07l-1.41-1.41M20 12h2" />
+            </svg>
+            <span>{{ hub.name }}</span>
+            <span class="hub-dep-count">{{ hub.inboundCount }} inbound</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>

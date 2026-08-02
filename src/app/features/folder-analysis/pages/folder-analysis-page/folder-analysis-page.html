@@ -1,6 +1,6 @@
-<div class="hub-page" [class.hub-page--has-model]="hasModel">
+<div class="hub-page">
 
-  <!-- ── Topbar — floats on background, no panel ───────────────── -->
+  <!-- ── Topbar ─────────────────────────────────────────────────── -->
   <div class="hub-topbar">
     <div class="hub-topbar-left">
       <div class="hub-breadcrumb">
@@ -21,17 +21,64 @@
   <!-- ── Hub body ───────────────────────────────────────────────── -->
   <div class="hub-body">
 
-    <!-- ── Row 1: Identity card (full width) ───────────────────── -->
+    <!-- ── Row 1: Identity card ───────────────────────────────── -->
     <div class="hub-first-row" [class.hub-section--animate]="showIdentity">
-
-      <!-- Identity card — morphs between analyzing / ready -->
       <div class="hub-identity-card"
            [class.hub-identity-card--analyzing]="isAnalyzing">
 
-        <!-- ── ANALYZING or READY: shared identity layout ── -->
+        <!-- SCANNING: file discovery in progress -->
+        <ng-container *ngIf="isScanning">
+          <div class="upload-zone upload-zone--inline upload-zone--scanning">
+            <div class="upload-icon-ring upload-icon-ring--scanning">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              </svg>
+            </div>
+            <h2 class="upload-title">Scanning Folder…</h2>
+            <p class="upload-desc">{{ scanFileCount }} file{{ scanFileCount !== 1 ? 's' : '' }} discovered</p>
+          </div>
+        </ng-container>
+
+        <!-- EMPTY: drag-and-drop upload prompt -->
+        <ng-container *ngIf="isEmpty && !isScanning">
+          <div class="upload-zone upload-zone--inline"
+               [class.upload-zone--drag]="isDragging"
+               (dragover)="onDragOver($event)"
+               (dragleave)="onDragLeave()"
+               (drop)="onDrop($event)">
+            <div class="upload-icon-ring">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                <line x1="12" y1="18" x2="12" y2="12" />
+                <line x1="9" y1="15" x2="15" y2="15" />
+              </svg>
+            </div>
+            <h2 class="upload-title">Analyze a Folder</h2>
+            <p class="upload-desc">Drop a folder here or browse to select one. SystemLens will scan all files, map dependencies, detect architecture patterns, and run a full AI analysis.</p>
+            <div class="upload-error" *ngIf="uploadError">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {{ uploadError }}
+            </div>
+            <div class="upload-actions">
+              <button class="upload-browse-btn" (click)="pickAndLoadFolder()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                </svg>
+                Browse Folder
+              </button>
+              <button class="upload-browse-btn upload-browse-btn--secondary" (click)="browseFolder()">
+                Upload via Browser
+              </button>
+            </div>
+            <p class="upload-hint">Drag a folder from your file explorer, or use Browse</p>
+          </div>
+        </ng-container>
+
+        <!-- ANALYZING or READY: identity layout -->
         <ng-container *ngIf="isAnalyzing || hasModel">
 
-          <!-- Folder icon -->
           <div class="identity-card-icon identity-card-icon--folder">
             <svg viewBox="0 0 48 40" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M2 8C2 5.8 3.8 4 6 4h14l4 5h16c2.2 0 4 1.8 4 4v22c0 2.2-1.8 4-4 4H6c-2.2 0-4-1.8-4-4V8z"
@@ -39,17 +86,14 @@
             </svg>
           </div>
 
-          <!-- Name + description -->
           <div class="identity-info">
             <span class="identity-filename">{{ folderName }}</span>
-            <!-- Hub narrative — heuristic, two-pass -->
             <p class="identity-narrative" *ngIf="hubNarrative">{{ hubNarrative }}</p>
             <div class="identity-role-tags" *ngIf="detectedRoleTags.length">
               <span class="identity-role-tag" *ngFor="let tag of detectedRoleTags">{{ tag }}</span>
             </div>
           </div>
 
-          <!-- Right metrics stack — shown once model is available -->
           <div class="identity-metrics" *ngIf="hasModel">
             <div class="identity-metric-item" *ngFor="let m of identityMetrics">
               <span class="identity-metric-label">{{ m.label }}</span>
@@ -57,7 +101,6 @@
             </div>
           </div>
 
-          <!-- Animated hex shape — right side -->
           <div class="identity-hex-wrap">
             <svg
               class="identity-hex"
@@ -67,30 +110,17 @@
               fill="none"
             >
               <g class="hex-ring-outer">
-                <polygon
-                  points="34,4 58,18 58,50 34,64 10,50 10,18"
-                  fill="none"
-                  stroke="rgba(141,99,255,0.6)"
-                  stroke-width="1.5"
-                  stroke-dasharray="6 4"
-                />
+                <polygon points="34,4 58,18 58,50 34,64 10,50 10,18"
+                  fill="none" stroke="rgba(141,99,255,0.6)" stroke-width="1.5" stroke-dasharray="6 4"/>
               </g>
               <g class="hex-ring-inner">
-                <polygon
-                  points="34,12 52,22 52,46 34,56 16,46 16,22"
-                  fill="none"
-                  stroke="rgba(141,99,255,0.8)"
-                  stroke-width="1.5"
-                />
+                <polygon points="34,12 52,22 52,46 34,56 16,46 16,22"
+                  fill="none" stroke="rgba(141,99,255,0.8)" stroke-width="1.5"/>
               </g>
               <g class="hex-core">
-                <polygon
-                  points="34,20 46,27 46,41 34,48 22,41 22,27"
-                  fill="rgba(141,99,255,0.28)"
-                  stroke="rgba(141,99,255,0.9)"
-                  stroke-width="1"
-                />
-                <circle cx="34" cy="34" r="4" fill="rgba(171,130,255,1)" />
+                <polygon points="34,20 46,27 46,41 34,48 22,41 22,27"
+                  fill="rgba(141,99,255,0.28)" stroke="rgba(141,99,255,0.9)" stroke-width="1"/>
+                <circle cx="34" cy="34" r="4" fill="rgba(171,130,255,1)"/>
               </g>
             </svg>
           </div>
@@ -98,15 +128,14 @@
         </ng-container>
 
       </div>
-
     </div>
 
-    <!-- ── Row 2: Info cards — visible once analyzing starts ─────── -->
+    <!-- ── Row 2: Info cards ──────────────────────────────────── -->
     <div class="hub-info-row"
          *ngIf="isAnalyzing || hasModel"
          [class.hub-section--animate]="showInfoCards">
 
-      <!-- ── Code Health card ──────────────────────────────────────── -->
+      <!-- Code Health card -->
       <div class="info-card info-card--health" [class]="'health-' + healthTier">
         <div class="info-card-header">
           <span class="info-card-title">Code Health</span>
@@ -118,10 +147,9 @@
           </div>
         </div>
 
-        <!-- Arc gauge -->
         <div class="health-arc-wrap">
           <svg class="health-arc" viewBox="0 0 200 105" preserveAspectRatio="xMidYMid meet">
-            <path d="M 10 100 A 90 90 0 0 1 190 100" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10" stroke-linecap="round" />
+            <path d="M 10 100 A 90 90 0 0 1 190 100" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10" stroke-linecap="round"/>
             <path
               class="health-arc-fill"
               [class.health-arc-fill--healthy]="healthTier === 'healthy'"
@@ -138,7 +166,6 @@
           <span class="health-tier-label">{{ healthLabel }}</span>
         </div>
 
-        <!-- Deterministic metrics -->
         <div class="health-stats" *ngIf="healthTier !== 'unknown'">
           <div class="health-stat">
             <div class="health-stat-label-group">
@@ -182,15 +209,14 @@
         </button>
       </div>
 
-      <!-- ── AI Analysis pipeline card ──────────────────────────────── -->
+      <!-- AI Analysis pipeline card -->
       <div class="info-card info-card--pipeline">
         <div class="info-card-header">
           <span class="info-card-title">AI Analysis</span>
         </div>
 
-        <ng-container *ngIf="model; else aiCardEmpty">
+        <ng-container *ngIf="isAnalyzing || model; else aiCardEmpty">
 
-          <!-- Pipeline bubble track -->
           <div class="pipeline-track">
             <ng-container *ngFor="let stage of aiPipeline.stages; let last = last">
               <div class="pipeline-bubble-wrap">
@@ -219,7 +245,7 @@
 
           <div class="pipeline-sections">
 
-            <!-- Core Analysis section -->
+            <!-- Core Analysis -->
             <div class="pipeline-section">
               <div class="pipeline-section-header">
                 <span class="pipeline-section-title">Core Analysis</span>
@@ -245,7 +271,7 @@
               </div>
             </div>
 
-            <!-- AI Insights section -->
+            <!-- AI Insights -->
             <div class="pipeline-section">
               <div class="pipeline-section-header">
                 <span class="pipeline-section-title">AI Insights</span>
@@ -256,7 +282,7 @@
                   [class.pipeline-status--failed]="aiInsightsState === 'failed'"
                 >{{ aiInsightsLabel }}</span>
               </div>
-              <div class="pipeline-stage-rows" *ngIf="model?.ai?.summaries as summaries">
+              <div class="pipeline-stage-rows" *ngIf="pipelineStages.length">
                 <div class="pipeline-stage-row-item"
                   *ngFor="let s of pipelineStages"
                   [class.pipeline-stage-row-item--complete]="s.state === 'complete'"
@@ -273,6 +299,10 @@
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>
                 No AI provider configured.
               </div>
+              <div class="pipeline-error-notice" *ngIf="aiPipeline.hasFailure && !aiPipeline.isRunning && !aiPipeline.noProvider">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>
+                Partial — some AI stages failed.
+              </div>
             </div>
 
           </div>
@@ -285,6 +315,7 @@
               </svg>
             </button>
           </div>
+
         </ng-container>
 
         <ng-template #aiCardEmpty>
@@ -300,12 +331,7 @@
 
         <div class="workspace-name-row">
           <span class="workspace-name" [title]="workspace?.name">{{ workspace?.name }}</span>
-          <span class="workspace-status-chip"
-            [class.workspace-status-chip--ready]="workspace?.status === 'ready'"
-            [class.workspace-status-chip--processing]="workspace?.status === 'processing'"
-            [class.workspace-status-chip--failed]="workspace?.status === 'failed' || workspace?.status === 'error'"
-            [class.workspace-status-chip--empty]="workspace?.status === 'empty'"
-          >{{ workspace?.status }}</span>
+          <span class="workspace-status-chip" [ngClass]="statusChipClass">{{ statusLabel }}</span>
         </div>
         <div class="workspace-divider"></div>
         <div class="workspace-analyzed-block" *ngIf="lastAnalyzed">
@@ -314,9 +340,9 @@
         </div>
         <button class="ws-btn ws-btn--reanalyze ws-btn--reanalyze-below" (click)="reanalyze()" [disabled]="!canReanalyze">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="23 4 23 10 17 10" />
-            <polyline points="1 20 1 14 7 14" />
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
           </svg>
           Re-analyze
         </button>
@@ -332,7 +358,7 @@
 
     </div>
 
-    <!-- ── Row 3: Metric / nav cards ─────────────────────────────── -->
+    <!-- ── Row 3: Metric cards ────────────────────────────────── -->
     <ng-container *ngIf="hasModel">
       <div class="hub-section-label" *ngIf="showMetricCards">Explore This Folder</div>
       <div class="hub-metric-row hub-metric-row--6"
@@ -346,7 +372,7 @@
         >
           <div class="metric-card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path [attr.d]="card.icon" />
+              <path [attr.d]="card.icon"/>
             </svg>
           </div>
 
@@ -366,7 +392,7 @@
           </div>
 
           <svg class="metric-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <polyline points="9 18 15 12 9 6" />
+            <polyline points="9 18 15 12 9 6"/>
           </svg>
         </button>
       </div>
@@ -391,3 +417,12 @@
   (close)="closeSwitcher()"
 >
 </app-workspace-switcher-modal>
+
+<!-- Validation dialog — shown when a picked folder is detected as a different target type -->
+<app-validation-dialog
+  *ngIf="validationResult"
+  [result]="validationResult"
+  (proceed)="onValidationProceed($event)"
+  (cancel)="onValidationCancel()"
+>
+</app-validation-dialog>

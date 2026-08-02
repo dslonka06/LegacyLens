@@ -52,9 +52,12 @@ function stageState(
   running: Set<AIStage>,
 ): PipelineStageState {
   if (!ai) return running.has(stage) ? 'running' : 'idle';
-  if (ai.completedStages.includes(stage)) return 'complete';
+  // Guard against persisted models where arrays may be missing.
+  const completed = ai.completedStages ?? [];
+  const failed    = ai.failedStages ?? [];
+  if (completed.includes(stage)) return 'complete';
   if (ai.partialStages?.includes(stage)) return 'partial';
-  if (ai.failedStages.includes(stage)) return 'failed';
+  if (failed.includes(stage)) return 'failed';
   if (running.has(stage)) return 'running';
   return 'idle';
 }
@@ -85,17 +88,30 @@ export function buildAIPipelineState(
     // Individual derive stages are never partial — only the derive group is.
     state: stageState(s, ai, running) as Exclude<PipelineStageState, 'partial'>,
   }));
-  const anyDeriveRunning  = deriveStages.some(s => running.has(s));
-  const allDeriveSettled  = !!ai && deriveStages.every(s =>
-    ai.completedStages.includes(s) || ai.failedStages.includes(s),
+  // Guard against persisted models where arrays may be missing.
+  const completedStages = ai?.completedStages ?? [];
+  const failedStages    = ai?.failedStages ?? [];
+
+  const anyDeriveRunning   = deriveStages.some(s => running.has(s));
+  const allDeriveSettled   = !!ai && deriveStages.every(s =>
+    completedStages.includes(s) || failedStages.includes(s),
   );
-  const someDeriveComplete = !!ai && deriveStages.some(s => ai.completedStages.includes(s));
-  const someDerveFailed    = !!ai && deriveStages.some(s => ai.failedStages.includes(s));
+  const someDeriveComplete = !!ai && deriveStages.some(s => completedStages.includes(s));
+  const someDerveFailed    = !!ai && deriveStages.some(s => failedStages.includes(s));
   let deriveState: PipelineStageState = 'idle';
-  if (anyDeriveRunning)                      deriveState = 'running';
-  else if (allDeriveSettled && someDerveFailed) deriveState = 'partial';
-  else if (allDeriveSettled)                   deriveState = 'complete';
-  else if (someDeriveComplete)                 deriveState = 'partial';
+  if (anyDeriveRunning) {
+    deriveState = 'running';
+  } else if (allDeriveSettled && someDerveFailed && !someDeriveComplete) {
+    // Every derive stage failed — surface as failed, not partial.
+    deriveState = 'failed';
+  } else if (allDeriveSettled && someDerveFailed) {
+    // Mixed result — some passed, some failed.
+    deriveState = 'partial';
+  } else if (allDeriveSettled) {
+    deriveState = 'complete';
+  } else if (someDeriveComplete) {
+    deriveState = 'partial';
+  }
 
   // ── Prompt ────────────────────────────────────────────────────────────────
   const promptState   = stageState('prompt', ai, running);
@@ -104,14 +120,14 @@ export function buildAIPipelineState(
   const generateState = stageState('generate', ai, running);
 
   // noProvider: generate was attempted but failed with the sentinel error message
-  const noProvider = ai?.failedStages.includes('generate') === true
+  const noProvider = failedStages.includes('generate')
     && ai?.stageErrors?.['generate'] === 'no-provider';
 
   // ── Finalise ─────────────────────────────────────────────────────────────
   const finaliseState: PipelineStageState = wsStatus === 'ready' && !!ai ? 'complete' : 'idle';
 
   const isRunning  = running.size > 0 || wsStatus === 'processing';
-  const hasFailure = (ai?.failedStages?.length ?? 0) > 0;
+  const hasFailure = failedStages.length > 0;
 
   return {
     isRunning,

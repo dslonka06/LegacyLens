@@ -11,16 +11,13 @@ import {
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { LLMSummaryService } from '@app/analysis/services/llm-summary.service';
 import type { LLMSummaryEntry } from '@app/knowledge/models/llm-summaries.model';
-import { CodeEditor } from '@app/shared/components/code-editor/code-editor';
-import { ResizeDividerComponent } from '@app/shell/resize-divider/resize-divider.component';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
-import { PanelLayoutService } from '@app/core/services/panel-layout.service';
 
 @Component({
   selector: 'app-security-page',
   standalone: true,
-  imports: [CommonModule, CodeEditor, ResizeDividerComponent, ThemeToggle, ExplanationCard],
+  imports: [CommonModule, ThemeToggle, ExplanationCard],
   templateUrl: './security-page.html',
   styleUrl: './security-page.scss',
 })
@@ -29,23 +26,16 @@ export class SecurityPage implements OnInit, OnDestroy {
   hasWorkspace = false;
   expandedFindingId: string | null = null;
   expandedCheckDomain: SecurityVerificationDomain | null = null;
-  highlightLines: { start: number; end: number } | null = null;
-  codeEditorWidth = 420;
-  codeCollapsed = false;
-  private _preCollapseWidth = 420;
 
   private sub: Subscription | null = null;
 
   constructor(
     private readonly manager: WorkspaceManagerService,
-    private readonly layoutService: PanelLayoutService,
     private readonly llmSummary: LLMSummaryService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
-    this.codeEditorWidth = this.layoutService.load('security-code')?.[0] ?? 420;
-
     const active = this.manager.getActive();
     this.security = active?.knowledgeModel?.ai?.security ?? null;
     this.hasWorkspace = active?.knowledgeModel != null;
@@ -55,7 +45,6 @@ export class SecurityPage implements OnInit, OnDestroy {
       this.hasWorkspace = ws?.knowledgeModel != null;
       this.expandedFindingId = null;
       this.expandedCheckDomain = null;
-      this.highlightLines = null;
       this.cdr.detectChanges();
     });
   }
@@ -64,36 +53,8 @@ export class SecurityPage implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  onCodePanelResize(width: number): void {
-    this.codeEditorWidth = width;
-    this.layoutService.save('security-code', [width]);
-  }
-
-  toggleCodePanel(): void {
-    if (this.codeCollapsed) {
-      this.codeEditorWidth = this._preCollapseWidth;
-      this.codeCollapsed = false;
-    } else {
-      this._preCollapseWidth = this.codeEditorWidth;
-      this.codeCollapsed = true;
-    }
-  }
-
   toggleFinding(finding: SecurityFinding): void {
-    if (this.expandedFindingId === finding.id) {
-      this.expandedFindingId = null;
-      this.highlightLines = null;
-    } else {
-      this.expandedFindingId = finding.id;
-      if (this.isFileScope && finding.lineStart) {
-        this.highlightLines = {
-          start: finding.lineStart,
-          end: finding.lineEnd ?? finding.lineStart,
-        };
-      } else {
-        this.highlightLines = null;
-      }
-    }
+    this.expandedFindingId = this.expandedFindingId === finding.id ? null : finding.id;
   }
 
   toggleCheck(check: SecurityVerificationCheck): void {
@@ -139,22 +100,6 @@ export class SecurityPage implements OnInit, OnDestroy {
     if (status === 'complete' || status === 'failed') return false;
     const wsId = this.manager.getActive()?.id ?? '';
     return this.manager.getActiveStages(wsId).has('generate');
-  }
-
-  get isFileScope(): boolean {
-    return this.manager.getActive()?.knowledgeModel?.targetType === 'file';
-  }
-
-  get sourceCode(): string | undefined {
-    return this.manager.getActive()?.knowledgeModel?.structure.sourceCode;
-  }
-
-  get sourceFileName(): string | undefined {
-    return (
-      this.manager.getActive()?.knowledgeModel?.structure.filePath ??
-      this.manager.getActive()?.knowledgeModel?.workspaceName ??
-      undefined
-    );
   }
 
   onRegenerate(): void {

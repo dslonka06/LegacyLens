@@ -252,8 +252,14 @@ export class AIAnalysisService {
         return { recommendations: result as RecommendationAnalysis };
       case 'learningPath':
         return { learningPath: result as LearningPathAnalysis };
-      case 'architecture':
-        return { architecture: result as ArchitectureAIAnalysis };
+      case 'architecture': {
+        const r = result as ArchitectureAIAnalysis & { enrichedHealthNarrative?: string | null };
+        const partial: Partial<KnowledgeAIResults> = { architecture: r as ArchitectureAIAnalysis };
+        if (r.enrichedHealthNarrative) {
+          partial.codeHealthNarrative = r.enrichedHealthNarrative;
+        }
+        return partial;
+      }
       case 'dataFlow': {
         const r = result as DataFlowAIAnalysis & {
           fileNarrative?: {

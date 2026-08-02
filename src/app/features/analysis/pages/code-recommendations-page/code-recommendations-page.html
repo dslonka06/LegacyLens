@@ -58,6 +58,63 @@
         </div>
       </div>
 
+      <!-- ── Security Action Items ─────────────────────────────────────── -->
+      <div class="rec-card" *ngIf="hasSecurityActionItems">
+        <div class="rec-card-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Security Fixes
+          <span class="rec-count-badge">{{ securityActionItems.length }}</span>
+        </div>
+
+        <div class="rec-list">
+          <div
+            class="rec-item"
+            *ngFor="let finding of securityActionItems"
+            [class.expanded]="isSecurityItemExpanded(finding.id)"
+            (click)="toggleSecurityItem(finding.id)"
+          >
+            <div class="rec-item-header">
+              <div class="rec-item-meta">
+                <span class="rec-item-title">{{ finding.title }}</span>
+                <div class="rec-item-tags">
+                  <span class="rec-priority-badge" [class]="securitySeverityClass(finding.severity)">{{ securitySeverityLabel(finding.severity) }}</span>
+                  <span class="rec-category-badge">Security</span>
+                </div>
+              </div>
+              <span class="rec-file-hint" *ngIf="finding.fileName">{{ finding.fileName }}<span *ngIf="finding.lineStart"> :{{ finding.lineStart }}</span></span>
+              <svg class="rec-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </div>
+
+            <div class="rec-item-body" *ngIf="isSecurityItemExpanded(finding.id)">
+              <div class="rec-section">
+                <div class="rec-section-label">Issue</div>
+                <p>{{ finding.issueDescription }}</p>
+              </div>
+              <div class="rec-section rec-why-matters">
+                <div class="rec-section-label rec-label-why">Why It Matters</div>
+                <p>{{ finding.riskExplanation }}</p>
+              </div>
+              <div class="rec-section">
+                <div class="rec-section-label">Remediation</div>
+                <p>{{ finding.remediation }}</p>
+              </div>
+              <div class="rec-section" *ngIf="finding.fileName">
+                <div class="rec-section-label">Location</div>
+                <div class="rec-chip-list">
+                  <span class="rec-chip">{{ finding.fileName }}<span *ngIf="finding.lineStart"> line {{ finding.lineStart }}<span *ngIf="finding.lineEnd && finding.lineEnd !== finding.lineStart">–{{ finding.lineEnd }}</span></span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── Recommendation list ────────────────────────────────────────── -->
       <div class="rec-card" *ngIf="recs!.recommendations.length > 0">
         <div class="rec-card-header">

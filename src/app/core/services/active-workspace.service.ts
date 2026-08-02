@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd, NavigationStart } from '@angular/router';
 import { BehaviorSubject, filter } from 'rxjs';
 
-export type ActiveWorkspace = 'file' | 'folder' | 'repository' | 'settings' | 'library' | 'new' | null;
+export type ActiveWorkspace = 'file' | 'folder' | 'repository' | 'settings' | 'library' | null;
 
 @Injectable({ providedIn: 'root' })
 export class ActiveWorkspaceService {
@@ -10,6 +10,15 @@ export class ActiveWorkspaceService {
   readonly workspace$ = this._workspace$.asObservable();
 
   constructor(private readonly router: Router) {
+    // Update optimistically on NavigationStart so the sidebar reflects the
+    // destination immediately, even while an async guard is still running.
+    this.router.events
+      .pipe(filter((e) => e instanceof NavigationStart))
+      .subscribe((e: NavigationStart) => {
+        this._workspace$.next(this.detectWorkspace(e.url));
+      });
+
+    // Correct to urlAfterRedirects once navigation commits (handles guard redirects).
     this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
       .subscribe((e: NavigationEnd) => {
@@ -25,12 +34,13 @@ export class ActiveWorkspaceService {
   }
 
   private detectWorkspace(url: string): ActiveWorkspace {
-    if (url.endsWith('/new')) return 'new';
-    if (url.startsWith('/file-analysis')) return 'file';
-    if (url.startsWith('/folder-analysis')) return 'folder';
-    if (url.startsWith('/repository-analysis')) return 'repository';
-    if (url.startsWith('/settings')) return 'settings';
-    if (url.startsWith('/library')) return 'library';
+    // Strip query string before matching
+    const path = url.split('?')[0];
+    if (path.startsWith('/file-analysis')) return 'file';
+    if (path.startsWith('/folder-analysis')) return 'folder';
+    if (path.startsWith('/repository-analysis')) return 'repository';
+    if (path.startsWith('/settings')) return 'settings';
+    if (path.startsWith('/library')) return 'library';
     return null;
   }
 }
