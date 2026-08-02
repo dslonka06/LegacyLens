@@ -19,20 +19,23 @@ export interface CodeReference {
 export interface Recommendation {
   id: string;
   title: string;
-  priorityScore: number;
-  priorityRank: number;
+  priorityScore: number; // 0–100 composite score; higher = act sooner
+  priorityRank: number; // 1-based rank across all recommendations
   priority: RecommendationPriority;
   category: RecommendationCategory;
-  affectedArea: string;
+  affectedArea: string; // human-readable label, e.g. "Dependency Management"
   affectedFiles: string[];
   codeReference: CodeReference;
   issueDescription: string;
   whyItMatters: string;
   recommendedImprovement: string;
   expectedImpact: string;
+  dependenciesAffected: string[];
+  riskLevel: 'low' | 'medium' | 'high';
 }
 
 export interface RecommendationAnalysis {
+  overview: string;
   criticalCount: number;
   highCount: number;
   technicalDebtLevel: 'Low' | 'Moderate' | 'High' | 'Critical';
@@ -40,6 +43,7 @@ export interface RecommendationAnalysis {
   modernizationReadiness: 'Not Ready' | 'Partially Ready' | 'Ready';
   modernizationContext: string;
   recommendations: Recommendation[];
+  improvementThemes: string[];
   modernizationAssessment: string;
   generatedAt: string;
 }

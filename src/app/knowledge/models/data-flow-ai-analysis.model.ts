@@ -4,7 +4,6 @@ export interface WorkflowRiskProfile {
   stepCount: number;
   bottleneckNodes: string[];
   failureRisk: 'Low' | 'Moderate' | 'High';
-  narrative?: string;
 }
 
 export interface DataFlowAIAnalysis {
@@ -16,6 +15,4 @@ export interface DataFlowAIAnalysis {
   mostReferenced: string[];
   dataAccessNodes: string[];
   generatedAt: string;
-  /** Mermaid flowchart LR syntax for the data flow workflow diagram. */
-  dataFlowDiagram?: string;
 }

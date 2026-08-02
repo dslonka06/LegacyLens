@@ -1,4 +1,4 @@
-import { Injectable, NgZone } from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
   BehaviorSubject,
   Observable,
@@ -98,7 +98,6 @@ export class WorkspaceManagerService {
   constructor(
     private readonly router: Router,
     private readonly electronService: ElectronService,
-    private readonly ngZone: NgZone,
   ) {
     this.ready = this.restoreFromStorage();
   }
@@ -179,11 +178,6 @@ export class WorkspaceManagerService {
   activate(id: string): void {
     const ws = this.getById(id);
     if (!ws) return;
-    // Briefly emit null so distinctUntilChanged always sees a change, even
-    // when re-activating the same workspace (e.g. reopening from home page).
-    if (this._activeId$.value === id) {
-      this._activeId$.next(null);
-    }
     this._activeId$.next(id);
     this.router.navigate([this.routeForType(ws.type)]);
   }
@@ -398,6 +392,7 @@ export class WorkspaceManagerService {
   clearKnowledgeModel(id: string): void {
     this.patch(id, {
       knowledgeModel: null,
+      status: 'empty',
       lastModifiedAt: new Date().toISOString(),
     });
   }
@@ -491,13 +486,10 @@ export class WorkspaceManagerService {
         };
       });
 
-      const hydrated = restored.map(ws => ({
+      this._workspaces$.next(restored.map(ws => ({
         ...ws,
         knowledgeModel: ws.knowledgeModel ? coerceSummaries(ws.knowledgeModel) : null,
-      }));
-      // Run inside NgZone so that subscribers (sidebar, hub pages) trigger
-      // Angular CD when the restored workspaces land.
-      this.ngZone.run(() => this._workspaces$.next(hydrated));
+      })));
     } catch {
       // Storage unavailable — start fresh, no user-visible error needed
     }

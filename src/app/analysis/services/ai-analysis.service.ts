@@ -234,8 +234,6 @@ export class AIAnalysisService {
             imports: string[];
             exports: string[];
           } | null;
-          folderResponsibilitiesNarrative?: string[] | null;
-          folderWorkflowsNarrative?: string[] | null;
         };
         return {
           understanding: r.understanding,
@@ -244,27 +242,21 @@ export class AIAnalysisService {
           codeHealthNarrative: r.codeHealthNarrative,
           fileResponsibilitiesNarrative: r.fileResponsibilitiesNarrative ?? null,
           fileComponentsNarrative: r.fileComponentsNarrative ?? null,
-          folderResponsibilitiesNarrative: r.folderResponsibilitiesNarrative ?? null,
-          folderWorkflowsNarrative: r.folderWorkflowsNarrative ?? null,
         };
       }
       case 'recommendations':
         return { recommendations: result as RecommendationAnalysis };
       case 'learningPath':
         return { learningPath: result as LearningPathAnalysis };
-      case 'architecture': {
-        const r = result as ArchitectureAIAnalysis & { enrichedHealthNarrative?: string | null };
-        const partial: Partial<KnowledgeAIResults> = { architecture: r as ArchitectureAIAnalysis };
-        if (r.enrichedHealthNarrative) {
-          partial.codeHealthNarrative = r.enrichedHealthNarrative;
-        }
-        return partial;
-      }
+      case 'architecture':
+        return { architecture: result as ArchitectureAIAnalysis };
       case 'dataFlow': {
         const r = result as DataFlowAIAnalysis & {
           fileNarrative?: {
             pattern: { label: string; overview: string };
             stepNarrative: string[];
+            inputsFrame: string | null;
+            outputsFrame: string | null;
           } | null;
         };
         return {

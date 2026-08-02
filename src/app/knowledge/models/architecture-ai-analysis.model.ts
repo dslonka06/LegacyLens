@@ -16,6 +16,4 @@ export interface ArchitectureAIAnalysis {
   evolutionRisk: 'Low' | 'Moderate' | 'High';
   boundaryViolations: string[];
   generatedAt: string;
-  /** Mermaid flowchart TD syntax for the architecture layer diagram. */
-  architectureDiagram?: string;
 }

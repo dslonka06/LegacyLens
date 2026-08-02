@@ -79,23 +79,6 @@ class LearningPathAnalysisEngine {
   // ── Folder / Repository scope ──────────────────────────────────────────────
 
   analyzeKnowledge(knowledge, session, understanding, scope) {
-    // Normalise understanding so all accessors below are safe even if the stage failed
-    const u_raw = understanding ?? {};
-    understanding = {
-      businessPurpose:          u_raw.businessPurpose          ?? '',
-      executiveSummary:         u_raw.executiveSummary         ?? '',
-      keyResponsibilities:      u_raw.keyResponsibilities      ?? [],
-      keyWorkflows:             u_raw.keyWorkflows             ?? [],
-      coreCapabilities:         u_raw.coreCapabilities         ?? [],
-      mostImportantItems:       u_raw.mostImportantItems       ?? [],
-      mostImportantWorkflows:   u_raw.mostImportantWorkflows   ?? [],
-      mostImportantDependencies: u_raw.mostImportantDependencies ?? [],
-      highRiskAreas:            u_raw.highRiskAreas            ?? [],
-      technicalDebtHotspots:    u_raw.technicalDebtHotspots    ?? [],
-      criticalAreas:            u_raw.criticalAreas            ?? [],
-      ...u_raw,
-    };
-
     const systemName = this.inferSystemName(knowledge, understanding);
     const systemType = this.inferSystemTypeFromKnowledge(knowledge, understanding);
 
@@ -218,7 +201,7 @@ class LearningPathAnalysisEngine {
       whereToNext: 'You are now ready to explore the broader system. Use the Architecture page to see how everything connects.',
     });
 
-    return steps.map(s => this._mapStep(s));
+    return steps;
   }
 
   extractFileKeyConcepts(session, u) {
@@ -533,7 +516,7 @@ class LearningPathAnalysisEngine {
       });
     }
 
-    return steps.map(s => this._mapStep(s));
+    return steps;
   }
 
   extractKnowledgeKeyConcepts(knowledge, u) {
@@ -734,26 +717,6 @@ class LearningPathAnalysisEngine {
       steps.push({ destination: 'Security', route: `${base}/security`, guidance: 'To understand the security posture and sensitive areas before working in the codebase.' });
     }
     return steps;
-  }
-
-  // ── Step normaliser ────────────────────────────────────────────────────────
-  // Maps internal step shape (goal/whyItMatters/recommendedFiles) to the
-  // TypeScript LearningStep contract (description/whyHere/codeLocations).
-
-  _mapStep(step) {
-    const files = step.recommendedFiles ?? [];
-    const codeLocations = files
-      .filter(Boolean)
-      .map(f => ({ label: f, filePaths: [f] }));
-
-    return {
-      stepNumber:    step.stepNumber,
-      title:         step.title,
-      description:   step.goal         ?? step.description ?? '',
-      whyHere:       step.whyItMatters ?? step.whyHere    ?? '',
-      codeLocations,
-      checkpoints:   step.checkpoints  ?? [],
-    };
   }
 
   // ── Shared helpers ─────────────────────────────────────────────────────────

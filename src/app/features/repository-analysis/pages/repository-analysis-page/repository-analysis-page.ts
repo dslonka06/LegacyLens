@@ -1,4 +1,4 @@
-import { Component, NgZone, OnInit, OnDestroy, ChangeDetectorRef, HostListener, ElementRef } from '@angular/core';
+import { Component, NgZone, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -41,15 +41,6 @@ export interface HubMetricCard {
   pending: boolean;
 }
 
-const EXT_TO_LANGUAGE: Record<string, string> = {
-  cs: 'C#', ts: 'TypeScript', tsx: 'TypeScript', js: 'JavaScript', jsx: 'JavaScript',
-  html: 'HTML', htm: 'HTML', css: 'CSS', scss: 'SCSS', less: 'Less', sql: 'SQL',
-  py: 'Python', json: 'JSON', xml: 'XML', md: 'Markdown', txt: 'Plain Text',
-  sh: 'Shell', bash: 'Shell', yml: 'YAML', yaml: 'YAML', rs: 'Rust', go: 'Go',
-  java: 'Java', kt: 'Kotlin', swift: 'Swift', rb: 'Ruby', php: 'PHP',
-  cpp: 'C++', c: 'C', h: 'C/C++ Header', hpp: 'C++ Header',
-};
-
 const STAGE_LABELS: Partial<Record<AIStage, string>> = {
   understanding: 'Understanding',
   security: 'Security',
@@ -90,16 +81,12 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   showInfoCards = false;
   showArcDraw = false;
   showHealthInfo = false;
-  showAiInfo = false;
   showMetricCards = false;
   isReturning = false;
-
-  displayedCounts: Record<string, number> = {};
 
   // Pipeline cycling status text per stage
   pipelineStatusText: Record<string, string> = {};
   private statusTimers: Record<string, ReturnType<typeof setInterval>> = {};
-  private countTimers: ReturnType<typeof setInterval>[] = [];
 
   // Electron / repo loading state
   isScanning = false;
@@ -124,81 +111,44 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     private readonly zone: NgZone,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
-    private readonly el: ElementRef,
   ) {}
 
-  @HostListener('document:click', ['$event'])
-  onDocClick(event: MouseEvent): void {
-    if (!this.showHealthInfo && !this.showAiInfo) return;
-    const host = this.el.nativeElement as HTMLElement;
-    const wraps = host.querySelectorAll('.hub-info-popup-wrap');
-    for (const wrap of Array.from(wraps)) {
-      if (wrap.contains(event.target as Node)) return;
-    }
-    this.showHealthInfo = false;
-    this.showAiInfo = false;
-    this.cdr.detectChanges();
-  }
-
   ngOnInit(): void {
-    // Bootstrap synchronously — guards distinctUntilChanged suppressing the first
-    // subscription emission when navigating back to a workspace with existing data.
-    const boot = this.manager.getActive();
-    if (boot) {
-      this.workspace = boot;
-      this.model     = boot.knowledgeModel ?? null;
-      if (boot.knowledgeModel) {
-        this.showIdentity = true;
-        this.showInfoCards = true;
-        this.showArcDraw = true;
-        this.showMetricCards = true;
-        this.animateCountsTo(this.metricCards);
-      } else {
-        this.runAnimations();
-      }
-    }
-
+    const init = this.manager.getActive();
+    this.workspace = init ?? null;
+    this.model = init?.knowledgeModel ?? null;
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
-      const prevId     = this.workspace?.id;
+      const prevId = this.workspace?.id;
       const prevStatus = this.workspace?.status;
-      const prevModel  = this.workspace?.knowledgeModel;
-      const prevAi     = this.workspace?.knowledgeModel?.ai;
-
+      const prevModel = this.workspace?.knowledgeModel;
+      const prevAi = this.workspace?.knowledgeModel?.ai;
       this.workspace = ws;
-      this.model     = ws?.knowledgeModel ?? null;
+      this.model = ws?.knowledgeModel ?? null;
 
-      // Skip re-animating if this emission matches what we already bootstrapped.
-      const sameAsBootstrap = prevId === ws?.id && prevModel === ws?.knowledgeModel;
-      if (sameAsBootstrap) {
-        this.cdr.detectChanges();
-        return;
-      }
-
-      const switched          = prevId !== ws?.id;
-      const modelArrived      = !prevModel && !!ws?.knowledgeModel;
+      const switched = prevId !== ws?.id;
+      const modelArrived = !prevModel && !!ws?.knowledgeModel;
       const processingStarted = prevStatus !== 'processing' && ws?.status === 'processing';
-      const aiUpdated         = !switched && !modelArrived && !!ws?.knowledgeModel
-                                && ws.knowledgeModel.ai !== prevAi;
+      const aiUpdated = !switched && !modelArrived && !!ws?.knowledgeModel &&
+        ws.knowledgeModel.ai !== prevAi;
+      console.log('[RepoHub] ws update', {
+        switched,
+        modelArrived,
+        aiUpdated,
+        prevAiSame: prevAi === ws?.knowledgeModel?.ai,
+        completedStages: ws?.knowledgeModel?.ai?.completedStages,
+      });
 
-      if (switched && !!ws?.knowledgeModel) {
-        this.showIdentity = true;
-        this.showInfoCards = true;
-        this.showArcDraw = true;
-        this.showMetricCards = true;
-      } else if (switched || modelArrived) {
+      if (switched || modelArrived) {
+        this.isReturning = switched && !!ws?.knowledgeModel;
         this.runAnimations();
       } else if (processingStarted) {
         this.runInfoCardAnimation();
       }
-
-      if (modelArrived || aiUpdated) {
-        this.animateCountsTo(this.metricCards);
-      }
-
       this.cdr.detectChanges();
     });
 
     this.stagesSub = this.manager.activeStages$.subscribe(() => {
+      // Update status cycling — start/stop per stage
       const stages: AIStage[] = ['understanding', 'security', 'recommendations', 'learningPath'];
       stages.forEach((stage) => {
         const running = this.manager.getActiveStages(this.workspace?.id ?? '').has(stage);
@@ -213,6 +163,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     });
 
     this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
+    this.runAnimations();
 
     // Auto-load from stored path when returning to an empty workspace that has one
     if (this.workspace?.status === 'empty' && this.workspace.path) {
@@ -227,7 +178,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     this.scanProgressUnsub?.();
     if (this.animTimer) clearTimeout(this.animTimer);
     this.stopAllStatusCycles();
-    this.clearCountTimers();
   }
 
   // ── Pipeline status cycling ─────────────────────────────────
@@ -382,6 +332,39 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   }
 
   private buildFileMetadata(files: File[]): FileMetadata[] {
+    const EXT_TO_LANGUAGE: Record<string, string> = {
+      cs: 'C#',
+      ts: 'TypeScript',
+      tsx: 'TypeScript',
+      js: 'JavaScript',
+      jsx: 'JavaScript',
+      html: 'HTML',
+      htm: 'HTML',
+      css: 'CSS',
+      scss: 'SCSS',
+      less: 'Less',
+      sql: 'SQL',
+      py: 'Python',
+      json: 'JSON',
+      xml: 'XML',
+      md: 'Markdown',
+      txt: 'Plain Text',
+      sh: 'Shell',
+      bash: 'Shell',
+      yml: 'YAML',
+      yaml: 'YAML',
+      rs: 'Rust',
+      go: 'Go',
+      java: 'Java',
+      kt: 'Kotlin',
+      swift: 'Swift',
+      rb: 'Ruby',
+      php: 'PHP',
+      cpp: 'C++',
+      c: 'C',
+      h: 'C/C++ Header',
+      hpp: 'C++ Header',
+    };
     return files.map((f) => {
       const name = f.name;
       const path = (f as any).webkitRelativePath || name;
@@ -423,82 +406,36 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
   private runAnimations(): void {
     if (this.animTimer) clearTimeout(this.animTimer);
-
-    const alreadyVisible = this.showIdentity && this.showInfoCards;
-    if (!alreadyVisible) {
-      this.showIdentity = false;
-      this.showInfoCards = false;
-      this.showArcDraw = false;
-      this.showMetricCards = false;
-      this.cdr.detectChanges();
-    }
+    this.showIdentity = false;
+    this.showInfoCards = false;
+    this.showArcDraw = false;
+    this.showMetricCards = false;
+    this.cdr.detectChanges();
 
     const fast = this.isReturning;
     const t = (ms: number) => (fast ? Math.round(ms * 0.4) : ms);
     const run = (fn: () => void, delay: number) =>
       setTimeout(() => this.zone.run(() => { fn(); this.cdr.detectChanges(); }), delay);
 
-    if (!alreadyVisible) {
-      run(() => { this.showIdentity = true; }, t(80));
-      run(() => { this.showInfoCards = true; }, t(220));
-      // Arc draws after the info-card fade-in animation completes (~380ms from showInfoCards).
-      // Slow: 220 + 420 = 640ms. Fast: 88 + 200 = 288ms.
-      run(() => { this.showArcDraw = true; }, t(640));
-    }
-    this.animTimer = run(() => { this.showMetricCards = true; }, t(780));
+    run(() => { this.showIdentity = true; }, t(80));
+    run(() => { this.showInfoCards = true; }, t(220));
+    run(() => { this.showArcDraw = true; }, t(320));
+    this.animTimer = run(() => { this.showMetricCards = true; }, t(380));
   }
 
   private runInfoCardAnimation(): void {
     const run = (fn: () => void, delay: number) =>
       setTimeout(() => this.zone.run(() => { fn(); this.cdr.detectChanges(); }), delay);
 
-    run(() => { this.showIdentity = true; }, 80);
     run(() => { this.showInfoCards = true; }, 150);
-    // Arc draws after info-card fade-in (150ms start + 380ms animation = 530ms).
-    run(() => { this.showArcDraw = true; }, 560);
-  }
-
-  private animateCountsTo(cards: HubMetricCard[]): void {
-    this.clearCountTimers();
-    for (const card of cards) {
-      if (card.count === null || card.count === 0) {
-        this.displayedCounts[card.id] = card.count ?? 0;
-        continue;
-      }
-      const target = card.count;
-      const steps = Math.min(target, 30);
-      const intervalMs = 600 / steps;
-      let current = 0;
-      const timer = setInterval(() => {
-        this.zone.run(() => {
-          current = Math.min(current + Math.ceil(target / steps), target);
-          this.displayedCounts[card.id] = current;
-          this.cdr.detectChanges();
-          if (current >= target) clearInterval(timer);
-        });
-      }, intervalMs);
-      this.countTimers.push(timer);
-    }
-  }
-
-  private clearCountTimers(): void {
-    this.countTimers.forEach((t) => clearInterval(t));
-    this.countTimers = [];
+    run(() => { this.showArcDraw = true; }, 280);
   }
 
   // ── Workspace actions ──────────────────────────────────────────────────────
 
   reanalyze(): void {
-    const ws = this.workspace;
-    if (!ws) return;
-
-    const obs = this.knowledge.reanalyze(ws.id);
-    if (obs) { obs.subscribe({ error: () => {} }); return; }
-
-    // Cold path: input cache is empty (e.g. restored from SQLite) — re-scan from stored path.
-    const path = ws.path;
-    if (!path) return;
-    this.loadFromPath(path);
+    const obs = this.knowledge.reanalyze(this.workspace!.id);
+    if (obs) obs.subscribe({ error: () => {} });
   }
 
   newWorkspace(): void {
@@ -787,12 +724,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     return this.model?.ai?.understanding?.executiveSummary ?? '';
   }
 
-  get hubNarrative(): string {
-    const hn = this.model?.ai?.hubNarrative;
-    if (!hn) return '';
-    return [hn.structural, hn.directive].filter(Boolean).join(' ');
-  }
-
   // ── Metric cards ───────────────────────────────────────────────────────────
 
   get metricCards(): HubMetricCard[] {
@@ -800,17 +731,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     const base = '/repository-analysis';
     const suggested = this.suggestedRoute;
 
-    const cards: HubMetricCard[] = [
-      {
-        id: 'key-areas',
-        icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
-        count: null,
-        tags: ai?.understanding?.coreCapabilities?.slice(0, 2).map((c) => c.name),
-        label: 'Key Areas',
-        route: `${base}/system-understanding`,
-        suggested: suggested === 'understanding',
-        pending: !ai?.completedStages?.includes('understanding'),
-      },
+    return [
       {
         id: 'dependencies',
         icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
@@ -848,32 +769,16 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
         pending: !this.model?.capabilities.includes('architectureDiscovery'),
       },
       {
-        id: 'learning',
-        icon: 'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
+        id: 'key-areas',
+        icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
         count: null,
-        subtitle: 'Personalized roadmap for this repository',
-        label: 'Learning Path',
-        route: `${base}/learning-path`,
-        suggested: false,
-        pending: !ai?.completedStages?.includes('learningPath'),
+        tags: ai?.understanding?.coreCapabilities?.slice(0, 2).map((c) => c.name),
+        label: 'Key Areas',
+        route: `${base}/system-understanding`,
+        suggested: suggested === 'understanding',
+        pending: !ai?.completedStages?.includes('understanding'),
       },
     ];
-
-    // Projects card — only meaningful when multi-project detection ran
-    if (this.model?.capabilities.includes('multiProject')) {
-      cards.push({
-        id: 'projects',
-        icon: 'M3 7l9-4 9 4v10l-9 4-9-4V7z M12 3v18 M3 7l9 4 9-4',
-        count: this.projectCount > 0 ? this.projectCount : null,
-        subtitle: 'Detected projects',
-        label: 'Projects',
-        route: `${base}/system-understanding`,
-        suggested: false,
-        pending: false,
-      });
-    }
-
-    return cards;
   }
 
   private get suggestedRoute(): string {

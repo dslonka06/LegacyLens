@@ -44,17 +44,18 @@ const STEP_CLUSTERS = [
   {
     keywords: ['parse', 'deserializ', 'decode', 'unmarshal', 'extract', 'read'],
     describe(step, i, steps, d) {
-      const input   = primaryInput(d.inputs);
-      const next    = nextStep(steps, i);
+      const input  = primaryInput(d.inputs);
+      const next   = nextStep(steps, i);
       const isFirst = i === 0;
+      const total  = steps.length;
 
       const what = input
         ? `Reads and structures the raw ${input} into an internal representation the rest of the flow can operate on.`
         : `Reads the raw input and structures it into an internal representation the rest of the flow can operate on.`;
 
       const gate = isFirst
-        ? `As the entry point of this flow, any structural problem in the source data is caught or passed through here — nothing downstream can compensate for malformed input that gets past this step.`
-        : `This parse operation restructures data that has already been partially processed — the incoming shape is defined by what ${prevStep(steps, i)} produced.`;
+        ? `As the entry point of this ${total}-step flow, any structural problem in the source data is caught or passed through here — nothing downstream can compensate for malformed input that gets past this step.`
+        : `Sitting at step ${i + 1} of ${total}, this parse operation restructures data that has already been partially processed — the incoming shape is defined by what the previous step produced.`;
 
       const chain = next
         ? `The structured result feeds directly into ${next}.`
@@ -95,10 +96,10 @@ const STEP_CLUSTERS = [
   {
     keywords: ['transform', 'convert', 'map', 'format', 'normaliz', 'encode', 'adapt', 'reshape', 'serial'],
     describe(step, i, steps, d) {
-      const prev    = prevStep(steps, i);
-      const next    = nextStep(steps, i);
-      const input   = primaryInput(d.inputs);
-      const output  = primaryOutput(d.outputs);
+      const prev   = prevStep(steps, i);
+      const next   = nextStep(steps, i);
+      const input  = primaryInput(d.inputs);
+      const output = primaryOutput(d.outputs);
       const isFirst = i === 0;
       const isLast  = i === steps.length - 1;
 
@@ -120,8 +121,9 @@ const STEP_CLUSTERS = [
   {
     keywords: ['auth', 'authoriz', 'authenticat', 'permission', 'role', 'access', 'token', 'credential', 'jwt'],
     describe(step, i, steps, d) {
-      const next    = nextStep(steps, i);
-      const prev    = prevStep(steps, i);
+      const next   = nextStep(steps, i);
+      const prev   = prevStep(steps, i);
+      const total  = steps.length;
       const isFirst = i === 0;
 
       const what = `Verifies the caller's identity or permissions before allowing the flow to continue.`;
@@ -130,7 +132,7 @@ const STEP_CLUSTERS = [
         ? `Positioned as the first step, this is the outermost security boundary — no other logic executes unless this passes.`
         : prev
           ? `Positioned after ${prev}, this step confirms that the context established earlier has the right to proceed.`
-          : `This security check sits mid-flow, gating the remaining steps behind an access check.`;
+          : `This security check sits mid-flow, gating the ${total - i} remaining steps behind an access check.`;
 
       const downstream = next
         ? `Everything from ${next} onward executes under the assumption that this step confirmed authorisation — those steps should not need to re-check.`
@@ -171,13 +173,14 @@ const STEP_CLUSTERS = [
   {
     keywords: ['fetch', 'load', 'retriev', 'query', 'find', 'lookup'],
     describe(step, i, steps, d) {
-      const next    = nextStep(steps, i);
-      const prev    = prevStep(steps, i);
-      const input   = primaryInput(d.inputs);
+      const next   = nextStep(steps, i);
+      const prev   = prevStep(steps, i);
+      const input  = primaryInput(d.inputs);
       const isFirst = i === 0;
+      const total  = steps.length;
 
       const what = isFirst
-        ? `Retrieves the source data that the rest of this flow will operate on.`
+        ? `Retrieves the source data that the rest of this ${total}-step flow will operate on.`
         : `Fetches additional data mid-flow${prev ? `, informed by what ${prev} established` : ''}.`;
 
       const chain = next
@@ -248,8 +251,9 @@ const STEP_CLUSTERS = [
   {
     keywords: ['log', 'audit', 'trace', 'record', 'track', 'monitor'],
     describe(step, i, steps, d) {
-      const prev = prevStep(steps, i);
-      const next = nextStep(steps, i);
+      const prev   = prevStep(steps, i);
+      const next   = nextStep(steps, i);
+      const total  = steps.length;
 
       const what = `Records the current state or event for observability — capturing what happened at this point in the flow without affecting any downstream behaviour.`;
 
@@ -277,7 +281,7 @@ const STEP_CLUSTERS = [
       const what = `Intercepts failure conditions and decides how the flow should respond — whether to recover and continue, return a safe default, or propagate the error cleanly.`;
 
       const placement = prev
-        ? `It catches failures originating from ${prev}${i > 1 ? ` or anything earlier in the chain` : ''}.`
+        ? `It catches failures originating from ${prev}${i > 1 ? ` or anything earlier in the ${total}-step chain` : ''}.`
         : `Positioned at the start of the flow, this pre-emptively guards against invalid entry conditions.`;
 
       const consequence = isLast
@@ -294,13 +298,13 @@ const STEP_CLUSTERS = [
   {
     keywords: ['init', 'setup', 'bootstrap', 'prepar', 'configur', 'construct', 'creat'],
     describe(step, i, steps, d) {
-      const next    = nextStep(steps, i);
+      const next   = nextStep(steps, i);
       const isFirst = i === 0;
-      const total   = steps.length;
-      const input   = primaryInput(d.inputs);
+      const total  = steps.length;
+      const input  = primaryInput(d.inputs);
 
       const what = isFirst
-        ? `Establishes the initial state or context that all subsequent steps in this flow depend on.`
+        ? `Establishes the initial state or context that all ${total - 1} subsequent step${total - 1 !== 1 ? 's' : ''} in this flow depend on.`
         : `Constructs or prepares an intermediate artifact that the steps following it require.`;
 
       const source = input
@@ -436,33 +440,21 @@ class DataFlowStepsNarrativeEngine {
     }
 
     // Fallback: positional context with adjacent step awareness
+    const total    = steps.length;
     const cleaned  = humanise(step);
     const prev     = prevStep(steps, i);
     const next     = nextStep(steps, i);
-    const isFirst  = i === 0;
-    const isLast   = i === steps.length - 1;
-
-    const what = isFirst
-      ? `Opens the flow by handling "${cleaned}" — the data and context produced here sets the shape for everything that follows.`
-      : isLast
-        ? `Closes the flow by handling "${cleaned}" — this is where the pipeline's accumulated work becomes the final result.`
-        : `Handles "${cleaned}" as an intermediate step, taking the output of ${prev} and preparing it for ${next}.`;
+    const position = i === 0 ? 'first' : i === total - 1 ? 'final' : `step ${i + 1} of ${total}`;
 
     const chain = prev && next
-      ? `It receives from ${prev} and passes its result on to ${next}.`
+      ? `It receives from ${prev} and passes its result to ${next}.`
       : prev
-        ? `It receives from ${prev} and its output is the final result of this flow.`
+        ? `It receives from ${prev} and produces the final output of this flow.`
         : next
           ? `As the opening step, it provides the initial data for ${next}.`
           : `It is the only step in this flow.`;
 
-    const io = d.inputs.length > 0 && isFirst
-      ? `The flow starts with ${d.inputs.slice(0, 2).join(' and ')} as its input${d.inputs.length > 1 ? 's' : ''}.`
-      : d.outputs.length > 0 && isLast
-        ? `The flow produces ${d.outputs.slice(0, 2).join(' and ')} as its output${d.outputs.length > 1 ? 's' : ''}.`
-        : '';
-
-    return [what, chain, io].filter(Boolean).join(' ');
+    return `The ${position} step — responsible for "${cleaned}" as data moves through this file. ${chain} Expanding this description requires the step name to match a known operation pattern.`;
   }
 }
 

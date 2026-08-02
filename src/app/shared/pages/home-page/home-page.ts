@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ElectronService, AiProviderStatus } from '@app/core/services/electron.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
-import { Workspace, WorkspaceType } from '@app/workspace/models/workspace-entity.model';
+import { Workspace } from '@app/workspace/models/workspace-entity.model';
 
 @Component({
   selector: 'app-home-page',
@@ -27,7 +27,6 @@ export class HomePage implements OnInit, OnDestroy {
     readonly electronService: ElectronService,
     private readonly cdr: ChangeDetectorRef,
     private readonly manager: WorkspaceManagerService,
-    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -94,27 +93,6 @@ export class HomePage implements OnInit, OnDestroy {
 
   openRecentAnalysis(ws: Workspace): void {
     this.manager.activate(ws.id);
-  }
-
-  startNewAnalysis(type: WorkspaceType): void {
-    if (!this.manager.canCreate()) {
-      // Limit reached — let the guard's limitReached$ bubble open the switcher
-      // on whichever hub page is currently active.
-      const routes: Record<WorkspaceType, string> = {
-        file: '/file-analysis',
-        folder: '/folder-analysis',
-        repository: '/repository-analysis',
-      };
-      this.router.navigate([routes[type]]);
-      return;
-    }
-    const ws = this.manager.create(type);
-    const routes: Record<WorkspaceType, string> = {
-      file: '/file-analysis',
-      folder: '/folder-analysis',
-      repository: '/repository-analysis',
-    };
-    this.router.navigate([routes[type]]);
   }
 
   private async loadAiStatus(): Promise<void> {

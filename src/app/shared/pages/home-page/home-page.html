@@ -52,7 +52,7 @@
         <h2 class="panel-title">Create a New Analysis</h2>
         <div class="panel-cards">
 
-          <button class="pcard pcard--file" (click)="startNewAnalysis('file')">
+          <a routerLink="/file-analysis" [queryParams]="{new: '1'}" class="pcard pcard--file">
             <div class="pcard-icon">
               <!-- File with code lines -->
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -68,9 +68,9 @@
             <svg class="pcard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12" /><polyline points="13 6 19 12 13 18" />
             </svg>
-          </button>
+          </a>
 
-          <button class="pcard pcard--folder" (click)="startNewAnalysis('folder')">
+          <a routerLink="/folder-analysis" [queryParams]="{new: '1'}" class="pcard pcard--folder">
             <div class="pcard-icon">
               <!-- Folder with stacked files inside -->
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -84,9 +84,9 @@
             <svg class="pcard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12" /><polyline points="13 6 19 12 13 18" />
             </svg>
-          </button>
+          </a>
 
-          <button class="pcard pcard--repo" (click)="startNewAnalysis('repository')">
+          <a routerLink="/repository-analysis" [queryParams]="{new: '1'}" class="pcard pcard--repo">
             <div class="pcard-icon">
               <!-- Git branch with nodes -->
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -102,7 +102,7 @@
             <svg class="pcard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12" /><polyline points="13 6 19 12 13 18" />
             </svg>
-          </button>
+          </a>
 
         </div>
       </div>

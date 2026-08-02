@@ -1,7 +1,6 @@
 'use strict';
 
 const { DataFlowDiscoveryEngine } = require('./data-flow-discovery.engine');
-const { FolderWorkflowsNarrativeEngine } = require('../narrative/folder-workflows-narrative.engine');
 
 /**
  * DataFlowAnalysisEngine — AI-tier data flow analysis.
@@ -19,7 +18,6 @@ class DataFlowAnalysisEngine {
 
   constructor() {
     this._discovery = new DataFlowDiscoveryEngine();
-    this._workflowsNarrative = new FolderWorkflowsNarrativeEngine();
   }
 
   /**
@@ -56,29 +54,7 @@ class DataFlowAnalysisEngine {
       // Non-fatal — proceed with empty insights
     }
 
-    const rel = model.relationships ?? {};
-    const graphEdges = rel.dependencies?.graph?.edges ?? [];
-    const graphNodes = rel.dependencies?.graph?.nodes ?? [];
-    const architecturePatterns = (rel.architecture?.patterns ?? []).map(p => p.name);
-    const fileCount = Object.keys(model.structure?.symbols ?? {}).length;
-    const couplingRatio = graphNodes.length > 0 ? graphEdges.length / graphNodes.length : 0;
-
-    const workflowNames = workflows.map(wf => wf.title ?? wf.name ?? 'Unnamed Workflow');
-    let narratives = [];
-    try {
-      narratives = this._workflowsNarrative.build({
-        workflows: workflowNames,
-        architecturePatterns,
-        fileCount,
-        couplingRatio,
-      });
-    } catch (e) {
-      // Non-fatal — proceed without narratives
-    }
-
-    const primaryWorkflows = workflows.map((wf, i) =>
-      this._profileWorkflow(wf, insights, narratives[i] ?? null),
-    );
+    const primaryWorkflows = workflows.map(wf => this._profileWorkflow(wf, insights));
 
     return {
       workflowCount:        workflows.length,
@@ -111,7 +87,7 @@ class DataFlowAnalysisEngine {
    * Build a WorkflowRiskProfile from a discovered WorkflowSummary.
    * Risk is assessed from step count, bottleneck presence, and workflow confidence.
    */
-  _profileWorkflow(wf, insights, narrative) {
+  _profileWorkflow(wf, insights) {
     const bottlenecksInPath = (wf.flowPath ?? []).filter(
       node => (insights.workflowBottlenecks ?? []).includes(node),
     );
@@ -128,7 +104,6 @@ class DataFlowAnalysisEngine {
       stepCount:        wf.steps?.length ?? wf.flowPath?.length ?? 0,
       bottleneckNodes:  bottlenecksInPath,
       failureRisk,
-      ...(narrative ? { narrative } : {}),
     };
   }
 

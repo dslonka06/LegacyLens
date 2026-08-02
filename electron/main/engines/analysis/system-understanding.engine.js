@@ -38,9 +38,11 @@ class SystemUnderstandingEngine {
     const ai = session.aiAnalysis;
     const fileName = session.fileName;
 
-    const executiveSummary = ai?.summary || analysis.summary || null;
+    const executiveSummary = ai?.summary || analysis.summary ||
+      `${fileName} is a ${analysis.language} ${analysis.type} file.`;
 
-    const businessPurpose = ai?.businessPurpose || analysis.businessPurpose || null;
+    const businessPurpose = ai?.businessPurpose || analysis.businessPurpose ||
+      `This file implements ${analysis.type.toLowerCase()} functionality within the application.`;
 
     const whyItMatters = this.deriveFileWhyItMatters(session);
 
@@ -293,7 +295,8 @@ class SystemUnderstandingEngine {
     if (a.developerNotes) parts.push(a.developerNotes);
 
     if (parts.length === 0) {
-      return null;
+      return `${name} is a ${a.language} file implementing ${a.type} functionality. ` +
+        `It has ${a.dependencies.length} dependencies and ${a.responsibilities.length} identified responsibilities.`;
     }
 
     return parts.join(' ');

@@ -19,47 +19,108 @@
       [entry]="llmSummaryEntry"
     ></app-explanation-card>
 
-    <div class="arch-col-main">
-      <div class="doc-block" *ngIf="architectureNarrative">
-        <div class="doc-block-label">Architecture Summary</div>
-        <p class="arch-narrative">{{ architectureNarrative }}</p>
+    <div class="arch-cols" [class.arch-cols--has-tree]="folderTree">
+      <!-- File tree (folder/repo workspaces only) -->
+      <div class="arch-col-tree" *ngIf="folderTree">
+        <app-file-tree-panel [folderTree]="folderTree" (fileSelected)="onFileSelected($event)">
+        </app-file-tree-panel>
       </div>
 
-      <div class="doc-block" *ngIf="architectureDiagram">
-        <div class="doc-block-label">Layer Diagram</div>
-        <app-mermaid-diagram [diagram]="architectureDiagram"></app-mermaid-diagram>
-      </div>
+      <div class="arch-col-main">
+        <div class="doc-block" *ngIf="architectureNarrative">
+          <div class="doc-block-label">Architecture Summary</div>
+          <p class="arch-narrative">{{ architectureNarrative }}</p>
+        </div>
 
-      <!-- Structural Analysis -->
-      <div class="doc-block" *ngIf="hasStructuralAnalysis">
-        <div class="doc-block-label">Structural Analysis</div>
-        <div class="metrics-strip">
-          <div class="strip-item">
-            <span class="strip-label">Coupling</span>
-            <span class="strip-val" [class]="couplingClass(archAI!.couplingAssessment)">{{ archAI!.couplingAssessment }}</span>
+        <div class="doc-block">
+          <div class="doc-block-label">Architectural Layers</div>
+          <div class="arch-empty-state" *ngIf="!patterns.length">
+            No architectural patterns detected. Upload a repository to begin analysis.
           </div>
-          <div class="strip-item">
-            <span class="strip-label">Hub Nodes</span>
-            <span class="strip-val" [class.strip-val-warn]="archAI!.hubCount > 2">{{ archAI!.hubCount }}</span>
-          </div>
-          <div class="strip-item">
-            <span class="strip-label">Circular Deps</span>
-            <span class="strip-val" [class.strip-val-warn]="archAI!.circularDependencyCount > 0">{{ archAI!.circularDependencyCount }}</span>
+          <div class="arch-pattern-grid" *ngIf="patterns.length">
+            <div class="arch-pattern-card" *ngFor="let p of patterns">
+              <div class="arch-pattern-info">
+                <span class="arch-pattern-name">{{ p.name }}</span>
+              </div>
+              <div class="arch-confidence-row">
+                <div class="arch-confidence-bar">
+                  <div class="arch-confidence-fill" [style.width.%]="confidencePercent(p)"></div>
+                </div>
+                <span class="arch-confidence-pct">{{ confidencePercent(p) }}%</span>
+              </div>
+              <p class="arch-pattern-summary">{{ architectureDescription(p.name) }}</p>
+              <div class="arch-indicators" *ngIf="p.indicators.length">
+                <span class="arch-indicator-tag" *ngFor="let ind of p.indicators.slice(0, 5)">{{
+                  ind
+                }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Hub Nodes -->
-      <div class="doc-block" *ngIf="hubNodes.length > 0">
-        <div class="doc-block-label">Hub Nodes</div>
-        <div class="arch-component-list">
-          <div class="arch-component-item" *ngFor="let hub of hubNodes">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.07 4.93l-1.41 1.41M12 2v2M4.93 4.93l1.41 1.41M2 12h2M4.93 19.07l1.41-1.41M12 20v2M19.07 19.07l-1.41-1.41M20 12h2" />
-            </svg>
-            <span>{{ hub.name }}</span>
-            <span class="hub-dep-count">{{ hub.inboundCount }} inbound</span>
+      <div class="arch-col-side">
+        <div class="doc-block">
+          <div class="doc-block-label">Architecture Summary</div>
+          <div class="metrics-strip">
+            <div class="strip-item">
+              <span class="strip-label">Modules</span>
+              <span class="strip-val accent">{{ nodeCount }}</span>
+            </div>
+            <div class="strip-item">
+              <span class="strip-label">Connections</span>
+              <span class="strip-val">{{ edgeCount }}</span>
+            </div>
+            <div class="strip-item">
+              <span class="strip-label">Patterns</span>
+              <span class="strip-val">{{ patterns.length }}</span>
+            </div>
+            <div class="strip-item">
+              <span class="strip-label">Hubs</span>
+              <span class="strip-val" [class.strip-val-warn]="hubs.length > 5">{{
+                hubs.length
+              }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-block" *ngIf="hubs.length > 0">
+          <div class="doc-block-label">Major Components</div>
+          <div class="arch-component-list">
+            <div class="arch-component-item" *ngFor="let hub of hubs">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+              </svg>
+              <span>{{ hub.name }}</span>
+              <span class="hub-dep-count">{{ hub.inboundCount }} connections</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-block" *ngIf="topDependencies.length > 0">
+          <div class="doc-block-label">Top Referenced Modules</div>
+          <div class="arch-responsibility-list">
+            <div class="arch-responsibility-item" *ngFor="let d of topDependencies">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>{{ d }}</span>
+            </div>
           </div>
         </div>
       </div>

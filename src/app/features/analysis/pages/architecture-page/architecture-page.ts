@@ -1,35 +1,33 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import type { LLMSummaryEntry } from '@app/knowledge/models/llm-summaries.model';
+import { FileTreePanel } from '@app/shared/components/file-tree-panel/file-tree-panel';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
-import { MermaidDiagram } from '@app/shared/components/mermaid-diagram/mermaid-diagram';
 import type {
   KnowledgeModel,
   ArchitecturePattern,
   DependencyHub,
 } from '@app/knowledge/models/knowledge-model.contract';
-import type { ArchitectureAIAnalysis } from '@app/knowledge/models/architecture-ai-analysis.model';
+import type { FolderNode, FileNode } from '@app/knowledge/models/repository.model';
 
 @Component({
   selector: 'app-architecture-page',
   standalone: true,
-  imports: [CommonModule, ThemeToggle, ExplanationCard, MermaidDiagram],
+  imports: [CommonModule, FileTreePanel, ThemeToggle, ExplanationCard],
   templateUrl: './architecture-page.html',
   styleUrl: './architecture-page.scss',
 })
 export class ArchitecturePage implements OnInit, OnDestroy {
   model: KnowledgeModel | null = null;
   hasWorkspace = false;
+  selectedFile: FileNode | null = null;
 
   private sub: Subscription | null = null;
 
-  constructor(
-    private readonly manager: WorkspaceManagerService,
-    private readonly cdr: ChangeDetectorRef,
-  ) {}
+  constructor(private readonly manager: WorkspaceManagerService) {}
 
   ngOnInit(): void {
     this.model = this.manager.getActive()?.knowledgeModel ?? null;
@@ -37,7 +35,6 @@ export class ArchitecturePage implements OnInit, OnDestroy {
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       this.model = ws?.knowledgeModel ?? null;
       this.hasWorkspace = this.model != null;
-      this.cdr.detectChanges();
     });
   }
 
@@ -49,8 +46,40 @@ export class ArchitecturePage implements OnInit, OnDestroy {
     return this.model?.relationships.architecture?.patterns ?? [];
   }
 
+  get hubs(): DependencyHub[] {
+    return (this.model?.relationships.dependencies?.hubs ?? []).slice(0, 8);
+  }
+
+  get nodeCount(): number {
+    return this.model?.relationships.dependencies?.graph.nodes.length ?? 0;
+  }
+
+  get edgeCount(): number {
+    return this.model?.relationships.dependencies?.graph.edges.length ?? 0;
+  }
+
+  get topDependencies(): string[] {
+    const graph = this.model?.relationships.dependencies?.graph;
+    if (!graph) return [];
+    const nodeMap = new Map(graph.nodes.map((n) => [n.id, n.name]));
+    const counts = new Map<string, number>();
+    graph.edges.forEach((e) => counts.set(e.target, (counts.get(e.target) ?? 0) + 1));
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([id]) => nodeMap.get(id) ?? id);
+  }
+
   get workspaceName(): string {
     return this.model?.workspaceName ?? 'Workspace';
+  }
+
+  get folderTree(): FolderNode | undefined {
+    return this.model?.structure.folderTree;
+  }
+
+  onFileSelected(file: FileNode): void {
+    this.selectedFile = file;
   }
 
   get architectureNarrative(): string {
@@ -58,7 +87,10 @@ export class ArchitecturePage implements OnInit, OnDestroy {
     if (!pts.length) return '';
     const names = pts.slice(0, 3).map((p) => p.name).join(', ');
     const topConf = this.confidencePercent(pts[0]);
-    return `Detected pattern${pts.length > 1 ? 's' : ''}: ${names} (${topConf}% confidence).`;
+    const hubNote = this.hubs.length > 0
+      ? ` ${this.hubs.length} central hub module${this.hubs.length > 1 ? 's' : ''} act as primary integration points.`
+      : '';
+    return `Detected pattern${pts.length > 1 ? 's' : ''}: ${names} (${topConf}% confidence). ${this.nodeCount} modules, ${this.edgeCount} dependency connections.${hubNote}`;
   }
 
   confidencePercent(p: ArchitecturePattern): number {
@@ -67,26 +99,6 @@ export class ArchitecturePage implements OnInit, OnDestroy {
 
   get llmSummaryEntry(): LLMSummaryEntry | null {
     return this.model?.ai?.summaries?.architecture ?? null;
-  }
-
-  get architectureDiagram(): string | null {
-    return this.model?.ai?.architecture?.architectureDiagram ?? null;
-  }
-
-  get archAI(): ArchitectureAIAnalysis | null {
-    return this.model?.ai?.architecture ?? null;
-  }
-
-  get hubNodes(): DependencyHub[] {
-    return (this.model?.relationships.dependencies?.hubs ?? []).filter(h => h.isHub).slice(0, 10);
-  }
-
-  get hasStructuralAnalysis(): boolean {
-    return this.archAI != null;
-  }
-
-  couplingClass(assessment: string): string {
-    return { Low: 'coupling-low', Moderate: 'coupling-moderate', High: 'coupling-high', Critical: 'coupling-critical' }[assessment] ?? 'coupling-low';
   }
 
   architectureDescription(name: string): string {

@@ -5,22 +5,6 @@
   overflow: hidden;
 }
 
-.doc-block {
-  background: var(--panel-bg);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius-card);
-  padding: 14px 16px;
-  gap: 12px;
-  transition: border-color 0.18s, box-shadow 0.18s;
-
-  &:hover {
-    border-color: rgba(141, 99, 255, 0.28);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  }
-}
-
 .arch-cols {
   display: grid;
   grid-template-columns: 1fr 340px;
@@ -264,8 +248,4 @@
   &.strip-val-warn {
     color: var(--warning);
   }
-  &.coupling-low      { color: var(--success); }
-  &.coupling-moderate { color: var(--warning); }
-  &.coupling-high     { color: var(--severity-high); }
-  &.coupling-critical { color: var(--severity-critical); }
 }

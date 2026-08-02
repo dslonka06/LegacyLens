@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
@@ -25,10 +25,7 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
 
   private sub: Subscription | null = null;
 
-  constructor(
-    private readonly manager: WorkspaceManagerService,
-    private readonly cdr: ChangeDetectorRef,
-  ) {}
+  constructor(private readonly manager: WorkspaceManagerService) {}
 
   ngOnInit(): void {
     const active = this.manager.getActive();
@@ -41,7 +38,6 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
       this.showCompMethods = false;
       this.showCompImportsExports = false;
       this.expandedResponsibilityIndex = null;
-      this.cdr.detectChanges();
     });
   }
 
@@ -107,24 +103,6 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
     const responsibilities = this.understanding?.keyResponsibilities ?? [];
     const descriptions = this.knowledgeModel?.ai?.fileResponsibilitiesNarrative ?? [];
     return responsibilities.map((text, i) => ({
-      text,
-      description: descriptions[i] ?? '',
-    }));
-  }
-
-  get folderResponsibilities(): Array<{ text: string; description: string }> {
-    const responsibilities = this.understanding?.keyResponsibilities ?? [];
-    const descriptions = this.knowledgeModel?.ai?.folderResponsibilitiesNarrative ?? [];
-    return responsibilities.map((text, i) => ({
-      text,
-      description: descriptions[i] ?? '',
-    }));
-  }
-
-  get folderWorkflows(): Array<{ text: string; description: string }> {
-    const workflows = this.understanding?.keyWorkflows ?? [];
-    const descriptions = this.knowledgeModel?.ai?.folderWorkflowsNarrative ?? [];
-    return workflows.map((text, i) => ({
       text,
       description: descriptions[i] ?? '',
     }));

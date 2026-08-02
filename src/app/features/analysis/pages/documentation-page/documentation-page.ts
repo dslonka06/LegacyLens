@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import {
@@ -35,13 +35,11 @@ export class DocumentationPage implements OnInit, OnDestroy {
     private readonly builder: DocumentationBuilderService,
     private readonly pdfExport: PdfExportService,
     private readonly layoutService: PanelLayoutService,
-    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     this.panelWidths = this.layoutService.load('documentation') ?? [320];
 
-    this.model = this.manager.getActive()?.knowledgeModel ?? null;
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       const prev = this.model;
       this.model = ws?.knowledgeModel ?? null;
@@ -50,8 +48,10 @@ export class DocumentationPage implements OnInit, OnDestroy {
         this.sections = this.builder.buildSectionList(this.model);
 
         if (!prev || this.selectedIds.size === 0) {
+          // First load — apply defaults
           this.selectedIds = new Set(this.builder.defaultSelections(this.model));
         } else {
+          // Subsequent update (AI stage arrived) — keep selections, drop unavailable
           const available = new Set(this.sections.filter((s) => s.available).map((s) => s.id));
           this.selectedIds = new Set([...this.selectedIds].filter((id) => available.has(id)));
         }
@@ -62,7 +62,6 @@ export class DocumentationPage implements OnInit, OnDestroy {
         this.selectedIds = new Set();
         this.previewText = '';
       }
-      this.cdr.detectChanges();
     });
   }
 
@@ -135,14 +134,12 @@ export class DocumentationPage implements OnInit, OnDestroy {
 
   get previewSections(): Array<{ title: string; content: string }> {
     if (!this.previewText) return [];
-    // Split on lines that start a new numbered section (e.g. "1. Executive Summary").
-    // Using a lookahead keeps the delimiter line inside each chunk.
-    const chunks = this.previewText.split(/(?=^\d+\. )/m).filter(Boolean);
-    return chunks.map((chunk) => {
-      const newline = chunk.indexOf('\n');
-      const title = (newline === -1 ? chunk : chunk.slice(0, newline)).replace(/^\d+\.\s*/, '').trim();
-      const content = newline === -1 ? '' : chunk.slice(newline + 1).trim();
-      return { title, content };
-    });
+    return this.previewText
+      .split('\n\n')
+      .filter(Boolean)
+      .map((block) => {
+        const lines = block.split('\n');
+        return { title: lines[0].replace(/^\d+\.\s*/, ''), content: lines.slice(2).join('\n') };
+      });
   }
 }
