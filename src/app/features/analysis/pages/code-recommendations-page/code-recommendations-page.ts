@@ -8,6 +8,7 @@ import {
   Recommendation,
 } from '@app/analysis/models/recommendation-analysis.model';
 import { Workspace } from '@app/workspace/models/workspace-entity.model';
+import { SecurityFinding, SecuritySeverity } from '@app/analysis/models/security-analysis.model';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 import { ExplanationCard } from '@app/shared/components/explanation-card/explanation-card';
 
@@ -89,5 +90,42 @@ export class CodeRecommendationsPage implements OnInit, OnDestroy {
 
   get llmSummaryEntry(): LLMSummaryEntry | null {
     return this.workspace?.knowledgeModel?.ai?.summaries?.recommendations ?? null;
+  }
+
+  get securityActionItems(): SecurityFinding[] {
+    const findings = this.workspace?.knowledgeModel?.ai?.security?.findings ?? [];
+    return findings
+      .filter(f => f.severity === 'critical' || f.severity === 'high' || f.severity === 'medium')
+      .sort((a, b) => {
+        const order: Record<SecuritySeverity, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+        return (order[a.severity] ?? 3) - (order[b.severity] ?? 3);
+      })
+      .slice(0, 8);
+  }
+
+  get hasSecurityActionItems(): boolean {
+    return this.securityActionItems.length > 0;
+  }
+
+  expandedSecurityIds = new Set<string>();
+
+  toggleSecurityItem(id: string): void {
+    if (this.expandedSecurityIds.has(id)) {
+      this.expandedSecurityIds.delete(id);
+    } else {
+      this.expandedSecurityIds.add(id);
+    }
+  }
+
+  isSecurityItemExpanded(id: string): boolean {
+    return this.expandedSecurityIds.has(id);
+  }
+
+  securitySeverityClass(s: SecuritySeverity): string {
+    return { critical: 'priority-critical', high: 'priority-high', medium: 'priority-medium', low: 'priority-low' }[s] ?? 'priority-low';
+  }
+
+  securitySeverityLabel(s: SecuritySeverity): string {
+    return { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' }[s] ?? s;
   }
 }

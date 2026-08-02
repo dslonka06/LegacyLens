@@ -9,7 +9,9 @@ import { MermaidDiagram } from '@app/shared/components/mermaid-diagram/mermaid-d
 import type {
   KnowledgeModel,
   ArchitecturePattern,
+  DependencyHub,
 } from '@app/knowledge/models/knowledge-model.contract';
+import type { ArchitectureAIAnalysis } from '@app/knowledge/models/architecture-ai-analysis.model';
 
 @Component({
   selector: 'app-architecture-page',
@@ -69,6 +71,22 @@ export class ArchitecturePage implements OnInit, OnDestroy {
 
   get architectureDiagram(): string | null {
     return this.model?.ai?.architecture?.architectureDiagram ?? null;
+  }
+
+  get archAI(): ArchitectureAIAnalysis | null {
+    return this.model?.ai?.architecture ?? null;
+  }
+
+  get hubNodes(): DependencyHub[] {
+    return (this.model?.relationships.dependencies?.hubs ?? []).filter(h => h.isHub).slice(0, 10);
+  }
+
+  get hasStructuralAnalysis(): boolean {
+    return this.archAI != null;
+  }
+
+  couplingClass(assessment: string): string {
+    return { Low: 'coupling-low', Moderate: 'coupling-moderate', High: 'coupling-high', Critical: 'coupling-critical' }[assessment] ?? 'coupling-low';
   }
 
   architectureDescription(name: string): string {

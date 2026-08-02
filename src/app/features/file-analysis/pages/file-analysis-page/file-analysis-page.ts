@@ -228,11 +228,15 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
 
   private runAnimations(): void {
     if (this.animTimer) clearTimeout(this.animTimer);
-    this.showIdentity = false;
-    this.showInfoCards = false;
-    this.showArcDraw = false;
-    this.showMetricCards = false;
-    this.cdr.detectChanges();
+
+    const alreadyVisible = this.showIdentity && this.showInfoCards;
+    if (!alreadyVisible) {
+      this.showIdentity = false;
+      this.showInfoCards = false;
+      this.showArcDraw = false;
+      this.showMetricCards = false;
+      this.cdr.detectChanges();
+    }
 
     const fast = this.isReturning;
     const t = (ms: number) => (fast ? Math.round(ms * 0.4) : ms);
@@ -240,9 +244,11 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     const run = (fn: () => void, delay: number) =>
       setTimeout(() => this.zone.run(() => { fn(); this.cdr.detectChanges(); }), delay);
 
-    run(() => { this.showIdentity = true; }, t(80));
-    run(() => { this.showInfoCards = true; }, t(220));
-    run(() => { this.showArcDraw = true; }, t(320));
+    if (!alreadyVisible) {
+      run(() => { this.showIdentity = true; }, t(80));
+      run(() => { this.showInfoCards = true; }, t(220));
+      run(() => { this.showArcDraw = true; }, t(320));
+    }
     this.animTimer = run(() => { this.showMetricCards = true; }, t(380));
   }
 
@@ -251,6 +257,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     const run = (fn: () => void, delay: number) =>
       setTimeout(() => this.zone.run(() => { fn(); this.cdr.detectChanges(); }), delay);
 
+    run(() => { this.showIdentity = true; }, 80);
     run(() => { this.showInfoCards = true; }, 150);
     run(() => { this.showArcDraw = true; }, 280);
   }

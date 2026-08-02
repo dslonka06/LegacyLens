@@ -114,13 +114,16 @@ function adaptModelForEngines(model) {
 
   // folder / repository — translate new shape to old RepositoryKnowledge shape
   const rel = model.relationships ?? {};
-  const symbols = model.structure?.symbols ?? {};
+  const str = model.structure ?? {};
+  const symbols = str.symbols ?? {};
   const knowledge = {
     sourceFiles:     Object.keys(symbols).map(path => ({
       path,
       extension: path.split('.').pop() ?? '',
       content:   '',
     })),
+    frameworks:      str.frameworks  ?? [],
+    technologies:    (str.technologies ?? []).map(t => t.name ?? t),
     dependencyGraph: rel.dependencies?.graph  ?? null,
     architecture:    rel.architecture         ? { patterns: rel.architecture.patterns } : null,
     builtAt:         model.metadata?.builtAt  ?? new Date().toISOString(),
@@ -422,7 +425,29 @@ function registerIntelligenceHandlers() {
     console.log('[IPC] intelligence:architectureAnalysis done result=' + (result ? 'ok' : 'null'));
     let diagram = '';
     try { diagram = architectureDiagram.build(model); } catch (e) { /* non-fatal */ }
-    return { ...result, architectureDiagram: diagram };
+
+    // Two-pass code health enrichment: architecture stage produces structural metrics
+    // (hubCount, couplingAssessment, circularDependencyCount) that the understanding
+    // stage didn't have. Overwrite codeHealthNarrative with the enriched version.
+    const ins = model.insights ?? {};
+    const symbols = model.structure?.symbols ?? {};
+    let enrichedHealthNarrative = null;
+    try {
+      const healthData = {
+        scope:                   model.targetType === 'file' ? 'file' : (Object.keys(symbols).length > 20 ? 'repository' : 'folder'),
+        name:                    model.workspaceName ?? 'this',
+        complexity:              ins.complexity      ?? 'Medium',
+        maintainability:         ins.maintainability ?? 'Medium',
+        riskCount:               (ins.risks ?? []).length,
+        fileCount:               Object.keys(symbols).length,
+        hubCount:                result.hubCount,
+        couplingAssessment:      result.couplingAssessment,
+        circularDependencyCount: result.circularDependencyCount,
+      };
+      enrichedHealthNarrative = codeHealthNarrative.build(healthData);
+    } catch (e) { /* non-fatal */ }
+
+    return { ...result, architectureDiagram: diagram, enrichedHealthNarrative };
   }));
 
   // intelligence:dataFlowAnalysis — AI-tier data flow analysis from KnowledgeModel

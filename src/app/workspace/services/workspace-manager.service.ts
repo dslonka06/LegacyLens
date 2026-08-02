@@ -398,7 +398,6 @@ export class WorkspaceManagerService {
   clearKnowledgeModel(id: string): void {
     this.patch(id, {
       knowledgeModel: null,
-      status: 'empty',
       lastModifiedAt: new Date().toISOString(),
     });
   }

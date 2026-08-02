@@ -10,12 +10,16 @@
  *
  * Input shape:
  *   {
- *     scope:           'file' | 'folder' | 'repository',
- *     name:            string,
- *     complexity:      'Low' | 'Medium' | 'High',
- *     maintainability: 'Low' | 'Medium' | 'High',
- *     riskCount:       number,
- *     fileCount:       number,   // folder/repo: number of files
+ *     scope:              'file' | 'folder' | 'repository',
+ *     name:               string,
+ *     complexity:         'Low' | 'Medium' | 'High',
+ *     maintainability:    'Low' | 'Medium' | 'High',
+ *     riskCount:          number,
+ *     fileCount:          number,     // folder/repo: number of files
+ *     // Optional — only present when architecture stage has completed (two-pass enrichment)
+ *     hubCount?:          number,
+ *     couplingAssessment?: 'Low' | 'Moderate' | 'High' | 'Critical',
+ *     circularDependencyCount?: number,
  *   }
  */
 
@@ -113,6 +117,44 @@ class CodeHealthNarrativeEngine {
       weight: 65,
       when:    (d) => d.complexity === 'Low' && d.maintainability === 'High',
       produce: (d) => `${d.name} scores well on both complexity and maintainability, though ${d.riskCount} risk${d.riskCount !== 1 ? 's were' : ' was'} identified. The structural fundamentals are sound — the risks are specific findings rather than systemic issues, and worth addressing individually rather than indicating deeper problems.`,
+    },
+
+    // ── Structural enrichment — only when architecture stage has completed ────
+
+    {
+      weight: 250,
+      when:    (d) => d.couplingAssessment === 'Critical' && d.hubCount >= 3,
+      produce: (d) => `${d.name} has a critical coupling profile: ${d.hubCount} hub nodes are each depended on by a disproportionate number of other modules, creating a structural bottleneck that amplifies the blast radius of every change. Combined with ${d.circularDependencyCount > 0 ? `${d.circularDependencyCount} circular dependencies and ` : ''}${d.complexity?.toLowerCase() ?? 'moderate'} complexity, this is the highest-risk structural configuration. Decomposing the hub nodes and breaking circular chains should be the first priority before adding new functionality.`,
+    },
+
+    {
+      weight: 245,
+      when:    (d) => d.couplingAssessment === 'Critical',
+      produce: (d) => `Coupling has reached a critical level in ${d.name} — a significant proportion of the codebase routes through a small number of highly-connected nodes. Any change to these nodes has unpredictable downstream effects, and the cost of future features scales non-linearly with this coupling. Refactoring toward smaller, single-responsibility modules would break the dependency concentration and stabilise the change cost.`,
+    },
+
+    {
+      weight: 240,
+      when:    (d) => d.couplingAssessment === 'High' && d.circularDependencyCount >= 3,
+      produce: (d) => `${d.name} has both high coupling and ${d.circularDependencyCount} circular dependency chains. The circular dependencies indicate that modules have become mutually aware of each other's internals, which prevents independent deployment and makes it hard to reason about initialisation order. High coupling compounds this — the affected modules are also the most-referenced in the graph, so fixing them has outsized positive impact.`,
+    },
+
+    {
+      weight: 235,
+      when:    (d) => d.couplingAssessment === 'High' && d.complexity === 'High',
+      produce: (d) => `${d.name} scores high on both structural coupling and code complexity. High coupling means many modules share state or call chains through a small set of hubs; high complexity means those hubs are themselves hard to understand. This combination is the most maintenance-intensive profile — isolating the hub responsibilities into dedicated abstractions would improve both metrics simultaneously.`,
+    },
+
+    {
+      weight: 230,
+      when:    (d) => d.couplingAssessment === 'High' && d.hubCount > 0,
+      produce: (d) => `${d.name} has high architectural coupling, concentrated across ${d.hubCount} hub node${d.hubCount !== 1 ? 's' : ''} that act as structural chokepoints. Changes near these hubs carry higher risk than the rest of the codebase, and the ${(d.complexity ?? 'moderate').toLowerCase()} complexity of the surrounding code means tracing the full impact of a modification requires careful path analysis.`,
+    },
+
+    {
+      weight: 225,
+      when:    (d) => d.circularDependencyCount >= 2 && d.complexity === 'High',
+      produce: (d) => `${d.name} has ${d.circularDependencyCount} circular dependency chains intersecting with high code complexity. Circular dependencies are a signal that module boundaries have blurred — these modules know too much about each other. Resolving them typically involves extracting shared state into a dedicated dependency, which also tends to reduce complexity in the affected modules.`,
     },
 
     // ── Fallback ──────────────────────────────────────────────────────────────

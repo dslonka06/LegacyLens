@@ -79,10 +79,95 @@
         files.
       </div>
 
-      <div class="doc-block" *ngIf="hasDataFlow && dataFlowDiagram">
-        <div class="doc-block-label">Workflow Diagram</div>
-        <app-mermaid-diagram [diagram]="dataFlowDiagram"></app-mermaid-diagram>
-      </div>
+      <ng-container *ngIf="hasDataFlow">
+
+        <!-- Overview strip -->
+        <div class="metrics-strip" *ngIf="workflowCount > 0 || entryPoints.length > 0">
+          <div class="strip-item">
+            <span class="strip-label">Workflows</span>
+            <span class="strip-val accent">{{ workflowCount }}</span>
+          </div>
+          <div class="strip-item">
+            <span class="strip-label">Entry Points</span>
+            <span class="strip-val">{{ entryPoints.length }}</span>
+          </div>
+          <div class="strip-item">
+            <span class="strip-label">Bottlenecks</span>
+            <span class="strip-val" [class.strip-val-warn]="bottlenecks.length > 0">{{ bottlenecks.length }}</span>
+          </div>
+          <div class="strip-item">
+            <span class="strip-label">External Deps</span>
+            <span class="strip-val">{{ externalDependencies.length }}</span>
+          </div>
+        </div>
+
+        <!-- Mermaid workflow diagram -->
+        <div class="doc-block" *ngIf="dataFlowDiagram">
+          <div class="doc-block-label">Workflow Diagram</div>
+          <app-mermaid-diagram [diagram]="dataFlowDiagram"></app-mermaid-diagram>
+        </div>
+
+        <!-- Workflow accordion cards -->
+        <div class="doc-block" *ngIf="primaryWorkflows.length > 0">
+          <div class="doc-block-label">Workflows</div>
+          <div class="df-workflow-list">
+            <div
+              class="df-workflow-card"
+              *ngFor="let wf of primaryWorkflows; let i = index"
+              [class.df-workflow-card--expanded]="isWorkflowExpanded(i)"
+              (click)="toggleWorkflow(i)"
+            >
+              <div class="df-workflow-header">
+                <div class="df-workflow-meta">
+                  <span class="df-workflow-name">{{ wf.workflowName }}</span>
+                  <span class="df-workflow-entry" *ngIf="wf.entryPoint">via {{ wf.entryPoint }}</span>
+                </div>
+                <div class="df-workflow-chips">
+                  <span class="df-risk-badge" [class]="riskClass(wf.failureRisk)">{{ wf.failureRisk }}</span>
+                  <span class="df-step-count">{{ wf.stepCount }} steps</span>
+                </div>
+                <svg class="df-workflow-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </div>
+              <div class="df-workflow-body" *ngIf="isWorkflowExpanded(i)">
+                <div class="df-bottleneck-list" *ngIf="wf.bottleneckNodes.length > 0">
+                  <span class="df-section-label">Bottlenecks</span>
+                  <div class="flow-tag-list">
+                    <span class="df-bottleneck-chip" *ngFor="let b of wf.bottleneckNodes">{{ b }}</span>
+                  </div>
+                </div>
+                <p class="df-workflow-narrative" *ngIf="wf.narrative">{{ wf.narrative }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Entry Points -->
+        <div class="doc-block" *ngIf="entryPoints.length > 0">
+          <div class="doc-block-label">Entry Points</div>
+          <div class="flow-tag-list">
+            <span class="flow-tag flow-tag-input" *ngFor="let ep of entryPoints">{{ ep }}</span>
+          </div>
+        </div>
+
+        <!-- Bottlenecks -->
+        <div class="doc-block" *ngIf="bottlenecks.length > 0">
+          <div class="doc-block-label">Bottleneck Nodes</div>
+          <div class="flow-tag-list">
+            <span class="df-bottleneck-chip" *ngFor="let b of bottlenecks">{{ b }}</span>
+          </div>
+        </div>
+
+        <!-- External Dependencies -->
+        <div class="doc-block" *ngIf="externalDependencies.length > 0">
+          <div class="doc-block-label">External Dependencies</div>
+          <div class="flow-tag-list">
+            <span class="flow-tag flow-tag-output" *ngFor="let dep of externalDependencies">{{ dep }}</span>
+          </div>
+        </div>
+
+      </ng-container>
     </ng-container>
   </div>
 

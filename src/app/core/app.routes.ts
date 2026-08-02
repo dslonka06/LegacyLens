@@ -9,13 +9,6 @@ export const routes: Routes = [
 
   // ── File Analysis workspace ────────────────────────────────────────────────
   {
-    path: 'file-analysis/new',
-    loadComponent: () =>
-      import('../features/file-analysis/pages/file-analysis-new-page/file-analysis-new-page').then(
-        (m) => m.FileAnalysisNewPage,
-      ),
-  },
-  {
     path: 'file-analysis',
     canActivate: [workspaceInitGuard],
     loadComponent: () =>
@@ -71,13 +64,6 @@ export const routes: Routes = [
   },
 
   // ── Folder Analysis workspace ─────────────────────────────────────────────
-  {
-    path: 'folder-analysis/new',
-    loadComponent: () =>
-      import('../features/folder-analysis/pages/folder-analysis-new-page/folder-analysis-new-page').then(
-        (m) => m.FolderAnalysisNewPage,
-      ),
-  },
   {
     path: 'folder-analysis',
     canActivate: [workspaceInitGuard],
@@ -142,13 +128,6 @@ export const routes: Routes = [
   },
 
   // ── Repository Analysis workspace ──────────────────────────────────────────
-  {
-    path: 'repository-analysis/new',
-    loadComponent: () =>
-      import('../features/repository-analysis/pages/repository-analysis-new-page/repository-analysis-new-page').then(
-        (m) => m.RepositoryAnalysisNewPage,
-      ),
-  },
   {
     path: 'repository-analysis',
     canActivate: [workspaceInitGuard],
