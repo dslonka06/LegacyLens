@@ -100,11 +100,21 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    const init = this.manager.getActive();
-    this.workspace = init ?? null;
-    this.model = init?.knowledgeModel ?? null;
-    // Returning to an existing analysis — use fast animation variant
-    this.isReturning = !!init?.knowledgeModel;
+    const boot = this.manager.getActive();
+    if (boot) {
+      this.workspace = boot;
+      this.model = boot.knowledgeModel ?? null;
+      if (boot.knowledgeModel) {
+        this.showIdentity = true;
+        this.showInfoCards = true;
+        this.showArcDraw = true;
+        this.showMetricCards = true;
+        this.animateCountsTo(this.metricCards);
+      } else {
+        this.runAnimations();
+      }
+      this.cdr.detectChanges();
+    }
 
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       const prevId = this.workspace?.id;
@@ -114,39 +124,35 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       this.workspace = ws;
       this.model = ws?.knowledgeModel ?? null;
 
+      const sameAsBootstrap = prevId === ws?.id && prevModel === ws?.knowledgeModel;
+      if (sameAsBootstrap) {
+        this.cdr.detectChanges();
+        return;
+      }
+
       const switched = prevId !== ws?.id;
       const modelArrived = !prevModel && !!ws?.knowledgeModel;
-      // Also animate when processing begins so info row slides in
       const processingStarted = prevStatus !== 'processing' && ws?.status === 'processing';
       const aiUpdated = !switched && !modelArrived && !!ws?.knowledgeModel &&
         ws.knowledgeModel.ai !== prevAi;
-      console.log('[Hub] ws update', {
-        switched,
-        modelArrived,
-        aiUpdated,
-        prevAiRef: prevAi ? 'has-prev' : 'null',
-        newAiRef: ws?.knowledgeModel?.ai ? 'has-new' : 'null',
-        prevAiSame: prevAi === ws?.knowledgeModel?.ai,
-        completedStages: ws?.knowledgeModel?.ai?.completedStages,
-        willAnimate: modelArrived || aiUpdated,
-      });
 
-      if (switched || modelArrived) {
-        this.isReturning = switched && !!ws?.knowledgeModel;
+      if (switched && !!ws?.knowledgeModel) {
+        this.showIdentity = true;
+        this.showInfoCards = true;
+        this.showArcDraw = true;
+        this.showMetricCards = true;
+      } else if (switched || modelArrived) {
         this.runAnimations();
       } else if (processingStarted) {
         this.runInfoCardAnimation();
       }
 
       if (modelArrived || aiUpdated) {
-        console.log('[Hub] calling animateCountsTo, cards pending states:', this.metricCards.map(c => ({ id: c.id, pending: c.pending, count: c.count })));
         this.animateCountsTo(this.metricCards);
       }
     });
 
-    // Re-render when stage running state changes so pipeline rows update live
     this.stagesSub = this.manager.activeStages$.subscribe((stagesMap) => {
-      // Update status cycling — start/stop per stage
       const stages: AIStage[] = ['understanding', 'dataFlow', 'security', 'recommendations', 'learningPath'];
       stages.forEach((stage) => {
         const running = this.manager.getActiveStages(this.workspace?.id ?? '').has(stage);
@@ -161,7 +167,6 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     });
 
     this.limitSub = this.manager.limitReached$.subscribe(() => this.openSwitcher());
-    this.runAnimations();
   }
 
   ngOnDestroy(): void {
@@ -229,27 +234,19 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   private runAnimations(): void {
     if (this.animTimer) clearTimeout(this.animTimer);
 
-    const alreadyVisible = this.showIdentity && this.showInfoCards;
-    if (!alreadyVisible) {
-      this.showIdentity = false;
-      this.showInfoCards = false;
-      this.showArcDraw = false;
-      this.showMetricCards = false;
-      this.cdr.detectChanges();
-    }
-
-    const fast = this.isReturning;
-    const t = (ms: number) => (fast ? Math.round(ms * 0.4) : ms);
+    this.showIdentity = false;
+    this.showInfoCards = false;
+    this.showArcDraw = false;
+    this.showMetricCards = false;
+    this.cdr.detectChanges();
 
     const run = (fn: () => void, delay: number) =>
       setTimeout(() => this.zone.run(() => { fn(); this.cdr.detectChanges(); }), delay);
 
-    if (!alreadyVisible) {
-      run(() => { this.showIdentity = true; }, t(80));
-      run(() => { this.showInfoCards = true; }, t(220));
-      run(() => { this.showArcDraw = true; }, t(320));
-    }
-    this.animTimer = run(() => { this.showMetricCards = true; }, t(380));
+    run(() => { this.showIdentity = true; }, 80);
+    run(() => { this.showInfoCards = true; }, 220);
+    run(() => { this.showArcDraw = true; }, 320);
+    this.animTimer = run(() => { this.showMetricCards = true; }, 380);
   }
 
   // Slide info row in as soon as processing begins, before model arrives

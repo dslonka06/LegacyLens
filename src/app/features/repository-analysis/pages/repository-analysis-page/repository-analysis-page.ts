@@ -167,13 +167,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
       this.workspace = ws;
       this.model     = ws?.knowledgeModel ?? null;
 
-      // Skip re-animating if this emission matches what we already bootstrapped.
-      const sameAsBootstrap = prevId === ws?.id && prevModel === ws?.knowledgeModel;
-      if (sameAsBootstrap) {
-        this.cdr.detectChanges();
-        return;
-      }
-
       const switched          = prevId !== ws?.id;
       const modelArrived      = !prevModel && !!ws?.knowledgeModel;
       const processingStarted = prevStatus !== 'processing' && ws?.status === 'processing';
@@ -601,7 +594,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   }
 
   get subfolderCount(): number {
-    return this.model?.structure.folderTree?.children.length ?? 0;
+    return this.model?.structure.folderTree?.children?.length ?? 0;
   }
 
   get languageList(): string {
