@@ -20,7 +20,11 @@ function getDbPath() {
 function openDatabase() {
   if (db) return db;
 
-  const Database = require('better-sqlite3');
+  // In packaged builds, better-sqlite3 is unpacked from the asar archive.
+  // We resolve it explicitly so the native .node binary can be loaded.
+  const Database = app.isPackaged
+    ? require(path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'better-sqlite3'))
+    : require('better-sqlite3');
   db = new Database(getDbPath());
 
   // WAL mode: faster writes, safe concurrent reads

@@ -4,7 +4,7 @@
   "description": "AI-powered codebase intelligence",
   "author": "Dominic Slonka",
   "main": "electron/main.js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "packageManager": "npm@11.13.0",
   "scripts": {
@@ -39,7 +39,9 @@
     "asar": true,
     "asarUnpack": [
       "node_modules/electron-updater/**/*",
-      "node_modules/better-sqlite3/**/*"
+      "node_modules/better-sqlite3/**/*",
+      "node_modules/bindings/**/*",
+      "node_modules/file-uri-to-path/**/*"
     ],
     "win": {
       "target": "nsis",
