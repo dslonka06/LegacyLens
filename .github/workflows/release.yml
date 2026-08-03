@@ -24,7 +24,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build and publish
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run release
+      - name: Build installer
+        run: npm run dist
+
+      - name: Create GitHub Release and upload artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/SystemLens-Setup-*.exe
+            release/SystemLens-Setup-*.exe.blockmap
+            release/latest.yml
