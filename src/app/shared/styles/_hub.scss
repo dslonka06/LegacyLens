@@ -831,8 +831,8 @@
   transition: border-color 0.18s, box-shadow 0.18s;
 
   &:hover {
-    border-color: rgba(141, 99, 255, 0.28);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+    box-shadow: var(--shadow-card);
   }
 }
 
@@ -1831,7 +1831,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: rgba(141, 99, 255, 0.9);
+  color: var(--accent);
   line-height: 1;
   pointer-events: none;
 }

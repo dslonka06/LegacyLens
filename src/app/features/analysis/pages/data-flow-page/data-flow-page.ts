@@ -61,6 +61,14 @@ export class DataFlowPage implements OnInit, OnDestroy {
     return this.model?.targetType === 'file';
   }
 
+  get isRepoScope(): boolean {
+    return this.model?.targetType === 'repository';
+  }
+
+  get workflowDiagramWidth(): string {
+    return this.isRepoScope ? '90%' : '65%';
+  }
+
   get fileStepNarrative(): string[] {
     return this.model?.ai?.dataFlowFileNarrative?.stepNarrative ?? [];
   }

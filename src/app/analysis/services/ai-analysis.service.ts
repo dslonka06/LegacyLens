@@ -236,6 +236,7 @@ export class AIAnalysisService {
           } | null;
           folderResponsibilitiesNarrative?: string[] | null;
           folderWorkflowsNarrative?: string[] | null;
+          debtHotspotsNarrative?: string[] | null;
         };
         return {
           understanding: r.understanding,
@@ -246,6 +247,7 @@ export class AIAnalysisService {
           fileComponentsNarrative: r.fileComponentsNarrative ?? null,
           folderResponsibilitiesNarrative: r.folderResponsibilitiesNarrative ?? null,
           folderWorkflowsNarrative: r.folderWorkflowsNarrative ?? null,
+          debtHotspotsNarrative: r.debtHotspotsNarrative ?? null,
         };
       }
       case 'recommendations':

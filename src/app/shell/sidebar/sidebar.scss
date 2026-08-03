@@ -116,7 +116,7 @@
   &:hover {
     background: var(--bg-card);
     color: var(--accent);
-    border-color: rgba(141, 99, 255, 0.3);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
   }
 }
 
@@ -249,7 +249,7 @@
   background: var(--accent);
   border-color: var(--accent);
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(141, 99, 255, 0.35);
+  box-shadow: var(--shadow-glow);
 
   svg {
     color: #ffffff;

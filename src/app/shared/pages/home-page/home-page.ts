@@ -12,6 +12,7 @@ import { Workspace, WorkspaceType } from '@app/workspace/models/workspace-entity
   imports: [CommonModule, RouterLink],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
+  host: { 'data-theme': 'dark' },
 })
 export class HomePage implements OnInit, OnDestroy {
   aiStatus: 'checking' | 'configured' | 'not-configured' = 'checking';

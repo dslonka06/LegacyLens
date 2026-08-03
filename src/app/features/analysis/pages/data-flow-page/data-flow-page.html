@@ -34,7 +34,7 @@
             </div>
           </div>
         </div>
-        <app-mermaid-diagram [diagram]="dataFlowFileDiagram" maxWidth="50%"></app-mermaid-diagram>
+        <app-mermaid-diagram [diagram]="dataFlowFileDiagram" maxWidth="65%"></app-mermaid-diagram>
       </div>
 
       <div class="doc-block" *ngIf="fileDataFlow; else noFileFlow">
@@ -149,7 +149,7 @@
               </div>
             </div>
           </div>
-          <app-mermaid-diagram [diagram]="dataFlowDiagram" maxWidth="50%"></app-mermaid-diagram>
+          <app-mermaid-diagram [diagram]="dataFlowDiagram" [maxWidth]="workflowDiagramWidth"></app-mermaid-diagram>
         </div>
       </ng-container>
 

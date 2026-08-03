@@ -21,7 +21,7 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
   showPurposeInfo = false;
   showRespInfo = false;
   showCompInfo = false;
-  showWorkflowsInfo = false;
+  showDebtInfo = false;
   showCompClasses = false;
   showCompMethods = false;
   showCompImportsExports = false;
@@ -147,12 +147,13 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
     return this.expandedComponentGroupIndex === index;
   }
 
-  get folderWorkflows(): Array<{ text: string; description: string }> {
-    const workflows = this.understanding?.keyWorkflows ?? [];
-    const descriptions = this.knowledgeModel?.ai?.folderWorkflowsNarrative ?? [];
-    return workflows.map((text, i) => ({
-      text,
-      description: descriptions[i] ?? '',
+  get debtHotspots(): Array<{ name: string; reason: string; narrative: string }> {
+    const hotspots = this.understanding?.technicalDebtHotspots ?? [];
+    const narratives = this.knowledgeModel?.ai?.debtHotspotsNarrative ?? [];
+    return hotspots.map((h, i) => ({
+      name: h.name,
+      reason: h.reason,
+      narrative: narratives[i] ?? h.impact,
     }));
   }
 

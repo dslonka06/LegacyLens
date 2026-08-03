@@ -150,14 +150,14 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 280px;
+  width: 420px;
   background: var(--panel-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-card);
   padding: 12px 14px;
-  z-index: 100;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -168,6 +168,8 @@
     color: var(--text-secondary);
     line-height: 1.6;
     margin: 0;
+    text-transform: none;
+    letter-spacing: normal;
 
     strong {
       color: var(--text-heading);
@@ -304,37 +306,50 @@
   flex: 1;
 }
 
-// ── Workflows ─────────────────────────────────────────────────────────────────
+// ── Technical Debt Hotspots ───────────────────────────────────────────────────
 
-.su-workflow-list {
+.su-debt-list {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 12px;
 }
 
-.su-workflow-item {
+.su-debt-item {
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 15%, transparent);
+  border-radius: 8px;
+}
+
+.su-debt-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--border);
-
-  &:last-child { border-bottom: none; }
+  margin-bottom: 6px;
+  flex-wrap: wrap;
 }
 
-.su-workflow-name {
+.su-debt-name {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-heading);
+}
+
+.su-debt-reason {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  border-radius: 4px;
+  padding: 1px 6px;
   flex-shrink: 0;
 }
 
-.su-workflow-desc {
+.su-debt-narrative {
   font-size: 13px;
   color: var(--text-secondary);
-  line-height: 1.5;
-  flex: 1;
-  min-width: 0;
+  line-height: 1.6;
+  margin: 0;
 }
 
 // ── Bottom two-col tier alignment ────────────────────────────────────────────

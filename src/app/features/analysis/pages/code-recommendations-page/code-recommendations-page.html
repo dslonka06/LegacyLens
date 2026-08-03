@@ -46,7 +46,7 @@
           <button class="rec-info-btn" (click)="showSummaryInfo = !showSummaryInfo">i</button>
           <div class="rec-info-popup" *ngIf="showSummaryInfo">
             <p><strong>Critical / High / Medium</strong> counts show the combined total of structural improvement recommendations and AI-confirmed security findings at each severity level.</p>
-            <p>Structural recommendations come from graph analysis — files that too many others depend on, detected circular dependencies, missing architecture patterns, isolated files, and overly broad modules. Security findings come from the AI's review of the pattern-scan evidence. Both are combined into a single prioritised list below.</p>
+            <p>Structural recommendations come from graph analysis — files that too many others depend on, detected circular dependencies, missing architecture patterns, isolated files, and overly broad modules. Security findings come from the AI's review of the pattern-scan evidence. Both are shown below — Improvement Opportunities first, Security Fixes second.</p>
           </div>
         </div>
       </div>
@@ -65,6 +65,92 @@
           <span class="rec-summary-value">{{ mediumCount }}</span>
           <span class="rec-summary-label">Medium</span>
         </div>
+      </div>
+
+      <!-- ── Improvement Opportunities ───────────────────────────────────── -->
+      <div class="rec-card" *ngIf="recs!.recommendations.length > 0">
+        <div class="rec-card-header">
+          <div class="rec-card-header-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8" y1="6" x2="21" y2="6" />
+              <line x1="8" y1="12" x2="21" y2="12" />
+              <line x1="8" y1="18" x2="21" y2="18" />
+              <line x1="3" y1="6" x2="3.01" y2="6" />
+              <line x1="3" y1="12" x2="3.01" y2="12" />
+              <line x1="3" y1="18" x2="3.01" y2="18" />
+            </svg>
+            Improvement Opportunities
+            <span class="rec-count-badge">{{ recs!.recommendations.length }}</span>
+          </div>
+          <div class="rec-info-popup-wrap">
+            <button class="rec-info-btn" (click)="showRecsInfo = !showRecsInfo">i</button>
+            <div class="rec-info-popup" *ngIf="showRecsInfo">
+              <p><strong>Improvement Opportunities</strong> come entirely from structural graph analysis — no AI is used. Each issue type carries a base score: circular dependencies are the most serious (85), followed by hub nodes with 5+ dependents (60–80 depending on degree), overly broad modules that import from 10+ places (55), missing architecture on larger codebases (50), mixed low-confidence patterns (45), and large clusters of isolated files (25).</p>
+              <p>The score determines the severity label — Critical (80+), High (60+), Medium (40+), Low otherwise — and the list is sorted so rank 1 is the highest-priority item to address. Expand any item to see the full description, why it matters, what to do about it, the expected impact, and which files are affected.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rec-list">
+          <div
+            class="rec-item"
+            *ngFor="let rec of recs!.recommendations"
+            [class.expanded]="isExpanded(rec.id)"
+            (click)="toggleRec(rec.id)"
+          >
+            <div class="rec-item-header">
+              <span class="rec-rank">{{ rec.priorityRank }}</span>
+              <div class="rec-item-meta">
+                <span class="rec-item-title">{{ rec.title }}</span>
+                <div class="rec-item-tags">
+                  <span class="rec-priority-badge" [class]="priorityClass(rec)">{{ priorityLabel(rec) }}</span>
+                  <span class="rec-category-badge">{{ categoryLabel(rec) }}</span>
+                  <span class="rec-area-badge">{{ rec.affectedArea }}</span>
+                </div>
+              </div>
+              <span class="rec-file-hint" *ngIf="rec.codeReference.fileName && rec.affectedFiles.length > 0">
+                {{ rec.codeReference.fileName }}
+              </span>
+              <svg class="rec-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </div>
+
+            <div class="rec-item-body" *ngIf="isExpanded(rec.id)">
+              <div class="rec-section">
+                <div class="rec-section-label">Issue</div>
+                <p>{{ rec.issueDescription }}</p>
+              </div>
+              <div class="rec-section rec-why-matters">
+                <div class="rec-section-label rec-label-why">Why It Matters</div>
+                <p>{{ rec.whyItMatters }}</p>
+              </div>
+              <div class="rec-section">
+                <div class="rec-section-label">Recommended Improvement</div>
+                <p>{{ rec.recommendedImprovement }}</p>
+              </div>
+              <div class="rec-section">
+                <div class="rec-section-label">Expected Impact</div>
+                <p>{{ rec.expectedImpact }}</p>
+              </div>
+              <div class="rec-section" *ngIf="rec.affectedFiles.length > 0">
+                <div class="rec-section-label">Affected Files</div>
+                <div class="rec-chip-list">
+                  <span class="rec-chip" *ngFor="let f of rec.affectedFiles">{{ f }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── No findings ────────────────────────────────────────────────── -->
+      <div class="rec-card rec-none" *ngIf="recs!.recommendations.length === 0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="9 11 12 14 22 4" />
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        </svg>
+        <p>No structural issues detected.</p>
       </div>
 
       <!-- ── Security Action Items ─────────────────────────────────────── -->
@@ -131,92 +217,6 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- ── Recommendation list ────────────────────────────────────────── -->
-      <div class="rec-card" *ngIf="recs!.recommendations.length > 0">
-        <div class="rec-card-header">
-          <div class="rec-card-header-row">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="8" y1="6" x2="21" y2="6" />
-              <line x1="8" y1="12" x2="21" y2="12" />
-              <line x1="8" y1="18" x2="21" y2="18" />
-              <line x1="3" y1="6" x2="3.01" y2="6" />
-              <line x1="3" y1="12" x2="3.01" y2="12" />
-              <line x1="3" y1="18" x2="3.01" y2="18" />
-            </svg>
-            Prioritized Recommendations
-            <span class="rec-count-badge">{{ recs!.recommendations.length }}</span>
-          </div>
-          <div class="rec-info-popup-wrap">
-            <button class="rec-info-btn" (click)="showRecsInfo = !showRecsInfo">i</button>
-            <div class="rec-info-popup" *ngIf="showRecsInfo">
-              <p><strong>Prioritized Recommendations</strong> come entirely from structural graph analysis — no AI is used. Each issue type carries a base score: circular dependencies are the most serious (85), followed by hub nodes with 5+ dependents (60–80 depending on degree), overly broad modules that import from 10+ places (55), missing architecture on larger codebases (50), mixed low-confidence patterns (45), and large clusters of isolated files (25).</p>
-              <p>The score determines the severity label — Critical (80+), High (60+), Medium (40+), Low otherwise — and the list is sorted so rank 1 is the highest-priority item to address. Expand any recommendation to see the full description, why it matters, what to do about it, the expected impact, and which files are affected.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="rec-list">
-          <div
-            class="rec-item"
-            *ngFor="let rec of recs!.recommendations"
-            [class.expanded]="isExpanded(rec.id)"
-            (click)="toggleRec(rec.id)"
-          >
-            <div class="rec-item-header">
-              <span class="rec-rank">{{ rec.priorityRank }}</span>
-              <div class="rec-item-meta">
-                <span class="rec-item-title">{{ rec.title }}</span>
-                <div class="rec-item-tags">
-                  <span class="rec-priority-badge" [class]="priorityClass(rec)">{{ priorityLabel(rec) }}</span>
-                  <span class="rec-category-badge">{{ categoryLabel(rec) }}</span>
-                  <span class="rec-area-badge">{{ rec.affectedArea }}</span>
-                </div>
-              </div>
-              <span class="rec-file-hint" *ngIf="rec.codeReference.fileName && rec.affectedFiles.length > 0">
-                {{ rec.codeReference.fileName }}
-              </span>
-              <svg class="rec-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </div>
-
-            <div class="rec-item-body" *ngIf="isExpanded(rec.id)">
-              <div class="rec-section">
-                <div class="rec-section-label">Issue</div>
-                <p>{{ rec.issueDescription }}</p>
-              </div>
-              <div class="rec-section rec-why-matters">
-                <div class="rec-section-label rec-label-why">Why It Matters</div>
-                <p>{{ rec.whyItMatters }}</p>
-              </div>
-              <div class="rec-section">
-                <div class="rec-section-label">Recommended Improvement</div>
-                <p>{{ rec.recommendedImprovement }}</p>
-              </div>
-              <div class="rec-section">
-                <div class="rec-section-label">Expected Impact</div>
-                <p>{{ rec.expectedImpact }}</p>
-              </div>
-              <div class="rec-section" *ngIf="rec.affectedFiles.length > 0">
-                <div class="rec-section-label">Affected Files</div>
-                <div class="rec-chip-list">
-                  <span class="rec-chip" *ngFor="let f of rec.affectedFiles">{{ f }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── No findings ────────────────────────────────────────────────── -->
-      <div class="rec-card rec-none" *ngIf="recs!.recommendations.length === 0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <polyline points="9 11 12 14 22 4" />
-          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-        </svg>
-        <p>No structural issues detected.</p>
       </div>
 
     </div>

@@ -15,6 +15,7 @@ const { CodeHealthNarrativeEngine } = require('../engines/narrative/code-health-
 const { ResponsibilitiesNarrativeEngine } = require('../engines/narrative/responsibilities-narrative.engine');
 const { FolderResponsibilitiesNarrativeEngine } = require('../engines/narrative/folder-responsibilities-narrative.engine');
 const { FolderWorkflowsNarrativeEngine } = require('../engines/narrative/folder-workflows-narrative.engine');
+const { DebtHotspotNarrativeEngine } = require('../engines/narrative/debt-hotspot-narrative.engine');
 const { DataFlowPatternEngine } = require('../engines/narrative/data-flow-pattern.engine');
 const { DataFlowStepsNarrativeEngine } = require('../engines/narrative/data-flow-steps-narrative.engine');
 const { WorkflowExplorerEngine } = require('../engines/analysis/workflow-explorer.engine');
@@ -58,6 +59,7 @@ const codeHealthNarrative = new CodeHealthNarrativeEngine();
 const responsibilitiesNarrative = new ResponsibilitiesNarrativeEngine();
 const folderResponsibilitiesNarrative = new FolderResponsibilitiesNarrativeEngine();
 const folderWorkflowsNarrative = new FolderWorkflowsNarrativeEngine();
+const debtHotspotNarrative = new DebtHotspotNarrativeEngine();
 const dataFlowPattern = new DataFlowPatternEngine();
 const dataFlowStepsNarrative = new DataFlowStepsNarrativeEngine();
 const workflowExplorer = new WorkflowExplorerEngine();
@@ -312,6 +314,13 @@ function registerIntelligenceHandlers() {
       };
     }
 
+    const debtHotspotsNarrativeResult = (model.targetType === 'repository' && understanding?.technicalDebtHotspots?.length)
+      ? debtHotspotNarrative.buildAll(
+          understanding.technicalDebtHotspots,
+          model.relationships?.dependencies?.graph?.nodes?.length ?? 0,
+        )
+      : null;
+
     return {
       understanding,
       hubNarrative:                      { structural, directive: '' },
@@ -321,6 +330,7 @@ function registerIntelligenceHandlers() {
       fileComponentsNarrative,
       folderResponsibilitiesNarrative:   folderResponsibilitiesNarrativeResult,
       folderWorkflowsNarrative:          folderWorkflowsNarrativeResult,
+      debtHotspotsNarrative:             debtHotspotsNarrativeResult,
     };
   }));
 

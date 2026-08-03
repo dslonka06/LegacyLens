@@ -271,8 +271,8 @@
 
         </div>
 
-        <!-- Folder scope: two-column responsibilities + components -->
-        <div class="su-tier su-tier--two-col su-tier--bottom" *ngIf="understanding!.scope === 'folder'">
+        <!-- Folder scope: full-width responsibilities -->
+        <div class="su-tier su-tier--bottom" *ngIf="understanding!.scope === 'folder'">
 
           <!-- Responsibilities -->
           <div class="su-card su-card--stretch">
@@ -287,8 +287,8 @@
               <div class="su-info-popup-wrap">
                 <button class="su-info-btn" (click)="showRespInfo = !showRespInfo">i</button>
                 <div class="su-info-popup" *ngIf="showRespInfo">
-                  <p><strong>Responsibilities</strong> are inferred from the folder names — no AI is needed for this. The top six folders are matched against a built-in keyword map: a folder named "services" maps to Business Logic, "api" maps to API Layer, "components" maps to UI Components, and so on.</p>
-                  <p>The description under each item is a short heuristic narrative describing what folders with that name typically do in a project like this one — written from the keyword match, not from reading the actual files inside.</p>
+                  <p><strong>Responsibilities</strong> are inferred from multiple structural signals — no AI is needed. The engine analyses the folder's file type distribution, dependency graph characteristics, naming patterns, and architectural role to derive a set of concrete responsibilities.</p>
+                  <p>Each responsibility is expanded with a heuristic description contextualised to the actual file count and graph data for this folder. The description under each item explains what that responsibility means in the context of this specific folder.</p>
                 </div>
               </div>
             </div>
@@ -310,101 +310,36 @@
             </ng-template>
           </div>
 
-          <!-- Components (folder scope) -->
-          <div class="su-card su-card--stretch">
-            <div class="su-card-header-row">
-              <div class="su-card-header">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
-                </svg>
-                Components
-              </div>
-              <div class="su-info-popup-wrap">
-                <button class="su-info-btn" (click)="showCompInfo = !showCompInfo">i</button>
-                <div class="su-info-popup" *ngIf="showCompInfo">
-                  <p><strong>Components</strong> lists the files in this folder grouped by their responsibility area — each file is classified based on its name and type and slotted into the group it belongs to.</p>
-                  <p><strong>Blast Radius</strong> is a change-impact indicator. It tells you how many other files import from this one — High means many things depend on it, so a change here ripples widely; Low means it is relatively self-contained. It is calculated from the file's inbound degree in the dependency graph built during structural analysis.</p>
-                </div>
-              </div>
-            </div>
-
-            <ng-container *ngIf="folderComponents.length; else folderCompPending">
-              <div class="su-comp-section" *ngFor="let group of folderComponents; let gi = index">
-                <div class="su-comp-section-header" (click)="toggleComponentGroup(gi)">
-                  <span class="su-comp-section-label">{{ group.responsibility }}</span>
-                  <span class="su-comp-section-count">{{ group.components.length }}</span>
-                  <svg class="su-accordion-chevron" [class.su-accordion-chevron--open]="isComponentGroupExpanded(gi)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </div>
-                <div class="su-accordion-body" [class.su-accordion-body--open]="isComponentGroupExpanded(gi)">
-                  <div class="su-comp-list su-comp-list--indented">
-                    <div class="su-comp-item su-comp-item--folder" *ngFor="let comp of group.components">
-                      <span class="su-comp-item-name">{{ comp.name }}</span>
-                      <span class="su-blast-badge su-blast-badge--{{ comp.blastRadius.toLowerCase() }}">{{ comp.blastRadius }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ng-container>
-            <ng-template #folderCompPending>
-              <p class="su-health-detail-text su-health-detail-text--pending">Analysing components…</p>
-            </ng-template>
-          </div>
-
         </div>
 
-        <!-- ── Tier 4: Workflows ──────────────────────────────────────────── -->
+        <!-- ── Tier 4: Technical Debt Hotspots (repo scope only) ────────────── -->
 
-        <!-- Repository scope: structured workflows with name + description -->
-        <div class="su-tier" *ngIf="understanding!.scope === 'repository' && understanding!.mostImportantWorkflows?.length">
+        <div class="su-tier" *ngIf="understanding!.scope === 'repository' && debtHotspots.length">
           <div class="su-card">
             <div class="su-card-header-row">
               <div class="su-card-header">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
-                Key Workflows
+                Technical Debt Hotspots
               </div>
               <div class="su-info-popup-wrap">
-                <button class="su-info-btn" (click)="showWorkflowsInfo = !showWorkflowsInfo">i</button>
-                <div class="su-info-popup" *ngIf="showWorkflowsInfo">
-                  <p><strong>Key Workflows</strong> are identified by finding the files that kick off the most downstream activity — specifically the top-4 nodes with the highest number of outgoing connections in the dependency graph. These are the files that, when they run, set off the longest chain of other files being called.</p>
-                  <p>Each is presented as a named workflow. The description is a heuristic narrative based on the node's type and what it connects to — no AI call is made for this section.</p>
+                <button class="su-info-btn" (click)="showDebtInfo = !showDebtInfo">i</button>
+                <div class="su-info-popup" *ngIf="showDebtInfo">
+                  <p><strong>Technical Debt Hotspots</strong> are identified from two structural signals in the dependency graph. <strong>God objects</strong> are files with both high inbound degree (many things depend on them) and high outbound degree (they depend on many things) — these files sit at the intersection of too many concerns and are the highest change-risk areas. <strong>Legacy-named files</strong> are identified by filename patterns such as "legacy", "deprecated", "v1", or "unused".</p>
+                  <p>No AI call is made for this section. The description for each hotspot is written from the specific structural numbers — inbound and outbound counts — rather than a generic template.</p>
                 </div>
               </div>
             </div>
-            <div class="su-workflow-list">
-              <div class="su-workflow-item" *ngFor="let wf of understanding!.mostImportantWorkflows">
-                <div class="su-workflow-name">{{ wf.name }}</div>
-                <div class="su-workflow-desc">{{ wf.description }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Folder scope: heuristic workflows with descriptions -->
-        <div class="su-tier" *ngIf="understanding!.scope === 'folder' && folderWorkflows.length">
-          <div class="su-card">
-            <div class="su-card-header-row">
-              <div class="su-card-header">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                </svg>
-                Key Workflows
-              </div>
-              <div class="su-info-popup-wrap">
-                <button class="su-info-btn" (click)="showWorkflowsInfo = !showWorkflowsInfo">i</button>
-                <div class="su-info-popup" *ngIf="showWorkflowsInfo">
-                  <p><strong>Key Workflows</strong> are traced by starting from the files in this folder that kick off the most downstream activity and following the dependency graph forward — where file A calls B, B calls C, and so on — building a chain from entry point through processing to data storage.</p>
-                  <p>The short description for each workflow is a heuristic summary based on how many steps the chain has, what type of file starts it, and whether any bottleneck files appear along the path. No AI call is made for this section.</p>
+            <div class="su-debt-list">
+              <div class="su-debt-item" *ngFor="let h of debtHotspots">
+                <div class="su-debt-header">
+                  <span class="su-debt-name">{{ h.name }}</span>
+                  <span class="su-debt-reason">{{ h.reason }}</span>
                 </div>
-              </div>
-            </div>
-            <div class="su-workflow-list">
-              <div class="su-workflow-item" *ngFor="let wf of folderWorkflows">
-                <div class="su-workflow-name">{{ wf.text }}</div>
-                <div class="su-workflow-desc" *ngIf="wf.description">{{ wf.description }}</div>
+                <p class="su-debt-narrative">{{ h.narrative }}</p>
               </div>
             </div>
           </div>

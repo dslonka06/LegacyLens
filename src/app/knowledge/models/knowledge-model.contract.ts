@@ -212,6 +212,8 @@ export interface KnowledgeAIResults {
   folderResponsibilitiesNarrative?: string[] | null;
   /** Folder scope only: per-workflow descriptions from heuristic engine. */
   folderWorkflowsNarrative?: string[] | null;
+  /** Repository scope only: per-hotspot narrative from DebtHotspotNarrativeEngine. */
+  debtHotspotsNarrative?: string[] | null;
   /** Security findings and risk surface produced by heuristic scanning. */
   security?: SecurityAnalysis;
   /** Actionable improvement recommendations from structural analysis. */

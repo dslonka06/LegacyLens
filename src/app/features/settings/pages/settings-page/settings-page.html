@@ -175,8 +175,8 @@
                 <ul class="hiw__ul">
                   <li><strong>AI Analysis card</strong> — <span class="hiw__tag hiw__tag--llm">Generate</span> <code>ai.summaries.recommendations.content</code></li>
                   <li><strong>Summary strip</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> critical/high/medium counts merged from <code>ai.recommendations.recommendations[]</code> and <code>ai.security.findings[]</code>.</li>
+                  <li><strong>Improvement Opportunities</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.recommendations.recommendations[]</code> — ranked by priorityRank, with title, priority badge, category, affectedArea, issueDescription, whyItMatters, recommendedImprovement, expectedImpact, affectedFiles.</li>
                   <li><strong>Security Fixes card</strong> — <span class="hiw__tag hiw__tag--llm">Generate</span> <code>ai.security.findings[]</code> filtered to critical/high/medium, capped at 8.</li>
-                  <li><strong>Prioritized Recommendations</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.recommendations.recommendations[]</code> — ranked by priorityRank, with title, priority badge, category, affectedArea, issueDescription, whyItMatters, recommendedImprovement, expectedImpact, affectedFiles.</li>
                 </ul>
 
                 <h4 class="hiw__h3">Learning Path</h4>
@@ -345,6 +345,7 @@
 
     <!-- ─── AI ────────────────────────────────────────────────────────────── -->
     <div class="settings-group" *ngIf="electron.isElectron">
+      <div class="settings-group-label">AI Provider</div>
       <div class="config-collapse">
         <button class="config-collapse-toggle" (click)="showAiConfig = !showAiConfig">
           <svg class="config-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -352,7 +353,10 @@
                [class.config-collapse-chevron--open]="showAiConfig">
             <polyline points="9 18 15 12 9 6"/>
           </svg>
-          <span class="settings-group-label" style="margin:0">AI</span>
+          <div class="config-collapse-title-block">
+            <span class="config-collapse-title">AI Configuration</span>
+            <span class="config-collapse-desc">Connect a local or cloud provider to enable AI-powered analysis, chat, and documentation</span>
+          </div>
           <span class="config-collapse-hint" *ngIf="!showAiConfig && isConfigured">{{ activePreset?.displayName ?? activeStatus?.id }}</span>
           <span class="config-collapse-hint" *ngIf="!showAiConfig && !isConfigured">Not configured</span>
         </button>
@@ -607,6 +611,7 @@
 
     <!-- ─── Storage Management ─────────────────────────────────────────────── -->
     <div class="settings-group" *ngIf="electron.isElectron">
+      <div class="settings-group-label">Data</div>
       <div class="config-collapse">
         <button class="config-collapse-toggle" (click)="showStorageConfig = !showStorageConfig">
           <svg class="config-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -614,7 +619,10 @@
                [class.config-collapse-chevron--open]="showStorageConfig">
             <polyline points="9 18 15 12 9 6"/>
           </svg>
-          <span class="settings-group-label" style="margin:0">Storage Management</span>
+          <div class="config-collapse-title-block">
+            <span class="config-collapse-title">Storage Management</span>
+            <span class="config-collapse-desc">View database usage, manage cached analyses, and clear stored workspaces or repositories</span>
+          </div>
           <span class="config-collapse-hint" *ngIf="!showStorageConfig && storageStats">{{ (storageStats.dbSizeKb / 1024).toFixed(1) }} MB · {{ storageStats.workspaces }} workspaces</span>
         </button>
 

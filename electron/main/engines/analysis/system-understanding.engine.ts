@@ -624,19 +624,70 @@ export class SystemUnderstandingEngine {
     primaryPattern: string,
     isRepo: boolean,
   ): string[] {
-    const folders = this.extractTopFolders(files);
     const responsibilities: string[] = [];
+    const fileCount = files.length;
 
-    for (const folder of folders.slice(0, 6)) {
-      if (FOLDER_RESPONSIBILITY_MAP[folder]) responsibilities.push(FOLDER_RESPONSIBILITY_MAP[folder]);
+    // ── 1. Folder keyword matching (all path segments, not just immediate parent) ──
+    const allSegments = new Set<string>();
+    for (const f of files) {
+      const parts = f.path.split('/').map((p: string) => p.toLowerCase());
+      for (const part of parts) allSegments.add(part);
+    }
+    for (const [keyword, label] of Object.entries(FOLDER_RESPONSIBILITY_MAP)) {
+      if (allSegments.has(keyword) && !responsibilities.includes(label)) {
+        responsibilities.push(label);
+      }
     }
 
-    if (responsibilities.length === 0 && primaryPattern) {
-      responsibilities.push(`Implement ${primaryPattern} architectural concerns`);
+    // ── 2. File type distribution signals ──────────────────────────────────
+    const fileTypes: Record<string, number> = { service: 0, component: 0, model: 0, page: 0, guard: 0, pipe: 0, module: 0, spec: 0, store: 0 };
+    for (const f of files) {
+      const name = f.path.split('/').pop()?.toLowerCase() ?? '';
+      if (name.includes('.service.')) fileTypes['service']++;
+      else if (name.includes('.component.')) fileTypes['component']++;
+      else if (name.includes('.model.') || name.includes('.entity.') || name.includes('.interface.')) fileTypes['model']++;
+      else if (name.includes('.page.') || name.includes('.view.')) fileTypes['page']++;
+      else if (name.includes('.guard.')) fileTypes['guard']++;
+      else if (name.includes('.pipe.')) fileTypes['pipe']++;
+      else if (name.includes('.module.')) fileTypes['module']++;
+      else if (name.includes('.spec.') || name.includes('.test.')) fileTypes['spec']++;
+      else if (name.includes('.store.') || name.includes('.reducer.') || name.includes('.effect.')) fileTypes['store']++;
     }
 
-    if (responsibilities.length < 3) {
-      responsibilities.push(`Coordinate interactions between ${files.length} source files`);
+    const dominant = Object.entries(fileTypes).sort((a, b) => b[1] - a[1]);
+    const topType = dominant[0];
+
+    if (topType && topType[1] >= 3) {
+      const typeLabels: Record<string, string> = {
+        service: `Implement business logic across ${topType[1]} service${topType[1] !== 1 ? 's' : ''}`,
+        component: `Provide ${topType[1]} UI component${topType[1] !== 1 ? 's' : ''} for rendering and interaction`,
+        model: `Define data structures and domain entities (${topType[1]} model${topType[1] !== 1 ? 's' : ''})`,
+        page: `Compose ${topType[1]} page-level view${topType[1] !== 1 ? 's' : ''} and manage their routing`,
+        guard: `Enforce access control via ${topType[1]} route guard${topType[1] !== 1 ? 's' : ''}`,
+        pipe: `Transform and format data via ${topType[1]} reusable pipe${topType[1] !== 1 ? 's' : ''}`,
+        module: `Organise and configure application modules (${topType[1]} NgModule${topType[1] !== 1 ? 's' : ''})`,
+        spec: `Validate behaviour through ${topType[1]} automated test file${topType[1] !== 1 ? 's' : ''}`,
+        store: `Manage application state across ${topType[1]} store file${topType[1] !== 1 ? 's' : ''}`,
+      };
+      const label = typeLabels[topType[0]];
+      if (label && !responsibilities.some(r => r.toLowerCase().includes(topType[0]))) {
+        responsibilities.push(label);
+      }
+    }
+
+    // ── 3. Architecture pattern signal ─────────────────────────────────────
+    if (primaryPattern && !responsibilities.some(r => r.toLowerCase().includes('architecture') || r.toLowerCase().includes('pattern'))) {
+      responsibilities.push(`Apply ${primaryPattern} architectural patterns across ${fileCount} files`);
+    }
+
+    // ── 4. Scale / cross-file coordination ─────────────────────────────────
+    if (fileCount >= 10 && !responsibilities.some(r => r.toLowerCase().includes('coordinate') || r.toLowerCase().includes('interaction'))) {
+      responsibilities.push(`Coordinate interactions between ${fileCount} source files`);
+    }
+
+    // ── 5. Ensure at least one responsibility ──────────────────────────────
+    if (responsibilities.length === 0) {
+      responsibilities.push(`Coordinate interactions between ${fileCount} source files`);
     }
 
     return responsibilities.slice(0, 6);
