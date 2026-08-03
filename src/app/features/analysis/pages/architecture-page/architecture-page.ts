@@ -23,6 +23,11 @@ import type { ArchitectureAIAnalysis } from '@app/knowledge/models/architecture-
 export class ArchitecturePage implements OnInit, OnDestroy {
   model: KnowledgeModel | null = null;
   hasWorkspace = false;
+  hubNodesExpanded = false;
+  showArchSummaryInfo = false;
+  showLayerDiagramInfo = false;
+  showStructuralInfo = false;
+  showHubNodesInfo = false;
 
   private sub: Subscription | null = null;
 
@@ -43,6 +48,10 @@ export class ArchitecturePage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+  }
+
+  toggleHubNodes(): void {
+    this.hubNodesExpanded = !this.hubNodesExpanded;
   }
 
   get patterns(): ArchitecturePattern[] {

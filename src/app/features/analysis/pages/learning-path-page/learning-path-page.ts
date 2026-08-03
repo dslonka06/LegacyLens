@@ -26,7 +26,8 @@ export class LearningPathPage implements OnInit, OnDestroy {
     return this.workspace?.knowledgeModel != null;
   }
 
-  expandedSteps = new Set<number>();
+  expandedStepIndex: number | null = null;
+  showRoadmapInfo = false;
 
   private sub: Subscription | null = null;
 
@@ -39,6 +40,7 @@ export class LearningPathPage implements OnInit, OnDestroy {
     this.workspace = this.manager.getActive();
     this.sub = this.manager.activeWorkspace$.subscribe((ws) => {
       this.workspace = ws;
+      this.expandedStepIndex = null;
       this.cdr.detectChanges();
     });
   }
@@ -48,12 +50,11 @@ export class LearningPathPage implements OnInit, OnDestroy {
   }
 
   toggleStep(n: number): void {
-    if (this.expandedSteps.has(n)) this.expandedSteps.delete(n);
-    else this.expandedSteps.add(n);
+    this.expandedStepIndex = this.expandedStepIndex === n ? null : n;
   }
 
   isStepExpanded(n: number): boolean {
-    return this.expandedSteps.has(n);
+    return this.expandedStepIndex === n;
   }
 
   get llmSummaryEntry(): LLMSummaryEntry | null {

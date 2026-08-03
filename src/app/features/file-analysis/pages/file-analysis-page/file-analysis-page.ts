@@ -78,7 +78,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
   private statusTimers: Record<string, ReturnType<typeof setInterval>> = {};
 
   // Animated count display — counts up from 0 to actual value when cards appear
-  displayedCounts: Record<string, number> = {};
+  displayedCounts: Record<string, number | undefined> = {};
 
   uploadError: string | null = null;
   isDragging = false;
@@ -338,6 +338,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     if (!id) return;
 
     this.manager.rename(id, file.name);
+    if (this.filePath) this.manager.setPath(id, this.filePath);
     this.fileToEntry(file).then((entry) => {
       this.knowledge
         .process('file', [entry], {
@@ -629,7 +630,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
     return [
       { key: 'understanding',   label: 'Understanding',   state: summaryState('understanding') },
       { key: 'dataFlow',        label: 'Data Flow',       state: summaryState('dataFlow') },
-      { key: 'security',        label: 'Security Review', state: summaryState('security') },
+      { key: 'security',        label: 'Security',        state: summaryState('security') },
       { key: 'recommendations', label: 'Recommendations', state: summaryState('recommendations') },
       { key: 'learningPath',    label: 'Learning Path',   state: summaryState('learningPath') },
     ];
@@ -697,7 +698,7 @@ export class FileAnalysisPage implements OnInit, OnDestroy {
       },
       {
         id: 'recommendations',
-        icon: 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
+        icon: 'M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
         count: recCount,
         subtitle: 'Recommendations',
         label: 'Recommendations',

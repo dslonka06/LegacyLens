@@ -66,7 +66,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
   showMetricCards = false;
   isReturning = false;
 
-  displayedCounts: Record<string, number> = {};
+  displayedCounts: Record<string, number | undefined> = {};
 
   uploadError: string | null = null;
   isDragging = false;
@@ -375,11 +375,13 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
     }
 
     if (!id) return;
+    const folderName = folderPath.split(/[\\/]/).pop() ?? 'folder';
     this.zone.run(() => {
+      this.manager.rename(id, folderName);
       this.knowledge
         .process('folder', entries, {
           workspaceId: id,
-          workspaceName: profile.files[0]?.name ?? folderPath.split(/[\\/]/).pop() ?? 'folder',
+          workspaceName: folderName,
           persist: true,
         })
         .subscribe({ error: () => {} });
@@ -714,7 +716,9 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
 
     return [
       { key: 'understanding',   label: 'Understanding',   state: summaryState('understanding') },
-      { key: 'security',        label: 'Security Review', state: summaryState('security') },
+      { key: 'architecture',    label: 'Architecture',    state: summaryState('architecture') },
+      { key: 'dataFlow',        label: 'Data Flow',       state: summaryState('dataFlow') },
+      { key: 'security',        label: 'Security',        state: summaryState('security') },
       { key: 'recommendations', label: 'Recommendations', state: summaryState('recommendations') },
       { key: 'learningPath',    label: 'Learning Path',   state: summaryState('learningPath') },
     ];
@@ -768,13 +772,11 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
       {
         id: 'architecture',
         icon: 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
-        count: this.model?.relationships.architecture?.patterns.length ?? null,
-        subtitle: 'Architecture Patterns',
+        count: ai?.architecture?.hubCount ?? null,
+        subtitle: 'Hub Nodes',
         label: 'Architecture',
         route: `${base}/architecture`,
         suggested: false,
-        // Uses AI completion rather than capabilities, because architectureDiscovery
-        // is not in the folder capability map — it arrives via the AI pipeline.
         pending: !ai?.completedStages?.includes('architecture'),
       },
       {
@@ -799,7 +801,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
       },
       {
         id: 'recommendations',
-        icon: 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
+        icon: 'M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
         count: ai?.recommendations?.recommendations?.length ?? null,
         subtitle: 'Recommendations',
         label: 'Recommendations',

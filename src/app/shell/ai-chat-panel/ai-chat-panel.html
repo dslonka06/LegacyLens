@@ -1,8 +1,12 @@
 <div class="chat-panel">
   <!-- Header -->
   <div class="chat-header">
-    <span class="chat-title">Ask AI</span>
-    <span class="chat-subtitle">Ask questions about this analysis.</span>
+    <div class="chat-header-top">
+      <span class="chat-title">Ask AI</span>
+      <span class="chat-context-badge" *ngIf="hasContext && workspaceName">{{ workspaceName }}</span>
+    </div>
+    <span class="chat-subtitle" *ngIf="hasContext">Ask anything about this analysis.</span>
+    <span class="chat-subtitle chat-subtitle--warn" *ngIf="!hasContext">No analysis loaded — run an analysis first for context-aware answers.</span>
   </div>
 
   <!-- Messages -->
@@ -12,7 +16,8 @@
       <div class="chat-empty-icon">
         <img src="assets/logo.png" alt="SystemLens" width="32" height="32" />
       </div>
-      <p class="chat-empty-text">Ask anything about the analyzed code.</p>
+      <p class="chat-empty-title">Ask anything about<ng-container *ngIf="workspaceName"> {{ workspaceName }}</ng-container></p>
+      <p class="chat-empty-text">Questions about architecture, security, dependencies, code patterns, and more.</p>
     </div>
 
     <!-- Message bubbles -->
@@ -46,7 +51,7 @@
     </div>
   </div>
 
-  <!-- Suggested prompts — always above the input -->
+  <!-- Suggested prompts — shown only when no messages yet -->
   <div class="chat-suggestions" *ngIf="suggestedPrompts.length">
     <button
       class="chat-suggestion-pill"
@@ -65,22 +70,15 @@
       (keydown)="onKeydown($event)"
       placeholder="Ask a question..."
       rows="1"
-    >
-    </textarea>
+    ></textarea>
     <button
       class="chat-send-btn"
       (click)="send()"
       [disabled]="!inputValue.trim() || isLoading"
       title="Send"
     >
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
         <line x1="22" y1="2" x2="11" y2="13" />
         <polygon points="22 2 15 22 11 13 2 9 22 2" />
       </svg>

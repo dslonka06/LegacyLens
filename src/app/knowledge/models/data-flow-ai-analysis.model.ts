@@ -1,3 +1,9 @@
+export interface EnrichedConnection {
+  sourceId: string;
+  targetId: string;
+  verb: string;
+}
+
 export interface WorkflowRiskProfile {
   workflowName: string;
   entryPoint: string;
@@ -5,6 +11,7 @@ export interface WorkflowRiskProfile {
   bottleneckNodes: string[];
   failureRisk: 'Low' | 'Moderate' | 'High';
   narrative?: string;
+  enrichedConnections?: EnrichedConnection[];
 }
 
 export interface DataFlowAIAnalysis {

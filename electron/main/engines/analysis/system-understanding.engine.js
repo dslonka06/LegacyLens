@@ -95,9 +95,9 @@ class SystemUnderstandingEngine {
 
   // ── Folder / Repository-scope ─────────────────────────────────────────────
 
-  analyzeKnowledge(knowledge, session) {
+  analyzeKnowledge(knowledge, session, targetType) {
     const now = new Date().toISOString();
-    const isRepo = this.isRepositoryScope(knowledge);
+    const isRepo = targetType ? targetType === 'repository' : this.isRepositoryScope(knowledge);
     const ai = session?.aiAnalysis;
     const files = knowledge.sourceFiles ?? [];
     const graph = knowledge.dependencyGraph;

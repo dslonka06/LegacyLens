@@ -169,7 +169,8 @@ export class DocumentationBuilderService {
     const scope = model.targetType as DocumentationScope;
     return sectionsForScope(scope).map((s) => ({
       ...s,
-      available: this.isSectionAvailable(s.id, model),
+      available: this.isSectionAvailable(s.id, model) &&
+                 this.renderSectionContent(s.id, model).trim().length > 0,
     }));
   }
 
@@ -207,12 +208,13 @@ export class DocumentationBuilderService {
     const caps = model.capabilities;
     const ai = model.ai;
     const isFile = model.targetType === 'file';
+    const isFolder = model.targetType === 'folder';
 
     switch (id) {
       case 'executive-summary':
         return isFile
           ? !!ai?.understanding
-          : !!ai?.understanding?.executiveSummary;
+          : !!(ai?.understanding?.executiveSummary || ai?.summaries?.understanding?.content);
 
       case 'repository-overview':
         return model.structure.totalFiles > 0;
@@ -236,12 +238,12 @@ export class DocumentationBuilderService {
         );
 
       case 'risk-assessment':
-        return isFile
+        return isFile || isFolder
           ? !!ai?.security
           : (ai?.security?.findings.length ?? 0) > 0;
 
       case 'modernization':
-        return isFile
+        return isFile || isFolder
           ? !!(ai?.recommendations?.recommendations.length || ai?.summaries?.recommendations?.content)
           : (ai?.recommendations?.recommendations.length ?? 0) > 0;
 
@@ -261,7 +263,7 @@ export class DocumentationBuilderService {
         );
 
       case 'onboarding-guide':
-        return isFile
+        return isFile || isFolder
           ? !!(ai?.learningPath || ai?.summaries?.learningPath?.content)
           : !!ai?.learningPath;
     }
@@ -275,11 +277,13 @@ export class DocumentationBuilderService {
     const ins = model.insights;
     const ai = model.ai;
     const isFile = model.targetType === 'file';
+    const isFolder = model.targetType === 'folder';
 
     switch (id) {
       case 'executive-summary':
-        if (!isFile) return ai?.understanding?.executiveSummary ?? '';
-        return this._renderFileUnderstanding(ai);
+        if (isFile) return this._renderFileUnderstanding(ai);
+        if (isFolder) return this._renderFolderUnderstanding(ai);
+        return this._renderRepoUnderstanding(ai);
 
       case 'repository-overview': {
         const lines = [
@@ -299,24 +303,15 @@ export class DocumentationBuilderService {
       }
 
       case 'architecture-overview': {
-        const patterns = rel.architecture?.patterns ?? [];
-        return patterns
-          .map((p) => `- ${p.name} (${Math.round((p.confidence ?? 0) * 100)}%) - ${p.indicators.join(', ')}`)
-          .join('\n');
+        if (isFile) return '';
+        if (isFolder) return this._renderFolderArchitecture(ai, rel);
+        return this._renderRepoArchitecture(ai, rel);
       }
 
       case 'data-flow': {
         if (isFile) return this._renderFileDataFlow(ai, ins.dataFlow);
-        const graph = rel.dependencies?.graph;
-        if (!graph) return '';
-        const nodeMap = new Map(graph.nodes.map((n) => [n.id, n.name]));
-        const counts = new Map<string, number>();
-        graph.edges.forEach((e) => counts.set(e.target, (counts.get(e.target) ?? 0) + 1));
-        const top = [...counts.entries()]
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 8)
-          .map(([id, c]) => `- ${nodeMap.get(id) ?? id} (${c} dependents)`);
-        return [`Top dependency targets:`, ...top].join('\n');
+        if (isFolder) return this._renderFolderDataFlow(ai, rel);
+        return this._renderRepoDataFlow(ai, rel);
       }
 
       case 'dependency-analysis': {
@@ -328,33 +323,29 @@ export class DocumentationBuilderService {
           `Nodes: ${graph.nodes.length} | Edges: ${graph.edges.length} | Avg connectivity: ${avgConn}`,
           ...(rel.dependencies?.hubs
             .slice(0, 5)
-            .map((h) => `- Hub: ${h.name} (${h.inboundCount} inbound)`) ?? []),
+            .map((h) => `- Hub: ${h.node.name} (${h.degree} connections)`) ?? []),
         ].join('\n');
       }
 
       case 'risk-assessment': {
         if (isFile) return this._renderFileSecurity(ai);
-        return (ai?.security?.findings ?? [])
-          .slice(0, 10)
-          .map((f) => `[${f.severity.toUpperCase()}] ${f.title}: ${f.issueDescription}`)
-          .join('\n');
+        if (isFolder) return this._renderFolderSecurity(ai);
+        return this._renderRepoSecurity(ai);
       }
 
       case 'modernization': {
         if (isFile) return this._renderFileRecommendations(ai);
-        return (ai?.recommendations?.recommendations ?? [])
-          .filter((r) => r.category === 'modernization' || r.category === 'technical-debt')
-          .slice(0, 10)
-          .map((r) => `- ${r.title}\n  ${r.recommendedImprovement}`)
-          .join('\n');
+        if (isFolder) return this._renderFolderRecommendations(ai);
+        return this._renderRepoRecommendations(ai);
       }
 
       case 'key-files': {
+        if (!isFile && !isFolder) return this._renderRepoKeyFiles(ai, rel, s);
         const ranks = rel.dependencies?.ranks ?? [];
         if (ranks.length) {
           return ranks
             .slice(0, 10)
-            .map((r, i) => `${i + 1}. ${r.name} (degree: ${r.degree})`)
+            .map((r) => `- ${r.node.name} (degree: ${r.total})`)
             .join('\n');
         }
         return Object.keys(s.symbols)
@@ -372,21 +363,431 @@ export class DocumentationBuilderService {
         return (rel.dependencies?.hubs ?? [])
           .filter((h) => h.isHub)
           .slice(0, 10)
-          .map((h) => `- ${h.name} - ${h.inboundCount} inbound connections`)
+          .map((h) => `- ${h.node.name} - ${h.degree} connections`)
           .join('\n');
 
       case 'onboarding-guide': {
         if (isFile) return this._renderFileLearningPath(ai);
-        const lp = ai?.learningPath;
-        if (!lp) return '';
-        const steps = (lp.roadmap ?? [])
-          .slice(0, 5)
-          .map((step) => `${step.stepNumber}. ${step.title}\n   ${step.description}`);
-        return [lp.focusFirst ? `Start here: ${lp.focusFirst}` : '', ...steps]
-          .filter(Boolean)
-          .join('\n');
+        if (isFolder) return this._renderFolderLearningPath(ai);
+        return this._renderRepoLearningPath(ai);
       }
     }
+  }
+
+  // ── Folder-scope section renderers ───────────────────────────────────────────
+
+  private _renderFolderUnderstanding(ai: KnowledgeModel['ai']): string {
+    const u = ai?.understanding;
+    const llm = ai?.summaries?.understanding?.content;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    if (u?.executiveSummary && u.executiveSummary !== llm) paras.push(u.executiveSummary);
+
+    const purposeParts: string[] = [];
+    if (u?.businessPurpose) purposeParts.push(u.businessPurpose);
+    if (u?.whyItMatters)    purposeParts.push(u.whyItMatters);
+    if (purposeParts.length) paras.push(purposeParts.join(' '));
+
+    const groups = u?.responsibilityGroups ?? [];
+    const respNarratives = ai?.folderResponsibilitiesNarrative ?? [];
+    if (groups.length) {
+      const groupParas = groups.map((g, i) => {
+        const desc = respNarratives[i];
+        return desc ? `${g.responsibility}: ${desc}` : g.responsibility;
+      });
+      paras.push(groupParas.join('\n\n'));
+    } else if (u?.keyResponsibilities?.length) {
+      paras.push(u.keyResponsibilities.join('\n'));
+    }
+
+    if (u?.businessCriticalityReason) paras.push(u.businessCriticalityReason);
+
+    return paras.join('\n\n');
+  }
+
+  private _renderFolderArchitecture(
+    ai: KnowledgeModel['ai'],
+    rel: KnowledgeModel['relationships'],
+  ): string {
+    const llm      = ai?.summaries?.architecture?.content;
+    const patterns = rel.architecture?.patterns ?? [];
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    if (patterns.length) {
+      const patternLines = patterns.map(
+        (p) => `- ${p.name} (${Math.round((p.confidence ?? 0) * 100)}%) — ${p.indicators.join(', ')}`,
+      );
+      paras.push(['Detected Patterns:', ...patternLines].join('\n'));
+    }
+
+    return paras.join('\n\n');
+  }
+
+  private _renderFolderDataFlow(
+    ai: KnowledgeModel['ai'],
+    rel: KnowledgeModel['relationships'],
+  ): string {
+    const llm = ai?.summaries?.dataFlow?.content;
+    const workflows = ai?.dataFlow?.primaryWorkflows ?? [];
+    const workflowNarratives = ai?.folderWorkflowsNarrative ?? [];
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    if (workflows.length) {
+      const workflowParas = workflows.map((w, i) => {
+        const desc = workflowNarratives[i];
+        const parts = [`Workflow: ${w.workflowName}`];
+        if (desc) parts.push(desc);
+        if (w.entryPoint) parts.push(`Entry: ${w.entryPoint}`);
+        if (w.failureRisk && w.failureRisk !== 'Low') parts.push(`Risk: ${w.failureRisk}`);
+        return parts.join(' — ');
+      });
+      paras.push(workflowParas.join('\n\n'));
+    }
+
+    const graph = rel.dependencies?.graph;
+    if (graph) {
+      const nodeMap = new Map(graph.nodes.map((n) => [n.id, n.name]));
+      const counts = new Map<string, number>();
+      graph.edges.forEach((e) => counts.set(e.target, (counts.get(e.target) ?? 0) + 1));
+      const top = [...counts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([nodeId, c]) => `- ${nodeMap.get(nodeId) ?? nodeId} (${c} dependents)`);
+      if (top.length) paras.push([`Top dependency targets:`, ...top].join('\n'));
+    }
+
+    return paras.join('\n\n');
+  }
+
+  private _renderFolderSecurity(ai: KnowledgeModel['ai']): string {
+    const llm      = ai?.summaries?.security?.content;
+    const security = ai?.security;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    const actionableChecks = (security?.verificationChecks ?? []).filter(c => c.status !== 'pass');
+    if (actionableChecks.length) {
+      const checkParas = actionableChecks.map(c => {
+        const prefix = c.status === 'fail' ? 'Fail' : 'Warning';
+        return c.detail ? `${prefix} - ${c.summary} ${c.detail}` : `${prefix} - ${c.summary}`;
+      });
+      paras.push(checkParas.join('\n\n'));
+    }
+
+    const findings = security?.findings ?? [];
+    if (findings.length) {
+      const findingParas = findings.slice(0, 10).map(f => {
+        const parts = [`[${f.severity.toUpperCase()}] ${f.title}. ${f.issueDescription}`];
+        if (f.remediation) parts.push(`Remediation: ${f.remediation}`);
+        return parts.join(' ');
+      });
+      paras.push(findingParas.join('\n\n'));
+    } else if (security) {
+      paras.push('No security findings were identified in this folder.');
+    }
+
+    return paras.join('\n\n');
+  }
+
+  private _renderFolderRecommendations(ai: KnowledgeModel['ai']): string {
+    const llm  = ai?.summaries?.recommendations?.content;
+    const recs = ai?.recommendations;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    if (recs?.debtContext) paras.push(recs.debtContext);
+
+    const items = recs?.recommendations ?? [];
+    if (items.length) {
+      const recParas = items.slice(0, 10).map(r => {
+        const parts = [`[${r.priority.toUpperCase()}] ${r.title}. ${r.issueDescription}`];
+        if (r.recommendedImprovement) parts.push(r.recommendedImprovement);
+        return parts.join(' ');
+      });
+      paras.push(recParas.join('\n\n'));
+    } else if (recs) {
+      paras.push('No structural improvements were identified for this folder.');
+    }
+
+    return paras.join('\n\n');
+  }
+
+  private _renderFolderLearningPath(ai: KnowledgeModel['ai']): string {
+    const llm = ai?.summaries?.learningPath?.content;
+    const lp  = ai?.learningPath;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    if (lp?.welcomeSummary && lp.welcomeSummary !== llm) paras.push(lp.welcomeSummary);
+
+    if (lp?.focusFirst) paras.push(`Start here: ${lp.focusFirst}`);
+
+    if (lp?.roadmap?.length) {
+      const stepParas = lp.roadmap.map(step => {
+        const parts = [`Step ${step.stepNumber}: ${step.title}.`];
+        if (step.description) parts.push(step.description);
+        if (step.whyHere)     parts.push(step.whyHere);
+        return parts.join(' ');
+      });
+      paras.push(stepParas.join('\n\n'));
+    }
+
+    return paras.join('\n\n');
+  }
+
+  // ── Repo-scope section renderers ─────────────────────────────────────────────
+
+  private _renderRepoUnderstanding(ai: KnowledgeModel['ai']): string {
+    const u   = ai?.understanding;
+    const llm = ai?.summaries?.understanding?.content;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+    if (u?.executiveSummary && u.executiveSummary !== llm) paras.push(u.executiveSummary);
+
+    const purposeParts: string[] = [];
+    if (u?.businessPurpose) purposeParts.push(u.businessPurpose);
+    if (u?.whyItMatters)    purposeParts.push(u.whyItMatters);
+    if (purposeParts.length) paras.push(purposeParts.join(' '));
+
+    if (u?.coreCapabilities?.length) {
+      const capParas = u.coreCapabilities.map(c => {
+        const parts = [c.name];
+        if (c.description)   parts.push(c.description);
+        if (c.businessValue) parts.push(c.businessValue);
+        return parts.join(' — ');
+      });
+      paras.push(capParas.join('\n\n'));
+    } else if (u?.keyResponsibilities?.length) {
+      paras.push(u.keyResponsibilities.join('\n'));
+    }
+
+    if (u?.technicalDebtHotspots?.length) {
+      const hotspotLines = u.technicalDebtHotspots.map(h => `- ${h.name}: ${h.reason}`);
+      paras.push(['Technical Debt Hotspots:', ...hotspotLines].join('\n'));
+    }
+
+    if (u?.businessCriticalityReason) paras.push(u.businessCriticalityReason);
+    if (u?.health?.interpretation)    paras.push(u.health.interpretation);
+
+    return paras.join('\n\n');
+  }
+
+  private _renderRepoArchitecture(
+    ai: KnowledgeModel['ai'],
+    rel: KnowledgeModel['relationships'],
+  ): string {
+    const llm      = ai?.summaries?.architecture?.content;
+    const arch     = ai?.architecture;
+    const patterns = rel.architecture?.patterns ?? [];
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    if (arch) {
+      const meta: string[] = [];
+      if (arch.dominantPattern && arch.dominantPattern !== 'Undetected') {
+        meta.push(`Pattern: ${arch.dominantPattern} (${Math.round((arch.patternConfidence ?? 0) * 100)}% confidence)`);
+      }
+      if (arch.couplingAssessment) meta.push(`Coupling: ${arch.couplingAssessment}`);
+      if (arch.evolutionRisk)      meta.push(`Evolution Risk: ${arch.evolutionRisk}`);
+      if (meta.length) paras.push(meta.join(' | '));
+
+      if (arch.layerBreakdown?.length) {
+        const layerLines = arch.layerBreakdown.map(l => {
+          const parts = [`- ${l.name} (${l.fileCount} files): ${l.responsibility}`];
+          if (l.couplingNotes) parts.push(l.couplingNotes);
+          return parts.join(' ');
+        });
+        paras.push(['Layers:', ...layerLines].join('\n'));
+      }
+
+      if (arch.boundaryViolations?.length) {
+        const vLines = arch.boundaryViolations.map(v => `- ${v}`);
+        paras.push(['Boundary Violations:', ...vLines].join('\n'));
+      }
+    }
+
+    if (patterns.length) {
+      const patternLines = patterns.map(
+        (p) => `- ${p.name} (${Math.round((p.confidence ?? 0) * 100)}%) — ${p.indicators.join(', ')}`,
+      );
+      paras.push(['Detected Patterns:', ...patternLines].join('\n'));
+    }
+
+    return paras.join('\n\n');
+  }
+
+  private _renderRepoDataFlow(
+    ai: KnowledgeModel['ai'],
+    rel: KnowledgeModel['relationships'],
+  ): string {
+    const llm       = ai?.summaries?.dataFlow?.content;
+    const dataFlow  = ai?.dataFlow;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    if (dataFlow?.primaryWorkflows?.length) {
+      const wfLines = dataFlow.primaryWorkflows.map(w => {
+        const parts = [`- ${w.workflowName}`];
+        if (w.entryPoint) parts.push(`entry: ${w.entryPoint}`);
+        if (w.stepCount)  parts.push(`${w.stepCount} steps`);
+        if (w.failureRisk && w.failureRisk !== 'Low') parts.push(`risk: ${w.failureRisk}`);
+        return parts.join(' | ');
+      });
+      paras.push(['Workflows:', ...wfLines].join('\n'));
+    }
+
+    if (dataFlow?.entryPoints?.length) {
+      paras.push(`Entry Points: ${dataFlow.entryPoints.join(', ')}`);
+    }
+
+    if (dataFlow?.bottlenecks?.length) {
+      paras.push(`Bottlenecks: ${dataFlow.bottlenecks.join(', ')}`);
+    }
+
+    const graph = rel.dependencies?.graph;
+    if (graph) {
+      const nodeMap = new Map(graph.nodes.map((n) => [n.id, n.name]));
+      const counts  = new Map<string, number>();
+      graph.edges.forEach((e) => counts.set(e.target, (counts.get(e.target) ?? 0) + 1));
+      const top = [...counts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([nodeId, c]) => `- ${nodeMap.get(nodeId) ?? nodeId} (${c} dependents)`);
+      if (top.length) paras.push(['Most Referenced:', ...top].join('\n'));
+    }
+
+    return paras.join('\n\n');
+  }
+
+  private _renderRepoSecurity(ai: KnowledgeModel['ai']): string {
+    const llm      = ai?.summaries?.security?.content;
+    const security = ai?.security;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    if (security) {
+      const meta: string[] = [];
+      if (security.overallRisk)      meta.push(`Overall Risk: ${security.overallRisk.toUpperCase()}`);
+      if (security.securityMaturity) meta.push(`Maturity: ${security.securityMaturity}`);
+      if (meta.length) paras.push(meta.join(' | '));
+      if (security.riskContext)      paras.push(security.riskContext);
+    }
+
+    const actionableChecks = (security?.verificationChecks ?? []).filter(c => c.status !== 'pass');
+    if (actionableChecks.length) {
+      const checkLines = actionableChecks.map(c => {
+        const prefix = c.status === 'fail' ? 'Fail' : 'Warning';
+        return c.detail ? `- ${prefix}: ${c.summary} ${c.detail}` : `- ${prefix}: ${c.summary}`;
+      });
+      paras.push(['Verification Checks:', ...checkLines].join('\n'));
+    }
+
+    const findings = security?.findings ?? [];
+    if (findings.length) {
+      const findingParas = findings.slice(0, 8).map(f => {
+        const parts = [`[${f.severity.toUpperCase()}] ${f.title}. ${f.issueDescription}`];
+        if (f.remediation) parts.push(`Remediation: ${f.remediation}`);
+        return parts.join(' ');
+      });
+      paras.push(findingParas.join('\n\n'));
+    } else if (security) {
+      paras.push('No security findings were identified.');
+    }
+
+    return paras.join('\n\n');
+  }
+
+  private _renderRepoRecommendations(ai: KnowledgeModel['ai']): string {
+    const llm  = ai?.summaries?.recommendations?.content;
+    const recs = ai?.recommendations;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    if (recs) {
+      const meta: string[] = [];
+      if (recs.technicalDebtLevel)    meta.push(`Debt Level: ${recs.technicalDebtLevel}`);
+      if (recs.modernizationReadiness) meta.push(`Modernization: ${recs.modernizationReadiness}`);
+      if (meta.length) paras.push(meta.join(' | '));
+      if (recs.debtContext)            paras.push(recs.debtContext);
+    }
+
+    const items = recs?.recommendations ?? [];
+    if (items.length) {
+      const sorted = [...items].sort((a, b) => (a.priorityRank ?? 99) - (b.priorityRank ?? 99));
+      const recParas = sorted.slice(0, 5).map(r => {
+        const parts = [`[${r.priority.toUpperCase()}] ${r.title}. ${r.issueDescription}`];
+        if (r.whyItMatters)          parts.push(r.whyItMatters);
+        if (r.recommendedImprovement) parts.push(r.recommendedImprovement);
+        return parts.join(' ');
+      });
+      paras.push(recParas.join('\n\n'));
+    } else if (recs) {
+      paras.push('No structural improvements were identified.');
+    }
+
+    return paras.join('\n\n');
+  }
+
+  private _renderRepoKeyFiles(
+    ai: KnowledgeModel['ai'],
+    rel: KnowledgeModel['relationships'],
+    s: KnowledgeModel['structure'],
+  ): string {
+    const importantItems = ai?.understanding?.mostImportantItems ?? [];
+    if (importantItems.length) {
+      return importantItems
+        .slice(0, 10)
+        .map(item => item.whyImportant ? `- ${item.name}: ${item.whyImportant}` : `- ${item.name}`)
+        .join('\n');
+    }
+    const ranks = rel.dependencies?.ranks ?? [];
+    if (ranks.length) {
+      return ranks
+        .slice(0, 10)
+        .map((r) => `- ${r.node.name} (degree: ${r.total})`)
+        .join('\n');
+    }
+    return Object.keys(s.symbols)
+      .slice(0, 10)
+      .map((p) => `- ${p}`)
+      .join('\n');
+  }
+
+  private _renderRepoLearningPath(ai: KnowledgeModel['ai']): string {
+    const llm = ai?.summaries?.learningPath?.content;
+    const lp  = ai?.learningPath;
+    const paras: string[] = [];
+
+    if (llm) paras.push(llm);
+
+    if (lp?.welcomeSummary && lp.welcomeSummary !== llm) paras.push(lp.welcomeSummary);
+    if (lp?.focusFirst) paras.push(`Start here: ${lp.focusFirst}`);
+
+    if (lp?.roadmap?.length) {
+      const stepParas = lp.roadmap.map(step => {
+        const parts = [`Step ${step.stepNumber}: ${step.title}.`];
+        if (step.description) parts.push(step.description);
+        if (step.whyHere)     parts.push(step.whyHere);
+        return parts.join(' ');
+      });
+      paras.push(stepParas.join('\n\n'));
+    }
+
+    return paras.join('\n\n');
   }
 
   // ── File-scope section renderers ──────────────────────────────────────────────

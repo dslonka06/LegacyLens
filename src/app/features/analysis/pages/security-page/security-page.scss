@@ -59,11 +59,11 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-primary);
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
   margin-bottom: 16px;
 
   svg {
@@ -112,9 +112,9 @@
 }
 
 .sec-finding-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-heading);
   flex: 1;
   line-height: 1.4;
 }
@@ -177,7 +177,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--text-primary);
+  color: var(--text-muted);
 }
 
 .sec-why-matters {
@@ -203,7 +203,7 @@
 }
 
 .sec-finding-section p {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.65;
   margin: 0;
@@ -239,7 +239,7 @@
 
 // ── Verification checks ───────────────────────────────────────
 .sec-verification-subtitle {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.5;
   margin: -8px 0 14px;
@@ -305,9 +305,9 @@
 }
 
 .sec-check-domain {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-heading);
   white-space: nowrap;
   flex-shrink: 0;
   min-width: 130px;
@@ -316,7 +316,7 @@
 }
 
 .sec-check-summary {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.4;
   flex: 1;
@@ -337,7 +337,7 @@
 }
 
 .sec-check-detail {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.6;
   padding: 0 12px 10px 40px;
@@ -424,5 +424,63 @@
     font-size: 13px;
     color: var(--text-secondary);
     margin: 0;
+  }
+}
+
+// ── Info popup ────────────────────────────────────────────────────────────────
+
+.sec-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.sec-info-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: inherit;
+  line-height: 1;
+  transition: border-color 0.15s, color 0.15s;
+  &:hover { border-color: var(--accent); color: var(--accent); }
+}
+
+.sec-info-popup-wrap { position: relative; }
+
+.sec-info-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-card);
+
+  p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    strong { color: var(--text-heading); font-weight: 600; }
   }
 }

@@ -266,10 +266,12 @@ export class AIAnalysisService {
             pattern: { label: string; overview: string };
             stepNarrative: string[];
           } | null;
+          fileDiagram?: string | null;
         };
         return {
           dataFlow: r as DataFlowAIAnalysis,
           dataFlowFileNarrative: r.fileNarrative ?? null,
+          dataFlowFileDiagram: r.fileDiagram ?? null,
         };
       }
       default:

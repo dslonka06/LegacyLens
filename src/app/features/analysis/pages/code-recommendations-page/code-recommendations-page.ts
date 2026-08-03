@@ -21,6 +21,9 @@ import { ExplanationCard } from '@app/shared/components/explanation-card/explana
 })
 export class CodeRecommendationsPage implements OnInit, OnDestroy {
   workspace: Workspace | null = null;
+  showSummaryInfo = false;
+  showSecFixesInfo = false;
+  showRecsInfo = false;
 
   get recs(): RecommendationAnalysis | null {
     return this.workspace?.knowledgeModel?.ai?.recommendations ?? null;
@@ -84,8 +87,22 @@ export class CodeRecommendationsPage implements OnInit, OnDestroy {
     })[rec.category] ?? rec.category;
   }
 
-  debtClass(level: string): string {
-    return `debt-${level.toLowerCase().replace(' ', '-')}`;
+  get criticalCount(): number {
+    const recCritical = this.recs?.recommendations?.filter(r => r.priority === 'critical').length ?? 0;
+    const secCritical = this.workspace?.knowledgeModel?.ai?.security?.findings?.filter(f => f.severity === 'critical').length ?? 0;
+    return recCritical + secCritical;
+  }
+
+  get highCount(): number {
+    const recHigh = this.recs?.recommendations?.filter(r => r.priority === 'high').length ?? 0;
+    const secHigh = this.workspace?.knowledgeModel?.ai?.security?.findings?.filter(f => f.severity === 'high').length ?? 0;
+    return recHigh + secHigh;
+  }
+
+  get mediumCount(): number {
+    const recMedium = this.recs?.recommendations?.filter(r => r.priority === 'medium').length ?? 0;
+    const secMedium = this.workspace?.knowledgeModel?.ai?.security?.findings?.filter(f => f.severity === 'medium').length ?? 0;
+    return recMedium + secMedium;
   }
 
   get llmSummaryEntry(): LLMSummaryEntry | null {

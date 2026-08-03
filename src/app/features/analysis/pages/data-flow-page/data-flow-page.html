@@ -22,11 +22,36 @@
     <!-- File scope: structured deterministic data flow -->
     <ng-container *ngIf="isFileScope">
 
+      <!-- File-scope data flow diagram -->
+      <div class="doc-block" *ngIf="dataFlowFileDiagram">
+        <div class="df-doc-block-header">
+          <div class="doc-block-label">Data Flow Diagram</div>
+          <div class="df-info-popup-wrap">
+            <button class="df-info-btn" (click)="showDfDiagramInfo = !showDfDiagramInfo">i</button>
+            <div class="df-info-popup" *ngIf="showDfDiagramInfo">
+              <p><strong>Data Flow Diagram</strong> shows how data moves through this specific file. Inputs are detected from recognisable source patterns in the code — things like @Input() bindings, HTTP parameters, localStorage reads, and route params. Outputs are detected from sink patterns — @Output() event emitters, router.navigate() calls, and reactive Subject emissions. The processing steps in between come from a template based on the file's type.</p>
+              <p>This is rendered as a left-to-right flow diagram using a teal/green palette to distinguish it from the architecture diagram.</p>
+            </div>
+          </div>
+        </div>
+        <app-mermaid-diagram [diagram]="dataFlowFileDiagram" maxWidth="50%"></app-mermaid-diagram>
+      </div>
+
       <div class="doc-block" *ngIf="fileDataFlow; else noFileFlow">
 
         <!-- Inputs -->
         <div class="flow-section" *ngIf="fileDataFlow!.inputs.length">
-          <div class="flow-section-label">Inputs</div>
+          <div class="df-doc-block-header">
+            <div class="flow-section-label">Inputs</div>
+            <div class="df-info-popup-wrap">
+              <button class="df-info-btn" (click)="showDfFlowInfo = !showDfFlowInfo">i</button>
+              <div class="df-info-popup" *ngIf="showDfFlowInfo">
+                <p><strong>Inputs</strong> are detected by scanning the file for recognisable data-entry patterns: HTTP method decorators (GET/POST/PUT), @Input() bindings, route parameters, localStorage/sessionStorage reads, and query string access. Each match surfaces as a labelled input tag.</p>
+                <p><strong>Flow Steps</strong> represent the typical processing stages for this type of file. They come from a template specific to the file's detected type — they describe the general shape of what happens, not a line-by-line parse of the actual code.</p>
+                <p><strong>Outputs</strong> are detected from data-exit patterns: @Output() EventEmitters, router.navigate() calls, reactive Subject emissions, HTTP response writes, and state store dispatches.</p>
+              </div>
+            </div>
+          </div>
           <div class="flow-tag-list">
             <span class="flow-tag flow-tag-input" *ngFor="let inp of fileDataFlow!.inputs">{{ inp }}</span>
           </div>
@@ -74,14 +99,25 @@
 
     <!-- Multi-file scope: dependency graph based flow -->
     <ng-container *ngIf="!isFileScope">
-      <div class="arch-empty-state" *ngIf="!hasDataFlow">
+      <div class="arch-empty-state" *ngIf="!hasDataFlow && primaryWorkflows.length === 0 && entryPoints.length === 0 && externalDependencies.length === 0">
         No dependency data available. Upload a folder or repository with multiple interconnected
         files.
       </div>
 
+      <!-- Dependency graph strip — only when structural graph is available -->
       <ng-container *ngIf="hasDataFlow">
+        <div class="metrics-strip">
+          <div class="strip-item">
+            <span class="strip-label">Files</span>
+            <span class="strip-val accent">{{ dependencyNodeCount }}</span>
+          </div>
+          <div class="strip-item">
+            <span class="strip-label">Relations</span>
+            <span class="strip-val">{{ dependencyEdgeCount }}</span>
+          </div>
+        </div>
 
-        <!-- Overview strip -->
+        <!-- Workflow overview strip -->
         <div class="metrics-strip" *ngIf="workflowCount > 0 || entryPoints.length > 0">
           <div class="strip-item">
             <span class="strip-label">Workflows</span>
@@ -103,13 +139,33 @@
 
         <!-- Mermaid workflow diagram -->
         <div class="doc-block" *ngIf="dataFlowDiagram">
-          <div class="doc-block-label">Workflow Diagram</div>
-          <app-mermaid-diagram [diagram]="dataFlowDiagram"></app-mermaid-diagram>
+          <div class="df-doc-block-header">
+            <div class="doc-block-label">Workflow Diagram</div>
+            <div class="df-info-popup-wrap">
+              <button class="df-info-btn" (click)="showWfDiagramInfo = !showWfDiagramInfo">i</button>
+              <div class="df-info-popup" *ngIf="showWfDiagramInfo">
+                <p><strong>Workflow Diagram</strong> shows the main paths data takes through the codebase at runtime. The diagram uses whichever level of detail is available: if the analysis captured the exact verbs at each hop in a chain (e.g. "calls", "reads from", "triggers"), those labels appear on the edges; if only the sequence of files in each workflow is known, each workflow renders as a named subgraph row; if only the raw graph exists, files are grouped by their role (Entry, Processing, Data, External); and if none of that is available, workflow names render as a simple summary.</p>
+                <p>The diagram always renders left-to-right with a teal/green palette.</p>
+              </div>
+            </div>
+          </div>
+          <app-mermaid-diagram [diagram]="dataFlowDiagram" maxWidth="50%"></app-mermaid-diagram>
         </div>
+      </ng-container>
 
         <!-- Workflow accordion cards -->
         <div class="doc-block" *ngIf="primaryWorkflows.length > 0">
-          <div class="doc-block-label">Workflows</div>
+          <div class="df-doc-block-header">
+            <div class="doc-block-label">Workflows</div>
+            <div class="df-info-popup-wrap">
+              <button class="df-info-btn" (click)="showWorkflowsInfo = !showWorkflowsInfo">i</button>
+              <div class="df-info-popup" *ngIf="showWorkflowsInfo">
+                <p><strong>Workflows</strong> are traced by starting from entry points (controllers, handlers, pages, components) and following the dependency graph forward — where file A calls file B, B calls C, and so on — up to 6 hops deep. Each resulting chain is surfaced as a named workflow representing a path data can travel through the system.</p>
+                <p><strong>Failure Risk</strong> is a heuristic score based on how long the chain is (longer = more things that could go wrong), whether the path passes through bottleneck files (high coupling = higher blast radius), and how confident the analysis was in the trace. The score maps to Low, Moderate, or High.</p>
+                <p><strong>Bottleneck Nodes</strong> listed inside a workflow are files that sit in that workflow's path AND have above-average connections on both sides — many files call them AND they call many files — making them the highest-risk points in the chain.</p>
+              </div>
+            </div>
+          </div>
           <div class="df-workflow-list">
             <div
               class="df-workflow-card"
@@ -145,7 +201,16 @@
 
         <!-- Entry Points -->
         <div class="doc-block" *ngIf="entryPoints.length > 0">
-          <div class="doc-block-label">Entry Points</div>
+          <div class="df-doc-block-header">
+            <div class="doc-block-label">Entry Points</div>
+            <div class="df-info-popup-wrap">
+              <button class="df-info-btn" (click)="showEntryInfo = !showEntryInfo">i</button>
+              <div class="df-info-popup" *ngIf="showEntryInfo">
+                <p><strong>Entry Points</strong> are the files where external requests or user interactions first arrive in the system. The top 5 are shown, chosen by how many other files reference them — which tends to reflect how central they are to the system's surface area.</p>
+                <p>Files are classified as entry points based on their name containing terms like "controller", "handler", "endpoint", "api", "route", "page", "component", "screen", or "view". No AI is involved — this is purely name-pattern matching.</p>
+              </div>
+            </div>
+          </div>
           <div class="flow-tag-list">
             <span class="flow-tag flow-tag-input" *ngFor="let ep of entryPoints">{{ ep }}</span>
           </div>
@@ -153,7 +218,16 @@
 
         <!-- Bottlenecks -->
         <div class="doc-block" *ngIf="bottlenecks.length > 0">
-          <div class="doc-block-label">Bottleneck Nodes</div>
+          <div class="df-doc-block-header">
+            <div class="doc-block-label">Bottleneck Nodes</div>
+            <div class="df-info-popup-wrap">
+              <button class="df-info-btn" (click)="showBottleneckInfo = !showBottleneckInfo">i</button>
+              <div class="df-info-popup" *ngIf="showBottleneckInfo">
+                <p><strong>Bottleneck Nodes</strong> are files that are unusually busy on both sides of the dependency graph — more files call them than average, and they call more files than average. Both conditions have to be true simultaneously.</p>
+                <p>This matters because a bottleneck sits at a structural crossroads: a bug or breaking change in it can ripple outward in multiple directions at once, making it one of the riskiest places to make modifications.</p>
+              </div>
+            </div>
+          </div>
           <div class="flow-tag-list">
             <span class="df-bottleneck-chip" *ngFor="let b of bottlenecks">{{ b }}</span>
           </div>
@@ -161,13 +235,21 @@
 
         <!-- External Dependencies -->
         <div class="doc-block" *ngIf="externalDependencies.length > 0">
-          <div class="doc-block-label">External Dependencies</div>
+          <div class="df-doc-block-header">
+            <div class="doc-block-label">External Dependencies</div>
+            <div class="df-info-popup-wrap">
+              <button class="df-info-btn" (click)="showExternalInfo = !showExternalInfo">i</button>
+              <div class="df-info-popup" *ngIf="showExternalInfo">
+                <p><strong>External Dependencies</strong> are files that appear to represent integration points with the outside world — third-party APIs, external services, or adapter layers. They're identified by name matching: files containing terms like "client", "gateway", "provider", "adapter", "proxy", "connector", "integration", "webhook", or "http" are flagged. Up to 8 are shown.</p>
+                <p>These are worth knowing about because their behaviour isn't controlled internally — a change in an external service or API can break the codebase in ways that no amount of internal testing will catch.</p>
+              </div>
+            </div>
+          </div>
           <div class="flow-tag-list">
             <span class="flow-tag flow-tag-output" *ngFor="let dep of externalDependencies">{{ dep }}</span>
           </div>
         </div>
 
-      </ng-container>
     </ng-container>
   </div>
 

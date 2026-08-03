@@ -23,6 +23,7 @@ import { ThemeService } from '@app/core/services/theme.service';
 })
 export class MermaidDiagram implements OnChanges, AfterViewInit {
   @Input() diagram: string | null | undefined = null;
+  @Input() maxWidth: string = '90%';
 
   @ViewChild('container') containerRef!: ElementRef<HTMLDivElement>;
 
@@ -113,7 +114,7 @@ export class MermaidDiagram implements OnChanges, AfterViewInit {
       .replace(/\bheight="[^"]*"/, 'height="auto"');
 
     // Inject inline style so it always wins over Mermaid's own style block
-    out = out.replace(/<svg /, '<svg style="max-width:100%;height:auto;display:block;" ');
+    out = out.replace(/<svg /, `<svg style="max-width:${this.maxWidth};height:auto;display:block;" `);
 
     return out;
   }

@@ -34,7 +34,7 @@ export class SecurityFindingsPromptBuilder {
       'Your task is to:',
       '  1. Review the candidate findings and determine which are real vulnerabilities vs false positives.',
       '  2. Assign accurate severity based on context, not just pattern match.',
-      '  3. Write a brief security posture summary.',
+      '  3. Write a meaningful security posture summary based on all available evidence.',
       '',
       'Output ONLY a valid JSON object. No markdown, no explanation, no wrapper text — raw JSON only.',
       '',
@@ -44,7 +44,7 @@ export class SecurityFindingsPromptBuilder {
     parts.push(
       'The JSON must match this exact schema:',
       '{',
-      '  "postureSummary": "string — 2-4 sentences contextualising the overall security posture",',
+      '  "postureSummary": "string — 3-5 sentences covering: what security controls are in place, what the domain evidence shows (secrets handling, auth, input validation, data access, error handling, cryptography), any concerns even if no confirmed findings, and an overall risk assessment. Be specific about what was observed, not just whether issues were found.",',
       '  "overallRisk": "critical | high | medium | low",',
       '  "securityMaturity": "Low | Medium | High",',
       '  "findings": [',
@@ -155,6 +155,7 @@ export class SecurityFindingsPromptBuilder {
 
     parts.push('Based on this evidence, return ONLY the JSON object described above.');
     parts.push('Confirm which candidates are real vulnerabilities and assign accurate severity.');
+    parts.push('Even if no candidates exist, write a substantive postureSummary using the domain evidence — comment on what security controls are present, what the patterns suggest, and where the risk lies.');
 
     return parts.join('\n');
   }

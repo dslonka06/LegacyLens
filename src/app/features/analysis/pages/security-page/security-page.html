@@ -90,13 +90,22 @@
         <!-- Security Findings -->
         <div class="sec-card">
           <div class="sec-card-header">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/>
-              <line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-            Security Findings
-            <span class="sec-count-badge" *ngIf="hasFindings">{{ findings.length }}</span>
+            <div class="sec-card-header-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              Security Findings
+              <span class="sec-count-badge" *ngIf="hasFindings">{{ findings.length }}</span>
+            </div>
+            <div class="sec-info-popup-wrap">
+              <button class="sec-info-btn" (click)="showFindingsInfo = !showFindingsInfo">i</button>
+              <div class="sec-info-popup" *ngIf="showFindingsInfo">
+                <p><strong>Security Findings</strong> are produced in two stages. First, all files are scanned using regex patterns across 8 security domains — Secrets, SQL Injection, Authentication, Authorisation, Input Validation, Data Access, Logging, and Error Handling. This produces raw evidence: specific code matches that look potentially risky.</p>
+                <p>That raw evidence is then sent to the AI, which reviews it and decides which matches represent genuine issues. The AI produces confirmed findings with a severity level, category, the specific file and line, an explanation of what the issue is, why it matters, and how to fix it. Only AI-confirmed findings appear here — pattern matches that the AI dismisses as false positives are discarded.</p>
+              </div>
+            </div>
           </div>
 
           <ng-container *ngIf="hasFindings; else noFindings">
@@ -159,11 +168,21 @@
         <!-- Verification Checks -->
         <div class="sec-card sec-verification" *ngIf="hasVerificationChecks">
           <div class="sec-card-header">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <polyline points="9 12 11 14 15 10"/>
-            </svg>
-            Security Verification
+            <div class="sec-card-header-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <polyline points="9 12 11 14 15 10"/>
+              </svg>
+              Security Verification
+            </div>
+            <div class="sec-info-popup-wrap">
+              <button class="sec-info-btn" (click)="showVerifInfo = !showVerifInfo">i</button>
+              <div class="sec-info-popup" *ngIf="showVerifInfo">
+                <p><strong>Security Verification</strong> is entirely deterministic — no AI is involved. Each of the 8 security domains is assessed independently based on what patterns were and weren't found in the scan.</p>
+                <p><strong>Pass</strong> means the scan found protective patterns in place — things like auth middleware, parameterised queries, or structured logging. <strong>Warn</strong> means the signals were mixed or incomplete. <strong>Fail</strong> means the scan found risky patterns (e.g. string-built SQL queries, empty catch blocks, hardcoded secrets) without corresponding safeguards.</p>
+                <p>Expand any domain check to see the specific code evidence that determined its result.</p>
+              </div>
+            </div>
           </div>
           <p class="sec-verification-subtitle">Domains assessed based on detected patterns.</p>
 

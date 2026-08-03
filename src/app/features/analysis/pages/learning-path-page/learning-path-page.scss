@@ -22,10 +22,10 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   color: var(--text-muted);
   margin-bottom: 16px;
 
@@ -119,15 +119,15 @@
 }
 
 .lp-step-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-content);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-heading);
   line-height: 1.4;
 }
 
 .lp-step-preview {
-  font-size: 12px;
-  color: var(--text-muted);
+  font-size: 13px;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -163,7 +163,7 @@
   gap: 4px;
 
   p {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
     line-height: 1.65;
     margin: 0;
@@ -205,8 +205,8 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 12px;
-  color: var(--text-content);
+  font-size: 13px;
+  color: var(--text-secondary);
   font-family: 'JetBrains Mono', Consolas, monospace;
 
   svg {
@@ -297,7 +297,7 @@
     display: flex;
     align-items: flex-start;
     gap: 7px;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
     line-height: 1.5;
 
@@ -308,5 +308,65 @@
       margin-top: 1px;
       color: var(--accent);
     }
+  }
+}
+
+// ── Info popup ────────────────────────────────────────────────────────────────
+
+.lp-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+
+  .lp-card-header { margin-bottom: 0; }
+}
+
+.lp-info-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: inherit;
+  line-height: 1;
+  transition: border-color 0.15s, color 0.15s;
+  &:hover { border-color: var(--accent); color: var(--accent); }
+}
+
+.lp-info-popup-wrap { position: relative; }
+
+.lp-info-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-card);
+
+  p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    strong { color: var(--text-heading); font-weight: 600; }
   }
 }

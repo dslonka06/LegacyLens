@@ -74,11 +74,11 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-primary);
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
   margin-bottom: 10px;
 
   svg {
@@ -91,7 +91,7 @@
 
 .su-body-text {
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   line-height: 1.7;
   margin: 0;
 
@@ -99,8 +99,8 @@
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px solid var(--border);
-    color: var(--text-muted);
-    font-size: 12px;
+    color: var(--text-secondary);
+    font-size: 13px;
   }
 }
 
@@ -164,13 +164,13 @@
   box-shadow: var(--shadow-card);
 
   p {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
     line-height: 1.6;
     margin: 0;
 
     strong {
-      color: var(--text-content);
+      color: var(--text-heading);
       font-weight: 600;
     }
   }
@@ -224,12 +224,12 @@
 }
 
 .su-health-metric-label {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
 .su-health-metric-val {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 
   &.complexity-Low  { color: var(--success); }
@@ -244,7 +244,7 @@
 }
 
 .su-health-detail-text {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.7;
   margin: 0;
@@ -323,15 +323,15 @@
 }
 
 .su-workflow-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-content);
+  color: var(--text-heading);
   flex-shrink: 0;
 }
 
 .su-workflow-desc {
-  font-size: 11px;
-  color: var(--text-muted);
+  font-size: 13px;
+  color: var(--text-secondary);
   line-height: 1.5;
   flex: 1;
   min-width: 0;
@@ -372,14 +372,14 @@
 
 .su-resp-label {
   flex: 1;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-heading);
   line-height: 1.4;
 }
 
 .su-resp-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.7;
   margin: 0;
@@ -408,8 +408,9 @@
 
 .su-comp-section-label {
   flex: 1;
-  font-size: 13px;
-  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-heading);
 }
 
 .su-comp-section-count {
@@ -464,12 +465,46 @@
 
   &:last-child { border-bottom: none; }
   &:first-child { padding-top: 0; }
+
+  &--folder {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.su-blast-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+
+  &--high {
+    color: var(--error);
+    background: color-mix(in srgb, var(--error) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--error) 25%, transparent);
+  }
+
+  &--medium {
+    color: var(--warning);
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--warning) 25%, transparent);
+  }
+
+  &--low {
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+  }
 }
 
 .su-comp-item-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-content);
+  color: var(--text-secondary);
   font-family: 'JetBrains Mono', Consolas, monospace;
 }
 
@@ -553,14 +588,14 @@
 }
 
 .su-concern-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-content);
+  color: var(--text-heading);
   font-family: 'JetBrains Mono', Consolas, monospace;
 }
 
 .su-concern-detail {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.5;
   margin: 0;

@@ -587,17 +587,43 @@ class LearningConceptEngine {
       }
     }
 
+    // Augment frameworks from file path signals when technology detection had no config file
+    // (e.g. analysing a subfolder that doesn't contain angular.json / package.json)
+    const allPaths = sourceFiles.map(f => f.path ?? '').join(' ');
+    const augFrameworks = [...frameworks];
+    if (augFrameworks.every(f => !/angular/i.test(f)) &&
+        /\.component\.ts|\.service\.ts|\.module\.ts|\.guard\.ts|\.directive\.ts/.test(allPaths)) {
+      augFrameworks.push('Angular');
+    }
+    if (augFrameworks.every(f => !/react/i.test(f)) &&
+        /\.tsx|useEffect|useState/.test(allPaths)) {
+      augFrameworks.push('React');
+    }
+
     // Framework-implied concepts
-    if (frameworks.some(f => /angular/i.test(f))) {
+    if (augFrameworks.some(f => /angular/i.test(f))) {
       for (const k of ['frontend-components', 'dependency-injection', 'reactive-streams']) {
         if (!candidates.includes(k)) candidates.push(k);
       }
     }
-    if (frameworks.some(f => /react/i.test(f))) {
+    if (augFrameworks.some(f => /react/i.test(f))) {
       if (!candidates.includes('frontend-components')) candidates.push('frontend-components');
     }
-    if (frameworks.some(f => /nest/i.test(f))) {
+    if (augFrameworks.some(f => /nest/i.test(f))) {
       if (!candidates.includes('dependency-injection')) candidates.push('dependency-injection');
+    }
+
+    // Language-implied baseline concepts when the scan found nothing
+    if (candidates.length === 0) {
+      if (languages.some(l => /typescript|javascript/i.test(l))) {
+        for (const k of ['oop-design', 'async-patterns', 'data-transformation']) {
+          candidates.push(k);
+        }
+      } else if (languages.some(l => /c#|java|python/i.test(l))) {
+        for (const k of ['oop-design', 'async-patterns']) {
+          candidates.push(k);
+        }
+      }
     }
 
     return this._sortAndCap(candidates);

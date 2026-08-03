@@ -40,6 +40,7 @@ export type KnowledgeCapability =
   | 'folderStructure'
   | 'frameworkDetection'
   | 'dependencyResolution'
+  | 'dataFlowExtraction'
   | 'multiProject'
   | 'gitAnalysis'
   | 'architectureDiscovery'
@@ -104,6 +105,14 @@ export interface KnowledgeStructure {
 
 // ── Relationships sub-types ────────────────────────────────────────────────────
 
+export interface DataFlowFact {
+  path: string;
+  fileRole: 'component' | 'service' | 'repository' | 'http-client' | 'state-store' | 'controller' | 'unknown';
+  sources: string[];
+  sinks: string[];
+  interactionVerbs: Record<string, string>;
+}
+
 export interface ArchitecturePattern {
   name: string;
   confidence: number;
@@ -111,16 +120,16 @@ export interface ArchitecturePattern {
 }
 
 export interface DependencyHub {
-  nodeId: string;
-  name: string;
-  inboundCount: number;
+  node: { id: string; name: string; type: string; path: string };
+  degree: number;
   isHub: boolean;
 }
 
 export interface FileRanking {
-  nodeId: string;
-  name: string;
-  degree: number;
+  node: { id: string; name: string; type: string; path: string };
+  inbound: number;
+  outbound: number;
+  total: number;
 }
 
 export interface KnowledgeRelationships {
@@ -142,6 +151,8 @@ export interface KnowledgeRelationships {
     branch: string | null;
     originUrl: string | null;
   };
+  /** Per-file data flow facts. Present when 'dataFlowExtraction' capability ran. */
+  dataFlowFacts?: DataFlowFact[];
 }
 
 // ── Insights sub-types ─────────────────────────────────────────────────────────
@@ -216,6 +227,8 @@ export interface KnowledgeAIResults {
     pattern: { label: string; overview: string };
     stepNarrative: string[];
   } | null;
+  /** File scope only: Mermaid flowchart LR diagram of the file's data flow. */
+  dataFlowFileDiagram?: string | null;
 
   // ── Generate tier ─────────────────────────────────────────────────────────────
   /** LLM-generated narrative summaries, one per page. Populated after the generate stage. */

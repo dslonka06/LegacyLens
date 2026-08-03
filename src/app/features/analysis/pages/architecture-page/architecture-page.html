@@ -21,18 +21,46 @@
 
     <div class="arch-col-main">
       <div class="doc-block" *ngIf="architectureNarrative">
-        <div class="doc-block-label">Architecture Summary</div>
+        <div class="arch-doc-block-header">
+          <div class="doc-block-label">Architecture Summary</div>
+          <div class="arch-info-popup-wrap">
+            <button class="arch-info-btn" (click)="showArchSummaryInfo = !showArchSummaryInfo">i</button>
+            <div class="arch-info-popup" *ngIf="showArchSummaryInfo">
+              <p><strong>Architecture Summary</strong> is determined entirely without AI. The engine checks folder and file names against known layer keywords — things like "controllers", "services", "repositories", "components" — and counts hub nodes and framework signals. From this it recognises patterns like Layered, MVC, or Event-driven.</p>
+              <p>Each detected pattern gets a confidence score based on how many expected structural indicators were actually found. The top matches are shown, with the strongest one displayed as the primary architecture.</p>
+            </div>
+          </div>
+        </div>
         <p class="arch-narrative">{{ architectureNarrative }}</p>
       </div>
 
       <div class="doc-block" *ngIf="architectureDiagram">
-        <div class="doc-block-label">Layer Diagram</div>
+        <div class="arch-doc-block-header">
+          <div class="doc-block-label">Layer Diagram</div>
+          <div class="arch-info-popup-wrap">
+            <button class="arch-info-btn" (click)="showLayerDiagramInfo = !showLayerDiagramInfo">i</button>
+            <div class="arch-info-popup" *ngIf="showLayerDiagramInfo">
+              <p><strong>Layer Diagram</strong> is generated after the architecture analysis completes. Each file is placed into one of four layers — Presentation, Business Logic, Data Access, or External — based on its name and file path matching known layer keywords.</p>
+              <p>To keep the diagram readable, up to 4 representative files per layer are chosen (the most-referenced ones), and up to 12 cross-layer connections are drawn. No AI is involved — it renders directly from the dependency graph using a top-down layout.</p>
+            </div>
+          </div>
+        </div>
         <app-mermaid-diagram [diagram]="architectureDiagram"></app-mermaid-diagram>
       </div>
 
       <!-- Structural Analysis -->
       <div class="doc-block" *ngIf="hasStructuralAnalysis">
-        <div class="doc-block-label">Structural Analysis</div>
+        <div class="arch-doc-block-header">
+          <div class="doc-block-label">Structural Analysis</div>
+          <div class="arch-info-popup-wrap">
+            <button class="arch-info-btn" (click)="showStructuralInfo = !showStructuralInfo">i</button>
+            <div class="arch-info-popup" *ngIf="showStructuralInfo">
+              <p><strong>Coupling</strong> describes how concentrated your dependencies are. It's based on the proportion of files that act as hubs (5+ other files depending on them). Critical means more than 1 in 5 files is a hub; High means more than 1 in 8; Moderate means more than 1 in 16; Low means the codebase is reasonably spread out.</p>
+              <p><strong>Hub Nodes</strong> is simply the count of files that 5 or more other files import. A high number means many parts of the codebase share a small set of central files — changes to those files ripple widely.</p>
+              <p><strong>Circular Deps</strong> counts dependency cycles — cases where file A depends on B which eventually depends back on A. These prevent clean isolation and can cause subtle loading or initialisation issues.</p>
+            </div>
+          </div>
+        </div>
         <div class="metrics-strip">
           <div class="strip-item">
             <span class="strip-label">Coupling</span>
@@ -50,16 +78,36 @@
       </div>
 
       <!-- Hub Nodes -->
-      <div class="doc-block" *ngIf="hubNodes.length > 0">
-        <div class="doc-block-label">Hub Nodes</div>
-        <div class="arch-component-list">
-          <div class="arch-component-item" *ngFor="let hub of hubNodes">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.07 4.93l-1.41 1.41M12 2v2M4.93 4.93l1.41 1.41M2 12h2M4.93 19.07l1.41-1.41M12 20v2M19.07 19.07l-1.41-1.41M20 12h2" />
-            </svg>
-            <span>{{ hub.name }}</span>
-            <span class="hub-dep-count">{{ hub.inboundCount }} inbound</span>
+      <div class="doc-block hub-nodes-block" *ngIf="hubNodes.length > 0">
+        <div class="hub-nodes-header" [class.hub-nodes-header--expanded]="hubNodesExpanded" (click)="toggleHubNodes()">
+          <div class="hub-nodes-summary">
+            <span class="hub-nodes-big-count">{{ hubNodes.length }}</span>
+            <div class="hub-nodes-meta">
+              <span class="hub-nodes-title">Hub Nodes</span>
+              <span class="hub-nodes-hint">{{ hubNodesExpanded ? 'Click to collapse' : 'Click to expand' }}</span>
+            </div>
+          </div>
+          <div class="arch-info-popup-wrap" (click)="$event.stopPropagation()">
+            <button class="arch-info-btn" (click)="showHubNodesInfo = !showHubNodesInfo">i</button>
+            <div class="arch-info-popup" *ngIf="showHubNodesInfo">
+              <p><strong>Hub Nodes</strong> are files that at least 5 other files depend on. They're ranked by their total number of connections — both how many files call them (inbound) and how many they call (outbound).</p>
+              <p>These are the architectural hotspots of the codebase. A change to a hub file can cascade to every file that imports it, so they carry higher risk during refactoring and deserve extra attention when reviewing changes.</p>
+            </div>
+          </div>
+          <svg class="hub-nodes-chevron" [class.hub-nodes-chevron--open]="hubNodesExpanded" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </div>
+        <div class="hub-nodes-body" [class.hub-nodes-body--open]="hubNodesExpanded">
+          <div class="arch-component-list">
+            <div class="arch-component-item" *ngFor="let hub of hubNodes">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.07 4.93l-1.41 1.41M12 2v2M4.93 4.93l1.41 1.41M2 12h2M4.93 19.07l1.41-1.41M12 20v2M19.07 19.07l-1.41-1.41M20 12h2" />
+              </svg>
+              <span>{{ hub.node.name }}</span>
+              <span class="hub-dep-count">{{ hub.degree }} connections</span>
+            </div>
           </div>
         </div>
       </div>

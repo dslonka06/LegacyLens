@@ -44,12 +44,12 @@
 
 .empty-state h3 {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-weight: 700;
+  color: var(--text-heading);
 }
 .empty-state p {
-  font-size: 12px;
-  color: var(--text-muted);
+  font-size: 13px;
+  color: var(--text-secondary);
   max-width: 200px;
   line-height: 1.5;
 }
@@ -111,8 +111,8 @@
 }
 
 .summary-text {
-  font-size: 14px; /* #6 up from 13px */
-  color: var(--text-content);
+  font-size: 13px;
+  color: var(--text-secondary);
   line-height: 1.7;
 }
 
@@ -183,8 +183,8 @@
 }
 
 .simpler-text {
-  font-size: 14px; /* #6 */
-  color: var(--text-content);
+  font-size: 13px;
+  color: var(--text-secondary);
   line-height: 1.7;
   background: var(--bg-secondary);
   padding: 10px 12px;
@@ -215,13 +215,13 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
 .metric-value {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-heading);
 }
 
 // #5 language value purple
@@ -385,8 +385,8 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  font-size: 12px;
-  color: var(--text-content);
+  font-size: 13px;
+  color: var(--text-secondary);
   line-height: 1.4;
 
   &.mod .check-dot {
@@ -404,9 +404,9 @@
 }
 
 .findings-preview-title {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-heading);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -513,8 +513,8 @@
 }
 
 .business-text {
-  font-size: 14px; /* #6 */
-  color: var(--text-content);
+  font-size: 13px;
+  color: var(--text-secondary);
   line-height: 1.7;
 }
 
@@ -527,7 +527,7 @@
 }
 
 .explore-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -621,8 +621,8 @@
 }
 
 .explore-card-desc {
-  font-size: 11px; /* #8 up from 10px */
-  color: var(--text-readable);
+  font-size: 13px;
+  color: var(--text-secondary);
   line-height: 1.5;
   flex: 1;
 }

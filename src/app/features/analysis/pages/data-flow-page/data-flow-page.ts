@@ -20,6 +20,13 @@ export class DataFlowPage implements OnInit, OnDestroy {
   model: KnowledgeModel | null = null;
   hasWorkspace = false;
   expandedStepIndex: number | null = null;
+  showDfDiagramInfo = false;
+  showDfFlowInfo = false;
+  showWfDiagramInfo = false;
+  showWorkflowsInfo = false;
+  showEntryInfo = false;
+  showBottleneckInfo = false;
+  showExternalInfo = false;
 
   private sub: Subscription | null = null;
 
@@ -51,7 +58,7 @@ export class DataFlowPage implements OnInit, OnDestroy {
   }
 
   get isFileScope(): boolean {
-    return this.model?.capabilities?.includes('insightExtraction') ?? false;
+    return this.model?.targetType === 'file';
   }
 
   get fileStepNarrative(): string[] {
@@ -75,7 +82,15 @@ export class DataFlowPage implements OnInit, OnDestroy {
   get hasDataFlow(): boolean {
     return this.isFileScope
       ? (this.fileDataFlow?.steps.length ?? 0) > 0
-      : (this.model?.relationships.dependencies?.graph.nodes.length ?? 0) > 0;
+      : (this.model?.relationships.dependencies?.graph?.nodes?.length ?? 0) > 0;
+  }
+
+  get dependencyNodeCount(): number {
+    return this.model?.relationships.dependencies?.graph?.nodes?.length ?? 0;
+  }
+
+  get dependencyEdgeCount(): number {
+    return this.model?.relationships.dependencies?.graph?.edges?.length ?? 0;
   }
 
   getStepClass(index: number, total: number): string {
@@ -90,6 +105,10 @@ export class DataFlowPage implements OnInit, OnDestroy {
 
   get dataFlowDiagram(): string | null {
     return this.model?.ai?.dataFlow?.dataFlowDiagram ?? null;
+  }
+
+  get dataFlowFileDiagram(): string | null {
+    return this.model?.ai?.dataFlowFileDiagram ?? null;
   }
 
   // ── Folder/repo: structured workflow data ────────────────────────────────────

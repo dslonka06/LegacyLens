@@ -187,7 +187,7 @@ function registerIntelligenceHandlers() {
     console.log('[IPC] intelligence:systemUnderstanding targetType=' + model.targetType);
     const { knowledge, session } = adaptModelForEngines(model);
     const understanding = await (knowledge
-      ? systemUnderstanding.analyzeKnowledge(knowledge, session)
+      ? systemUnderstanding.analyzeKnowledge(knowledge, session, model.targetType)
       : systemUnderstanding.analyzeFile(session));
     console.log('[IPC] intelligence:systemUnderstanding done result=' + (understanding ? 'ok' : 'null'));
 
@@ -208,7 +208,7 @@ function registerIntelligenceHandlers() {
     }
 
     const narrativeData = {
-      scope:               isFile ? 'file' : (Object.keys(symbols).length > 20 ? 'repository' : 'folder'),
+      scope:               model.targetType,
       fileName:            model.structure?.filePath?.split(/[\\/]/).pop() ?? model.workspaceName ?? 'this',
       inboundDeps:         isFile
                              ? (ins.dataFlow?.inputs?.length ?? 0)
@@ -473,13 +473,16 @@ function registerIntelligenceHandlers() {
       const pattern       = dataFlowPattern.build(flowData);
       const stepNarrative = dataFlowStepsNarrative.build(flowData);
 
-      return { ...result, fileNarrative: { pattern, stepNarrative } };
+      let fileDiagram = null;
+      try { fileDiagram = dataFlowDiagram.buildFileFlow({ steps, inputs, outputs }); } catch (e) { /* non-fatal */ }
+
+      return { ...result, fileNarrative: { pattern, stepNarrative }, fileDiagram };
     }
 
     // ── Folder/repo: generate workflow diagram ────────────────────────────────
     let diagram = '';
     try {
-      diagram = dataFlowDiagram.build(result, model.relationships?.dependencies?.graph ?? null);
+      diagram = dataFlowDiagram.build(result, model.relationships?.dependencies?.graph ?? null, model.relationships?.dataFlowFacts ?? null);
     } catch (e) { /* non-fatal */ }
 
     return { ...result, dataFlowDiagram: diagram };

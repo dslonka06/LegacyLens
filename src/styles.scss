@@ -464,8 +464,8 @@ ol {
   padding: 14px 16px;
 
   p {
-    font-size: 14px;
-    color: var(--text-content);
+    font-size: 13px;
+    color: var(--text-secondary);
     line-height: 1.7;
   }
 
@@ -480,9 +480,9 @@ ol {
   }
 
   &.large-text p {
-    font-size: 15px;
+    font-size: 13px;
     line-height: 1.8;
-    color: var(--text-primary);
+    color: var(--text-secondary);
   }
 
   &.flow-text-card p {
@@ -570,7 +570,7 @@ ol {
 .risk-row-text {
   flex: 1;
   font-size: 13px;
-  color: var(--text-content);
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 
@@ -607,7 +607,7 @@ ol {
     border-bottom: none;
   }
   font-size: 13px;
-  color: var(--text-content);
+  color: var(--text-secondary);
 
   svg {
     width: 15px;
@@ -757,13 +757,13 @@ ol {
     color: var(--border);
   }
   h3 {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-heading);
   }
   p {
-    font-size: 12px;
-    color: var(--text-muted);
+    font-size: 13px;
+    color: var(--text-secondary);
     max-width: 240px;
     line-height: 1.6;
   }
@@ -853,15 +853,15 @@ ol {
 }
 
 .risk-card-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-heading);
   line-height: 1.3;
 }
 
 .risk-card-desc {
-  font-size: 12px;
-  color: var(--text-content);
+  font-size: 13px;
+  color: var(--text-secondary);
   line-height: 1.45;
 }
 

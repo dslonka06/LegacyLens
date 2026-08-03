@@ -39,15 +39,10 @@ export class SettingsPage implements OnInit {
   testReason = '';
   saved = false;
   showSetupHelp = false;
+  showAiConfig = false;
   showProviderConfig = false;
+  showStorageConfig = false;
   activeModel = '';
-
-  // ── AI analysis behavior ──────────────────────────────────────────────────
-  deriveTimeoutSec = 30;
-  generateTimeoutSec = 300;
-  providerTimeoutSec = 300;
-  parallelSummaries = false;
-  maxTokensGenerate = 4096;
 
   // ── App info ──────────────────────────────────────────────────────────────
   appVersion = '';
@@ -61,6 +56,14 @@ export class SettingsPage implements OnInit {
 
   // ── How it works ─────────────────────────────────────────────────────────
   showHowItWorks = false;
+  showHiwOverview = false;
+  showHiwStructural = false;
+  showHiwAiPipeline = false;
+  showHiwPages = false;
+  showHiwDocumentation = false;
+  showHiwDiagrams = false;
+  showHiwAiConfig = false;
+  showHiwAiChat = false;
 
   constructor(
     readonly theme: ThemeService,

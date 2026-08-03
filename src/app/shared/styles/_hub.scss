@@ -138,14 +138,14 @@
 }
 
 .upload-title {
-  font-size: 20px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.3px;
+  color: var(--text-heading);
+  letter-spacing: -0.1px;
 }
 
 .upload-desc {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.6;
   max-width: 340px;
@@ -279,15 +279,15 @@
 }
 
 .analyzing-title {
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.2px;
+  color: var(--text-heading);
+  letter-spacing: -0.1px;
 }
 
 .analyzing-desc {
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .scan-progress-bar {
@@ -374,7 +374,7 @@
 
 .hub-subheading {
   font-size: 13px;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.4;
 }
@@ -429,11 +429,11 @@
 // ─── Section label (above metric cards) ──────────────────
 
 .hub-section-label {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-primary);
+  color: var(--text-muted);
   padding: 4px 0 0;
 }
 
@@ -558,10 +558,10 @@
 }
 
 .identity-filename {
-  font-size: 20px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.4px;
+  color: var(--text-heading);
+  letter-spacing: -0.2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -671,7 +671,7 @@
 }
 
 .identity-summary {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.65;
 
@@ -712,8 +712,15 @@
   transform-origin: 50% 50%;
 }
 
+// Idle (pre-analysis): slow ambient pulse, dimmed
+.identity-hex--idle {
+  opacity: 0.45;
+  .hex-core { animation: hex-pulse 3s ease-in-out infinite; }
+}
+
 // When analyzing: spin and pulse
 .identity-hex--analyzing {
+  opacity: 1;
   .hex-ring-outer { animation: hex-spin-slow 3s linear infinite; }
   .hex-ring-inner { animation: hex-spin-reverse 2s linear infinite; }
   .hex-core       { animation: hex-pulse 1.2s ease-in-out infinite; }
@@ -721,7 +728,23 @@
 
 // When ready: fully stopped, settled at full opacity
 .identity-hex--ready {
+  opacity: 1;
   .hex-core { opacity: 0.9; }
+}
+
+// Hex in topbar — smaller, floats right of actions
+.hub-topbar-hex {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .identity-hex {
+    width: 52px;
+    height: 52px;
+  }
 }
 
 @keyframes hex-spin-slow {
@@ -829,10 +852,10 @@
 }
 
 .info-card-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.2px;
+  color: var(--text-heading);
+  letter-spacing: -0.1px;
   flex: 1;
 }
 
@@ -970,11 +993,11 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
 .health-signal-body {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.55;
   display: -webkit-box;
@@ -998,7 +1021,7 @@
 }
 
 .health-metric-label {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
@@ -1223,9 +1246,9 @@
 }
 
 .pipeline-section-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-heading);
   letter-spacing: -0.1px;
 }
 
@@ -1578,6 +1601,7 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 10px;
+  width: 100%;
 
   &--4 {
     grid-template-columns: repeat(4, 1fr);
@@ -1589,6 +1613,14 @@
 
   &--7 {
     grid-template-columns: repeat(7, 1fr);
+  }
+
+  &--animate {
+    animation: hub-fade-up 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  &--animate-fast {
+    animation: hub-fade-up 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 }
 
@@ -1653,10 +1685,10 @@
 }
 
 .metric-card-learning-title {
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-heading);
-  letter-spacing: -0.4px;
+  letter-spacing: -0.2px;
   line-height: 1.1;
 }
 
@@ -2087,50 +2119,56 @@
   }
 }
 
-// Identity card upload state — centers content, no left accent bar
+// Identity card upload state — full-card centered vertical drop zone
 .hub-identity-card--upload {
   padding: 0;
   overflow: visible;
+  min-height: 200px;
 
   &::before { display: none; }
+}
 
-  .upload-zone--inline {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 28px 24px;
-    text-align: center;
-    border-radius: var(--radius-card);
-    transition: background 0.2s;
+// Inline upload zone — renders inside hub-identity-card, fills it vertically
+.upload-zone--inline {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 36px 40px;
+  text-align: center;
+  border-radius: var(--radius-card);
+  border: 1.5px dashed color-mix(in srgb, var(--accent) 22%, transparent);
+  transition: background 0.2s, border-color 0.2s;
 
-    &.upload-zone--drag {
-      background: rgba(141, 99, 255, 0.06);
-    }
+  &.upload-zone--drag {
+    background: rgba(141, 99, 255, 0.06);
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
   }
 
   .upload-icon-ring {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
   }
 
   .upload-title {
-    font-size: 17px;
+    font-size: 14px;
+    margin: 0;
   }
 
   .upload-desc {
     font-size: 13px;
-    max-width: 280px;
+    max-width: 360px;
+    margin: 0;
   }
 
   .upload-hint {
     font-size: 11px;
     color: var(--text-muted);
-    margin-top: 4px;
+    margin: 0;
   }
 }
 
@@ -2160,17 +2198,17 @@
     }
 
     .analyzing-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
-      color: var(--text-primary);
+      color: var(--text-heading);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .analyzing-desc {
-      font-size: 12px;
-      color: var(--text-muted);
+      font-size: 13px;
+      color: var(--text-secondary);
     }
 
     .stage-dots {
@@ -2375,13 +2413,13 @@
   box-shadow: var(--shadow-card);
 
   p {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
     line-height: 1.6;
     margin: 0;
 
     strong {
-      color: var(--text-content);
+      color: var(--text-heading);
       font-weight: 600;
     }
   }
@@ -2467,8 +2505,8 @@
 
 .health-stat-label {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--text-heading);
 }
 
 .health-stat-desc {
@@ -2478,9 +2516,9 @@
 }
 
 .health-stat-val {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-heading);
   flex-shrink: 0;
 
   &.complexity-Low   { color: var(--success); }

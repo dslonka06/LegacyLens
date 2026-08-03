@@ -88,6 +88,25 @@ function buildChatContext(model) {
       lines.push(`Data outputs: ${dataFlow.outputs.slice(0, 5).map(o => o.name ?? o).join(', ')}`);
     }
     if (dataFlow.pattern) lines.push(`Data flow pattern: ${dataFlow.pattern}`);
+    const workflows = dataFlow.primaryWorkflows;
+    if (workflows?.length) {
+      const wfNames = workflows.slice(0, 4).map(w => w.workflowName ?? w.name ?? w).join(', ');
+      lines.push(`Primary workflows: ${wfNames}`);
+    }
+  }
+
+  // ── Recommendations ───────────────────────────────────────────────────────
+  const recs = model.ai?.recommendations;
+  if (recs) {
+    const allRecs = recs.recommendations ?? [];
+    if (allRecs.length > 0) {
+      const topRecs = allRecs
+        .filter(r => r.priority === 'High' || r.priority === 'Critical')
+        .slice(0, 3)
+        .map(r => r.title ?? r.recommendation);
+      if (topRecs.length) lines.push(`Top recommendations: ${topRecs.join('; ')}`);
+    }
+    if (recs.debtContext) lines.push(`Technical debt: ${recs.debtContext}`);
   }
 
   // ── Top-level symbols (file target only) ─────────────────────────────────

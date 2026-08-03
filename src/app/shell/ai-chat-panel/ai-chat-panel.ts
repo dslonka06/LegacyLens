@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, OnInit, OnDestroy, Output, ViewChild, Pipe, PipeTransform } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, EventEmitter, OnInit, OnDestroy, Output, ViewChild, Pipe, PipeTransform } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -25,18 +25,21 @@ export interface ChatMessage {
 const SUGGESTED_PROMPTS: Record<string, string[]> = {
   file: [
     'What does this file do?',
-    'What are the main dependencies?',
     'Are there any security concerns?',
+    'What are the main dependencies?',
+    'How complex is this file?',
   ],
   folder: [
     'What is the overall architecture?',
     'Which files are most important?',
     'What patterns are used here?',
+    'Are there any security issues?',
   ],
   repository: [
     'Give me an overview of this codebase.',
     'Where should I start as a new developer?',
-    'What are the main components?',
+    'What are the biggest risks or issues?',
+    'What are the main architectural patterns?',
   ],
   default: ['What did the analysis find?', 'Where should I start?', 'Are there any issues to fix?'],
 };
@@ -62,6 +65,7 @@ export class AiChatPanel implements OnInit, OnDestroy {
   constructor(
     private readonly manager: WorkspaceManagerService,
     private readonly electron: ElectronService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -89,6 +93,14 @@ export class AiChatPanel implements OnInit, OnDestroy {
     return this.messages.length > 0;
   }
 
+  get hasContext(): boolean {
+    return !!this.manager.getActive()?.knowledgeModel;
+  }
+
+  get workspaceName(): string {
+    return this.manager.getActive()?.name ?? '';
+  }
+
   selectPrompt(prompt: string): void {
     this.inputValue = prompt;
     this.send();
@@ -105,6 +117,7 @@ export class AiChatPanel implements OnInit, OnDestroy {
     });
     this.inputValue = '';
     this.isLoading = true;
+    this.cdr.detectChanges();
     this.scrollToBottom();
 
     const knowledgeModel = this.manager.getActive()?.knowledgeModel ?? null;
@@ -120,6 +133,7 @@ export class AiChatPanel implements OnInit, OnDestroy {
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         });
         this.isLoading = false;
+        this.cdr.detectChanges();
         this.scrollToBottom();
       },
       (err) => {
@@ -130,16 +144,17 @@ export class AiChatPanel implements OnInit, OnDestroy {
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         });
         this.isLoading = false;
+        this.cdr.detectChanges();
         this.scrollToBottom();
       },
     );
   }
 
   private scrollToBottom(): void {
-    setTimeout(() => {
-      const el = this.messagesContainer?.nativeElement;
-      if (el) el.scrollTop = el.scrollHeight;
-    }, 0);
+    // detectChanges must run first so the DOM reflects the new messages before we measure scrollHeight
+    this.cdr.detectChanges();
+    const el = this.messagesContainer?.nativeElement;
+    if (el) el.scrollTop = el.scrollHeight;
   }
 
   onKeydown(event: KeyboardEvent): void {

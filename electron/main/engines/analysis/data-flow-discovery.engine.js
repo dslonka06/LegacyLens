@@ -6,7 +6,7 @@
 const ENTRY_PATTERNS = [
   /controller/i, /handler/i, /endpoint/i, /api/i, /route/i,
   /-page$/i, /page\.ts$/i, /screen$/i, /view$/i, /presenter/i,
-  /component$/i,
+  /component$/i, /\.component\b/i,
 ];
 
 // Patterns that suggest a service / processor
@@ -130,9 +130,10 @@ class DataFlowDiscoveryEngine {
 
     const deduped = this.deduplicateFlows(flows);
 
-    // If graph tracing found too few flows (common on frontend-only repos where
-    // pages share services), supplement with structure-based feature flows.
-    if (deduped.length < 3 && structure) {
+    // Always supplement with structure-based feature flows when structure is available.
+    // Graph tracing alone misses feature-area groupings (common in Angular/Electron apps
+    // where many pages share the same downstream services), so structural flows fill the gap.
+    if (structure) {
       const structural = this.discoverStructuralFlows(typed, graph, structure);
       for (const f of structural) {
         const key = f.nodes.map(n => n.name).join(',');
@@ -292,8 +293,8 @@ class DataFlowDiscoveryEngine {
 
     const from = typed.get(nodeId)?.type;
 
-    // First pass: prefer semantically typed forward transitions
-    for (const edge of outEdges.slice(0, 5)) {
+    // First pass: prefer semantically typed forward transitions (scan all edges)
+    for (const edge of outEdges) {
       const next = typed.get(edge.target);
       if (!next || visited.has(edge.target)) continue;
       if (this.isForwardTransition(from, next.type)) {
@@ -302,10 +303,17 @@ class DataFlowDiscoveryEngine {
     }
 
     // Second pass: fall back to any typed (non-unknown) node to avoid dead-ends
-    for (const edge of outEdges.slice(0, 5)) {
-      const next = typed.get(edge.target);
-      if (!next || visited.has(edge.target) || next.type === 'unknown') continue;
-      return [nodeId, ...this.traceForward(edge.target, typed, graph, new Set(visited), maxDepth - 1)];
+    // Prefer nodes with the most inbound references (more central = more likely a real service)
+    const inbound = new Map();
+    for (const e of graph.edges) inbound.set(e.target, (inbound.get(e.target) ?? 0) + 1);
+
+    const typedTargets = outEdges
+      .map(e => typed.get(e.target))
+      .filter(n => !!n && !visited.has(n.id) && n.type !== 'unknown')
+      .sort((a, b) => (inbound.get(b.id) ?? 0) - (inbound.get(a.id) ?? 0));
+
+    if (typedTargets.length > 0) {
+      return [nodeId, ...this.traceForward(typedTargets[0].id, typed, graph, new Set(visited), maxDepth - 1)];
     }
 
     return [nodeId];

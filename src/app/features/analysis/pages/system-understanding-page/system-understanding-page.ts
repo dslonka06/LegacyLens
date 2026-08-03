@@ -18,6 +18,10 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
   understanding: SystemUnderstanding | null = null;
   hasWorkspace = false;
   showHealthInfo = false;
+  showPurposeInfo = false;
+  showRespInfo = false;
+  showCompInfo = false;
+  showWorkflowsInfo = false;
   showCompClasses = false;
   showCompMethods = false;
   showCompImportsExports = false;
@@ -41,6 +45,7 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
       this.showCompMethods = false;
       this.showCompImportsExports = false;
       this.expandedResponsibilityIndex = null;
+      this.expandedComponentGroupIndex = null;
       this.cdr.detectChanges();
     });
   }
@@ -119,6 +124,27 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
       text,
       description: descriptions[i] ?? '',
     }));
+  }
+
+  get folderComponents(): Array<{ responsibility: string; components: Array<{ name: string; whyImportant: string; blastRadius: 'High' | 'Medium' | 'Low' }> }> {
+    return (this.understanding?.responsibilityGroups ?? []).map(g => ({
+      responsibility: g.responsibility,
+      components: g.components.map(c => ({
+        name: c.name,
+        whyImportant: c.whyImportant,
+        blastRadius: c.blastRadius,
+      })),
+    }));
+  }
+
+  expandedComponentGroupIndex: number | null = null;
+
+  toggleComponentGroup(index: number): void {
+    this.expandedComponentGroupIndex = this.expandedComponentGroupIndex === index ? null : index;
+  }
+
+  isComponentGroupExpanded(index: number): boolean {
+    return this.expandedComponentGroupIndex === index;
   }
 
   get folderWorkflows(): Array<{ text: string; description: string }> {

@@ -31,6 +31,7 @@ class DataFlowAnalysisEngine {
   analyze(model) {
     const graph  = model.relationships?.dependencies?.graph ?? null;
     const struct = model.structure?.folderTree              ?? null;
+    const dataFlowFacts = model.relationships?.dataFlowFacts ?? null;
     const now    = new Date().toISOString();
 
     if (!graph) {
@@ -53,8 +54,16 @@ class DataFlowAnalysisEngine {
     try {
       insights = this._discovery.extractBehaviorInsights(knowledge) ?? insights;
     } catch (e) {
-      // Non-fatal — proceed with empty insights
+      console.error('[DataFlowAnalysis] extractBehaviorInsights failed:', e?.message ?? e);
     }
+
+    // Normalize workflow shape: discovery engine uses .nodes[] and .connections[],
+    // not .flowPath[] and .steps[]. Fix so _profileWorkflow reads the right fields.
+    workflows = workflows.map(wf => ({
+      ...wf,
+      flowPath: wf.nodes?.map(n => n.name) ?? [],
+      steps:    wf.nodes ?? [],
+    }));
 
     const rel = model.relationships ?? {};
     const graphEdges = rel.dependencies?.graph?.edges ?? [];
@@ -63,11 +72,22 @@ class DataFlowAnalysisEngine {
     const fileCount = Object.keys(model.structure?.symbols ?? {}).length;
     const couplingRatio = graphNodes.length > 0 ? graphEdges.length / graphNodes.length : 0;
 
-    const workflowNames = workflows.map(wf => wf.title ?? wf.name ?? 'Unnamed Workflow');
+    // Build preliminary profiles first so the narrative engine has step counts,
+    // entry points, bottlenecks, and risk — enabling per-workflow specific text.
+    const preliminaryProfiles = workflows.map(wf =>
+      this._profileWorkflow(wf, insights, null, dataFlowFacts),
+    );
+
     let narratives = [];
     try {
       narratives = this._workflowsNarrative.build({
-        workflows: workflowNames,
+        workflows: preliminaryProfiles.map(p => ({
+          name:            p.workflowName,
+          entryPoint:      p.entryPoint,
+          stepCount:       p.stepCount,
+          bottleneckNodes: p.bottleneckNodes,
+          failureRisk:     p.failureRisk,
+        })),
         architecturePatterns,
         fileCount,
         couplingRatio,
@@ -76,8 +96,8 @@ class DataFlowAnalysisEngine {
       // Non-fatal — proceed without narratives
     }
 
-    const primaryWorkflows = workflows.map((wf, i) =>
-      this._profileWorkflow(wf, insights, narratives[i] ?? null),
+    const primaryWorkflows = preliminaryProfiles.map((profile, i) =>
+      narratives[i] ? { ...profile, narrative: narratives[i] } : profile,
     );
 
     return {
@@ -108,10 +128,11 @@ class DataFlowAnalysisEngine {
   }
 
   /**
-   * Build a WorkflowRiskProfile from a discovered WorkflowSummary.
+   * Build a WorkflowRiskProfile from a discovered workflow.
    * Risk is assessed from step count, bottleneck presence, and workflow confidence.
+   * Enriches connections with semantic verbs from dataFlowFacts when available.
    */
-  _profileWorkflow(wf, insights, narrative) {
+  _profileWorkflow(wf, insights, narrative, dataFlowFacts) {
     const bottlenecksInPath = (wf.flowPath ?? []).filter(
       node => (insights.workflowBottlenecks ?? []).includes(node),
     );
@@ -122,6 +143,12 @@ class DataFlowAnalysisEngine {
       wf.confidence,
     );
 
+    const enrichedConnections = (wf.connections ?? []).map(c => ({
+      sourceId: c.sourceId,
+      targetId: c.targetId,
+      verb: this._enrichConnectionVerb(c, dataFlowFacts),
+    }));
+
     return {
       workflowName:     wf.title    ?? wf.name ?? 'Unnamed Workflow',
       entryPoint:       wf.flowPath?.[0] ?? '',
@@ -129,7 +156,38 @@ class DataFlowAnalysisEngine {
       bottleneckNodes:  bottlenecksInPath,
       failureRisk,
       ...(narrative ? { narrative } : {}),
+      ...(enrichedConnections.length ? { enrichedConnections } : {}),
     };
+  }
+
+  /**
+   * Resolve the interaction verb for a connection using dataFlowFacts.
+   * Falls back to the connection's existing relationshipType, then 'calls'.
+   */
+  _enrichConnectionVerb(connection, dataFlowFacts) {
+    if (!dataFlowFacts?.length) return connection.relationshipType ?? 'calls';
+
+    // Find the fact for the source file (node IDs are normalized paths)
+    const fact = dataFlowFacts.find(f =>
+      connection.sourceId?.endsWith(f.path) || f.path?.endsWith(connection.sourceId),
+    );
+    if (!fact) return connection.relationshipType ?? 'calls';
+
+    // Look up the verb by matching the target against the fact's interactionVerbs keys
+    const targetBase = (connection.targetId ?? '').split('/').pop()?.replace(/\.[^.]+$/, '') ?? '';
+
+    for (const [importPath, verb] of Object.entries(fact.interactionVerbs)) {
+      const importBase = importPath.split('/').pop()?.replace(/\.[^.]+$/, '') ?? '';
+      if (
+        importBase === targetBase ||
+        importPath.endsWith(connection.targetId) ||
+        connection.targetId?.endsWith(importPath)
+      ) {
+        return verb;
+      }
+    }
+
+    return connection.relationshipType ?? 'calls';
   }
 
   _rateWorkflowRisk(stepCount, bottleneckCount, confidence) {

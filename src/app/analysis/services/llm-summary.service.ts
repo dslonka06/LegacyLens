@@ -232,29 +232,6 @@ export class LLMSummaryService {
 
     const generatedAt = new Date().toISOString();
 
-    // Skip the LLM entirely when there are no candidate findings to confirm
-    if (evidence.candidates.length === 0) {
-      console.log('[LLMSummary] security: no candidates — synthesising no-findings result');
-      const hasMeaningful = this.securityVerification.hasMeaningfulEvidence(evidence);
-      const postureSummary = hasMeaningful
-        ? 'No high-confidence security issues were detected. Domain evidence suggests baseline security controls are in place.'
-        : 'No security-relevant patterns were detected in the analysed scope.';
-      this.ngZone.run(() => {
-        this.manager.mergeAIResults(workspaceId, {
-          security: {
-            ...model.ai!.security!,
-            findings: [],
-            verificationChecks,
-            overallRisk: 'low',
-            securityMaturity: 'Medium',
-          },
-        }, 'generate', generation);
-        const entry: LLMSummaryEntry = { content: postureSummary, status: 'complete', provider, model: modelId, generatedAt };
-        this.manager.mergeSummaryKey(workspaceId, 'security', entry, generation);
-      });
-      return true;
-    }
-
     const prompt = this.securityFindingsPrompt.build({
       workspaceName: model.workspaceName ?? 'Unknown',
       scope: model.targetType,

@@ -47,9 +47,10 @@
 // so we target it globally here. The _normaliseSvg() method also inlines
 // max-width/height:auto directly on the element as a belt-and-suspenders fix.
 .mermaid-diagram__svg svg {
-  max-width: 100% !important;
+  max-width: 90% !important;
   height: auto !important;
   display: block;
+  margin: 0 auto;
   font-family: inherit !important;
 }
 

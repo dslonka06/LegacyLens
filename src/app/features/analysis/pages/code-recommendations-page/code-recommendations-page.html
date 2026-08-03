@@ -41,33 +41,51 @@
       ></app-explanation-card>
 
       <!-- ── Summary strip ──────────────────────────────────────────────── -->
+      <div class="rec-summary-header">
+        <div class="rec-info-popup-wrap">
+          <button class="rec-info-btn" (click)="showSummaryInfo = !showSummaryInfo">i</button>
+          <div class="rec-info-popup" *ngIf="showSummaryInfo">
+            <p><strong>Critical / High / Medium</strong> counts show the combined total of structural improvement recommendations and AI-confirmed security findings at each severity level.</p>
+            <p>Structural recommendations come from graph analysis — files that too many others depend on, detected circular dependencies, missing architecture patterns, isolated files, and overly broad modules. Security findings come from the AI's review of the pattern-scan evidence. Both are combined into a single prioritised list below.</p>
+          </div>
+        </div>
+      </div>
       <div class="rec-summary-strip">
-        <div class="rec-summary-stat" [class.stat-error]="recs!.criticalCount > 0">
-          <span class="rec-summary-value">{{ recs!.criticalCount }}</span>
+        <div class="rec-summary-stat" [class.stat-error]="criticalCount > 0">
+          <span class="rec-summary-value">{{ criticalCount }}</span>
           <span class="rec-summary-label">Critical</span>
         </div>
         <div class="rec-summary-divider"></div>
-        <div class="rec-summary-stat" [class.stat-warn]="recs!.highCount > 0">
-          <span class="rec-summary-value">{{ recs!.highCount }}</span>
+        <div class="rec-summary-stat" [class.stat-warn]="highCount > 0">
+          <span class="rec-summary-value">{{ highCount }}</span>
           <span class="rec-summary-label">High</span>
         </div>
         <div class="rec-summary-divider"></div>
-        <div class="rec-summary-stat" [ngClass]="debtClass(recs!.technicalDebtLevel)">
-          <span class="rec-summary-value">{{ recs!.technicalDebtLevel }}</span>
-          <span class="rec-summary-label">Technical Debt</span>
+        <div class="rec-summary-stat" [class.stat-warn]="mediumCount > 0">
+          <span class="rec-summary-value">{{ mediumCount }}</span>
+          <span class="rec-summary-label">Medium</span>
         </div>
       </div>
 
       <!-- ── Security Action Items ─────────────────────────────────────── -->
       <div class="rec-card" *ngIf="hasSecurityActionItems">
         <div class="rec-card-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          Security Fixes
-          <span class="rec-count-badge">{{ securityActionItems.length }}</span>
+          <div class="rec-card-header-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Security Fixes
+            <span class="rec-count-badge">{{ securityActionItems.length }}</span>
+          </div>
+          <div class="rec-info-popup-wrap">
+            <button class="rec-info-btn" (click)="showSecFixesInfo = !showSecFixesInfo">i</button>
+            <div class="rec-info-popup" *ngIf="showSecFixesInfo">
+              <p><strong>Security Fixes</strong> are taken directly from the Security page's AI-confirmed findings and surfaced here as part of the improvement roadmap. Only Critical, High, and Medium severity items are included, and at most 8 are shown to keep the list actionable.</p>
+              <p>The full set — including Low severity and full scan evidence — is available on the Security page. Expand any item here to see the issue description, why it matters, and the recommended fix.</p>
+            </div>
+          </div>
         </div>
 
         <div class="rec-list">
@@ -118,16 +136,25 @@
       <!-- ── Recommendation list ────────────────────────────────────────── -->
       <div class="rec-card" *ngIf="recs!.recommendations.length > 0">
         <div class="rec-card-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="8" y1="6" x2="21" y2="6" />
-            <line x1="8" y1="12" x2="21" y2="12" />
-            <line x1="8" y1="18" x2="21" y2="18" />
-            <line x1="3" y1="6" x2="3.01" y2="6" />
-            <line x1="3" y1="12" x2="3.01" y2="12" />
-            <line x1="3" y1="18" x2="3.01" y2="18" />
-          </svg>
-          Prioritized Recommendations
-          <span class="rec-count-badge">{{ recs!.recommendations.length }}</span>
+          <div class="rec-card-header-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8" y1="6" x2="21" y2="6" />
+              <line x1="8" y1="12" x2="21" y2="12" />
+              <line x1="8" y1="18" x2="21" y2="18" />
+              <line x1="3" y1="6" x2="3.01" y2="6" />
+              <line x1="3" y1="12" x2="3.01" y2="12" />
+              <line x1="3" y1="18" x2="3.01" y2="18" />
+            </svg>
+            Prioritized Recommendations
+            <span class="rec-count-badge">{{ recs!.recommendations.length }}</span>
+          </div>
+          <div class="rec-info-popup-wrap">
+            <button class="rec-info-btn" (click)="showRecsInfo = !showRecsInfo">i</button>
+            <div class="rec-info-popup" *ngIf="showRecsInfo">
+              <p><strong>Prioritized Recommendations</strong> come entirely from structural graph analysis — no AI is used. Each issue type carries a base score: circular dependencies are the most serious (85), followed by hub nodes with 5+ dependents (60–80 depending on degree), overly broad modules that import from 10+ places (55), missing architecture on larger codebases (50), mixed low-confidence patterns (45), and large clusters of isolated files (25).</p>
+              <p>The score determines the severity label — Critical (80+), High (60+), Medium (40+), Low otherwise — and the list is sorted so rank 1 is the highest-priority item to address. Expand any recommendation to see the full description, why it matters, what to do about it, the expected impact, and which files are affected.</p>
+            </div>
+          </div>
         </div>
 
         <div class="rec-list">

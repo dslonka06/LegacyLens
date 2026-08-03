@@ -38,11 +38,17 @@ function primaryOutput(outputs) {
   return outputs.length > 0 ? outputs[0] : null;
 }
 
+function _ordinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
+}
+
 // ── Clusters ───────────────────────────────────────────────────────────────────
 
 const STEP_CLUSTERS = [
   {
-    keywords: ['parse', 'deserializ', 'decode', 'unmarshal', 'extract', 'read'],
+    keywords: ['parse', 'deserializ', 'decode', 'unmarshal', 'extract', 'read', 'lex', 'tokeniz', 'import'],
     describe(step, i, steps, d) {
       const input   = primaryInput(d.inputs);
       const next    = nextStep(steps, i);
@@ -66,7 +72,7 @@ const STEP_CLUSTERS = [
     },
   },
   {
-    keywords: ['valid', 'sanitiz', 'verify', 'check', 'enforce', 'assert', 'constrain', 'schema'],
+    keywords: ['valid', 'sanitiz', 'verify', 'check', 'enforce', 'assert', 'constrain', 'schema', 'guard', 'inspect', 'lint'],
     describe(step, i, steps, d) {
       const prev   = prevStep(steps, i);
       const next   = nextStep(steps, i);
@@ -93,7 +99,7 @@ const STEP_CLUSTERS = [
     },
   },
   {
-    keywords: ['transform', 'convert', 'map', 'format', 'normaliz', 'encode', 'adapt', 'reshape', 'serial'],
+    keywords: ['transform', 'convert', 'map', 'format', 'normaliz', 'encode', 'adapt', 'reshape', 'serial', 'process', 'analyz', 'build', 'compile', 'generat', 'assembl'],
     describe(step, i, steps, d) {
       const prev    = prevStep(steps, i);
       const next    = nextStep(steps, i);
@@ -118,7 +124,7 @@ const STEP_CLUSTERS = [
     },
   },
   {
-    keywords: ['auth', 'authoriz', 'authenticat', 'permission', 'role', 'access', 'token', 'credential', 'jwt'],
+    keywords: ['auth', 'authoriz', 'authenticat', 'permission', 'role', 'access', 'token', 'credential', 'jwt', 'oauth', 'guard', 'securit'],
     describe(step, i, steps, d) {
       const next    = nextStep(steps, i);
       const prev    = prevStep(steps, i);
@@ -142,7 +148,7 @@ const STEP_CLUSTERS = [
     },
   },
   {
-    keywords: ['save', 'store', 'persist', 'insert', 'write', 'commit', 'upsert'],
+    keywords: ['save', 'store', 'persist', 'insert', 'write', 'commit', 'upsert', 'put', 'post', 'upload', 'sync'],
     describe(step, i, steps, d) {
       const prev   = prevStep(steps, i);
       const next   = nextStep(steps, i);
@@ -169,7 +175,7 @@ const STEP_CLUSTERS = [
     },
   },
   {
-    keywords: ['fetch', 'load', 'retriev', 'query', 'find', 'lookup'],
+    keywords: ['fetch', 'load', 'retriev', 'query', 'find', 'lookup', 'get', 'select', 'search', 'scan', 'discover', 'resolv'],
     describe(step, i, steps, d) {
       const next    = nextStep(steps, i);
       const prev    = prevStep(steps, i);
@@ -194,7 +200,7 @@ const STEP_CLUSTERS = [
     },
   },
   {
-    keywords: ['send', 'emit', 'publish', 'notify', 'dispatch', 'broadcast', 'deliver', 'push'],
+    keywords: ['send', 'emit', 'publish', 'notify', 'dispatch', 'broadcast', 'deliver', 'push', 'output', 'export', 'return result', 'respond', 'reply'],
     describe(step, i, steps, d) {
       const prev   = prevStep(steps, i);
       const next   = nextStep(steps, i);
@@ -221,7 +227,7 @@ const STEP_CLUSTERS = [
     },
   },
   {
-    keywords: ['calculat', 'comput', 'deriv', 'aggregat', 'evaluat', 'score', 'rank', 'resolv'],
+    keywords: ['calculat', 'comput', 'deriv', 'aggregat', 'evaluat', 'score', 'rank', 'measur', 'count', 'summar'],
     describe(step, i, steps, d) {
       const prev   = prevStep(steps, i);
       const next   = nextStep(steps, i);
@@ -246,7 +252,7 @@ const STEP_CLUSTERS = [
     },
   },
   {
-    keywords: ['log', 'audit', 'trace', 'record', 'track', 'monitor'],
+    keywords: ['log', 'audit', 'trace', 'record', 'track', 'monitor', 'observ', 'telemetri', 'report'],
     describe(step, i, steps, d) {
       const prev = prevStep(steps, i);
       const next = nextStep(steps, i);
@@ -267,7 +273,7 @@ const STEP_CLUSTERS = [
     },
   },
   {
-    keywords: ['error', 'catch', 'handl', 'recover', 'retry', 'fallback', 'fail'],
+    keywords: ['error', 'catch', 'handl', 'recover', 'retry', 'fallback', 'fail', 'except', 'reject', 'abort'],
     describe(step, i, steps, d) {
       const prev   = prevStep(steps, i);
       const next   = nextStep(steps, i);
@@ -292,7 +298,7 @@ const STEP_CLUSTERS = [
     },
   },
   {
-    keywords: ['init', 'setup', 'bootstrap', 'prepar', 'configur', 'construct', 'creat'],
+    keywords: ['init', 'setup', 'bootstrap', 'prepar', 'configur', 'construct', 'creat', 'new', 'instantiat', 'start', 'launch', 'open'],
     describe(step, i, steps, d) {
       const next    = nextStep(steps, i);
       const isFirst = i === 0;
@@ -435,34 +441,37 @@ class DataFlowStepsNarrativeEngine {
       }
     }
 
-    // Fallback: positional context with adjacent step awareness
+    // Fallback: positional + name-aware description
     const cleaned  = humanise(step);
     const prev     = prevStep(steps, i);
     const next     = nextStep(steps, i);
     const isFirst  = i === 0;
     const isLast   = i === steps.length - 1;
+    const total    = steps.length;
 
     const what = isFirst
-      ? `Opens the flow by handling "${cleaned}" — the data and context produced here sets the shape for everything that follows.`
+      ? `"${cleaned}" opens this flow — the state and data it establishes here determines the shape that every subsequent step works with.`
       : isLast
-        ? `Closes the flow by handling "${cleaned}" — this is where the pipeline's accumulated work becomes the final result.`
-        : `Handles "${cleaned}" as an intermediate step, taking the output of ${prev} and preparing it for ${next}.`;
+        ? `"${cleaned}" closes this ${total}-step flow — it takes the accumulated output of the preceding steps and produces the final result.`
+        : `"${cleaned}" handles the ${_ordinal(i + 1)} stage of this ${total}-step flow, receiving from ${prev} and handing off to ${next}.`;
 
-    const chain = prev && next
-      ? `It receives from ${prev} and passes its result on to ${next}.`
-      : prev
-        ? `It receives from ${prev} and its output is the final result of this flow.`
-        : next
-          ? `As the opening step, it provides the initial data for ${next}.`
-          : `It is the only step in this flow.`;
+    const breadth = isFirst && total > 3
+      ? `With ${total} steps downstream depending on what this produces, its output shape is the most load-bearing contract in this flow.`
+      : isLast && total > 3
+        ? `At step ${i + 1} of ${total}, this is the final integration point — all work done by prior steps converges here.`
+        : null;
 
     const io = d.inputs.length > 0 && isFirst
-      ? `The flow starts with ${d.inputs.slice(0, 2).join(' and ')} as its input${d.inputs.length > 1 ? 's' : ''}.`
+      ? `The flow begins with ${d.inputs.slice(0, 2).join(' and ')} as its input${d.inputs.length > 1 ? 's' : ''}.`
       : d.outputs.length > 0 && isLast
-        ? `The flow produces ${d.outputs.slice(0, 2).join(' and ')} as its output${d.outputs.length > 1 ? 's' : ''}.`
-        : '';
+        ? `The flow produces ${d.outputs.slice(0, 2).join(' and ')} as its final output${d.outputs.length > 1 ? 's' : ''}.`
+        : null;
 
-    return [what, chain, io].filter(Boolean).join(' ');
+    const risk = !isFirst && !isLast
+      ? `Intermediate steps are often the hardest to test in isolation — the contract between "${cleaned}", ${prev}, and ${next} should be explicitly defined.`
+      : null;
+
+    return [what, breadth, io, risk].filter(Boolean).join(' ');
   }
 }
 

@@ -7,18 +7,20 @@ const { DependencyExplorerEngine } = require('../knowledge/dependency-explorer.e
 const { RepositoryScannerEngine } = require('../knowledge/repository-scanner.engine');
 const { ProjectDiscoveryEngine } = require('../knowledge/project-discovery.engine');
 const { WorkspaceClassifierEngine } = require('../knowledge/workspace-classifier.engine');
+const { DataFlowExtractionEngine } = require('./data-flow-extraction.engine');
 
 // Capability identifiers — used to label results and select execution order.
 const CAPABILITIES = {
-  FILE_PARSING:          'fileParsing',
-  LANGUAGE_DETECTION:    'languageDetection',
-  SYMBOL_EXTRACTION:     'symbolExtraction',
-  FOLDER_STRUCTURE:      'folderStructure',
-  FRAMEWORK_DETECTION:   'frameworkDetection',
-  DEPENDENCY_RESOLUTION: 'dependencyResolution',
-  MULTI_PROJECT:         'multiProject',
-  GIT_ANALYSIS:          'gitAnalysis',
-  ARCHITECTURE:          'architectureDiscovery',
+  FILE_PARSING:           'fileParsing',
+  LANGUAGE_DETECTION:     'languageDetection',
+  SYMBOL_EXTRACTION:      'symbolExtraction',
+  FOLDER_STRUCTURE:       'folderStructure',
+  FRAMEWORK_DETECTION:    'frameworkDetection',
+  DEPENDENCY_RESOLUTION:  'dependencyResolution',
+  DATA_FLOW_EXTRACTION:   'dataFlowExtraction',
+  MULTI_PROJECT:          'multiProject',
+  GIT_ANALYSIS:           'gitAnalysis',
+  ARCHITECTURE:           'architectureDiscovery',
 };
 
 // Which capabilities apply to each target type.
@@ -36,6 +38,7 @@ const CAPABILITY_MAP = {
     CAPABILITIES.FOLDER_STRUCTURE,
     CAPABILITIES.FRAMEWORK_DETECTION,
     CAPABILITIES.DEPENDENCY_RESOLUTION,
+    CAPABILITIES.DATA_FLOW_EXTRACTION,
   ],
   repository: [
     CAPABILITIES.FILE_PARSING,
@@ -44,6 +47,7 @@ const CAPABILITY_MAP = {
     CAPABILITIES.FOLDER_STRUCTURE,
     CAPABILITIES.FRAMEWORK_DETECTION,
     CAPABILITIES.DEPENDENCY_RESOLUTION,
+    CAPABILITIES.DATA_FLOW_EXTRACTION,
     CAPABILITIES.MULTI_PROJECT,
     CAPABILITIES.GIT_ANALYSIS,
     CAPABILITIES.ARCHITECTURE,
@@ -53,13 +57,14 @@ const CAPABILITY_MAP = {
 class CapabilityPipelineEngine {
 
   constructor() {
-    this.parser              = new PatternParser();
-    this.technologyDetector  = new TechnologyDetectorEngine();
-    this.dependencyMapper    = new DependencyMapperEngine();
-    this.dependencyExplorer  = new DependencyExplorerEngine();
-    this.repositoryScanner   = new RepositoryScannerEngine();
-    this.projectDiscovery    = new ProjectDiscoveryEngine();
-    this.workspaceClassifier = new WorkspaceClassifierEngine();
+    this.parser               = new PatternParser();
+    this.technologyDetector   = new TechnologyDetectorEngine();
+    this.dependencyMapper     = new DependencyMapperEngine();
+    this.dependencyExplorer   = new DependencyExplorerEngine();
+    this.repositoryScanner    = new RepositoryScannerEngine();
+    this.projectDiscovery     = new ProjectDiscoveryEngine();
+    this.workspaceClassifier  = new WorkspaceClassifierEngine();
+    this.dataFlowExtractor    = new DataFlowExtractionEngine();
   }
 
   // ── Public API ─────────────────────────────────────────────────────────────
@@ -145,6 +150,10 @@ class CapabilityPipelineEngine {
         result.dependencyRanks = this.dependencyExplorer.rankByConnectivity(result.dependencyGraph);
         break;
 
+      case CAPABILITIES.DATA_FLOW_EXTRACTION:
+        result.dataFlowFacts = this.dataFlowExtractor.extract(result.parsedFiles);
+        break;
+
       case CAPABILITIES.MULTI_PROJECT:
         result.projects = this.projectDiscovery.discoverProjects(files);
         break;
@@ -191,6 +200,7 @@ class CapabilityPipelineEngine {
       dependencyGraph: null,
       dependencyHubs: [],
       dependencyRanks: [],
+      dataFlowFacts: null,
       projects: [],
       gitAnalysis: null,
       architectureHints: null,

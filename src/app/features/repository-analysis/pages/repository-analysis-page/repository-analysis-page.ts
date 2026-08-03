@@ -94,7 +94,7 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
   showMetricCards = false;
   isReturning = false;
 
-  displayedCounts: Record<string, number> = {};
+  displayedCounts: Record<string, number | undefined> = {};
 
   // Pipeline cycling status text per stage
   pipelineStatusText: Record<string, string> = {};
@@ -336,12 +336,14 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     }
 
     if (!id) return;
+    const repoName = folderPath.split(/[\\/]/).pop() ?? 'repository';
+    this.manager.rename(id, repoName);
     this.knowledge
       .process('repository', entries, {
         workspaceId: id,
         repositoryId: ws?.repositoryId ?? undefined,
         repositoryPath: folderPath,
-        workspaceName: profile.files[0]?.name,
+        workspaceName: repoName,
         persist: true,
       })
       .subscribe({ error: () => {} });
@@ -619,9 +621,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     return this.model?.relationships.architecture?.patterns.map((p) => p.name) ?? [];
   }
 
-  get projectCount(): number {
-    return this.model?.structure.projects?.length ?? 0;
-  }
 
   get topSubsystems(): { name: string; fileCount: number }[] {
     const tree = this.model?.structure.folderTree;
@@ -735,7 +734,9 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
 
     return [
       { key: 'understanding',   label: 'Understanding',   state: summaryState('understanding') },
-      { key: 'security',        label: 'Security Review', state: summaryState('security') },
+      { key: 'architecture',    label: 'Architecture',    state: summaryState('architecture') },
+      { key: 'dataFlow',        label: 'Data Flow',       state: summaryState('dataFlow') },
+      { key: 'security',        label: 'Security',        state: summaryState('security') },
       { key: 'recommendations', label: 'Recommendations', state: summaryState('recommendations') },
       { key: 'learningPath',    label: 'Learning Path',   state: summaryState('learningPath') },
     ];
@@ -793,52 +794,56 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     const base = '/repository-analysis';
     const suggested = this.suggestedRoute;
 
-    const cards: HubMetricCard[] = [
-      {
-        id: 'key-areas',
-        icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
-        count: null,
-        tags: ai?.understanding?.coreCapabilities?.slice(0, 2).map((c) => c.name),
-        label: 'Key Areas',
-        route: `${base}/system-understanding`,
-        suggested: suggested === 'understanding',
-        pending: !ai?.completedStages?.includes('understanding'),
-      },
+    return [
       {
         id: 'dependencies',
         icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
         count: this.dependencyCount > 0 ? this.dependencyCount : null,
+        subtitle: 'Dependencies & Relations',
         label: 'Dependencies & Relations',
         route: `${base}/data-flow`,
         suggested: false,
         pending: !this.model?.capabilities.includes('dependencyResolution'),
       },
       {
+        id: 'architecture',
+        icon: 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
+        count: ai?.architecture?.hubCount ?? null,
+        subtitle: 'Hub Nodes',
+        label: 'Architecture',
+        route: `${base}/architecture`,
+        suggested: false,
+        pending: !ai?.completedStages?.includes('architecture'),
+      },
+      {
+        id: 'dataflow',
+        icon: 'M22 12h-4l-3 9L9 3l-3 9H2',
+        count: ai?.dataFlow?.workflowCount ?? null,
+        subtitle: 'Workflows detected',
+        label: 'Data Flow',
+        route: `${base}/data-flow`,
+        suggested: false,
+        pending: !ai?.completedStages?.includes('dataFlow'),
+      },
+      {
         id: 'security',
         icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
         count: ai?.security?.findings?.length ?? null,
-        label: 'Security Issues',
+        subtitle: 'Security Issues',
+        label: 'Security',
         route: `${base}/security`,
         suggested: suggested === 'security',
         pending: !ai?.completedStages?.includes('security'),
       },
       {
         id: 'recommendations',
-        icon: 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
+        icon: 'M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
         count: ai?.recommendations?.recommendations?.length ?? null,
+        subtitle: 'Recommendations',
         label: 'Recommendations',
         route: `${base}/code-recommendations`,
         suggested: suggested === 'recommendations',
         pending: !ai?.completedStages?.includes('recommendations'),
-      },
-      {
-        id: 'architecture',
-        icon: 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
-        count: this.model?.relationships.architecture?.patterns.length ?? null,
-        label: 'Arch Patterns',
-        route: `${base}/architecture`,
-        suggested: false,
-        pending: !this.model?.capabilities.includes('architectureDiscovery'),
       },
       {
         id: 'learning',
@@ -851,22 +856,6 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
         pending: !ai?.completedStages?.includes('learningPath'),
       },
     ];
-
-    // Projects card — only meaningful when multi-project detection ran
-    if (this.model?.capabilities.includes('multiProject')) {
-      cards.push({
-        id: 'projects',
-        icon: 'M3 7l9-4 9 4v10l-9 4-9-4V7z M12 3v18 M3 7l9 4 9-4',
-        count: this.projectCount > 0 ? this.projectCount : null,
-        subtitle: 'Detected projects',
-        label: 'Projects',
-        route: `${base}/system-understanding`,
-        suggested: false,
-        pending: false,
-      });
-    }
-
-    return cards;
   }
 
   private get suggestedRoute(): string {

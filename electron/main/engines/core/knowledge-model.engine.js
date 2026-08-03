@@ -39,7 +39,7 @@ class KnowledgeModelEngine {
     };
 
     if (isMultiFile) {
-      structure.folderTree = pipelineResult.folderStructure ?? null;
+      structure.folderTree = pipelineResult.folderStructure?.root ?? null;
       structure.projects   = pipelineResult.projects        ?? [];
     }
 
@@ -74,6 +74,10 @@ class KnowledgeModelEngine {
 
     if (isRepository) {
       relationships.git = this.buildGitAnalysis(pipelineResult, options.repositoryPath);
+    }
+
+    if (isMultiFile && pipelineResult.dataFlowFacts?.length) {
+      relationships.dataFlowFacts = pipelineResult.dataFlowFacts;
     }
 
     // ── Insights ───────────────────────────────────────────────────────────────

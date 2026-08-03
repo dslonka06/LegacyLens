@@ -58,11 +58,11 @@ class ArchitectureDiagramEngine {
     const graph    = model.relationships?.dependencies?.graph ?? null;
     const patterns = model.relationships?.architecture?.patterns ?? [];
 
-    if (!graph?.nodes?.length) {
-      return this._patternOnlyDiagram(patterns);
+    if (graph?.nodes?.length) {
+      return this._layerDiagram(graph, patterns);
     }
 
-    return this._layerDiagram(graph, patterns);
+    return this._patternOnlyDiagram(patterns);
   }
 
   _layerDiagram(graph, patterns) {

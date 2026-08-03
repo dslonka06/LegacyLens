@@ -97,10 +97,10 @@
 }
 
 .new-analysis-label-text {
-  font-size: 26px;
+  font-size: 30px;
   font-weight: 700;
   color: var(--text-heading);
-  letter-spacing: -0.4px;
+  letter-spacing: -0.6px;
 }
 
 // ─── Drop zone card ───────────────────────────────────────────
@@ -150,10 +150,10 @@
 }
 
 .drop-zone-title {
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.2px;
+  color: var(--text-heading);
+  letter-spacing: -0.1px;
 }
 
 .drop-zone-desc {
@@ -270,10 +270,10 @@
 }
 
 .scanning-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.2px;
+  color: var(--text-heading);
+  letter-spacing: -0.1px;
 }
 
 .scanning-desc {

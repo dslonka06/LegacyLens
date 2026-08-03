@@ -14,6 +14,320 @@
 
   <div class="page-content">
 
+    <!-- ─── How SystemLens Works ───────────────────────────────────────────── -->
+    <div class="settings-group">
+      <div class="settings-group-label">About</div>
+      <div class="how-it-works">
+        <button class="how-it-works-toggle" (click)="showHowItWorks = !showHowItWorks">
+          <svg class="how-it-works-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               [class.how-it-works-chevron--open]="showHowItWorks">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+          How SystemLens Works
+        </button>
+
+        <div class="how-it-works-body" *ngIf="showHowItWorks">
+          <div class="hiw">
+
+            <!-- ── Overview ─────────────────────────────────── -->
+            <div class="hiw__nested">
+              <button class="hiw__toggle" (click)="showHiwOverview = !showHiwOverview">
+                <svg class="hiw__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.hiw__chevron--open]="showHiwOverview"><polyline points="9 18 15 12 9 6"/></svg>
+                Overview
+              </button>
+              <div class="hiw__body" *ngIf="showHiwOverview">
+                <p class="hiw__p">An analysis runs in two phases. The <strong>structural phase</strong> runs entirely in the Electron main process and produces a fully renderable KnowledgeModel before any AI is involved. The <strong>AI phase</strong> runs concurrently in the background and patches the model in several waves, each triggering a UI re-render.</p>
+                <p class="hiw__p">Every piece of data the UI displays traces back to one of three tiers:</p>
+                <ul class="hiw__ul">
+                  <li><span class="hiw__tag hiw__tag--struct">Structural</span> Deterministic heuristic analysis — runs in the Electron main process, always available, no LLM required.</li>
+                  <li><span class="hiw__tag hiw__tag--derive">Derive</span> Structured inference from structural results — heuristic engines that produce typed data objects, no LLM required.</li>
+                  <li><span class="hiw__tag hiw__tag--llm">Generate</span> Narrative text from a language model — only present when an AI provider is configured and the generate stage completes.</li>
+                </ul>
+                <p class="hiw__p">The <strong>KnowledgeModel</strong> is the single source of truth for all displayed data. It is constructed by WorkspaceKnowledgeService (the only service permitted to mutate it) and flows to all pages via <code>WorkspaceManagerService.activeWorkspace$</code>. Pages gate their sections on the <code>capabilities[]</code> array — never on targetType directly.</p>
+              </div>
+            </div>
+
+            <!-- ── Structural Phase ─────────────────────────── -->
+            <div class="hiw__nested">
+              <button class="hiw__toggle" (click)="showHiwStructural = !showHiwStructural">
+                <svg class="hiw__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.hiw__chevron--open]="showHiwStructural"><polyline points="9 18 15 12 9 6"/></svg>
+                Structural Phase
+              </button>
+              <div class="hiw__body" *ngIf="showHiwStructural">
+                <p class="hiw__p">Triggered by <code>intelligence:processWorkspace</code> IPC. Three sub-stages run in sequence:</p>
+
+                <h4 class="hiw__h3">D6 — Incremental Check</h4>
+                <p class="hiw__p">All file contents are hashed with FNV-1a 32-bit. Compared against the stored model hash index. Decision: no changes → return cached model (<code>fromCache: true</code>); ≤ 30% files changed → partial rebuild (symbol index updated, graph preserved); &gt; 30% changed or no prior model → full rebuild.</p>
+
+                <h4 class="hiw__h3">D2/D3 — Capability Pipeline</h4>
+                <p class="hiw__p">Runs a fixed capability set per target type. A capability that throws is recorded in <code>capabilityErrors</code> and skipped — later capabilities still run.</p>
+                <ul class="hiw__ul">
+                  <li><strong>fileParsing</strong> — PatternParser → AnalysisEngine. Every file is classified by sequential content pattern-match: <code>[ApiController]</code> → C# API Controller; <code>@Component</code> → Angular Component; <code>export class … Service</code> → Angular Service; <code>SELECT</code> → SQL Query; etc. Each match maps to a hardcoded template with fixed responsibilities, inputs, outputs, dataFlow string, and security advice. <em>These are type descriptions, not file-specific content.</em> Complexity is the only value computed from the actual file: Low &lt;30 non-blank lines, Medium &lt;75, High ≥75.</li>
+                  <li><strong>languageDetection</strong> — counts language occurrences; calls TechnologyDetectorEngine for framework signals.</li>
+                  <li><strong>symbolExtraction</strong> — builds a flat index keyed by file path: classes, methods, imports, exports, language, type.</li>
+                  <li><strong>folderStructure</strong> — RepositoryScannerEngine builds the folderTree hierarchy.</li>
+                  <li><strong>dependencyResolution</strong> — DependencyMapperEngine parses TS/JS imports (relative + <code>@app/*</code> alias), C# <code>using</code> statements, and SQL table references (FROM/JOIN/INTO/UPDATE) into a directed graph. DependencyExplorerEngine then derives hubs (inbound ≥5) and ranks all nodes by total degree.</li>
+                  <li><strong>dataFlowExtraction</strong> — per file: classifies role (controller/component/service/repository/http-client/state-store) from name patterns; extracts sources (HTTP verbs, @Input(), localStorage reads, route params) and sinks (@Output(), router.navigate, Subject.next()); infers interaction verb per import via method-call pattern matching (reads/writes/updates/deletes/publishes/navigates/calls).</li>
+                  <li><strong>multiProject</strong> — ProjectDiscoveryEngine discovers sub-projects.</li>
+                  <li><strong>gitAnalysis</strong> — reads branch and origin URL from disk via readGitMetadata().</li>
+                  <li><strong>architectureDiscovery</strong> — checks folder names against conventional layer keywords (controllers/services/repositories/models/components/pages/views); counts hub nodes; checks tech names for framework signals. Produces ArchitecturePattern[] with confidence: null.</li>
+                </ul>
+
+                <h4 class="hiw__h3">D4 — KnowledgeModel Build</h4>
+                <p class="hiw__p">KnowledgeModelEngine converts the pipeline result into the typed KnowledgeModel. The <code>insights</code> layer is computed here:</p>
+                <ul class="hiw__ul">
+                  <li><strong>File targets</strong> — complexity from AnalysisEngine line-count bucket; maintainability from AnalysisEngine template value; dataFlow.steps split from dataFlow string on → / -&gt;.</li>
+                  <li><strong>Multi-file targets</strong> — complexity from coupling ratio (edges/nodes): Low ≤2, Medium ≤4, High &gt;4. Maintainability: Low if &gt;100 files AND ratio &gt;3; High if ≤50 files AND ratio ≤2; else Medium.</li>
+                </ul>
+                <p class="hiw__p">The model is emitted to Angular and hub pages become renderable. <code>ai</code> is undefined at this point.</p>
+              </div>
+            </div>
+
+            <!-- ── AI Pipeline ──────────────────────────────── -->
+            <div class="hiw__nested">
+              <button class="hiw__toggle" (click)="showHiwAiPipeline = !showHiwAiPipeline">
+                <svg class="hiw__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.hiw__chevron--open]="showHiwAiPipeline"><polyline points="9 18 15 12 9 6"/></svg>
+                AI Pipeline
+              </button>
+              <div class="hiw__body" *ngIf="showHiwAiPipeline">
+                <p class="hiw__p">Kicked off immediately after the structural model arrives in Angular. Runs in the background. Results arrive in waves via <code>manager.mergeAIResults()</code>, patching <code>workspace.knowledgeModel.ai</code> and triggering a re-render each time.</p>
+
+                <h4 class="hiw__h3">Derive Tier — concurrent (all start simultaneously)</h4>
+                <ul class="hiw__ul">
+                  <li><strong>understanding</strong> → <code>intelligence:systemUnderstanding</code> — produces SystemUnderstanding plus all heuristic narrative strings in one IPC round-trip. File scope: executiveSummary/businessPurpose from AnalysisEngine templates; businessCriticality from rule table (Critical if high-risk + many deps; High if high-risk OR many deps + arch layer). Folder/repo scope: executiveSummary assembled from file count + language + tech + pattern; businessPurpose from folder presence rule (api+ui+data → full-stack; services+repos → backend); keyResponsibilities from top-6 folder names via FOLDER_RESPONSIBILITY_MAP; keyWorkflows from top-4 high-fanout graph nodes; mostImportantItems from top 5–8 nodes by inbound degree. Narrative engines run inline in the same handler: HubNarrativeEngine pass 1 (structural sentence), BusinessPurposeNarrativeEngine, CodeHealthNarrativeEngine pass 1, FolderResponsibilitiesNarrativeEngine (folder), FolderWorkflowsNarrativeEngine (folder), ResponsibilitiesNarrativeEngine (file).</li>
+                  <li><strong>security</strong> → <code>intelligence:security</code> — SecurityEvidenceEngine scans all files across 8 domains using regex patterns. No LLM here — produces raw evidence only. Domains: Secrets (8 patterns, confidence-scored 40–100, 1 candidate per file, max 15 total); SQL Injection (8 concat patterns); Authentication (9 framework patterns, counts protected surfaces + unprotected HTTP verbs); Authorization (role/policy/permission/presence counts); Input Validation (7 framework patterns); Data Access (7 ORM patterns, counts parameterised vs concatenated queries); Logging (6 framework patterns, structured logging detection, sensitive-adjacent count); Error Handling (try/catch, empty catch, global handler, stack exposure). SecurityVerificationBuilder converts domainEvidence into SecurityVerificationCheck[] (pass/warn/fail per domain) — deterministic, no LLM.</li>
+                  <li><strong>recommendations</strong> → <code>intelligence:recommendations</code> — file scope: converts AnalysisEngine risks[] and modernizations[] into Recommendation[]. Folder/repo scope: generates from graph structure — high coupling hubs (inbound ≥5, score 60–80); circular dependencies (score 85); no architecture pattern detected &gt;20 nodes (score 50); isolated files &gt;3 (score 25); broad scope modules outbound ≥10 (score 55); mixed low-confidence patterns (score 45). technicalDebtLevel: Critical if critical recs exist; High if high-priority &gt;2; Moderate if any medium; else Low.</li>
+                  <li><strong>architecture</strong> → <code>intelligence:architectureAnalysis</code> (folder/repo only) — input: patterns[], dependency graph, hubs, folderTree. Computes: dominantPattern (highest-confidence pattern); hubCount (isHub === true nodes); circularDependencyCount (DFS cycle detection); couplingAssessment (Critical if hubCount/totalNodes ≥0.20, High ≥0.12, Moderate ≥0.06, else Low); evolutionRisk (scored from circular count + hub count + low confidence → High ≥4, Moderate ≥2, else Low); boundaryViolations (nodes whose names match multiple layer patterns simultaneously); layerBreakdown (nodes bucketed by layer keyword). Also re-runs CodeHealthNarrativeEngine with hub/coupling/circular metrics — overwrites ai.codeHealthNarrative.</li>
+                  <li><strong>dataFlow</strong> → <code>intelligence:dataFlowAnalysis</code> — DataFlowDiscoveryEngine traces graph paths from entry-point nodes (controller/handler/endpoint/api/route/component/page name patterns), preferring typed forward transitions (entry → processor → repository → database). Up to 8 deduplicated workflows. Per workflow: failureRisk scored from step count (≥6=+2, ≥4=+1) + bottlenecks (≥2=+2, ≥1=+1) + low confidence (&lt;0.65=+1) → High ≥4, Moderate ≥2, else Low. extractBehaviorInsights identifies entry points, most-referenced services, repositories, and bottlenecks (above-average inbound AND outbound). FolderWorkflowsNarrativeEngine generates per-workflow narrative strings.</li>
+                </ul>
+
+                <h4 class="hiw__h3">Hub Directive — after all derive stages settle</h4>
+                <p class="hiw__p">HubNarrativeEngine.buildDirective() reads security findings count and recommendations count to produce the actionable sentence on the hub card (<code>ai.hubNarrative.directive</code>).</p>
+
+                <h4 class="hiw__h3">Sequential Derive — Learning Path</h4>
+                <p class="hiw__p">Runs after hub directive because it reads from <code>ai.understanding</code>. File scope: 4–5 steps (Purpose → Responsibilities → Main Workflow → Most Important Parts → Broader Context). Folder/repo scope: 5–6 steps (Business Purpose → Core Workflow → Architecture → Data Movement → Critical Components → Advanced Areas). Each step includes recommendedFiles[] from graph analysis. ignoreForNow[] covers isolated files, debt hotspots, high-risk areas, test/config files, and the full file tree if &gt;50 files.</p>
+
+                <h4 class="hiw__h3">Prompt Tier</h4>
+                <p class="hiw__p">LLMSummaryService builds one prompt per page from whichever ai.* fields are populated. All prompts share the system prompt: "You are an expert software analyst. Provide clear, accurate, and actionable explanations. Be concise but thorough." Structure: persona instruction → output format constraints (scope-specific word counts) → evidence block.</p>
+                <ul class="hiw__ul">
+                  <li><strong>understanding</strong> — evidence: businessCriticality, health (complexity/maintainability/risk), coreCapabilities, keyWorkflows, criticalAreas, highRiskAreas, technicalDebtHotspots, architecture (dominantPattern, confidence, coupling, hubCount, circularDeps, boundaryViolations), mostImportantItems. Output: file = 2–3 sentences; folder = 2 paragraphs 80–130 words; repo = 3 paragraphs 160–240 words.</li>
+                  <li><strong>security</strong> — evidence: all 15 candidates with file/line/snippet; full domain evidence summary across all 8 domains. Output: structured JSON only — postureSummary, overallRisk, securityMaturity, findings[]. Max tokens: 4096. Angular side parses the JSON and writes findings[], overallRisk, securityMaturity back into ai.security.</li>
+                  <li><strong>recommendations</strong> — evidence: technicalDebtLevel, total/critical/high counts, dominant category, architecture + coupling, top-3 recommendations (title, priority, category, issueDescription). Output: file = 1–2 sentences; folder = 2 paragraphs 80–130 words; repo = 3 paragraphs 150–220 words.</li>
+                  <li><strong>learningPath</strong> — evidence: systemType, welcomeSummary, roadmap length, first/last step, focusFirst, businessCriticality, keyWorkflows, highRiskAreas. Output: same word counts as recommendations.</li>
+                  <li><strong>architecture</strong> — evidence: dominantPattern + confidence, competing patterns, coupling assessment, hub count, circular dep count, evolution risk, boundary violations, layer breakdown, raw structural detection indicators. Output: file = 1–2 sentences; folder = 2 paragraphs 80–130 words; repo = 3–4 paragraphs 180–260 words.</li>
+                  <li><strong>dataFlow</strong> — file scope: flow pattern label, step sequence, inputs, outputs, step descriptions. Folder/repo scope: workflow count, per-workflow risk profiles (name, step count, entry point, risk, bottleneck nodes), entry points, bottlenecks, most-referenced, data access nodes, external integrations, architecture context. Output: file = 2–4 sentences; folder = 2 paragraphs 80–130 words; repo = 3 paragraphs 160–240 words.</li>
+                </ul>
+
+                <h4 class="hiw__h3">Generate Tier</h4>
+                <p class="hiw__p">LLMSummaryService dispatches all prompts to the configured provider. Local providers (Ollama) run sequentially — security first, then each task — to avoid overloading local hardware. Cloud providers run all tasks in parallel via Promise.all. Each call: <code>electron.aiExplain(prompt, maxTokens)</code> → IPC <code>ai:explain</code> → AiKnowledgeEngine → provider.generate(). Max tokens: 4096 for security, 2048 for all others. Timeout: 300 seconds per call. Results stored as <code>LLMSummaryEntry &#123; content, status, provider, model, generatedAt &#125;</code> in <code>ai.summaries[key]</code>.</p>
+              </div>
+            </div>
+
+            <!-- ── Analysis Pages ────────────────────────────── -->
+            <div class="hiw__nested">
+              <button class="hiw__toggle" (click)="showHiwPages = !showHiwPages">
+                <svg class="hiw__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.hiw__chevron--open]="showHiwPages"><polyline points="9 18 15 12 9 6"/></svg>
+                Analysis Pages
+              </button>
+              <div class="hiw__body" *ngIf="showHiwPages">
+                <p class="hiw__p">Each page reads from a specific slice of the KnowledgeModel. Sections gate on <code>capabilities[]</code> and on whether the relevant ai.* field is populated.</p>
+
+                <h4 class="hiw__h3">System Understanding</h4>
+                <ul class="hiw__ul">
+                  <li><strong>AI Analysis card</strong> — <span class="hiw__tag hiw__tag--llm">Generate</span> <code>ai.summaries.understanding.content</code></li>
+                  <li><strong>Code Health card</strong> — <span class="hiw__tag hiw__tag--struct">Structural</span> health tier badge computed from <code>insights.complexity</code> + <code>insights.maintainability</code>; narrative from <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.codeHealthNarrative</code> (enriched after architecture stage completes).</li>
+                  <li><strong>Business Purpose card</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.understanding.businessPurpose</code> + <code>ai.businessPurposeNarrative</code>.</li>
+                  <li><strong>Responsibilities panel</strong> (file/folder) — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>understanding.keyResponsibilities[]</code> zipped with <code>ai.fileResponsibilitiesNarrative[]</code> or <code>ai.folderResponsibilitiesNarrative[]</code>.</li>
+                  <li><strong>Components panel</strong> (file) — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.fileComponentsNarrative</code> — classes, methods, imports, exports built from <code>structure.symbols</code>.</li>
+                  <li><strong>Components panel</strong> (folder) — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>understanding.responsibilityGroups[]</code> with per-component blast radius (High/Medium/Low).</li>
+                  <li><strong>Key Workflows</strong> (repo) — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>understanding.mostImportantWorkflows[]</code>.</li>
+                  <li><strong>Key Workflows</strong> (folder) — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>understanding.keyWorkflows[]</code> zipped with <code>ai.folderWorkflowsNarrative[]</code>.</li>
+                </ul>
+
+                <h4 class="hiw__h3">Architecture</h4>
+                <ul class="hiw__ul">
+                  <li><strong>AI Analysis card</strong> — <span class="hiw__tag hiw__tag--llm">Generate</span> <code>ai.summaries.architecture.content</code></li>
+                  <li><strong>Architecture Summary</strong> — <span class="hiw__tag hiw__tag--struct">Structural</span> top 3 pattern names + confidence from <code>relationships.architecture.patterns[]</code>.</li>
+                  <li><strong>Layer Diagram</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.architecture.architectureDiagram</code> (Mermaid flowchart TD).</li>
+                  <li><strong>Structural Analysis strip</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> couplingAssessment, hubCount, circularDependencyCount from <code>ai.architecture</code>.</li>
+                  <li><strong>Hub Nodes list</strong> — <span class="hiw__tag hiw__tag--struct">Structural</span> <code>relationships.dependencies.hubs[]</code> filtered to isHub=true, top 10.</li>
+                </ul>
+
+                <h4 class="hiw__h3">Data Flow</h4>
+                <ul class="hiw__ul">
+                  <li><strong>AI Analysis card</strong> — <span class="hiw__tag hiw__tag--llm">Generate</span> <code>ai.summaries.dataFlow.content</code></li>
+                  <li><strong>File diagram</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.dataFlowFileDiagram</code> (Mermaid flowchart LR built from insights.dataFlow steps/inputs/outputs).</li>
+                  <li><strong>Inputs / Steps / Outputs</strong> (file) — <span class="hiw__tag hiw__tag--struct">Structural</span> <code>insights.dataFlow</code>; step descriptions from <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.dataFlowFileNarrative.stepNarrative[]</code>.</li>
+                  <li><strong>Metrics strip</strong> (folder/repo) — <span class="hiw__tag hiw__tag--struct">Structural</span> graph node/edge counts; workflow/entry point/bottleneck/external dep counts from <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.dataFlow</code>.</li>
+                  <li><strong>Workflow diagram</strong> (folder/repo) — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.dataFlow.dataFlowDiagram</code> (Mermaid flowchart LR).</li>
+                  <li><strong>Workflows accordion</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.dataFlow.primaryWorkflows[]</code> — workflowName, entryPoint, failureRisk, stepCount, bottleneckNodes, narrative.</li>
+                </ul>
+
+                <h4 class="hiw__h3">Security</h4>
+                <ul class="hiw__ul">
+                  <li><strong>AI Analysis card</strong> — <span class="hiw__tag hiw__tag--llm">Generate</span> <code>ai.summaries.security.content</code> (postureSummary from LLM JSON response).</li>
+                  <li><strong>Security Findings</strong> — <span class="hiw__tag hiw__tag--llm">Generate</span> <code>ai.security.findings[]</code> confirmed by the LLM (overwritten from raw evidence). Per finding: severity badge, category, title, file + line, issueDescription, riskExplanation, remediation.</li>
+                  <li><strong>Security Verification</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.security.verificationChecks[]</code> — deterministic pass/warn/fail across 8 domains (secrets, input-validation, authentication, authorization, data-access, logging, error-handling, cryptography).</li>
+                </ul>
+
+                <h4 class="hiw__h3">Recommendations</h4>
+                <ul class="hiw__ul">
+                  <li><strong>AI Analysis card</strong> — <span class="hiw__tag hiw__tag--llm">Generate</span> <code>ai.summaries.recommendations.content</code></li>
+                  <li><strong>Summary strip</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> critical/high/medium counts merged from <code>ai.recommendations.recommendations[]</code> and <code>ai.security.findings[]</code>.</li>
+                  <li><strong>Security Fixes card</strong> — <span class="hiw__tag hiw__tag--llm">Generate</span> <code>ai.security.findings[]</code> filtered to critical/high/medium, capped at 8.</li>
+                  <li><strong>Prioritized Recommendations</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.recommendations.recommendations[]</code> — ranked by priorityRank, with title, priority badge, category, affectedArea, issueDescription, whyItMatters, recommendedImprovement, expectedImpact, affectedFiles.</li>
+                </ul>
+
+                <h4 class="hiw__h3">Learning Path</h4>
+                <ul class="hiw__ul">
+                  <li><strong>AI Analysis card</strong> — <span class="hiw__tag hiw__tag--llm">Generate</span> <code>ai.summaries.learningPath.content</code></li>
+                  <li><strong>Learning Roadmap</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.learningPath.roadmap[]</code> — per step: title, description, whyHere, codeLocations (file paths + line ranges), checkpoints[].</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- ── Documentation & PDF ──────────────────────── -->
+            <div class="hiw__nested">
+              <button class="hiw__toggle" (click)="showHiwDocumentation = !showHiwDocumentation">
+                <svg class="hiw__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.hiw__chevron--open]="showHiwDocumentation"><polyline points="9 18 15 12 9 6"/></svg>
+                Documentation &amp; PDF Export
+              </button>
+              <div class="hiw__body" *ngIf="showHiwDocumentation">
+                <h4 class="hiw__h3">Section Availability</h4>
+                <p class="hiw__p">Three fixed section catalogues — FILE_SECTIONS, FOLDER_SECTIONS, REPO_SECTIONS — define which sections exist per scope. A section is marked available only when two conditions both pass: <code>isSectionAvailable()</code> (checks required data exists on the model) AND <code>renderSectionContent()</code> produces non-empty output. This prevents the UI offering sections that would render blank.</p>
+
+                <h4 class="hiw__h3">Content Rendering Priority</h4>
+                <p class="hiw__p">Each section renderer follows the same priority order:</p>
+                <ul class="hiw__ul">
+                  <li><span class="hiw__tag hiw__tag--llm">Generate</span> <code>ai.summaries[key].content</code> — LLM narrative, shown first when present.</li>
+                  <li><span class="hiw__tag hiw__tag--derive">Derive</span> Structured heuristic fields — typed data from derive engines, formatted as labelled lines and bullet lists.</li>
+                  <li><span class="hiw__tag hiw__tag--struct">Structural</span> Raw structural data — fallback when neither above is available (e.g. raw graph edge counts).</li>
+                </ul>
+                <p class="hiw__p">Repo-scope sections each have dedicated renderer methods that pull the full richness of the model: executive summary includes coreCapabilities, technicalDebtHotspots, health interpretation; architecture includes dominantPattern, layerBreakdown, boundaryViolations; data flow includes workflow risk profiles, entry points, bottlenecks; recommendations show top 5 sorted by priorityRank with issueDescription + whyItMatters + recommendedImprovement; key files prefers mostImportantItems with whyImportant descriptions over raw degree ranks.</p>
+
+                <h4 class="hiw__h3">Preview Assembly</h4>
+                <p class="hiw__p"><code>renderPreview()</code> assembles selected sections as numbered plain text: <code>"N. Title\n\nContent"</code>, joined by <code>\n\n</code>. Sections producing empty content are silently skipped and not numbered — numbering is always contiguous. The preview panel splits this text on <code>/(?=^\d+\. )/m</code> to recover individual sections for display.</p>
+
+                <h4 class="hiw__h3">PDF Export</h4>
+                <p class="hiw__p">Library: jsPDF, dynamically imported. All layout is hand-drawn with raw drawing primitives — no plugins. Page geometry: A4 portrait (210×297 mm), 20 mm margins, 170 mm content width, 16 mm footer zone.</p>
+                <ul class="hiw__ul">
+                  <li><strong>Cover page</strong> — full-width purple rectangle (top 72 mm), report title at 22 pt, workspace name at 15 pt, scope/date at 9 pt.</li>
+                  <li><strong>Section headers</strong> — 3.5×8 mm brand-purple left accent bar, bold 13 pt title, full-width underrule.</li>
+                  <li><strong>Body parsing</strong> — <code>renderPreview()</code> output split on <code>\n(?=\d+\.\s)</code> into section blocks; paragraphs split on <code>\n\n</code>; lines starting with <code>[WORD]</code> rendered as severity-coloured labels (mapped to red/amber/green by keyword); two-space-indented lines at 9 pt; plain lines at 9.5 pt.</li>
+                  <li><strong>Pagination</strong> — <code>checkPage(neededMm)</code> called before each draw. Insufficient space triggers <code>doc.addPage()</code>, <code>fillPageBackground()</code> repaints dark, Y cursor resets.</li>
+                  <li><strong>Footers</strong> — written last in a second pass: horizontal separator, brand label left, <code>Page N of M</code> right at 7 pt.</li>
+                  <li><strong>Colour palette</strong> — background <code>#151927</code> (dark navy); brand accent <code>#8d63ff</code> (purple); severity: red/amber/green.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- ── Mermaid Diagrams ──────────────────────────── -->
+            <div class="hiw__nested">
+              <button class="hiw__toggle" (click)="showHiwDiagrams = !showHiwDiagrams">
+                <svg class="hiw__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.hiw__chevron--open]="showHiwDiagrams"><polyline points="9 18 15 12 9 6"/></svg>
+                Mermaid Diagrams
+              </button>
+              <div class="hiw__body" *ngIf="showHiwDiagrams">
+                <p class="hiw__p">All three diagram types are generated in the Electron main process as Mermaid syntax strings stored on the model. The Angular MermaidDiagramComponent renders them on demand.</p>
+
+                <h4 class="hiw__h3">Architecture Diagram — <code>ai.architecture.architectureDiagram</code></h4>
+                <p class="hiw__p">flowchart TD (top-down). Built by ArchitectureDiagramEngine after ArchitectureAnalysisEngine completes.</p>
+                <ul class="hiw__ul">
+                  <li><strong>With a dependency graph (primary path)</strong> — every graph node is classified into Presentation (controller/handler/component/page), Business Logic (service/manager/engine/processor), Data Access (repository/dao/store/database), or External (client/gateway/provider/adapter). Up to 4 representative nodes per layer by highest inbound degree. Layer headers link top-down; file nodes hang off headers. Up to 12 direct cross-layer edges included. Style: purple/indigo palette (#7c3aed layer headers, #1e1b4b file nodes).</li>
+                  <li><strong>Fallback (no graph)</strong> — up to 4 detected architecture patterns as sequentially-linked nodes by confidence ranking.</li>
+                </ul>
+
+                <h4 class="hiw__h3">Data Flow Diagram — <code>ai.dataFlow.dataFlowDiagram</code></h4>
+                <p class="hiw__p">flowchart LR (left-right). Built by DataFlowDiagramEngine. Three paths in priority order:</p>
+                <ul class="hiw__ul">
+                  <li><strong>Enriched connections</strong> — when any workflow has enrichedConnections (verbs resolved from dataFlowFacts): up to 4 workflow chains with shaped nodes and pipe-label verb edges (<code>src --&gt;|verb| tgt</code>).</li>
+                  <li><strong>Role diagram</strong> — when graph has ≥3 nodes: nodes bucketed into Entry / Processing / Data / External (dataFlowFacts.fileRole takes precedence over name inference); up to 4 reps per role; cross-role edges with verb labels. Bottleneck nodes highlighted red.</li>
+                  <li><strong>Workflow summary fallback</strong> — workflow names as double-circle nodes with risk icons (⚠ High, △ Moderate), or entry points as rectangles.</li>
+                </ul>
+                <p class="hiw__p">Node shapes by role: Processing → double-circle; Data → cylinder; Entry/External → rectangle. Style: teal/green palette (#065f46 role headers, #0d9488 process nodes, #0369a1 store nodes) — deliberately contrasting with the architecture diagram's purple.</p>
+
+                <h4 class="hiw__h3">File Data Flow Diagram — <code>ai.dataFlowFileDiagram</code></h4>
+                <p class="hiw__p">flowchart LR. Built from <code>insights.dataFlow</code> (steps[], inputs[], outputs[]). Three columns: input nodes (rectangle) → step nodes (double-circle) → output nodes (rectangle). Inputs connect to first step; steps chain sequentially; last step connects to each output. If no steps, inputs connect directly to outputs.</p>
+
+                <h4 class="hiw__h3">Rendering (Angular)</h4>
+                <p class="hiw__p">MermaidDiagramComponent (standalone, OnPush) receives the Mermaid string as <code>[diagram]</code>. On each change: dynamically imports mermaid; calls <code>mermaid.initialize()</code> with current theme from ThemeService (dark/default); calls <code>mermaid.render()</code> to produce an SVG string. The SVG is post-processed by <code>_normaliseSvg()</code>: extracts pixel width/height; inserts viewBox if absent; replaces fixed width/height with 100%/auto; injects inline <code>style="max-width:&#123;maxWidth&#125;"</code> — where maxWidth is an @Input() defaulting to 90% (data flow pages override to 50%). The processed SVG is passed through DomSanitizer.bypassSecurityTrustHtml and bound via [innerHTML]. Rendering errors show a warning icon or are silently suppressed when the mermaid package is not yet loaded.</p>
+              </div>
+            </div>
+
+            <!-- ── AI Chat ──────────────────────────────────── -->
+            <div class="hiw__nested">
+              <button class="hiw__toggle" (click)="showHiwAiChat = !showHiwAiChat">
+                <svg class="hiw__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.hiw__chevron--open]="showHiwAiChat"><polyline points="9 18 15 12 9 6"/></svg>
+                AI Chat
+              </button>
+              <div class="hiw__body" *ngIf="showHiwAiChat">
+                <p class="hiw__p">The AI Chat panel is a context-aware assistant embedded in the right sidebar. It can answer questions about the specific codebase that is currently loaded — not generic coding questions.</p>
+
+                <h4 class="hiw__h3">What it knows</h4>
+                <p class="hiw__p">Before every message, a context block is assembled from the active workspace's analysis results and sent alongside your question. This includes: the target name and type; primary language and detected frameworks; code health (complexity, maintainability, risk); architecture pattern and coupling; data flow pattern and primary workflows; top Critical/High recommendations; security posture; and the first learning path step. The assistant cites these by name rather than speaking in generalities.</p>
+                <p class="hiw__p">If no analysis has been run yet, the assistant will say so and suggest running one first.</p>
+
+                <h4 class="hiw__h3">Scope and history</h4>
+                <p class="hiw__p">The context badge in the panel header shows which workspace is active. Switching workspaces resets the conversation and loads context from the new target. Chat history exists only for the current session — it is not saved between application restarts.</p>
+
+                <h4 class="hiw__h3">Suggested prompts</h4>
+                <p class="hiw__p">When the conversation is empty, four starter prompts appear. These are tailored to the active target type — file prompts ask about what the file does, dependencies, and complexity; folder prompts ask about architecture and patterns; repository prompts ask for an overview, where to start, and biggest risks. Any free-form question works once you dismiss them.</p>
+              </div>
+            </div>
+
+            <!-- ── AI Configuration ─────────────────────────── -->
+            <div class="hiw__nested">
+              <button class="hiw__toggle" (click)="showHiwAiConfig = !showHiwAiConfig">
+                <svg class="hiw__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.hiw__chevron--open]="showHiwAiConfig"><polyline points="9 18 15 12 9 6"/></svg>
+                AI Configuration
+              </button>
+              <div class="hiw__body" *ngIf="showHiwAiConfig">
+                <p class="hiw__p">Three provider implementations are available. A fresh provider instance is created on every call so settings changes are immediately reflected — no caching. The active provider is selected via <code>activePresetId</code> in settings; the preset's protocol field maps to a provider class.</p>
+
+                <h4 class="hiw__h3">Ollama (local)</h4>
+                <ul class="hiw__ul">
+                  <li>Config: <code>ollamaHost</code> (default http://localhost:11434), <code>aiModel</code> (default llama3.2).</li>
+                  <li>Model discovery: calls <code>/api/tags</code> — lists installed models. testConnection() calls /api/tags then verifies the configured model name appears in the result.</li>
+                  <li>Generate: POST to <code>/api/chat</code> with <code>stream: false</code>, <code>think: false</code>. 300-second timeout.</li>
+                  <li>Sequential generation in LLMSummaryService (security first, then each task one by one) to avoid overloading local hardware.</li>
+                </ul>
+
+                <h4 class="hiw__h3">Anthropic (cloud)</h4>
+                <ul class="hiw__ul">
+                  <li>Config: <code>anthropicApiKeyEncrypted</code> (stored via Electron safeStorage — AES encryption at rest), <code>aiModel</code> (default claude-sonnet-5-20251101).</li>
+                  <li>API: POST to api.anthropic.com with version header <code>2023-06-01</code>. System prompt sent as top-level field (Anthropic Messages API format).</li>
+                  <li>Suggested models: claude-sonnet-5-20251101, claude-opus-4-8-20251101, claude-haiku-4-5-20251001.</li>
+                  <li>Cloud providers run all generate tasks in parallel via Promise.all.</li>
+                </ul>
+
+                <h4 class="hiw__h3">OpenAI-Compatible (cloud/custom)</h4>
+                <ul class="hiw__ul">
+                  <li>Config: <code>openaiCompatBaseUrl</code> (required), <code>openaiCompatApiKeyEncrypted</code> (optional), <code>aiModel</code> (default gpt-4o).</li>
+                  <li>Calls <code>&lt;baseUrl&gt;/chat/completions</code> with <code>stream: false</code>. Selects http vs https based on URL protocol.</li>
+                  <li>Works with any OpenAI-compatible server — OpenAI, local inference servers, etc.</li>
+                </ul>
+
+                <h4 class="hiw__h3">API Key Storage</h4>
+                <p class="hiw__p">API keys are encrypted with <code>Electron.safeStorage.encryptString()</code> (OS keychain-backed AES) before being written to settings. The IPC handler <code>ai:isKeyConfigured</code> returns a boolean without decrypting. Keys are never logged or exposed to the renderer process.</p>
+
+                <h4 class="hiw__h3">IPC Channels</h4>
+                <ul class="hiw__ul">
+                  <li><code>ai:explain</code> — single prompt → provider.generate(). Used for all LLM summary calls.</li>
+                  <li><code>ai:chat</code> — multi-turn conversation. Builds chat context from the KnowledgeModel via buildChatContext(), prepends system prompt, calls provider.chat() with maxTokens 4096.</li>
+                  <li><code>ai:getProviders</code> — returns provider status array. No network call.</li>
+                  <li><code>ai:discoverModels</code> — calls /api/tags on Ollama only.</li>
+                  <li><code>ai:testConnection</code> — makes a real minimal API call to verify connectivity.</li>
+                  <li><code>ai:setApiKey</code> — encrypts and saves a plain-text key. Passing null clears it.</li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ─── Appearance ─────────────────────────────────────────────────────── -->
     <div class="settings-group">
       <div class="settings-group-label">Appearance</div>
@@ -31,407 +345,377 @@
 
     <!-- ─── AI ────────────────────────────────────────────────────────────── -->
     <div class="settings-group" *ngIf="electron.isElectron">
-      <div class="settings-group-label">AI</div>
-
-      <!-- Configured status card -->
-      <div class="ai-status-card" *ngIf="isConfigured">
-        <div class="ai-status-header">
-          <div class="ai-status-dot ai-status-dot--ok"></div>
-          <span class="ai-status-name">{{ activePreset?.displayName ?? activeStatus?.id }}</span>
-          <span class="ai-status-category">{{ activePreset?.category === 'local' ? 'Local' : 'Cloud' }}</span>
-        </div>
-        <div class="ai-status-meta">
-          <div class="ai-status-meta-row" *ngIf="activeModel">
-            <span class="ai-meta-label">Model</span>
-            <span class="ai-meta-val">{{ activeModel }}</span>
-          </div>
-          <div class="ai-status-meta-row" *ngIf="activeStatus?.lastTestedAt">
-            <span class="ai-meta-label">Last tested</span>
-            <span class="ai-meta-val">{{ activeStatus!.lastTestedAt | date:'short' }}</span>
-          </div>
-          <div class="ai-status-meta-row" *ngIf="activeStatus?.available === false">
-            <span class="ai-meta-label ai-meta-label--warn">Connection failed</span>
-            <span class="ai-meta-val ai-meta-val--warn">{{ activeStatus?.reason }}</span>
-          </div>
-        </div>
-        <div class="ai-status-caps">
-          <span class="ai-cap">Repository Analysis</span>
-          <span class="ai-cap">AI Chat</span>
-          <span class="ai-cap">Documentation</span>
-        </div>
-        <div class="ai-status-actions">
-          <button class="btn-secondary" (click)="testConnection()" [disabled]="testState === 'testing'">
-            {{ testState === 'testing' ? 'Testing…' : 'Retest Connection' }}
-          </button>
-        </div>
-        <div class="test-result" *ngIf="testState !== 'idle'" [class.ok]="testState === 'ok'" [class.fail]="testState === 'fail'">
-          <span *ngIf="testState === 'testing'">Testing connection…</span>
-          <span *ngIf="testState === 'ok'">Connection successful</span>
-          <span *ngIf="testState === 'fail'">Connection failed<ng-container *ngIf="testReason"> — {{ testReason }}</ng-container></span>
-        </div>
-      </div>
-
-      <!-- Welcome banner -->
-      <div class="ai-welcome" *ngIf="!isConfigured">
-        <div class="ai-welcome-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 8v4l3 3"/>
-          </svg>
-        </div>
-        <div class="ai-welcome-text">
-          <span class="ai-welcome-title">Configure AI to unlock analysis</span>
-          <span class="ai-welcome-desc">Choose a local or cloud provider to enable repository explanations, AI chat, learning paths, and documentation generation.</span>
-        </div>
-      </div>
-
-      <!-- Configure provider — collapsible -->
       <div class="config-collapse">
-        <button class="config-collapse-toggle" (click)="showProviderConfig = !showProviderConfig">
+        <button class="config-collapse-toggle" (click)="showAiConfig = !showAiConfig">
           <svg class="config-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round"
-               [class.config-collapse-chevron--open]="showProviderConfig">
+               [class.config-collapse-chevron--open]="showAiConfig">
             <polyline points="9 18 15 12 9 6"/>
           </svg>
-          <span>Configure Provider</span>
-          <span class="config-collapse-hint" *ngIf="!showProviderConfig && selectedPreset">{{ selectedPreset.displayName }}</span>
+          <span class="settings-group-label" style="margin:0">AI</span>
+          <span class="config-collapse-hint" *ngIf="!showAiConfig && isConfigured">{{ activePreset?.displayName ?? activeStatus?.id }}</span>
+          <span class="config-collapse-hint" *ngIf="!showAiConfig && !isConfigured">Not configured</span>
         </button>
 
-        <div class="config-collapse-body" *ngIf="showProviderConfig">
+        <div class="config-collapse-body" *ngIf="showAiConfig">
 
-          <!-- Provider selection -->
-          <div class="provider-categories">
-            <div class="provider-category">
-              <div class="provider-category-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-                </svg>
-                Local
-                <span class="provider-category-hint">Free · Private · Works offline</span>
+          <!-- Configured status card -->
+          <div class="ai-status-card" *ngIf="isConfigured">
+            <div class="ai-status-header">
+              <div class="ai-status-dot ai-status-dot--ok"></div>
+              <span class="ai-status-name">{{ activePreset?.displayName ?? activeStatus?.id }}</span>
+              <span class="ai-status-category">{{ activePreset?.category === 'local' ? 'Local' : 'Cloud' }}</span>
+            </div>
+            <div class="ai-status-meta">
+              <div class="ai-status-meta-row" *ngIf="activeModel">
+                <span class="ai-meta-label">Model</span>
+                <span class="ai-meta-val">{{ activeModel }}</span>
               </div>
-              <div class="provider-grid">
-                <button
-                  *ngFor="let p of localPresets"
-                  class="provider-card"
-                  [class.provider-card--selected]="selectedPresetId === p.id"
-                  (click)="selectPreset(p.id)"
-                >
-                  <span class="provider-card-name">{{ p.displayName }}</span>
-                  <span class="provider-card-desc">{{ p.description }}</span>
-                </button>
+              <div class="ai-status-meta-row" *ngIf="activeStatus?.lastTestedAt">
+                <span class="ai-meta-label">Last tested</span>
+                <span class="ai-meta-val">{{ activeStatus!.lastTestedAt | date:'short' }}</span>
+              </div>
+              <div class="ai-status-meta-row" *ngIf="activeStatus?.available === false">
+                <span class="ai-meta-label ai-meta-label--warn">Connection failed</span>
+                <span class="ai-meta-val ai-meta-val--warn">{{ activeStatus?.reason }}</span>
               </div>
             </div>
-
-            <div class="provider-category">
-              <div class="provider-category-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
-                </svg>
-                Cloud
-                <span class="provider-category-hint">Requires API key · Strongest models</span>
-              </div>
-              <div class="provider-grid">
-                <button
-                  *ngFor="let p of cloudPresets"
-                  class="provider-card"
-                  [class.provider-card--selected]="selectedPresetId === p.id"
-                  (click)="selectPreset(p.id)"
-                >
-                  <span class="provider-card-name">{{ p.displayName }}</span>
-                  <span class="provider-card-desc">{{ p.description }}</span>
-                </button>
-              </div>
+            <div class="ai-status-caps">
+              <span class="ai-cap">Repository Analysis</span>
+              <span class="ai-cap">AI Chat</span>
+              <span class="ai-cap">Documentation</span>
+            </div>
+            <div class="ai-status-actions">
+              <button class="btn-secondary" (click)="testConnection()" [disabled]="testState === 'testing'">
+                {{ testState === 'testing' ? 'Testing…' : 'Retest Connection' }}
+              </button>
+            </div>
+            <div class="test-result" *ngIf="testState !== 'idle'" [class.ok]="testState === 'ok'" [class.fail]="testState === 'fail'">
+              <span *ngIf="testState === 'testing'">Testing connection…</span>
+              <span *ngIf="testState === 'ok'">Connection successful</span>
+              <span *ngIf="testState === 'fail'">Connection failed<ng-container *ngIf="testReason"> — {{ testReason }}</ng-container></span>
             </div>
           </div>
 
-          <!-- Configuration fields -->
-          <ng-container *ngIf="selectedPreset">
-            <div class="config-panel">
-              <div class="config-panel-title">Configure {{ selectedPreset.displayName }}</div>
+          <!-- Welcome banner -->
+          <div class="ai-welcome" *ngIf="!isConfigured">
+            <div class="ai-welcome-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 8v4l3 3"/>
+              </svg>
+            </div>
+            <div class="ai-welcome-text">
+              <span class="ai-welcome-title">Configure AI to unlock analysis</span>
+              <span class="ai-welcome-desc">Choose a local or cloud provider to enable repository explanations, AI chat, learning paths, and documentation generation.</span>
+            </div>
+          </div>
 
-              <!-- Ollama -->
-              <ng-container *ngIf="isOllama">
-                <div class="config-field">
-                  <div class="ollama-discover-row">
-                    <button class="btn-secondary" (click)="discoverOllamaModels()" [disabled]="discoveringModels">
-                      {{ discoveringModels ? 'Checking…' : 'Check for installed models' }}
+          <!-- Configure provider — inner collapsible -->
+          <div class="config-collapse">
+            <button class="config-collapse-toggle" (click)="showProviderConfig = !showProviderConfig">
+              <svg class="config-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round"
+                   [class.config-collapse-chevron--open]="showProviderConfig">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+              <span>Configure Provider</span>
+              <span class="config-collapse-hint" *ngIf="!showProviderConfig && selectedPreset">{{ selectedPreset.displayName }}</span>
+            </button>
+
+            <div class="config-collapse-body" *ngIf="showProviderConfig">
+
+              <!-- Provider selection -->
+              <div class="provider-categories">
+                <div class="provider-category">
+                  <div class="provider-category-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    Local
+                    <span class="provider-category-hint">Free · Private · Works offline</span>
+                  </div>
+                  <div class="provider-grid">
+                    <button
+                      *ngFor="let p of localPresets"
+                      class="provider-card"
+                      [class.provider-card--selected]="selectedPresetId === p.id"
+                      (click)="selectPreset(p.id)"
+                    >
+                      <span class="provider-card-name">{{ p.displayName }}</span>
+                      <span class="provider-card-desc">{{ p.description }}</span>
                     </button>
-                    <span class="ollama-status ollama-status--warn" *ngIf="ollamaSetupState === 'no-models'">No models found</span>
-                    <span class="ollama-status ollama-status--ok" *ngIf="ollamaSetupState === 'ready'">
-                      {{ discoveredModels.length }} model{{ discoveredModels.length === 1 ? '' : 's' }} found
-                    </span>
                   </div>
                 </div>
-                <div class="config-field" *ngIf="ollamaSetupState === 'ready'">
-                  <label class="config-label">Model</label>
-                  <div class="model-chips">
-                    <button
-                      class="model-chip"
-                      *ngFor="let m of discoveredModels"
-                      [class.active]="aiModel === m"
-                      (click)="selectModel(m)"
-                    >{{ m }}</button>
-                  </div>
-                </div>
-                <div class="config-field config-field--secondary">
-                  <label class="config-label">Host <span class="config-label-hint">optional — default: http://localhost:11434</span></label>
-                  <input class="settings-input" type="text" [(ngModel)]="hostInput" placeholder="http://localhost:11434" />
-                </div>
-              </ng-container>
 
-              <!-- Cloud / custom -->
-              <ng-container *ngIf="!isOllama">
-                <div class="config-field" *ngIf="selectedPreset.requiresHostInput">
-                  <label class="config-label">Base URL</label>
-                  <input class="settings-input settings-input--wide" type="text" [(ngModel)]="hostInput" [placeholder]="hostPlaceholder" />
-                </div>
-                <div class="config-field" *ngIf="selectedPreset.requiresApiKey">
-                  <label class="config-label">API Key</label>
-                  <div class="key-input-wrap">
-                    <input
-                      class="settings-input settings-input--wide"
-                      type="password"
-                      [(ngModel)]="apiKeyInput"
-                      [placeholder]="apiKeyConfigured ? '••••••••••••••••' : 'Enter API key'"
-                      autocomplete="off"
-                    />
-                    <span class="key-badge" *ngIf="apiKeyConfigured">Configured</span>
+                <div class="provider-category">
+                  <div class="provider-category-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+                    </svg>
+                    Cloud
+                    <span class="provider-category-hint">Requires API key · Strongest models</span>
                   </div>
-                </div>
-                <div class="config-field">
-                  <label class="config-label">Model</label>
-                  <input
-                    class="settings-input settings-input--wide"
-                    type="text"
-                    [(ngModel)]="aiModel"
-                    [placeholder]="selectedPreset.suggestedModels[0] || 'Enter model name'"
-                  />
-                  <div class="model-chips" *ngIf="modelChoices.length">
+                  <div class="provider-grid">
                     <button
-                      class="model-chip"
-                      *ngFor="let m of modelChoices"
-                      [class.active]="aiModel === m"
-                      (click)="selectModel(m)"
-                    >{{ m }}</button>
+                      *ngFor="let p of cloudPresets"
+                      class="provider-card"
+                      [class.provider-card--selected]="selectedPresetId === p.id"
+                      (click)="selectPreset(p.id)"
+                    >
+                      <span class="provider-card-name">{{ p.displayName }}</span>
+                      <span class="provider-card-desc">{{ p.description }}</span>
+                    </button>
                   </div>
                 </div>
-              </ng-container>
+              </div>
 
-              <!-- Setup help -->
-              <div class="setup-help">
-                <button class="setup-help-toggle" (click)="showSetupHelp = !showSetupHelp">
-                  <svg class="setup-help-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                       stroke-linecap="round" stroke-linejoin="round"
-                       [class.setup-help-chevron--open]="showSetupHelp">
-                    <polyline points="9 18 15 12 9 6"/>
-                  </svg>
-                  How do I set this up?
-                </button>
-                <div class="setup-help-body" *ngIf="showSetupHelp">
+              <!-- Configuration fields -->
+              <ng-container *ngIf="selectedPreset">
+                <div class="config-panel">
+                  <div class="config-panel-title">Configure {{ selectedPreset.displayName }}</div>
+
+                  <!-- Ollama -->
                   <ng-container *ngIf="isOllama">
-                    <p class="setup-help-step">1. <a class="setup-help-link" (click)="openDownloadUrl()">Download and install Ollama</a></p>
-                    <p class="setup-help-step">2. Open a terminal and pull a model:</p>
-                    <div class="recommended-models">
-                      <div class="copy-command" *ngFor="let m of selectedPreset.suggestedModels">
-                        <code>ollama pull {{ m }}</code>
-                        <button class="btn-copy" (click)="copyToClipboard('ollama pull ' + m)" title="Copy">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                          </svg>
+                    <div class="config-field">
+                      <div class="ollama-discover-row">
+                        <button class="btn-secondary" (click)="discoverOllamaModels()" [disabled]="discoveringModels">
+                          {{ discoveringModels ? 'Checking…' : 'Check for installed models' }}
                         </button>
+                        <span class="ollama-status ollama-status--warn" *ngIf="ollamaSetupState === 'no-models'">No models found</span>
+                        <span class="ollama-status ollama-status--ok" *ngIf="ollamaSetupState === 'ready'">
+                          {{ discoveredModels.length }} model{{ discoveredModels.length === 1 ? '' : 's' }} found
+                        </span>
                       </div>
                     </div>
-                    <p class="setup-help-step">3. Click <strong>Check for installed models</strong> above.</p>
+                    <div class="config-field" *ngIf="ollamaSetupState === 'ready'">
+                      <label class="config-label">Model</label>
+                      <div class="model-chips">
+                        <button
+                          class="model-chip"
+                          *ngFor="let m of discoveredModels"
+                          [class.active]="aiModel === m"
+                          (click)="selectModel(m)"
+                        >{{ m }}</button>
+                      </div>
+                    </div>
+                    <div class="config-field config-field--secondary">
+                      <label class="config-label">Host <span class="config-label-hint">optional — default: http://localhost:11434</span></label>
+                      <input class="settings-input" type="text" [(ngModel)]="hostInput" placeholder="http://localhost:11434" />
+                    </div>
                   </ng-container>
-                  <ng-container *ngIf="!isOllama && selectedPreset.requiresApiKey">
-                    <p class="setup-help-step">1. <a class="setup-help-link" (click)="openApiKeyUrl()">Get an API key from {{ selectedPreset.displayName }} ↗</a></p>
-                    <p class="setup-help-step">2. Paste it into the API Key field above.</p>
-                    <p class="setup-help-step">3. Pick a model and click <strong>Save</strong>.</p>
+
+                  <!-- Cloud / custom -->
+                  <ng-container *ngIf="!isOllama">
+                    <div class="config-field" *ngIf="selectedPreset.requiresHostInput">
+                      <label class="config-label">Base URL</label>
+                      <input class="settings-input settings-input--wide" type="text" [(ngModel)]="hostInput" [placeholder]="hostPlaceholder" />
+                    </div>
+                    <div class="config-field" *ngIf="selectedPreset.requiresApiKey">
+                      <label class="config-label">API Key</label>
+                      <div class="key-input-wrap">
+                        <input
+                          class="settings-input settings-input--wide"
+                          type="password"
+                          [(ngModel)]="apiKeyInput"
+                          [placeholder]="apiKeyConfigured ? '••••••••••••••••' : 'Enter API key'"
+                          autocomplete="off"
+                        />
+                        <span class="key-badge" *ngIf="apiKeyConfigured">Configured</span>
+                      </div>
+                    </div>
+                    <div class="config-field">
+                      <label class="config-label">Model</label>
+                      <input
+                        class="settings-input settings-input--wide"
+                        type="text"
+                        [(ngModel)]="aiModel"
+                        [placeholder]="selectedPreset.suggestedModels[0] || 'Enter model name'"
+                      />
+                      <div class="model-chips" *ngIf="modelChoices.length">
+                        <button
+                          class="model-chip"
+                          *ngFor="let m of modelChoices"
+                          [class.active]="aiModel === m"
+                          (click)="selectModel(m)"
+                        >{{ m }}</button>
+                      </div>
+                    </div>
                   </ng-container>
-                  <ng-container *ngIf="isCustomEndpoint">
-                    <p class="setup-help-step">Enter the base URL of any OpenAI-compatible server, e.g. <code>http://localhost:8080/v1</code>.</p>
-                    <p class="setup-help-step">Add an API key only if your server requires one.</p>
-                  </ng-container>
+
+                  <!-- Setup help -->
+                  <div class="setup-help">
+                    <button class="setup-help-toggle" (click)="showSetupHelp = !showSetupHelp">
+                      <svg class="setup-help-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                           stroke-linecap="round" stroke-linejoin="round"
+                           [class.setup-help-chevron--open]="showSetupHelp">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                      How do I set this up?
+                    </button>
+                    <div class="setup-help-body" *ngIf="showSetupHelp">
+                      <ng-container *ngIf="isOllama">
+                        <p class="setup-help-step">1. <a class="setup-help-link" (click)="openDownloadUrl()">Download and install Ollama</a></p>
+                        <p class="setup-help-step">2. Open a terminal and pull a model:</p>
+                        <div class="recommended-models">
+                          <div class="copy-command" *ngFor="let m of selectedPreset.suggestedModels">
+                            <code>ollama pull {{ m }}</code>
+                            <button class="btn-copy" (click)="copyToClipboard('ollama pull ' + m)" title="Copy">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                        <p class="setup-help-step">3. Click <strong>Check for installed models</strong> above.</p>
+                      </ng-container>
+                      <ng-container *ngIf="!isOllama && selectedPreset.requiresApiKey">
+                        <p class="setup-help-step">1. <a class="setup-help-link" (click)="openApiKeyUrl()">Get an API key from {{ selectedPreset.displayName }} ↗</a></p>
+                        <p class="setup-help-step">2. Paste it into the API Key field above.</p>
+                        <p class="setup-help-step">3. Pick a model and click <strong>Save</strong>.</p>
+                      </ng-container>
+                      <ng-container *ngIf="isCustomEndpoint">
+                        <p class="setup-help-step">Enter the base URL of any OpenAI-compatible server, e.g. <code>http://localhost:8080/v1</code>.</p>
+                        <p class="setup-help-step">Add an API key only if your server requires one.</p>
+                      </ng-container>
+                    </div>
+                  </div>
+
+                  <!-- Test result + actions -->
+                  <div class="test-result" *ngIf="testState !== 'idle'" [class.ok]="testState === 'ok'" [class.fail]="testState === 'fail'">
+                    <span *ngIf="testState === 'testing'">Testing connection…</span>
+                    <span *ngIf="testState === 'ok'">Connection successful</span>
+                    <span *ngIf="testState === 'fail'">Failed<ng-container *ngIf="testReason"> — {{ testReason }}</ng-container></span>
+                  </div>
+                  <div class="config-actions">
+                    <button class="btn-secondary" *ngIf="canTestConnection" [disabled]="testState === 'testing'" (click)="testConnection()">
+                      {{ testState === 'testing' ? 'Testing…' : 'Test Connection' }}
+                    </button>
+                    <button class="btn-save" [disabled]="!canSave" (click)="saveSettings()">
+                      {{ saved ? 'Saved ✓' : 'Save' }}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </ng-container>
 
-              <!-- Test result + actions -->
-              <div class="test-result" *ngIf="testState !== 'idle'" [class.ok]="testState === 'ok'" [class.fail]="testState === 'fail'">
-                <span *ngIf="testState === 'testing'">Testing connection…</span>
-                <span *ngIf="testState === 'ok'">Connection successful</span>
-                <span *ngIf="testState === 'fail'">Failed<ng-container *ngIf="testReason"> — {{ testReason }}</ng-container></span>
-              </div>
-              <div class="config-actions">
-                <button class="btn-secondary" *ngIf="canTestConnection" [disabled]="testState === 'testing'" (click)="testConnection()">
-                  {{ testState === 'testing' ? 'Testing…' : 'Test Connection' }}
-                </button>
-                <button class="btn-save" [disabled]="!canSave" (click)="saveSettings()">
-                  {{ saved ? 'Saved ✓' : 'Save' }}
-                </button>
-              </div>
             </div>
-          </ng-container>
+          </div>
 
         </div>
       </div>
     </div>
 
-    <!-- ─── AI Analysis Behavior ───────────────────────────────────────────── -->
-    <div class="settings-group" *ngIf="electron.isElectron">
-      <div class="settings-group-label">AI Analysis Behavior</div>
-
-      <div class="settings-row">
-        <div class="settings-info">
-          <span class="settings-name">Derive stage timeout</span>
-          <span class="settings-desc">How long each local analysis stage (security, architecture, data flow, etc.) may run before being marked failed</span>
-        </div>
-        <div class="settings-control settings-control--inline">
-          <input class="settings-input settings-input--sm" type="number" min="5" max="300" [(ngModel)]="deriveTimeoutSec" />
-          <span class="settings-unit">seconds</span>
-        </div>
-      </div>
-
-      <div class="settings-row">
-        <div class="settings-info">
-          <span class="settings-name">Generate stage timeout</span>
-          <span class="settings-desc">How long each AI summary generation call may run before timing out</span>
-        </div>
-        <div class="settings-control settings-control--inline">
-          <input class="settings-input settings-input--sm" type="number" min="30" max="600" [(ngModel)]="generateTimeoutSec" />
-          <span class="settings-unit">seconds</span>
-        </div>
-      </div>
-
-      <div class="settings-row">
-        <div class="settings-info">
-          <span class="settings-name">Provider request timeout</span>
-          <span class="settings-desc">Maximum wall-clock time for a single HTTP request to the AI provider</span>
-        </div>
-        <div class="settings-control settings-control--inline">
-          <input class="settings-input settings-input--sm" type="number" min="30" max="600" [(ngModel)]="providerTimeoutSec" />
-          <span class="settings-unit">seconds</span>
-        </div>
-      </div>
-
-      <div class="settings-row">
-        <div class="settings-info">
-          <span class="settings-name">Max tokens per summary</span>
-          <span class="settings-desc">Maximum response size for each AI-generated summary. Larger values allow more detailed output but take longer</span>
-        </div>
-        <div class="settings-control settings-control--inline">
-          <input class="settings-input settings-input--sm" type="number" min="512" max="16384" step="256" [(ngModel)]="maxTokensGenerate" />
-          <span class="settings-unit">tokens</span>
-        </div>
-      </div>
-
-      <div class="settings-row">
-        <div class="settings-info">
-          <span class="settings-name">Run summaries in parallel</span>
-          <span class="settings-desc">Generate all AI summaries concurrently. Faster on powerful hardware, but may overload slower local models</span>
-        </div>
-        <div class="settings-control">
-          <button class="select-pill" [class.active]="parallelSummaries" (click)="parallelSummaries = true">On</button>
-          <button class="select-pill" [class.active]="!parallelSummaries" (click)="parallelSummaries = false">Off</button>
-        </div>
-      </div>
-    </div>
 
     <!-- ─── Storage Management ─────────────────────────────────────────────── -->
     <div class="settings-group" *ngIf="electron.isElectron">
-      <div class="settings-group-label">Storage Management</div>
+      <div class="config-collapse">
+        <button class="config-collapse-toggle" (click)="showStorageConfig = !showStorageConfig">
+          <svg class="config-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               [class.config-collapse-chevron--open]="showStorageConfig">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+          <span class="settings-group-label" style="margin:0">Storage Management</span>
+          <span class="config-collapse-hint" *ngIf="!showStorageConfig && storageStats">{{ (storageStats.dbSizeKb / 1024).toFixed(1) }} MB · {{ storageStats.workspaces }} workspaces</span>
+        </button>
 
-      <!-- DB location -->
-      <div class="settings-row">
-        <div class="settings-info">
-          <span class="settings-name">Database location</span>
-          <span class="settings-desc settings-desc--mono">{{ dbPath || 'userData/legacylens.db' }}</span>
-        </div>
-        <div class="settings-control">
-          <button class="btn-secondary" (click)="openDbFolder()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;margin-right:5px;">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-            </svg>
-            Open Folder
-          </button>
-        </div>
-      </div>
+        <div class="config-collapse-body" *ngIf="showStorageConfig">
 
-      <!-- Storage stats -->
-      <div class="storage-stats" *ngIf="storageStats">
-        <div class="storage-stat">
-          <span class="storage-stat-val">{{ storageStats.repositories }}</span>
-          <span class="storage-stat-label">Repositories</span>
-        </div>
-        <div class="storage-stat">
-          <span class="storage-stat-val">{{ storageStats.workspaces }}</span>
-          <span class="storage-stat-label">Workspaces</span>
-        </div>
-        <div class="storage-stat">
-          <span class="storage-stat-val">{{ storageStats.analyses }}</span>
-          <span class="storage-stat-label">Analyses</span>
-        </div>
-        <div class="storage-stat">
-          <span class="storage-stat-val">{{ storageStats.files }}</span>
-          <span class="storage-stat-label">File records</span>
-        </div>
-        <div class="storage-stat">
-          <span class="storage-stat-val">{{ (storageStats.dbSizeKb / 1024).toFixed(1) }} MB</span>
-          <span class="storage-stat-label">Database size</span>
-        </div>
-      </div>
-
-      <!-- Destructive actions -->
-      <div class="danger-rows">
-
-        <div class="settings-row settings-row--danger">
-          <div class="settings-info">
-            <span class="settings-name">Clear analysis cache</span>
-            <span class="settings-desc">Deletes all stored analyses and file records. Repositories and workspaces are kept.</span>
+          <!-- DB location -->
+          <div class="settings-row">
+            <div class="settings-info">
+              <span class="settings-name">Database location</span>
+              <span class="settings-desc settings-desc--mono">{{ dbPath || 'userData/legacylens.db' }}</span>
+            </div>
+            <div class="settings-control">
+              <button class="btn-secondary" (click)="openDbFolder()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;margin-right:5px;">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+                Open Folder
+              </button>
+            </div>
           </div>
-          <button class="btn-danger" (click)="requestConfirm('clearCache')" [disabled]="storageActionBusy">Clear Cache</button>
-        </div>
 
-        <div class="settings-row settings-row--danger">
-          <div class="settings-info">
-            <span class="settings-name">Clear all workspaces</span>
-            <span class="settings-desc">Removes all saved workspace sessions.</span>
+          <!-- Storage stats -->
+          <div class="storage-stats" *ngIf="storageStats">
+            <div class="storage-stat">
+              <span class="storage-stat-val">{{ storageStats.repositories }}</span>
+              <span class="storage-stat-label">Repositories</span>
+            </div>
+            <div class="storage-stat">
+              <span class="storage-stat-val">{{ storageStats.workspaces }}</span>
+              <span class="storage-stat-label">Workspaces</span>
+            </div>
+            <div class="storage-stat">
+              <span class="storage-stat-val">{{ storageStats.analyses }}</span>
+              <span class="storage-stat-label">Analyses</span>
+            </div>
+            <div class="storage-stat">
+              <span class="storage-stat-val">{{ storageStats.files }}</span>
+              <span class="storage-stat-label">File records</span>
+            </div>
+            <div class="storage-stat">
+              <span class="storage-stat-val">{{ (storageStats.dbSizeKb / 1024).toFixed(1) }} MB</span>
+              <span class="storage-stat-label">Database size</span>
+            </div>
           </div>
-          <button class="btn-danger" (click)="requestConfirm('clearWorkspaces')" [disabled]="storageActionBusy">Clear Workspaces</button>
-        </div>
 
-        <div class="settings-row settings-row--danger">
-          <div class="settings-info">
-            <span class="settings-name">Remove all repositories</span>
-            <span class="settings-desc">Deletes all registered repositories and their associated analyses and file records.</span>
-          </div>
-          <button class="btn-danger" (click)="requestConfirm('removeRepos')" [disabled]="storageActionBusy">Remove All</button>
-        </div>
+          <!-- Destructive actions -->
+          <div class="danger-rows">
 
-        <div class="settings-row settings-row--danger settings-row--factory">
-          <div class="settings-info">
-            <span class="settings-name">Factory reset</span>
-            <span class="settings-desc">Wipes the entire database. All repositories, workspaces, analyses, and settings are permanently deleted.</span>
-          </div>
-          <button class="btn-danger btn-danger--critical" (click)="requestConfirm('factoryReset')" [disabled]="storageActionBusy">Factory Reset</button>
-        </div>
+            <div class="settings-row settings-row--danger">
+              <div class="settings-info">
+                <span class="settings-name">Clear analysis cache</span>
+                <span class="settings-desc">Deletes all stored analyses and file records. Repositories and workspaces are kept.</span>
+              </div>
+              <button class="btn-danger" (click)="requestConfirm('clearCache')" [disabled]="storageActionBusy">Clear Cache</button>
+            </div>
 
-      </div>
+            <div class="settings-row settings-row--danger">
+              <div class="settings-info">
+                <span class="settings-name">Clear all workspaces</span>
+                <span class="settings-desc">Removes all saved workspace sessions.</span>
+              </div>
+              <button class="btn-danger" (click)="requestConfirm('clearWorkspaces')" [disabled]="storageActionBusy">Clear Workspaces</button>
+            </div>
 
-      <!-- Confirm overlay -->
-      <div class="confirm-panel" *ngIf="confirmAction">
-        <div class="confirm-panel-body">
-          <p class="confirm-msg" *ngIf="confirmAction === 'clearCache'">This will permanently delete all analyses and file records. Continue?</p>
-          <p class="confirm-msg" *ngIf="confirmAction === 'clearWorkspaces'">This will permanently delete all workspaces. Continue?</p>
-          <p class="confirm-msg" *ngIf="confirmAction === 'removeRepos'">This will permanently remove all repositories, their analyses, and file records. Continue?</p>
-          <div *ngIf="confirmAction === 'factoryReset'" class="confirm-factory">
-            <p class="confirm-msg confirm-msg--critical">This will wipe the entire database and cannot be undone. Type <strong>RESET</strong> to confirm.</p>
-            <input class="settings-input" type="text" [(ngModel)]="confirmInput" placeholder="Type RESET" autocomplete="off" />
+            <div class="settings-row settings-row--danger">
+              <div class="settings-info">
+                <span class="settings-name">Remove all repositories</span>
+                <span class="settings-desc">Deletes all registered repositories and their associated analyses and file records.</span>
+              </div>
+              <button class="btn-danger" (click)="requestConfirm('removeRepos')" [disabled]="storageActionBusy">Remove All</button>
+            </div>
+
+            <div class="settings-row settings-row--danger settings-row--factory">
+              <div class="settings-info">
+                <span class="settings-name">Factory reset</span>
+                <span class="settings-desc">Wipes the entire database. All repositories, workspaces, analyses, and settings are permanently deleted.</span>
+              </div>
+              <button class="btn-danger btn-danger--critical" (click)="requestConfirm('factoryReset')" [disabled]="storageActionBusy">Factory Reset</button>
+            </div>
+
           </div>
-          <div class="confirm-actions">
-            <button class="btn-secondary" (click)="cancelConfirm()">Cancel</button>
-            <button class="btn-danger" [disabled]="!confirmReady || storageActionBusy" (click)="executeConfirmedAction()">
-              {{ storageActionBusy ? 'Working…' : 'Confirm' }}
-            </button>
+
+          <!-- Confirm overlay -->
+          <div class="confirm-panel" *ngIf="confirmAction">
+            <div class="confirm-panel-body">
+              <p class="confirm-msg" *ngIf="confirmAction === 'clearCache'">This will permanently delete all analyses and file records. Continue?</p>
+              <p class="confirm-msg" *ngIf="confirmAction === 'clearWorkspaces'">This will permanently delete all workspaces. Continue?</p>
+              <p class="confirm-msg" *ngIf="confirmAction === 'removeRepos'">This will permanently remove all repositories, their analyses, and file records. Continue?</p>
+              <div *ngIf="confirmAction === 'factoryReset'" class="confirm-factory">
+                <p class="confirm-msg confirm-msg--critical">This will wipe the entire database and cannot be undone. Type <strong>RESET</strong> to confirm.</p>
+                <input class="settings-input" type="text" [(ngModel)]="confirmInput" placeholder="Type RESET" autocomplete="off" />
+              </div>
+              <div class="confirm-actions">
+                <button class="btn-secondary" (click)="cancelConfirm()">Cancel</button>
+                <button class="btn-danger" [disabled]="!confirmReady || storageActionBusy" (click)="executeConfirmedAction()">
+                  {{ storageActionBusy ? 'Working…' : 'Confirm' }}
+                </button>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -445,37 +729,28 @@
           <span>{{ appVersion || '—' }}</span>
         </div>
         <div class="about-row">
-          <span>Storage</span>
-          <span>SQLite</span>
+          <span>Shell</span>
+          <span>Electron 42 · Chromium · Node.js</span>
         </div>
         <div class="about-row">
-          <span>Framework</span>
-          <span>Angular 21 · Standalone Components</span>
+          <span>Frontend</span>
+          <span>Angular 21 · TypeScript 5.9 · RxJS 7.8</span>
+        </div>
+        <div class="about-row">
+          <span>Storage</span>
+          <span>SQLite · better-sqlite3 · Electron Store</span>
+        </div>
+        <div class="about-row">
+          <span>Rendering</span>
+          <span>Mermaid 11 · Shiki 1 · jsPDF 2</span>
         </div>
         <div class="about-row" *ngIf="dbPath">
-          <span>Database</span>
+          <span>Database path</span>
           <span class="about-val--mono">{{ dbPath }}</span>
         </div>
       </div>
     </div>
 
-    <!-- ─── How SystemLens Works ───────────────────────────────────────────── -->
-    <div class="settings-group">
-      <div class="settings-group-label">About</div>
-      <div class="how-it-works">
-        <button class="how-it-works-toggle" (click)="showHowItWorks = !showHowItWorks">
-          <svg class="how-it-works-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round"
-               [class.how-it-works-chevron--open]="showHowItWorks">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-          How SystemLens Works
-        </button>
-        <div class="how-it-works-body" *ngIf="showHowItWorks">
-          <p class="how-it-works-placeholder">Documentation coming soon.</p>
-        </div>
-      </div>
-    </div>
 
   </div>
 </div>

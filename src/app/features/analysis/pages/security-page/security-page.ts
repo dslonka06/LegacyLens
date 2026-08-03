@@ -26,6 +26,8 @@ export class SecurityPage implements OnInit, OnDestroy {
   hasWorkspace = false;
   expandedFindingId: string | null = null;
   expandedCheckDomain: SecurityVerificationDomain | null = null;
+  showFindingsInfo = false;
+  showVerifInfo = false;
 
   private sub: Subscription | null = null;
 

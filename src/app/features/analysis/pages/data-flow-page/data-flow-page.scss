@@ -31,7 +31,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.09em;
-  color: var(--text-primary);
+  color: var(--text-muted);
 }
 
 // ── Tree layout ───────────────────────────────────────────────
@@ -67,8 +67,8 @@
 
 
 .flow-narrative {
-  font-size: 14px;
-  color: var(--text-content);
+  font-size: 13px;
+  color: var(--text-secondary);
   line-height: 1.7;
   margin: 0;
 }
@@ -169,8 +169,8 @@
 }
 
 .step-desc {
-  font-size: 12px;
-  color: var(--text-muted);
+  font-size: 13px;
+  color: var(--text-secondary);
   line-height: 1.7;
 }
 
@@ -281,11 +281,11 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: var(--text-primary);
+  color: var(--text-muted);
 }
 
 .strip-val {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
   font-weight: 600;
   &.accent {
@@ -338,9 +338,9 @@
 }
 
 .df-workflow-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-content);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-heading);
 }
 
 .df-workflow-entry {
@@ -425,7 +425,7 @@
 }
 
 .df-workflow-narrative {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.65;
   margin: 0;
@@ -449,17 +449,84 @@
 }
 
 .flow-workflow-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-content);
+  color: var(--text-heading);
   flex-shrink: 0;
   min-width: 140px;
 }
 
 .flow-workflow-desc {
-  font-size: 11px;
-  color: var(--text-muted);
+  font-size: 13px;
+  color: var(--text-secondary);
   line-height: 1.5;
   flex: 1;
   min-width: 0;
+}
+
+// ── Info popup ────────────────────────────────────────────────────────────────
+
+.df-doc-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+
+  .doc-block-label { margin-bottom: 0; }
+}
+
+.df-info-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: inherit;
+  line-height: 1;
+  transition: border-color 0.15s, color 0.15s;
+  &:hover { border-color: var(--accent); color: var(--accent); }
+}
+
+.df-info-popup-wrap { position: relative; }
+
+.df-info-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-card);
+
+  p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    strong { color: var(--text-heading); font-weight: 600; }
+  }
+}
+
+.df-metrics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
 }
