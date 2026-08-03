@@ -188,9 +188,9 @@
             <div class="hub-info-popup-wrap">
               <button class="hub-info-btn" (click)="showHealthInfo = !showHealthInfo">i</button>
               <div class="hub-info-popup" *ngIf="showHealthInfo">
-                <p><strong>Complexity</strong> measures how tangled the internal structure is, based on coupling between components.</p>
-                <p><strong>Maintainability</strong> reflects how easy the code is to change safely over time.</p>
-                <p><strong>Issues</strong> is the total number of problems identified during structural analysis.</p>
+                <p><strong>Complexity</strong> is measured by dividing the number of dependency edges in the file graph by the number of nodes (files). A ratio of 2 or below is Low, 2–4 is Medium, and above 4 is High. Higher ratios mean more cross-file coupling, which makes it harder to reason about any individual file in isolation.</p>
+                <p><strong>Maintainability</strong> combines file count with coupling density. More than 100 files and a ratio above 3 = Low. More than 50 files or a ratio above 2 = Medium. Otherwise = High.</p>
+                <p><strong>Risk Level</strong> combines those two scores: High complexity or Low maintainability = Critical; Low complexity and High maintainability = Healthy; either score being Medium = Fair; any other combination = Needs Attention.</p>
               </div>
             </div>
           </div>

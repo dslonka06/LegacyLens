@@ -176,7 +176,9 @@
           <div class="hub-info-popup-wrap">
             <button class="hub-info-btn" (click)="showHealthInfo = !showHealthInfo">i</button>
             <div class="hub-info-popup" *ngIf="showHealthInfo">
-              <p>Code health is derived from static analysis of the file's structure, coupling, and maintainability characteristics.</p>
+              <p><strong>Complexity</strong> is based on non-blank line count: under 30 lines is Low, 30–74 is Medium, 75 or more is High. Longer files tend to have more branching logic and are harder to hold in your head at once.</p>
+              <p><strong>Maintainability</strong> is derived from the file's detected type — for example, interfaces and SQL queries score High because they have well-defined contracts, while components and service classes score Medium due to their broader responsibilities.</p>
+              <p><strong>Risk Level</strong> combines those two scores: High complexity or Low maintainability = Critical; Low complexity and High maintainability = Healthy; either score being Medium = Fair; any other combination = Needs Attention.</p>
             </div>
           </div>
         </div>

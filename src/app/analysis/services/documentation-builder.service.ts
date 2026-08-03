@@ -15,37 +15,37 @@ interface SectionDef {
 const REPO_SECTIONS: SectionDef[] = [
   {
     id: 'executive-summary',
-    title: 'Executive Summary',
-    description: 'High-level overview of what this system is and what it does.',
+    title: 'System Understanding',
+    description: 'What this repository is and what it is responsible for.',
   },
   {
     id: 'repository-overview',
-    title: 'Repository Overview',
+    title: 'Overview',
     description: 'File counts, folder structure, projects, and workspace statistics.',
   },
   {
     id: 'architecture-overview',
-    title: 'Architecture Overview',
+    title: 'Architecture',
     description: 'Detected architectural patterns, layers, and structural design.',
   },
   {
     id: 'data-flow',
-    title: 'Data Flow Analysis',
+    title: 'Data Flow',
     description: 'How data moves through the system — requests, services, and storage.',
   },
   {
     id: 'dependency-analysis',
-    title: 'Dependency Analysis',
+    title: 'Dependencies',
     description: 'Dependency graph statistics, most-connected files, and coupling metrics.',
   },
   {
     id: 'risk-assessment',
-    title: 'Risk Assessment',
+    title: 'Security',
     description: 'Identified risks, high-coupling areas, and change-impact concerns.',
   },
   {
     id: 'modernization',
-    title: 'Modernization Opportunities',
+    title: 'Recommendations',
     description: 'Technical debt and recommended improvements.',
   },
   {
@@ -65,7 +65,7 @@ const REPO_SECTIONS: SectionDef[] = [
   },
   {
     id: 'onboarding-guide',
-    title: 'Onboarding Guide',
+    title: 'Learning Path',
     description: 'Step-by-step guide for a new developer joining this project.',
   },
 ];
@@ -73,37 +73,37 @@ const REPO_SECTIONS: SectionDef[] = [
 const FOLDER_SECTIONS: SectionDef[] = [
   {
     id: 'executive-summary',
-    title: 'Executive Summary',
-    description: 'High-level overview of what this folder contains and does.',
+    title: 'System Understanding',
+    description: 'What this folder contains and what it is responsible for.',
   },
   {
     id: 'repository-overview',
-    title: 'Folder Overview',
+    title: 'Overview',
     description: 'File counts, subfolder structure, and workspace statistics.',
   },
   {
     id: 'architecture-overview',
-    title: 'Architecture Overview',
+    title: 'Architecture',
     description: 'Detected architectural patterns, layers, and structural design.',
   },
   {
     id: 'data-flow',
-    title: 'Data Flow Analysis',
+    title: 'Data Flow',
     description: 'How data moves through the modules in this folder.',
   },
   {
     id: 'dependency-analysis',
-    title: 'Dependency Analysis',
+    title: 'Dependencies',
     description: 'Dependency graph statistics, most-connected files, and coupling metrics.',
   },
   {
     id: 'risk-assessment',
-    title: 'Risk Assessment',
+    title: 'Security',
     description: 'Identified risks, high-coupling areas, and change-impact concerns.',
   },
   {
     id: 'modernization',
-    title: 'Modernization Opportunities',
+    title: 'Recommendations',
     description: 'Technical debt and recommended improvements.',
   },
   {
@@ -113,7 +113,7 @@ const FOLDER_SECTIONS: SectionDef[] = [
   },
   {
     id: 'onboarding-guide',
-    title: 'Onboarding Guide',
+    title: 'Learning Path',
     description: 'Step-by-step guide for a new developer working in this folder.',
   },
 ];
