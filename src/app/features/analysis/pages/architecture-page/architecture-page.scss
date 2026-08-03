@@ -301,6 +301,131 @@
   font-style: italic;
 }
 
+// ── File Roles panel ──────────────────────────────────────────────────────────
+
+.arch-role-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.arch-role-group {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.arch-role-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  background: var(--panel-bg);
+  transition: background 0.12s;
+
+  &:hover { background: var(--bg-hover); }
+}
+
+.arch-role-group-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.role-controller  { background: #a78bfa; }
+  &.role-service     { background: #60a5fa; }
+  &.role-repository  { background: #34d399; }
+  &.role-http-client { background: #f97316; }
+  &.role-state-store { background: #f59e0b; }
+  &.role-component   { background: #ec4899; }
+  &.role-unknown     { background: var(--text-muted); }
+}
+
+.arch-role-group-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-heading);
+  text-transform: capitalize;
+  flex: 1;
+}
+
+.arch-role-group-count {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.arch-role-group-chevron {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 200ms ease;
+
+  &.arch-role-group-chevron--open {
+    transform: rotate(90deg);
+  }
+}
+
+.arch-role-group-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 220ms ease;
+
+  &.arch-role-group-body--open {
+    max-height: 2000px;
+  }
+}
+
+.arch-file-role-list {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 10px 10px;
+  gap: 8px;
+}
+
+.arch-file-role-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+
+  &:first-child { border-top: none; padding-top: 0; }
+}
+
+.arch-file-role-name-block {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.arch-file-role-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-heading);
+  font-family: 'JetBrains Mono', Consolas, monospace;
+}
+
+.arch-file-role-path {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', Consolas, monospace;
+}
+
+.arch-file-role-narrative {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
 .arch-narrative {
   font-size: 13px;
   color: var(--text-secondary);

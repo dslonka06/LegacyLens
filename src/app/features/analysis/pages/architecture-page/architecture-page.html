@@ -20,65 +20,65 @@
     ></app-explanation-card>
 
     <div class="arch-col-main">
-      <div class="doc-block" *ngIf="architectureNarrative">
+      <div class="doc-block">
         <div class="arch-doc-block-header">
-          <div class="doc-block-label">Architecture Summary</div>
-          <div class="arch-info-popup-wrap">
-            <button class="arch-info-btn" (click)="showArchSummaryInfo = !showArchSummaryInfo">i</button>
-            <div class="arch-info-popup" *ngIf="showArchSummaryInfo">
-              <p><strong>Architecture Summary</strong> is determined entirely without AI. The engine checks folder and file names against known layer keywords — things like "controllers", "services", "repositories", "components" — and counts hub nodes and framework signals. From this it recognises patterns like Layered, MVC, or Event-driven.</p>
-              <p>Each detected pattern gets a confidence score based on how many expected structural indicators were actually found. The top matches are shown, with the strongest one displayed as the primary architecture.</p>
-            </div>
-          </div>
-        </div>
-        <p class="arch-narrative">{{ architectureNarrative }}</p>
-      </div>
-
-      <div class="doc-block" *ngIf="architectureDiagram">
-        <div class="arch-doc-block-header">
-          <div class="doc-block-label">Layer Diagram</div>
+          <div class="doc-block-label">Dependency Layer Diagram</div>
           <div class="arch-info-popup-wrap">
             <button class="arch-info-btn" (click)="showLayerDiagramInfo = !showLayerDiagramInfo">i</button>
             <div class="arch-info-popup" *ngIf="showLayerDiagramInfo">
-              <p><strong>Layer Diagram</strong> is generated after the architecture analysis completes. Each file is placed into one of four layers — Presentation, Business Logic, Data Access, or External — based on its name and file path matching known layer keywords.</p>
-              <p>To keep the diagram readable, up to 4 representative files per layer are chosen (the most-referenced ones), and up to 12 cross-layer connections are drawn. No AI is involved — it renders directly from the dependency graph using a top-down layout.</p>
+              <p><strong>Dependency Layer Diagram</strong> groups files into four architectural layers — Presentation, Business Logic, Data Access, and External — based on file name and path patterns. Edges show which layers depend on which, giving a structural overview of how data and control flow through the codebase.</p>
+              <p>Up to 4 representative files per layer are shown (the most-referenced ones) and up to 12 cross-layer edges are drawn to keep the diagram readable. No AI is involved — it renders directly from the dependency graph.</p>
             </div>
           </div>
         </div>
-        <app-mermaid-diagram [diagram]="architectureDiagram"></app-mermaid-diagram>
+        <app-mermaid-diagram *ngIf="architectureDiagram; else noArchDiagram" [diagram]="architectureDiagram"></app-mermaid-diagram>
+        <ng-template #noArchDiagram>
+          <p class="arch-empty-state">Dependency layer diagram could not be generated — not enough cross-layer dependency data was found.</p>
+        </ng-template>
       </div>
 
-      <!-- Structural Analysis -->
-      <div class="doc-block" *ngIf="hasStructuralAnalysis">
+      <!-- File Roles -->
+      <div class="doc-block">
         <div class="arch-doc-block-header">
-          <div class="doc-block-label">Structural Analysis</div>
+          <div class="doc-block-label">File Roles</div>
           <div class="arch-info-popup-wrap">
-            <button class="arch-info-btn" (click)="showStructuralInfo = !showStructuralInfo">i</button>
-            <div class="arch-info-popup" *ngIf="showStructuralInfo">
-              <p><strong>Coupling</strong> describes how concentrated your dependencies are. It's based on the proportion of files that act as hubs (5+ other files depending on them). Critical means more than 1 in 5 files is a hub; High means more than 1 in 8; Moderate means more than 1 in 16; Low means the codebase is reasonably spread out.</p>
-              <p><strong>Hub Nodes</strong> is simply the count of files that 5 or more other files import. A high number means many parts of the codebase share a small set of central files — changes to those files ripple widely.</p>
-              <p><strong>Circular Deps</strong> counts dependency cycles — cases where file A depends on B which eventually depends back on A. These prevent clean isolation and can cause subtle loading or initialisation issues.</p>
+            <button class="arch-info-btn" (click)="showFileRolesInfo = !showFileRolesInfo">i</button>
+            <div class="arch-info-popup" *ngIf="showFileRolesInfo">
+              <p><strong>File Roles</strong> classifies each file by its structural role in the architecture: controller (external entry points), service (business logic), repository (data access), http-client (external API bridges), state-store (shared reactive state), and component (UI layer).</p>
+              <p>Classification is heuristic — it combines content signals (decorators, imports, method patterns) with file naming. Files that could not be classified are excluded. Each description explains what the file does in context.</p>
             </div>
           </div>
         </div>
-        <div class="metrics-strip">
-          <div class="strip-item">
-            <span class="strip-label">Coupling</span>
-            <span class="strip-val" [class]="couplingClass(archAI!.couplingAssessment)">{{ archAI!.couplingAssessment }}</span>
-          </div>
-          <div class="strip-item">
-            <span class="strip-label">Hub Nodes</span>
-            <span class="strip-val" [class.strip-val-warn]="archAI!.hubCount > 2">{{ archAI!.hubCount }}</span>
-          </div>
-          <div class="strip-item">
-            <span class="strip-label">Circular Deps</span>
-            <span class="strip-val" [class.strip-val-warn]="archAI!.circularDependencyCount > 0">{{ archAI!.circularDependencyCount }}</span>
+        <div class="arch-role-group-list" *ngIf="fileRoleGroups.length > 0; else noFileRoles">
+          <div class="arch-role-group" *ngFor="let group of fileRoleGroups">
+            <div class="arch-role-group-header" (click)="toggleRoleGroup(group.role)">
+              <span class="arch-role-group-dot" [class]="roleClass(group.role)"></span>
+              <span class="arch-role-group-name">{{ group.role }}</span>
+              <span class="arch-role-group-count">{{ group.count }}</span>
+              <svg class="arch-role-group-chevron" [class.arch-role-group-chevron--open]="isRoleGroupExpanded(group.role)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </div>
+            <div class="arch-role-group-body" [class.arch-role-group-body--open]="isRoleGroupExpanded(group.role)">
+              <div class="arch-file-role-list">
+                <div class="arch-file-role-item" *ngFor="let f of group.files">
+                  <div class="arch-file-role-name-block">
+                    <span class="arch-file-role-name">{{ f.name }}</span>
+                    <span class="arch-file-role-path">{{ f.shortPath }}</span>
+                  </div>
+                  <p class="arch-file-role-narrative">{{ f.narrative }}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+        <ng-template #noFileRoles>
+          <p class="arch-empty-state">No file roles detected — files could not be classified from naming and dependency patterns.</p>
+        </ng-template>
       </div>
 
       <!-- Hub Nodes -->
-      <div class="doc-block hub-nodes-block" *ngIf="hubNodes.length > 0">
+      <div class="doc-block hub-nodes-block">
         <div class="hub-nodes-header" [class.hub-nodes-header--expanded]="hubNodesExpanded" (click)="toggleHubNodes()">
           <div class="hub-nodes-summary">
             <span class="hub-nodes-big-count">{{ hubNodes.length }}</span>
@@ -99,7 +99,7 @@
           </svg>
         </div>
         <div class="hub-nodes-body" [class.hub-nodes-body--open]="hubNodesExpanded">
-          <div class="arch-component-list">
+          <div class="arch-component-list" *ngIf="hubNodes.length > 0; else noHubNodes">
             <div class="arch-component-item" *ngFor="let hub of hubNodes">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="3" />
@@ -109,6 +109,9 @@
               <span class="hub-dep-count">{{ hub.degree }} connections</span>
             </div>
           </div>
+          <ng-template #noHubNodes>
+            <p class="arch-empty-state">No hub nodes detected — no file is depended on by 5 or more others.</p>
+          </ng-template>
         </div>
       </div>
     </div>

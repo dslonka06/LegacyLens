@@ -5,11 +5,12 @@ import { Subscription } from 'rxjs';
 import { ElectronService, AiProviderStatus } from '@app/core/services/electron.service';
 import { WorkspaceManagerService } from '@app/workspace/services/workspace-manager.service';
 import { Workspace, WorkspaceType } from '@app/workspace/models/workspace-entity.model';
+import { WorkspaceSwitcherModal } from '@app/workspace/components/workspace-switcher-modal/workspace-switcher-modal';
 
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, WorkspaceSwitcherModal],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
   host: { 'data-theme': 'dark' },
@@ -22,6 +23,8 @@ export class HomePage implements OnInit, OnDestroy {
 
   recentAnalyses: Workspace[] = [];
   activeWorkspace: Workspace | null = null;
+  showLimitModal = false;
+  limitModalPendingType: WorkspaceType | null = null;
   private subs: Subscription[] = [];
 
   constructor(
@@ -99,23 +102,23 @@ export class HomePage implements OnInit, OnDestroy {
 
   startNewAnalysis(type: WorkspaceType): void {
     if (!this.manager.canCreate()) {
-      // Limit reached — let the guard's limitReached$ bubble open the switcher
-      // on whichever hub page is currently active.
-      const routes: Record<WorkspaceType, string> = {
-        file: '/file-analysis',
-        folder: '/folder-analysis',
-        repository: '/repository-analysis',
-      };
-      this.router.navigate([routes[type]]);
+      this.limitModalPendingType = type;
+      this.showLimitModal = true;
+      this.cdr.detectChanges();
       return;
     }
-    const ws = this.manager.create(type);
+    this.manager.create(type);
     const routes: Record<WorkspaceType, string> = {
       file: '/file-analysis',
       folder: '/folder-analysis',
       repository: '/repository-analysis',
     };
     this.router.navigate([routes[type]]);
+  }
+
+  closeLimitModal(): void {
+    this.showLimitModal = false;
+    this.limitModalPendingType = null;
   }
 
   private async loadAiStatus(): Promise<void> {

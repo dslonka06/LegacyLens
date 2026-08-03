@@ -71,7 +71,7 @@
                   <li><strong>dataFlowExtraction</strong> — per file: classifies role (controller/component/service/repository/http-client/state-store) from name patterns; extracts sources (HTTP verbs, @Input(), localStorage reads, route params) and sinks (@Output(), router.navigate, Subject.next()); infers interaction verb per import via method-call pattern matching (reads/writes/updates/deletes/publishes/navigates/calls).</li>
                   <li><strong>multiProject</strong> — ProjectDiscoveryEngine discovers sub-projects.</li>
                   <li><strong>gitAnalysis</strong> — reads branch and origin URL from disk via readGitMetadata().</li>
-                  <li><strong>architectureDiscovery</strong> — checks folder names against conventional layer keywords (controllers/services/repositories/models/components/pages/views); counts hub nodes; checks tech names for framework signals. Produces ArchitecturePattern[] with confidence: null.</li>
+                  <li><strong>architectureDiscovery</strong> — matches folder names against a set of known architecture patterns (Angular Feature Module, Feature-Sliced Design, Clean Architecture, MVC, etc.) using per-pattern folder indicator lists and minimum match thresholds; counts hub nodes; checks tech names for framework signals. Each detected pattern receives a confidence score. Produces ArchitecturePattern[] with confidence: null until the AI phase overwrites it.</li>
                 </ul>
 
                 <h4 class="hiw__h3">D4 — KnowledgeModel Build</h4>
@@ -116,7 +116,7 @@
                   <li><strong>recommendations</strong> — evidence: technicalDebtLevel, total/critical/high counts, dominant category, architecture + coupling, top-3 recommendations (title, priority, category, issueDescription). Output: file = 1–2 sentences; folder = 2 paragraphs 80–130 words; repo = 3 paragraphs 150–220 words.</li>
                   <li><strong>learningPath</strong> — evidence: systemType, welcomeSummary, roadmap length, first/last step, focusFirst, businessCriticality, keyWorkflows, highRiskAreas. Output: same word counts as recommendations.</li>
                   <li><strong>architecture</strong> — evidence: dominantPattern + confidence, competing patterns, coupling assessment, hub count, circular dep count, evolution risk, boundary violations, layer breakdown, raw structural detection indicators. Output: file = 1–2 sentences; folder = 2 paragraphs 80–130 words; repo = 3–4 paragraphs 180–260 words.</li>
-                  <li><strong>dataFlow</strong> — file scope: flow pattern label, step sequence, inputs, outputs, step descriptions. Folder/repo scope: workflow count, per-workflow risk profiles (name, step count, entry point, risk, bottleneck nodes), entry points, bottlenecks, most-referenced, data access nodes, external integrations, architecture context. Output: file = 2–4 sentences; folder = 2 paragraphs 80–130 words; repo = 3 paragraphs 160–240 words.</li>
+                  <li><strong>dataFlow</strong> — file scope: flow pattern label, step sequence, inputs, outputs, step descriptions. Folder/repo scope: workflow count, per-workflow risk profiles (name, step count, entry point, risk), entry points, most-referenced, data access nodes, external integrations, architecture context. Output: file = 2–4 sentences; folder = 2 paragraphs 80–130 words; repo = 3 paragraphs 160–240 words.</li>
                 </ul>
 
                 <h4 class="hiw__h3">Generate Tier</h4>
@@ -148,9 +148,8 @@
                 <h4 class="hiw__h3">Architecture</h4>
                 <ul class="hiw__ul">
                   <li><strong>AI Analysis card</strong> — <span class="hiw__tag hiw__tag--llm">Generate</span> <code>ai.summaries.architecture.content</code></li>
-                  <li><strong>Architecture Summary</strong> — <span class="hiw__tag hiw__tag--struct">Structural</span> top 3 pattern names + confidence from <code>relationships.architecture.patterns[]</code>.</li>
-                  <li><strong>Layer Diagram</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.architecture.architectureDiagram</code> (Mermaid flowchart TD).</li>
-                  <li><strong>Structural Analysis strip</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> couplingAssessment, hubCount, circularDependencyCount from <code>ai.architecture</code>.</li>
+                  <li><strong>Dependency Layer Diagram</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.architecture.architectureDiagram</code> (Mermaid flowchart TD). Groups files into four architectural layers — Presentation, Business Logic, Data Access, and External — based on file name and path patterns.</li>
+                  <li><strong>File Roles</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> files classified by structural role (controller, service, repository, http-client, state-store, component) from content signals and naming patterns.</li>
                   <li><strong>Hub Nodes list</strong> — <span class="hiw__tag hiw__tag--struct">Structural</span> <code>relationships.dependencies.hubs[]</code> filtered to isHub=true, top 10.</li>
                 </ul>
 
@@ -159,9 +158,9 @@
                   <li><strong>AI Analysis card</strong> — <span class="hiw__tag hiw__tag--llm">Generate</span> <code>ai.summaries.dataFlow.content</code></li>
                   <li><strong>File diagram</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.dataFlowFileDiagram</code> (Mermaid flowchart LR built from insights.dataFlow steps/inputs/outputs).</li>
                   <li><strong>Inputs / Steps / Outputs</strong> (file) — <span class="hiw__tag hiw__tag--struct">Structural</span> <code>insights.dataFlow</code>; step descriptions from <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.dataFlowFileNarrative.stepNarrative[]</code>.</li>
-                  <li><strong>Metrics strip</strong> (folder/repo) — <span class="hiw__tag hiw__tag--struct">Structural</span> graph node/edge counts; workflow/entry point/bottleneck/external dep counts from <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.dataFlow</code>.</li>
+                  <li><strong>Metrics strip</strong> (folder/repo) — <span class="hiw__tag hiw__tag--struct">Structural</span> graph node/edge counts from <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.dataFlow</code>.</li>
                   <li><strong>Workflow diagram</strong> (folder/repo) — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.dataFlow.dataFlowDiagram</code> (Mermaid flowchart LR).</li>
-                  <li><strong>Workflows accordion</strong> — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.dataFlow.primaryWorkflows[]</code> — workflowName, entryPoint, failureRisk, stepCount, bottleneckNodes, narrative.</li>
+                  <li><strong>Workflows accordion</strong> (repo) — <span class="hiw__tag hiw__tag--derive">Derive</span> <code>ai.dataFlow.primaryWorkflows[]</code> — workflowName, entryPoint, failureRisk, stepCount, narrative. Expand a workflow to see the file-by-file chain with hop verbs and failure risk.</li>
                 </ul>
 
                 <h4 class="hiw__h3">Security</h4>
@@ -210,14 +209,15 @@
                 <p class="hiw__p"><code>renderPreview()</code> assembles selected sections as numbered plain text: <code>"N. Title\n\nContent"</code>, joined by <code>\n\n</code>. Sections producing empty content are silently skipped and not numbered — numbering is always contiguous. The preview panel splits this text on <code>/(?=^\d+\. )/m</code> to recover individual sections for display.</p>
 
                 <h4 class="hiw__h3">PDF Export</h4>
-                <p class="hiw__p">Library: jsPDF, dynamically imported. All layout is hand-drawn with raw drawing primitives — no plugins. Page geometry: A4 portrait (210×297 mm), 20 mm margins, 170 mm content width, 16 mm footer zone.</p>
+                <p class="hiw__p">Library: jsPDF, dynamically imported. All layout is hand-drawn with raw drawing primitives — no plugins. Page geometry: A4 portrait (210×297 mm), 20 mm margins, 170 mm content width, 16 mm footer zone. Two export modes are available: <strong>Export PDF</strong> (dark theme) and <strong>Print-Friendly</strong> (light/corporate theme).</p>
                 <ul class="hiw__ul">
-                  <li><strong>Cover page</strong> — full-width purple rectangle (top 72 mm), report title at 22 pt, workspace name at 15 pt, scope/date at 9 pt.</li>
-                  <li><strong>Section headers</strong> — 3.5×8 mm brand-purple left accent bar, bold 13 pt title, full-width underrule.</li>
+                  <li><strong>Cover page</strong> — full-width accent rectangle (top 72 mm), report title at 22 pt, workspace name at 15 pt, scope/date at 9 pt.</li>
+                  <li><strong>Section headers</strong> — 3.5×8 mm brand-accent left bar, bold 13 pt title, full-width underrule.</li>
                   <li><strong>Body parsing</strong> — <code>renderPreview()</code> output split on <code>\n(?=\d+\.\s)</code> into section blocks; paragraphs split on <code>\n\n</code>; lines starting with <code>[WORD]</code> rendered as severity-coloured labels (mapped to red/amber/green by keyword); two-space-indented lines at 9 pt; plain lines at 9.5 pt.</li>
-                  <li><strong>Pagination</strong> — <code>checkPage(neededMm)</code> called before each draw. Insufficient space triggers <code>doc.addPage()</code>, <code>fillPageBackground()</code> repaints dark, Y cursor resets.</li>
+                  <li><strong>Pagination</strong> — <code>checkPage(neededMm)</code> called before each draw. Insufficient space triggers <code>doc.addPage()</code>, <code>fillPageBackground()</code> repaints the background, Y cursor resets.</li>
                   <li><strong>Footers</strong> — written last in a second pass: horizontal separator, brand label left, <code>Page N of M</code> right at 7 pt.</li>
-                  <li><strong>Colour palette</strong> — background <code>#151927</code> (dark navy); brand accent <code>#8d63ff</code> (purple); severity: red/amber/green.</li>
+                  <li><strong>Dark palette</strong> — background <code>#151927</code> (dark navy); brand accent <code>#8d63ff</code> (purple); severity: red/amber/green.</li>
+                  <li><strong>Print-friendly palette</strong> — white background; brand accent <code>#6d41d9</code> (indigo); same severity mapping on white.</li>
                 </ul>
               </div>
             </div>
@@ -251,7 +251,7 @@
                 <p class="hiw__p">flowchart LR. Built from <code>insights.dataFlow</code> (steps[], inputs[], outputs[]). Three columns: input nodes (rectangle) → step nodes (double-circle) → output nodes (rectangle). Inputs connect to first step; steps chain sequentially; last step connects to each output. If no steps, inputs connect directly to outputs.</p>
 
                 <h4 class="hiw__h3">Rendering (Angular)</h4>
-                <p class="hiw__p">MermaidDiagramComponent (standalone, OnPush) receives the Mermaid string as <code>[diagram]</code>. On each change: dynamically imports mermaid; calls <code>mermaid.initialize()</code> with current theme from ThemeService (dark/default); calls <code>mermaid.render()</code> to produce an SVG string. The SVG is post-processed by <code>_normaliseSvg()</code>: extracts pixel width/height; inserts viewBox if absent; replaces fixed width/height with 100%/auto; injects inline <code>style="max-width:&#123;maxWidth&#125;"</code> — where maxWidth is an @Input() defaulting to 90% (data flow pages override to 50%). The processed SVG is passed through DomSanitizer.bypassSecurityTrustHtml and bound via [innerHTML]. Rendering errors show a warning icon or are silently suppressed when the mermaid package is not yet loaded.</p>
+                <p class="hiw__p">MermaidDiagramComponent (standalone, OnPush) receives the Mermaid string as <code>[diagram]</code>. On each change: dynamically imports mermaid; calls <code>mermaid.initialize()</code> with current theme from ThemeService (dark/default); calls <code>mermaid.render()</code> to produce an SVG string. The SVG is post-processed by <code>_normaliseSvg()</code>: extracts pixel width/height; inserts viewBox if absent; replaces fixed width/height with 100%/auto; injects inline <code>style="max-width:&#123;maxWidth&#125;"</code> — where maxWidth is an @Input() defaulting to 90% (data flow workflow and file diagrams render at 65%). The processed SVG is passed through DomSanitizer.bypassSecurityTrustHtml and bound via [innerHTML]. Rendering errors show a warning icon or are silently suppressed when the mermaid package is not yet loaded.</p>
               </div>
             </div>
 

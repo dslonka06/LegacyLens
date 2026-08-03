@@ -113,8 +113,8 @@ export class MermaidDiagram implements OnChanges, AfterViewInit {
       .replace(/\bwidth="[^"]*"/, 'width="100%"')
       .replace(/\bheight="[^"]*"/, 'height="auto"');
 
-    // Inject inline style so it always wins over Mermaid's own style block
-    out = out.replace(/<svg /, `<svg style="max-width:${this.maxWidth};height:auto;display:block;" `);
+    // Inject inline style so layout properties win over Mermaid's own style block
+    out = out.replace(/<svg /, `<svg style="height:auto;display:block;width:100%;" `);
 
     return out;
   }

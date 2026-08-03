@@ -11,7 +11,6 @@ import type {
   ArchitecturePattern,
   DependencyHub,
 } from '@app/knowledge/models/knowledge-model.contract';
-import type { ArchitectureAIAnalysis } from '@app/knowledge/models/architecture-ai-analysis.model';
 
 @Component({
   selector: 'app-architecture-page',
@@ -24,9 +23,8 @@ export class ArchitecturePage implements OnInit, OnDestroy {
   model: KnowledgeModel | null = null;
   hasWorkspace = false;
   hubNodesExpanded = false;
-  showArchSummaryInfo = false;
   showLayerDiagramInfo = false;
-  showStructuralInfo = false;
+  showFileRolesInfo = false;
   showHubNodesInfo = false;
 
   private sub: Subscription | null = null;
@@ -62,12 +60,8 @@ export class ArchitecturePage implements OnInit, OnDestroy {
     return this.model?.workspaceName ?? 'Workspace';
   }
 
-  get architectureNarrative(): string {
-    const pts = this.patterns;
-    if (!pts.length) return '';
-    const names = pts.slice(0, 3).map((p) => p.name).join(', ');
-    const topConf = this.confidencePercent(pts[0]);
-    return `Detected pattern${pts.length > 1 ? 's' : ''}: ${names} (${topConf}% confidence).`;
+  get isRepoScope(): boolean {
+    return this.model?.targetType === 'repository';
   }
 
   confidencePercent(p: ArchitecturePattern): number {
@@ -82,37 +76,50 @@ export class ArchitecturePage implements OnInit, OnDestroy {
     return this.model?.ai?.architecture?.architectureDiagram ?? null;
   }
 
-  get archAI(): ArchitectureAIAnalysis | null {
-    return this.model?.ai?.architecture ?? null;
-  }
-
   get hubNodes(): DependencyHub[] {
     return (this.model?.relationships.dependencies?.hubs ?? []).filter(h => h.isHub).slice(0, 10);
   }
 
-  get hasStructuralAnalysis(): boolean {
-    return this.archAI != null;
+  private static readonly ROLE_ORDER = ['controller', 'service', 'state-store', 'component', 'http-client', 'repository'];
+
+  get fileRoles(): Array<{ name: string; path: string; shortPath: string; fileRole: string; narrative: string }> {
+    return this.model?.ai?.dataFlow?.fileRoles ?? [];
   }
 
-  couplingClass(assessment: string): string {
-    return { Low: 'coupling-low', Moderate: 'coupling-moderate', High: 'coupling-high', Critical: 'coupling-critical' }[assessment] ?? 'coupling-low';
+  get fileRoleGroups(): Array<{ role: string; count: number; files: Array<{ name: string; path: string; shortPath: string; fileRole: string; narrative: string }> }> {
+    const grouped: Record<string, Array<{ name: string; path: string; shortPath: string; fileRole: string; narrative: string }>> = {};
+    for (const f of this.fileRoles) {
+      (grouped[f.fileRole] ??= []).push(f);
+    }
+    return ArchitecturePage.ROLE_ORDER
+      .filter(role => grouped[role]?.length)
+      .map(role => ({ role, count: grouped[role].length, files: grouped[role] }));
   }
 
-  architectureDescription(name: string): string {
-    const descriptions: Record<string, string> = {
-      'Clean Architecture':
-        'Business logic isolated from infrastructure. Dependencies point inward.',
-      MVC: 'Model, View, Controller separation — each layer has a distinct role.',
-      CQRS: 'Read and write operations handled separately. Queries and commands are decoupled.',
-      'Layered Architecture':
-        'Code organised into horizontal layers: presentation, business logic, data access.',
-      'Microservice Architecture': 'Independently deployable services, each owning its own data.',
-      'Feature-Sliced Design': 'Code grouped by feature slice rather than by technical layer.',
-      'Hexagonal Architecture': 'Application core surrounded by ports and adapters.',
+  private expandedRoleGroups = new Set<string>();
+
+  toggleRoleGroup(role: string): void {
+    if (this.expandedRoleGroups.has(role)) {
+      this.expandedRoleGroups.delete(role);
+    } else {
+      this.expandedRoleGroups.add(role);
+    }
+  }
+
+  isRoleGroupExpanded(role: string): boolean {
+    return this.expandedRoleGroups.has(role);
+  }
+
+  roleClass(role: string): string {
+    const map: Record<string, string> = {
+      controller:    'role-controller',
+      service:       'role-service',
+      repository:    'role-repository',
+      'http-client': 'role-http-client',
+      'state-store': 'role-state-store',
+      component:     'role-component',
     };
-    return (
-      descriptions[name] ??
-      'Architectural pattern detected from folder structure and dependency analysis.'
-    );
+    return map[role] ?? 'role-unknown';
   }
+
 }

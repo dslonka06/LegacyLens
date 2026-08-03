@@ -158,6 +158,7 @@
             <div class="su-resp-list" *ngIf="fileResponsibilities.length; else respPending">
               <div class="su-resp-item" *ngFor="let r of fileResponsibilities; let i = index">
                 <div class="su-resp-header" (click)="toggleResponsibility(i)">
+                  <span class="su-resp-num">{{ i + 1 }}</span>
                   <span class="su-resp-label">{{ r.text }}</span>
                   <svg class="su-accordion-chevron" [class.su-accordion-chevron--open]="isResponsibilityExpanded(i)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="9 18 15 12 9 6" />
@@ -271,8 +272,8 @@
 
         </div>
 
-        <!-- Folder scope: full-width responsibilities -->
-        <div class="su-tier su-tier--bottom" *ngIf="understanding!.scope === 'folder'">
+        <!-- Folder scope: responsibilities + reading order -->
+        <div class="su-tier su-tier--two-col su-tier--bottom" *ngIf="understanding!.scope === 'folder'">
 
           <!-- Responsibilities -->
           <div class="su-card su-card--stretch">
@@ -295,6 +296,7 @@
             <div class="su-resp-list" *ngIf="folderResponsibilities.length; else folderRespPending">
               <div class="su-resp-item" *ngFor="let r of folderResponsibilities; let i = index">
                 <div class="su-resp-header" (click)="toggleResponsibility(i)">
+                  <span class="su-resp-num">{{ i + 1 }}</span>
                   <span class="su-resp-label">{{ r.text }}</span>
                   <svg class="su-accordion-chevron" [class.su-accordion-chevron--open]="isResponsibilityExpanded(i)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="9 18 15 12 9 6" />
@@ -310,40 +312,80 @@
             </ng-template>
           </div>
 
+          <!-- Reading Order -->
+          <ng-container *ngTemplateOutlet="readingOrderPanel"></ng-container>
+
         </div>
 
-        <!-- ── Tier 4: Technical Debt Hotspots (repo scope only) ────────────── -->
+        <!-- Repo scope: reading order (full-width) -->
+        <div class="su-tier" *ngIf="understanding!.scope === 'repository'">
+          <ng-container *ngTemplateOutlet="readingOrderPanel"></ng-container>
+        </div>
 
-        <div class="su-tier" *ngIf="understanding!.scope === 'repository' && debtHotspots.length">
-          <div class="su-card">
+        <!-- Reading Order shared panel template -->
+        <ng-template #readingOrderPanel>
+          <div class="su-card su-card--stretch">
             <div class="su-card-header-row">
               <div class="su-card-header">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                  <line x1="12" y1="9" x2="12" y2="13" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
                 </svg>
-                Technical Debt Hotspots
+                Most Depended-On Files
               </div>
               <div class="su-info-popup-wrap">
-                <button class="su-info-btn" (click)="showDebtInfo = !showDebtInfo">i</button>
-                <div class="su-info-popup" *ngIf="showDebtInfo">
-                  <p><strong>Technical Debt Hotspots</strong> are identified from two structural signals in the dependency graph. <strong>God objects</strong> are files with both high inbound degree (many things depend on them) and high outbound degree (they depend on many things) — these files sit at the intersection of too many concerns and are the highest change-risk areas. <strong>Legacy-named files</strong> are identified by filename patterns such as "legacy", "deprecated", "v1", or "unused".</p>
-                  <p>No AI call is made for this section. The description for each hotspot is written from the specific structural numbers — inbound and outbound counts — rather than a generic template.</p>
+                <button class="su-info-btn" (click)="showReadingOrderInfo = !showReadingOrderInfo">i</button>
+                <div class="su-info-popup" *ngIf="showReadingOrderInfo">
+                  <p><strong>Most Depended-On Files</strong> ranks files by structural centrality — the total number of inbound and outbound dependency connections. Files near the top of this list are the most load-bearing: they are either depended on by many others, coordinate many dependencies themselves, or both.</p>
+                  <p>Expand a file to see its path, a one-line description of its role, and the files that depend on it or that it depends on. No AI is used — ranking and descriptions are derived purely from the dependency graph.</p>
                 </div>
               </div>
             </div>
-            <div class="su-debt-list">
-              <div class="su-debt-item" *ngFor="let h of debtHotspots">
-                <div class="su-debt-header">
-                  <span class="su-debt-name">{{ h.name }}</span>
-                  <span class="su-debt-reason">{{ h.reason }}</span>
+            <div class="su-reading-list" *ngIf="readingOrder.length; else readingOrderPending">
+              <div
+                class="su-reading-item"
+                [class.su-reading-item--expanded]="isReadingItemExpanded(f.path)"
+                *ngFor="let f of readingOrder; let i = index"
+              >
+                <div class="su-reading-summary" (click)="toggleReadingItem(f.path)">
+                  <div class="su-reading-rank">{{ i + 1 }}</div>
+                  <div class="su-reading-body">
+                    <div class="su-reading-header">
+                      <span class="su-reading-name">{{ f.name }}</span>
+                      <span class="su-reading-role" *ngIf="f.role">{{ f.role }}</span>
+                      <span class="su-reading-degree">{{ f.inbound }}↓ {{ f.outbound }}↑</span>
+                    </div>
+                  </div>
+                  <svg class="su-reading-chevron" [class.su-reading-chevron--open]="isReadingItemExpanded(f.path)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
                 </div>
-                <p class="su-debt-narrative">{{ h.narrative }}</p>
+                <div class="su-reading-expand" [class.su-reading-expand--open]="isReadingItemExpanded(f.path)">
+                  <span class="su-reading-path">{{ f.shortPath }}</span>
+                  <p class="su-reading-narrative" *ngIf="f.narrative">{{ f.narrative }}</p>
+                  <div class="su-reading-deps" *ngIf="f.callers.length || f.callees.length">
+                    <div class="su-reading-dep-group" *ngIf="f.callers.length">
+                      <span class="su-reading-dep-label">Depended on by</span>
+                      <div class="su-reading-dep-list">
+                        <span class="su-reading-dep-item" *ngFor="let c of f.callers">{{ c }}</span>
+                      </div>
+                    </div>
+                    <div class="su-reading-dep-group" *ngIf="f.callees.length">
+                      <span class="su-reading-dep-label">Depends on</span>
+                      <div class="su-reading-dep-list">
+                        <span class="su-reading-dep-item" *ngFor="let c of f.callees">{{ c }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+            <ng-template #readingOrderPending>
+              <p class="su-health-detail-text su-health-detail-text--pending">Analysing file structure…</p>
+            </ng-template>
           </div>
-        </div>
+        </ng-template>
+
 
       </div>
     </div>

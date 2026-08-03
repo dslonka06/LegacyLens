@@ -2,6 +2,7 @@
   <div
     *ngIf="svgHtml && !renderError"
     class="mermaid-diagram__svg"
+    [style.maxWidth]="maxWidth"
     [innerHTML]="svgHtml"
   ></div>
 

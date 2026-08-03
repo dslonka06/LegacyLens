@@ -13,7 +13,6 @@ export type DocumentationSectionId =
   | 'risk-assessment'
   | 'modernization'
   | 'key-files'
-  | 'key-projects'
   | 'repository-insights'
   | 'onboarding-guide';
 

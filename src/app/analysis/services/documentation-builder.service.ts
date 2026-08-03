@@ -54,11 +54,6 @@ const REPO_SECTIONS: SectionDef[] = [
     description: 'The most important files to understand the system.',
   },
   {
-    id: 'key-projects',
-    title: 'Key Projects',
-    description: 'Discovered projects with their types, frameworks, and languages.',
-  },
-  {
     id: 'repository-insights',
     title: 'Repository Insights',
     description: 'High-coupling components, system hubs, and orphan files.',
@@ -253,9 +248,6 @@ export class DocumentationBuilderService {
           (model.structure.symbols && Object.keys(model.structure.symbols).length > 0)
         );
 
-      case 'key-projects':
-        return caps.includes('multiProject') && (model.structure.projects?.length ?? 0) > 0;
-
       case 'repository-insights':
         return (
           caps.includes('dependencyResolution') &&
@@ -353,11 +345,6 @@ export class DocumentationBuilderService {
           .map((p) => `- ${p}`)
           .join('\n');
       }
-
-      case 'key-projects':
-        return (s.projects ?? [])
-          .map((p) => `- ${p.name} (${p.type}) - ${p.framework} / ${p.language}`)
-          .join('\n');
 
       case 'repository-insights':
         return (rel.dependencies?.hubs ?? [])

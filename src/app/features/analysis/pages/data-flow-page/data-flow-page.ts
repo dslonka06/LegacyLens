@@ -25,7 +25,6 @@ export class DataFlowPage implements OnInit, OnDestroy {
   showWfDiagramInfo = false;
   showWorkflowsInfo = false;
   showEntryInfo = false;
-  showBottleneckInfo = false;
   showExternalInfo = false;
 
   private sub: Subscription | null = null;
@@ -66,7 +65,7 @@ export class DataFlowPage implements OnInit, OnDestroy {
   }
 
   get workflowDiagramWidth(): string {
-    return this.isRepoScope ? '90%' : '65%';
+    return '65%';
   }
 
   get fileStepNarrative(): string[] {
@@ -119,22 +118,10 @@ export class DataFlowPage implements OnInit, OnDestroy {
     return this.model?.ai?.dataFlowFileDiagram ?? null;
   }
 
-  // ── Folder/repo: structured workflow data ────────────────────────────────────
+  // ── Repo: workflow data ───────────────────────────────────────────────────────
 
   get primaryWorkflows(): WorkflowRiskProfile[] {
     return this.model?.ai?.dataFlow?.primaryWorkflows ?? [];
-  }
-
-  get entryPoints(): string[] {
-    return this.model?.ai?.dataFlow?.entryPoints ?? [];
-  }
-
-  get bottlenecks(): string[] {
-    return this.model?.ai?.dataFlow?.bottlenecks ?? [];
-  }
-
-  get externalDependencies(): string[] {
-    return this.model?.ai?.dataFlow?.externalDependencies ?? [];
   }
 
   get workflowCount(): number {
@@ -151,8 +138,23 @@ export class DataFlowPage implements OnInit, OnDestroy {
     return this.expandedWorkflowIndex === index;
   }
 
-  riskClass(risk: string): string {
-    return { High: 'risk-high', Moderate: 'risk-moderate', Low: 'risk-low' }[risk] ?? 'risk-low';
+  getChainVerb(wf: WorkflowRiskProfile, stepIndex: number): string {
+    if (!wf.enrichedConnections?.length || !wf.steps?.length) return '→';
+    const srcName = wf.flowPath[stepIndex];
+    const srcStep = wf.steps.find(s => s.name === srcName);
+    if (!srcStep) return '→';
+    const conn = wf.enrichedConnections.find(c => c.sourceId === srcStep.id);
+    return conn?.verb ?? '→';
+  }
+
+  // ── Folder/repo: structured data ─────────────────────────────────────────────
+
+  get entryPoints(): string[] {
+    return this.model?.ai?.dataFlow?.entryPoints ?? [];
+  }
+
+  get externalDependencies(): string[] {
+    return this.model?.ai?.dataFlow?.externalDependencies ?? [];
   }
 
 }

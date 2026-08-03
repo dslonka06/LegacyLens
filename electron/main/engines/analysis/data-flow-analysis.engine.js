@@ -82,11 +82,13 @@ class DataFlowAnalysisEngine {
     try {
       narratives = this._workflowsNarrative.build({
         workflows: preliminaryProfiles.map(p => ({
-          name:            p.workflowName,
-          entryPoint:      p.entryPoint,
-          stepCount:       p.stepCount,
-          bottleneckNodes: p.bottleneckNodes,
-          failureRisk:     p.failureRisk,
+          name:               p.workflowName,
+          entryPoint:         p.entryPoint,
+          stepCount:          p.stepCount,
+          bottleneckNodes:    p.bottleneckNodes,
+          failureRisk:        p.failureRisk,
+          flowPath:           p.flowPath,
+          enrichedConnections: p.enrichedConnections,
         })),
         architecturePatterns,
         fileCount,
@@ -150,11 +152,13 @@ class DataFlowAnalysisEngine {
     }));
 
     return {
-      workflowName:     wf.title    ?? wf.name ?? 'Unnamed Workflow',
-      entryPoint:       wf.flowPath?.[0] ?? '',
-      stepCount:        wf.steps?.length ?? wf.flowPath?.length ?? 0,
-      bottleneckNodes:  bottlenecksInPath,
+      workflowName:        wf.title    ?? wf.name ?? 'Unnamed Workflow',
+      entryPoint:          wf.flowPath?.[0] ?? '',
+      stepCount:           wf.steps?.length ?? wf.flowPath?.length ?? 0,
+      bottleneckNodes:     bottlenecksInPath,
       failureRisk,
+      flowPath:            wf.flowPath ?? [],
+      steps:               wf.steps    ?? [],
       ...(narrative ? { narrative } : {}),
       ...(enrichedConnections.length ? { enrichedConnections } : {}),
     };

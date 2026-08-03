@@ -44,10 +44,10 @@
 }
 
 // The SVG Mermaid injects via innerHTML bypasses Angular view encapsulation,
-// so we target it globally here. The _normaliseSvg() method also inlines
-// max-width/height:auto directly on the element as a belt-and-suspenders fix.
+// so we target it globally here. max-width is controlled by the parent wrapper
+// via [style.maxWidth] binding — do not override it here.
 .mermaid-diagram__svg svg {
-  max-width: 90% !important;
+  max-width: 100% !important;
   height: auto !important;
   display: block;
   margin: 0 auto;

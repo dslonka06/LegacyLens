@@ -81,10 +81,19 @@ const ARCHITECTURE_RULES: ArchitectureRule[] = [
   },
   {
     name: 'Feature-Sliced Design',
+    // Genuine FSD requires dedicated top-level slices; raise threshold to avoid
+    // false positives on Angular apps that have a 'features' folder + 'shared'.
     folderIndicators: ['features', 'entities', 'widgets', 'shared', 'pages'],
-    minFolderMatches: 3,
+    minFolderMatches: 4,
     baseConfidence: 0.70,
     confidencePerExtra: 0.08,
+  },
+  {
+    name: 'Angular Feature Module',
+    folderIndicators: ['features', 'core', 'shared', 'components', 'services', 'guards', 'pipes'],
+    minFolderMatches: 3,
+    baseConfidence: 0.72,
+    confidencePerExtra: 0.07,
   },
   {
     name: 'Hexagonal Architecture',

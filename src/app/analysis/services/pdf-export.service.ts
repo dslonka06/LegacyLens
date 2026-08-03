@@ -15,7 +15,7 @@ const FOOTER_H = 16; // reserved at bottom of every page
 const BODY_LH = 5.8; // body line height (mm)
 const SMALL_LH = 5.2;
 
-// ─── Colour palette ──────────────────────────────────────
+// ─── Colour palettes ─────────────────────────────────────
 const C = {
   brand:     [141, 99, 255] as const,   // --accent #8d63ff
   brandDark: [108, 76, 220] as const,
@@ -31,6 +31,26 @@ const C = {
   white:     [255, 255, 255] as const,
 };
 
+type Palette = {
+  [K in keyof typeof C]: readonly [number, number, number];
+};
+
+// Print-friendly overrides — swapped in when theme === 'print'
+const P: Palette = {
+  brand:     [109, 65, 217] as const,   // slightly darker purple, readable on white
+  brandDark: [85, 47, 185] as const,
+  text:      [20, 22, 30] as const,     // near-black body text
+  muted:     [90, 100, 120] as const,   // dark grey for field labels
+  subtle:    [130, 140, 160] as const,  // footer
+  border:    [210, 215, 225] as const,  // light grey rule
+  pageBg:    [255, 255, 255] as const,  // white page
+  cardBg:    [247, 248, 250] as const,  // very light grey card
+  high:      [200, 40, 50] as const,    // red — readable on white
+  medium:    [180, 110, 0] as const,    // amber — readable on white
+  lowGreen:  [30, 140, 70] as const,    // green — readable on white
+  white:     [255, 255, 255] as const,
+};
+
 @Injectable({ providedIn: 'root' })
 export class PdfExportService {
   constructor(private readonly builder: DocumentationBuilderService) {}
@@ -38,10 +58,11 @@ export class PdfExportService {
   async exportFromModel(
     model: KnowledgeModel,
     selectedIds: DocumentationSectionId[],
+    theme: 'dark' | 'print' = 'dark',
   ): Promise<void> {
     const { jsPDF } = await import('jspdf');
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const ctx = new RenderContext(doc);
+    const ctx = new RenderContext(doc, theme);
 
     // Fill page 1 background before any drawing
     ctx.fillPageBackground();
@@ -76,10 +97,10 @@ export class PdfExportService {
             const sev = (line.match(/^\[(\w+)\]/) ?? [])[1]?.toLowerCase() ?? 'low';
             const sevColor: [number, number, number] =
               sev === 'critical' || sev === 'high'
-                ? [C.high[0], C.high[1], C.high[2]]
+                ? [...ctx.p.high]
                 : sev === 'medium'
-                  ? [C.medium[0], C.medium[1], C.medium[2]]
-                  : [C.lowGreen[0], C.lowGreen[1], C.lowGreen[2]];
+                  ? [...ctx.p.medium]
+                  : [...ctx.p.lowGreen];
             ctx.coloredLabel(line.replace(/^\[\w+\]\s*/, ''), sevColor);
           } else if (line.startsWith('  ')) {
             ctx.body(line.trim(), 9);
@@ -96,7 +117,8 @@ export class PdfExportService {
     this.renderFooters(ctx);
 
     const safeName = (model.workspaceName ?? 'workspace').replace(/[^a-z0-9]/gi, '-').toLowerCase();
-    doc.save(`${safeName}-Documentation.pdf`);
+    const suffix = theme === 'print' ? '-Documentation-Print.pdf' : '-Documentation.pdf';
+    doc.save(`${safeName}${suffix}`);
   }
 
   private renderDocumentationCover(ctx: RenderContext, model: KnowledgeModel): void {
@@ -112,15 +134,16 @@ export class PdfExportService {
         ? `${primaryLang} · 1 file`
         : `${model.targetType} · ${model.structure.totalFiles} files`;
 
+    const p = ctx.p;
     const HEADER_H = 72;
-    doc.setFillColor(...C.brand);
+    doc.setFillColor(...p.brand);
     doc.rect(0, 0, PAGE_W, HEADER_H, 'F');
-    doc.setFillColor(...C.brandDark);
+    doc.setFillColor(...p.brandDark);
     doc.rect(0, HEADER_H - 2, PAGE_W, 2, 'F');
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(20);
-    doc.setTextColor(...C.white);
+    doc.setTextColor(...p.white);
     doc.text(`SYSTEMLENS — ${scopeLabel}`, cx, 22, { align: 'center' });
 
     doc.setDrawColor(160, 140, 255);
@@ -148,7 +171,7 @@ export class PdfExportService {
     doc.text(subtitleLine, cx, 57, { align: 'center' });
 
     ctx.y = HEADER_H + 14;
-    doc.setDrawColor(...C.border);
+    doc.setDrawColor(...p.border);
     doc.setLineWidth(0.3);
     doc.line(MARGIN, ctx.y - 4, PAGE_W - MARGIN, ctx.y - 4);
   }
@@ -210,22 +233,23 @@ export class PdfExportService {
   // Occupies ~25% of page 1. Centered, consulting-style.
   private renderCover(ctx: RenderContext, session: AnalysisSession): void {
     const doc = ctx.doc;
+    const p = ctx.p;
     const cx = PAGE_W / 2; // horizontal center
     const ai = session.aiAnalysis;
 
     // ── Purple background block (~25% of page height) ──
     const HEADER_H = 72;
-    doc.setFillColor(...C.brand);
+    doc.setFillColor(...p.brand);
     doc.rect(0, 0, PAGE_W, HEADER_H, 'F');
 
     // Bottom accent stripe
-    doc.setFillColor(...C.brandDark);
+    doc.setFillColor(...p.brandDark);
     doc.rect(0, HEADER_H - 2, PAGE_W, 2, 'F');
 
     // ── Report title — largest text, centered ──
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(22);
-    doc.setTextColor(...C.white);
+    doc.setTextColor(...p.white);
     doc.text('SYSTEMLENS ANALYSIS REPORT', cx, 22, { align: 'center' });
 
     // ── Thin rule beneath title ──
@@ -265,7 +289,7 @@ export class PdfExportService {
 
     // ── Horizontal divider below the purple block ──
     ctx.y = HEADER_H + 10;
-    doc.setDrawColor(...C.border);
+    doc.setDrawColor(...p.border);
     doc.setLineWidth(0.3);
     doc.line(MARGIN, ctx.y, PAGE_W - MARGIN, ctx.y);
     ctx.y += 10;
@@ -295,20 +319,20 @@ export class PdfExportService {
     const labelX = MARGIN + 5;
     const valueX = MARGIN + 52;
 
-    doc.setFillColor(...C.cardBg);
-    doc.setDrawColor(...C.border);
+    doc.setFillColor(...p.cardBg);
+    doc.setDrawColor(...p.border);
     doc.roundedRect(MARGIN, ctx.y, CONTENT_W, boxH, 2, 2, 'FD');
 
     ctx.y += 6;
     for (const [label, value] of rows) {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(7.5);
-      doc.setTextColor(...C.muted);
+      doc.setTextColor(...p.muted);
       doc.text(label.toUpperCase(), labelX, ctx.y);
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
-      doc.setTextColor(...C.text);
+      doc.setTextColor(...p.text);
       // Truncate long values to fit the box
       const maxW = CONTENT_W - (valueX - MARGIN) - 5;
       const lines = doc.splitTextToSize(value, maxW) as string[];
@@ -412,17 +436,17 @@ export class PdfExportService {
       const sev = risk.severity.toLowerCase();
       const sevColor: [number, number, number] =
         sev === 'high'
-          ? [C.high[0], C.high[1], C.high[2]]
+          ? [...ctx.p.high]
           : sev === 'medium'
-            ? [C.medium[0], C.medium[1], C.medium[2]]
-            : [C.lowGreen[0], C.lowGreen[1], C.lowGreen[2]];
+            ? [...ctx.p.medium]
+            : [...ctx.p.lowGreen];
 
       // ── Draw severity pill ──
       ctx.doc.setFillColor(sevColor[0], sevColor[1], sevColor[2]);
       ctx.doc.roundedRect(MARGIN, ctx.y, pillW, pillH, 1.5, 1.5, 'F');
       ctx.doc.setFont('helvetica', 'bold');
       ctx.doc.setFontSize(6.5);
-      ctx.doc.setTextColor(...C.white);
+      ctx.doc.setTextColor(...ctx.p.white);
       ctx.doc.text(risk.severity.toUpperCase(), MARGIN + pillW / 2, ctx.y + pillH / 2 + 1.2, {
         align: 'center',
       });
@@ -432,7 +456,7 @@ export class PdfExportService {
       const titleBaseY = ctx.y + pillH / 2 + 1.5; // baseline of first line, aligned to pill center
       ctx.doc.setFont('helvetica', 'bold');
       ctx.doc.setFontSize(9.5);
-      ctx.doc.setTextColor(...C.text);
+      ctx.doc.setTextColor(...ctx.p.text);
       ctx.doc.text(titleLines, titleX, titleBaseY);
 
       // Advance past the entire title/badge row — use the measured titleRowH
@@ -442,7 +466,7 @@ export class PdfExportService {
       if (hasDesc) {
         ctx.doc.setFont('helvetica', 'normal');
         ctx.doc.setFontSize(9);
-        ctx.doc.setTextColor(...C.muted);
+        ctx.doc.setTextColor(...ctx.p.muted);
         for (const line of descLines) {
           ctx.checkPage(BODY_LH + 1);
           ctx.doc.text(line, MARGIN + pillW + 4, ctx.y);
@@ -475,10 +499,10 @@ export class PdfExportService {
       // Dash prefix — ASCII, renders reliably in all jspdf built-in fonts
       ctx.doc.setFont('helvetica', 'bold');
       ctx.doc.setFontSize(9.5);
-      ctx.doc.setTextColor(...C.brand);
+      ctx.doc.setTextColor(...ctx.p.brand);
       ctx.doc.text('-', MARGIN, ctx.y);
 
-      ctx.doc.setTextColor(...C.text);
+      ctx.doc.setTextColor(...ctx.p.text);
       const titleLines = ctx.doc.splitTextToSize(item.title, CONTENT_W - 7) as string[];
       ctx.doc.text(titleLines, MARGIN + 5, ctx.y);
       ctx.y += titleLines.length * SMALL_LH + 1;
@@ -486,7 +510,7 @@ export class PdfExportService {
       if (item.description && item.description !== item.title) {
         ctx.doc.setFont('helvetica', 'normal');
         ctx.doc.setFontSize(9);
-        ctx.doc.setTextColor(...C.muted);
+        ctx.doc.setTextColor(...ctx.p.muted);
         const descLines = ctx.doc.splitTextToSize(item.description, CONTENT_W - 7) as string[];
         for (const line of descLines) {
           ctx.checkPage(BODY_LH + 1);
@@ -546,13 +570,13 @@ export class PdfExportService {
       ctx.doc.setPage(i);
 
       // Separator line
-      ctx.doc.setDrawColor(...C.border);
+      ctx.doc.setDrawColor(...ctx.p.border);
       ctx.doc.setLineWidth(0.3);
       ctx.doc.line(MARGIN, PAGE_H - FOOTER_H, PAGE_W - MARGIN, PAGE_H - FOOTER_H);
 
       ctx.doc.setFont('helvetica', 'normal');
       ctx.doc.setFontSize(7);
-      ctx.doc.setTextColor(...C.subtle);
+      ctx.doc.setTextColor(...ctx.p.subtle);
 
       // Left: brand text
       ctx.doc.text('SystemLens  |  AI-Powered Codebase Intelligence', MARGIN, PAGE_H - 9);
@@ -566,12 +590,15 @@ export class PdfExportService {
 // ─── Rendering context ────────────────────────────────────
 class RenderContext {
   y = 0;
+  readonly p: Palette;
 
-  constructor(readonly doc: JsPDF) {}
+  constructor(readonly doc: JsPDF, theme: 'dark' | 'print' = 'dark') {
+    this.p = theme === 'print' ? P : C;
+  }
 
-  // Fill current page with the dark background — must be called before drawing any content
+  // Fill current page with the background colour
   fillPageBackground(): void {
-    this.doc.setFillColor(...C.pageBg);
+    this.doc.setFillColor(...this.p.pageBg);
     this.doc.rect(0, 0, PAGE_W, PAGE_H, 'F');
   }
 
@@ -594,16 +621,16 @@ class RenderContext {
     this.y += 6;
 
     // Left accent bar
-    this.doc.setFillColor(...C.brand);
+    this.doc.setFillColor(...this.p.brand);
     this.doc.rect(MARGIN, this.y, 3.5, 8, 'F');
 
     this.doc.setFont('helvetica', 'bold');
     this.doc.setFontSize(13);
-    this.doc.setTextColor(...C.brand);
+    this.doc.setTextColor(...this.p.brand);
     this.doc.text(title, MARGIN + 7, this.y + 6);
 
     // Underrule
-    this.doc.setDrawColor(...C.border);
+    this.doc.setDrawColor(...this.p.border);
     this.doc.setLineWidth(0.4);
     this.doc.line(MARGIN, this.y + 10, PAGE_W - MARGIN, this.y + 10);
 
@@ -615,7 +642,7 @@ class RenderContext {
     this.checkPage(10);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setFontSize(7.5);
-    this.doc.setTextColor(...C.muted);
+    this.doc.setTextColor(...this.p.muted);
     this.doc.text(label.toUpperCase(), MARGIN, this.y);
     this.y += 5;
   }
@@ -635,7 +662,7 @@ class RenderContext {
     if (!text?.trim()) return;
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(size);
-    this.doc.setTextColor(...C.text);
+    this.doc.setTextColor(...this.p.text);
 
     const lines = this.doc.splitTextToSize(text, CONTENT_W) as string[];
     for (const line of lines) {
@@ -649,18 +676,18 @@ class RenderContext {
   bulletList(items: string[]): void {
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(9);
-    this.doc.setTextColor(...C.text);
+    this.doc.setTextColor(...this.p.text);
 
     for (const item of items) {
       const lines = this.doc.splitTextToSize(item, CONTENT_W - 8) as string[];
       this.checkPage(lines.length * SMALL_LH + 2);
 
       this.doc.setFont('helvetica', 'bold');
-      this.doc.setTextColor(...C.brand);
+      this.doc.setTextColor(...this.p.brand);
       this.doc.text('-', MARGIN + 2, this.y);
 
       this.doc.setFont('helvetica', 'normal');
-      this.doc.setTextColor(...C.text);
+      this.doc.setTextColor(...this.p.text);
       this.doc.text(lines, MARGIN + 7, this.y);
       this.y += lines.length * SMALL_LH + 2;
     }

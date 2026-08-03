@@ -13,7 +13,7 @@
       <div class="wsm-header-actions">
         <button
           class="wsm-new-btn"
-          *ngIf="canCreate"
+          *ngIf="canCreate && !limitReached"
           (click)="newWorkspace()"
           title="New workspace"
         >
@@ -22,6 +22,9 @@
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
           New
+        </button>
+        <button class="wsm-continue-btn" *ngIf="limitReached && pendingType" (click)="continueToExisting()">
+          Continue
         </button>
         <button class="wsm-close-btn" (click)="dismiss()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -382,6 +382,7 @@ export class FolderAnalysisPage implements OnInit, OnDestroy {
         .process('folder', entries, {
           workspaceId: id,
           workspaceName: folderName,
+          repositoryPath: folderPath,
           persist: true,
         })
         .subscribe({ error: () => {} });

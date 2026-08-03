@@ -3,6 +3,8 @@ export interface ArchitectureLayerBreakdown {
   fileCount: number;
   responsibility: string;
   couplingNotes: string;
+  /** Heuristic narrative sentence from LayerBreakdownNarrativeEngine. */
+  narrative?: string;
 }
 
 export interface ArchitectureAIAnalysis {
@@ -18,4 +20,6 @@ export interface ArchitectureAIAnalysis {
   generatedAt: string;
   /** Mermaid flowchart TD syntax for the architecture layer diagram. */
   architectureDiagram?: string;
+  /** Per-layer breakdown with narrative, produced by LayerBreakdownNarrativeEngine. */
+  layerBreakdownNarratives?: ArchitectureLayerBreakdown[] | null;
 }

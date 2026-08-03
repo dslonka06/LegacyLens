@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import {
   Workspace,
@@ -19,6 +20,7 @@ import { ElectronService } from '@app/core/services/electron.service';
 })
 export class WorkspaceSwitcherModal implements OnInit, OnDestroy {
   @Input() limitReached = false;
+  @Input() pendingType: WorkspaceType | null = null;
   @Output() close = new EventEmitter<void>();
 
   workspaces: Workspace[] = [];
@@ -34,6 +36,7 @@ export class WorkspaceSwitcherModal implements OnInit, OnDestroy {
   constructor(
     private readonly manager: WorkspaceManagerService,
     private readonly electron: ElectronService,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -88,7 +91,27 @@ export class WorkspaceSwitcherModal implements OnInit, OnDestroy {
   delete(ws: Workspace, event: MouseEvent): void {
     event.stopPropagation();
     this.manager.delete(ws.id);
+    if (this.pendingType && this.manager.canCreate()) {
+      this.manager.create(this.pendingType);
+      this.close.emit();
+      this.router.navigate([this.routeForType(this.pendingType)]);
+      return;
+    }
     if (this.workspaces.length === 0) this.close.emit();
+  }
+
+  continueToExisting(): void {
+    if (!this.pendingType) { this.close.emit(); return; }
+    const existing = this.manager.workspaces
+      .filter((w) => w.type === this.pendingType)
+      .sort((a, b) => b.lastModifiedAt.localeCompare(a.lastModifiedAt))[0] ?? null;
+    if (existing) {
+      this.manager.activate(existing.id);
+      this.close.emit();
+      this.router.navigate([this.routeForType(this.pendingType!)]);
+    } else {
+      this.close.emit();
+    }
   }
 
   saveAiModel(): void {
@@ -97,6 +120,12 @@ export class WorkspaceSwitcherModal implements OnInit, OnDestroy {
 
   dismiss(): void {
     this.close.emit();
+  }
+
+  private routeForType(type: WorkspaceType): string {
+    if (type === 'file') return '/file-analysis';
+    if (type === 'folder') return '/folder-analysis';
+    return '/repository-analysis';
   }
 
   typeLabel(type: WorkspaceType): string {

@@ -4,6 +4,13 @@ export interface EnrichedConnection {
   verb: string;
 }
 
+export interface WorkflowStep {
+  id: string;
+  name: string;
+  type: string;
+  path: string;
+}
+
 export interface WorkflowRiskProfile {
   workflowName: string;
   entryPoint: string;
@@ -11,6 +18,8 @@ export interface WorkflowRiskProfile {
   bottleneckNodes: string[];
   failureRisk: 'Low' | 'Moderate' | 'High';
   narrative?: string;
+  flowPath: string[];
+  steps: WorkflowStep[];
   enrichedConnections?: EnrichedConnection[];
 }
 
@@ -25,4 +34,14 @@ export interface DataFlowAIAnalysis {
   generatedAt: string;
   /** Mermaid flowchart LR syntax for the data flow workflow diagram. */
   dataFlowDiagram?: string;
+  /** Per-file role breakdown with narrative, produced by FileRoleNarrativeEngine. Folder + repo only. */
+  fileRoles?: Array<{
+    name: string;
+    path: string;
+    shortPath: string;
+    fileRole: string;
+    sources: string[];
+    sinks: string[];
+    narrative: string;
+  }> | null;
 }

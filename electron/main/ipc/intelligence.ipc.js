@@ -16,6 +16,9 @@ const { ResponsibilitiesNarrativeEngine } = require('../engines/narrative/respon
 const { FolderResponsibilitiesNarrativeEngine } = require('../engines/narrative/folder-responsibilities-narrative.engine');
 const { FolderWorkflowsNarrativeEngine } = require('../engines/narrative/folder-workflows-narrative.engine');
 const { DebtHotspotNarrativeEngine } = require('../engines/narrative/debt-hotspot-narrative.engine');
+const { ReadingOrderNarrativeEngine } = require('../engines/narrative/reading-order-narrative.engine');
+const { LayerBreakdownNarrativeEngine } = require('../engines/narrative/layer-breakdown-narrative.engine');
+const { FileRoleNarrativeEngine } = require('../engines/narrative/file-role-narrative.engine');
 const { DataFlowPatternEngine } = require('../engines/narrative/data-flow-pattern.engine');
 const { DataFlowStepsNarrativeEngine } = require('../engines/narrative/data-flow-steps-narrative.engine');
 const { WorkflowExplorerEngine } = require('../engines/analysis/workflow-explorer.engine');
@@ -60,6 +63,9 @@ const responsibilitiesNarrative = new ResponsibilitiesNarrativeEngine();
 const folderResponsibilitiesNarrative = new FolderResponsibilitiesNarrativeEngine();
 const folderWorkflowsNarrative = new FolderWorkflowsNarrativeEngine();
 const debtHotspotNarrative = new DebtHotspotNarrativeEngine();
+const readingOrderNarrative = new ReadingOrderNarrativeEngine();
+const layerBreakdownNarrative = new LayerBreakdownNarrativeEngine();
+const fileRoleNarrative = new FileRoleNarrativeEngine();
 const dataFlowPattern = new DataFlowPatternEngine();
 const dataFlowStepsNarrative = new DataFlowStepsNarrativeEngine();
 const workflowExplorer = new WorkflowExplorerEngine();
@@ -321,6 +327,84 @@ function registerIntelligenceHandlers() {
         )
       : null;
 
+    // ── Reading Order (folder + repo scope) ──────────────────────────────────
+    // Rank files by total degree (inbound + outbound), exclude any that already
+    // appear in the learning path's suggestedReadingOrder so the two panels
+    // surface different files.
+    let readingOrderNarrativeResult = null;
+    const isMultiFile = !isFile;
+    if (isMultiFile) {
+      const ranks = model.relationships?.dependencies?.ranks ?? [];
+      const dataFlowFacts = model.relationships?.dataFlowFacts ?? [];
+      const symbols = model.structure?.symbols ?? {};
+      const totalFiles = Object.keys(symbols).length || ranks.length;
+
+      // Build a Set of paths already covered by the learning path reading order
+      const learningPathPaths = new Set(
+        (model.ai?.learningPath?.suggestedReadingOrder ?? [])
+          .map(item => item.path)
+          .filter(Boolean)
+      );
+
+      // Build a role lookup from dataFlowFacts (path → fileRole)
+      const roleByPath = {};
+      for (const fact of dataFlowFacts) {
+        if (fact.path) roleByPath[fact.path] = fact.fileRole ?? 'unknown';
+      }
+
+      const candidates = ranks
+        .filter(r => r.node?.path && !learningPathPaths.has(r.node.path))
+        .slice(0, 8);
+
+      if (candidates.length > 0) {
+        const graph = model.relationships?.dependencies?.graph ?? null;
+        const nodeNameById = graph ? new Map(graph.nodes.map(n => [n.id, n.name])) : new Map();
+
+        // Build caller/callee lookup from graph edges
+        const callersByPath = {};
+        const calleesByPath = {};
+        if (graph?.edges) {
+          for (const edge of graph.edges) {
+            const srcName = nodeNameById.get(edge.source);
+            const tgtName = nodeNameById.get(edge.target);
+            if (srcName && tgtName) {
+              (calleesByPath[edge.source] ??= []).push(tgtName);
+              (callersByPath[edge.target] ??= []).push(srcName);
+            }
+          }
+        }
+
+        const enriched = candidates.map(r => ({
+          name:       r.node.name,
+          path:       r.node.path,
+          type:       r.node.type ?? symbols[r.node.path]?.type ?? '',
+          role:       roleByPath[r.node.path] ?? 'unknown',
+          inbound:    r.inbound,
+          outbound:   r.outbound,
+          total:      r.total,
+          totalFiles,
+        }));
+        const narratives = readingOrderNarrative.buildAll(enriched, totalFiles);
+        const INTERNAL_TYPES = new Set(['module', 'file', 'unknown', '']);
+        readingOrderNarrativeResult = enriched.map((f, i) => {
+          const nodeId = f.path.replace(/\\/g, '/').replace(/^\.\//, '');
+          const callers = [...new Set(callersByPath[nodeId] ?? [])].slice(0, 6);
+          const callees = [...new Set(calleesByPath[nodeId] ?? [])].slice(0, 6);
+          return {
+            name:      f.name,
+            path:      f.path,
+            shortPath: f.path.replace(/\\/g, '/').split('/').slice(-2).join('/'),
+            role:      f.role !== 'unknown' ? f.role : (!INTERNAL_TYPES.has((f.type ?? '').toLowerCase()) ? f.type : null),
+            inbound:   f.inbound,
+            outbound:  f.outbound,
+            callers,
+            callees,
+            narrative: narratives[i],
+          };
+        });
+      }
+    }
+
     return {
       understanding,
       hubNarrative:                      { structural, directive: '' },
@@ -331,6 +415,7 @@ function registerIntelligenceHandlers() {
       folderResponsibilitiesNarrative:   folderResponsibilitiesNarrativeResult,
       folderWorkflowsNarrative:          folderWorkflowsNarrativeResult,
       debtHotspotsNarrative:             debtHotspotsNarrativeResult,
+      readingOrder:                      readingOrderNarrativeResult,
     };
   }));
 
@@ -431,7 +516,28 @@ function registerIntelligenceHandlers() {
   ipcMain.handle('intelligence:architectureAnalysis', wrapHandler(async (_event, model) => {
     if (!model) throw new Error('model is required');
     console.log('[IPC] intelligence:architectureAnalysis targetType=' + model.targetType);
-    const result = architectureAnalysis.analyze(model);
+
+    // The capability pipeline stores architecture as legacy string hints (confidence: null).
+    // Replace them with proper ArchitectureDetectorEngine results for all scopes.
+    const existingPatterns = model.relationships?.architecture?.patterns ?? [];
+    const hasProperPatterns = existingPatterns.length > 0 && existingPatterns[0].confidence != null;
+    let enrichedModel = model;
+    if (!hasProperPatterns) {
+      try {
+        const structure = { root: model.structure?.folderTree };
+        const graph = model.relationships?.dependencies?.graph ?? null;
+        const detected = architectureDetector.detect(structure, graph);
+        enrichedModel = {
+          ...model,
+          relationships: {
+            ...model.relationships,
+            architecture: { patterns: detected?.patterns ?? [] },
+          },
+        };
+      } catch (e) { /* non-fatal — proceed without patterns */ }
+    }
+
+    const result = architectureAnalysis.analyze(enrichedModel);
     console.log('[IPC] intelligence:architectureAnalysis done result=' + (result ? 'ok' : 'null'));
     let diagram = '';
     try { diagram = architectureDiagram.build(model); } catch (e) { /* non-fatal */ }
@@ -457,7 +563,24 @@ function registerIntelligenceHandlers() {
       enrichedHealthNarrative = codeHealthNarrative.build(healthData);
     } catch (e) { /* non-fatal */ }
 
-    return { ...result, architectureDiagram: diagram, enrichedHealthNarrative };
+    // ── Layer Breakdown narratives ────────────────────────────────────────────
+    let layerBreakdownNarratives = null;
+    if (result.layerBreakdown?.length) {
+      const totalFiles = Object.keys(model.structure?.symbols ?? {}).length || (model.relationships?.dependencies?.graph?.nodes?.length ?? 0);
+      const scope = model.targetType === 'repository' ? 'repository' : 'folder';
+      try {
+        const narratives = layerBreakdownNarrative.buildAll(result.layerBreakdown, result.dominantPattern, totalFiles, scope);
+        layerBreakdownNarratives = result.layerBreakdown.map((l, i) => ({
+          name:         l.name,
+          fileCount:    l.fileCount,
+          responsibility: l.responsibility,
+          couplingNotes:  l.couplingNotes,
+          narrative:    narratives[i],
+        }));
+      } catch (e) { /* non-fatal */ }
+    }
+
+    return { ...result, architectureDiagram: diagram, enrichedHealthNarrative, layerBreakdownNarratives };
   }));
 
   // intelligence:dataFlowAnalysis — AI-tier data flow analysis from KnowledgeModel
@@ -495,7 +618,30 @@ function registerIntelligenceHandlers() {
       diagram = dataFlowDiagram.build(result, model.relationships?.dependencies?.graph ?? null, model.relationships?.dataFlowFacts ?? null);
     } catch (e) { /* non-fatal */ }
 
-    return { ...result, dataFlowDiagram: diagram };
+    // ── File Roles narratives ─────────────────────────────────────────────────
+    let fileRolesResult = null;
+    const facts = (model.relationships?.dataFlowFacts ?? []).filter(f => f.fileRole && f.fileRole !== 'unknown');
+    if (facts.length > 0) {
+      const scope = model.targetType === 'repository' ? 'repository' : 'folder';
+      try {
+        const narratives = fileRoleNarrative.buildAll(facts, scope);
+        fileRolesResult = facts.map((f, i) => {
+          const parts = f.path.replace(/\\/g, '/').split('/');
+          const shortPath = parts.slice(-2).join('/');
+          return {
+            name:      parts[parts.length - 1],
+            path:      f.path,
+            shortPath,
+            fileRole:  f.fileRole,
+            sources:   f.sources,
+            sinks:     f.sinks,
+            narrative: narratives[i],
+          };
+        });
+      } catch (e) { /* non-fatal */ }
+    }
+
+    return { ...result, dataFlowDiagram: diagram, fileRoles: fileRolesResult };
   }));
 
   // intelligence:insights — derive repository-level insights from aggregated knowledge

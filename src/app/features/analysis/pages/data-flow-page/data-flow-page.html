@@ -99,7 +99,7 @@
 
     <!-- Multi-file scope: dependency graph based flow -->
     <ng-container *ngIf="!isFileScope">
-      <div class="arch-empty-state" *ngIf="!hasDataFlow && primaryWorkflows.length === 0 && entryPoints.length === 0 && externalDependencies.length === 0">
+      <div class="arch-empty-state" *ngIf="!hasDataFlow && externalDependencies.length === 0">
         No dependency data available. Upload a folder or repository with multiple interconnected
         files.
       </div>
@@ -117,28 +117,8 @@
           </div>
         </div>
 
-        <!-- Workflow overview strip -->
-        <div class="metrics-strip" *ngIf="workflowCount > 0 || entryPoints.length > 0">
-          <div class="strip-item">
-            <span class="strip-label">Workflows</span>
-            <span class="strip-val accent">{{ workflowCount }}</span>
-          </div>
-          <div class="strip-item">
-            <span class="strip-label">Entry Points</span>
-            <span class="strip-val">{{ entryPoints.length }}</span>
-          </div>
-          <div class="strip-item">
-            <span class="strip-label">Bottlenecks</span>
-            <span class="strip-val" [class.strip-val-warn]="bottlenecks.length > 0">{{ bottlenecks.length }}</span>
-          </div>
-          <div class="strip-item">
-            <span class="strip-label">External Deps</span>
-            <span class="strip-val">{{ externalDependencies.length }}</span>
-          </div>
-        </div>
-
         <!-- Mermaid workflow diagram -->
-        <div class="doc-block" *ngIf="dataFlowDiagram">
+        <div class="doc-block">
           <div class="df-doc-block-header">
             <div class="doc-block-label">Workflow Diagram</div>
             <div class="df-info-popup-wrap">
@@ -149,24 +129,26 @@
               </div>
             </div>
           </div>
-          <app-mermaid-diagram [diagram]="dataFlowDiagram" [maxWidth]="workflowDiagramWidth"></app-mermaid-diagram>
+          <app-mermaid-diagram *ngIf="dataFlowDiagram; else noWfDiagram" [diagram]="dataFlowDiagram" [maxWidth]="workflowDiagramWidth"></app-mermaid-diagram>
+          <ng-template #noWfDiagram>
+            <p class="df-none-detected">Workflow diagram could not be generated — insufficient dependency data to trace meaningful paths.</p>
+          </ng-template>
         </div>
       </ng-container>
 
-        <!-- Workflow accordion cards -->
-        <div class="doc-block" *ngIf="primaryWorkflows.length > 0">
+        <!-- Workflows — repo scope only -->
+        <div class="doc-block" *ngIf="isRepoScope">
           <div class="df-doc-block-header">
             <div class="doc-block-label">Workflows</div>
             <div class="df-info-popup-wrap">
               <button class="df-info-btn" (click)="showWorkflowsInfo = !showWorkflowsInfo">i</button>
               <div class="df-info-popup" *ngIf="showWorkflowsInfo">
-                <p><strong>Workflows</strong> are traced by starting from entry points (controllers, handlers, pages, components) and following the dependency graph forward — where file A calls file B, B calls C, and so on — up to 6 hops deep. Each resulting chain is surfaced as a named workflow representing a path data can travel through the system.</p>
-                <p><strong>Failure Risk</strong> is a heuristic score based on how long the chain is (longer = more things that could go wrong), whether the path passes through bottleneck files (high coupling = higher blast radius), and how confident the analysis was in the trace. The score maps to Low, Moderate, or High.</p>
-                <p><strong>Bottleneck Nodes</strong> listed inside a workflow are files that sit in that workflow's path AND have above-average connections on both sides — many files call them AND they call many files — making them the highest-risk points in the chain.</p>
+                <p><strong>Workflows</strong> are traced by starting from entry points and following the dependency graph forward up to 6 hops. Each chain is a path data can travel through the system.</p>
+                <p>Expand a workflow to see the file-by-file chain with the verb describing how each step hands off to the next, along with the failure risk score for that path.</p>
               </div>
             </div>
           </div>
-          <div class="df-workflow-list">
+          <div class="df-workflow-list" *ngIf="primaryWorkflows.length > 0; else noWorkflows">
             <div
               class="df-workflow-card"
               *ngFor="let wf of primaryWorkflows; let i = index"
@@ -176,31 +158,44 @@
               <div class="df-workflow-header">
                 <div class="df-workflow-meta">
                   <span class="df-workflow-name">{{ wf.workflowName }}</span>
-                  <span class="df-workflow-entry" *ngIf="wf.entryPoint">via {{ wf.entryPoint }}</span>
+                  <span class="df-workflow-entry" *ngIf="wf.entryPoint">starts at {{ wf.entryPoint }}</span>
                 </div>
                 <div class="df-workflow-chips">
-                  <span class="df-risk-badge" [class]="riskClass(wf.failureRisk)">{{ wf.failureRisk }}</span>
+                  <span
+                    class="df-bottleneck-tag"
+                    *ngFor="let b of wf.bottleneckNodes"
+                  >{{ b }}</span>
                   <span class="df-step-count">{{ wf.stepCount }} steps</span>
                 </div>
-                <svg class="df-workflow-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg class="df-workflow-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </div>
               <div class="df-workflow-body" *ngIf="isWorkflowExpanded(i)">
-                <div class="df-bottleneck-list" *ngIf="wf.bottleneckNodes.length > 0">
-                  <span class="df-section-label">Bottlenecks</span>
-                  <div class="flow-tag-list">
-                    <span class="df-bottleneck-chip" *ngFor="let b of wf.bottleneckNodes">{{ b }}</span>
-                  </div>
+                <!-- Chain -->
+                <div class="df-chain" *ngIf="wf.flowPath.length >= 2">
+                  <ng-container *ngFor="let step of wf.flowPath; let si = index">
+                    <span class="df-chain-node">{{ step }}</span>
+                    <span class="df-chain-arrow" *ngIf="si < wf.flowPath.length - 1">
+                      <span class="df-chain-verb">{{ getChainVerb(wf, si) }}</span>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </span>
+                  </ng-container>
                 </div>
+                <!-- Narrative -->
                 <p class="df-workflow-narrative" *ngIf="wf.narrative">{{ wf.narrative }}</p>
               </div>
             </div>
           </div>
+          <ng-template #noWorkflows>
+            <p class="df-none-detected">No workflows traced — entry points or dependency chains could not be determined.</p>
+          </ng-template>
         </div>
 
         <!-- Entry Points -->
-        <div class="doc-block" *ngIf="entryPoints.length > 0">
+        <div class="doc-block">
           <div class="df-doc-block-header">
             <div class="doc-block-label">Entry Points</div>
             <div class="df-info-popup-wrap">
@@ -211,30 +206,16 @@
               </div>
             </div>
           </div>
-          <div class="flow-tag-list">
+          <div class="flow-tag-list" *ngIf="entryPoints.length > 0; else noEntryPoints">
             <span class="flow-tag flow-tag-input" *ngFor="let ep of entryPoints">{{ ep }}</span>
           </div>
-        </div>
-
-        <!-- Bottlenecks -->
-        <div class="doc-block" *ngIf="bottlenecks.length > 0">
-          <div class="df-doc-block-header">
-            <div class="doc-block-label">Bottleneck Nodes</div>
-            <div class="df-info-popup-wrap">
-              <button class="df-info-btn" (click)="showBottleneckInfo = !showBottleneckInfo">i</button>
-              <div class="df-info-popup" *ngIf="showBottleneckInfo">
-                <p><strong>Bottleneck Nodes</strong> are files that are unusually busy on both sides of the dependency graph — more files call them than average, and they call more files than average. Both conditions have to be true simultaneously.</p>
-                <p>This matters because a bottleneck sits at a structural crossroads: a bug or breaking change in it can ripple outward in multiple directions at once, making it one of the riskiest places to make modifications.</p>
-              </div>
-            </div>
-          </div>
-          <div class="flow-tag-list">
-            <span class="df-bottleneck-chip" *ngFor="let b of bottlenecks">{{ b }}</span>
-          </div>
+          <ng-template #noEntryPoints>
+            <p class="df-none-detected">None detected — no files matched entry-point naming patterns (controller, handler, page, component, etc.).</p>
+          </ng-template>
         </div>
 
         <!-- External Dependencies -->
-        <div class="doc-block" *ngIf="externalDependencies.length > 0">
+        <div class="doc-block">
           <div class="df-doc-block-header">
             <div class="doc-block-label">External Dependencies</div>
             <div class="df-info-popup-wrap">
@@ -245,9 +226,12 @@
               </div>
             </div>
           </div>
-          <div class="flow-tag-list">
+          <div class="flow-tag-list" *ngIf="externalDependencies.length > 0; else noExternalDeps">
             <span class="flow-tag flow-tag-output" *ngFor="let dep of externalDependencies">{{ dep }}</span>
           </div>
+          <ng-template #noExternalDeps>
+            <p class="df-none-detected">None detected — no files matched external integration naming patterns.</p>
+          </ng-template>
         </div>
 
     </ng-container>

@@ -326,3 +326,10 @@
   <main class="home-body">
   </main>
 </div>
+
+<app-workspace-switcher-modal
+  *ngIf="showLimitModal"
+  [limitReached]="true"
+  [pendingType]="limitModalPendingType"
+  (close)="closeLimitModal()"
+></app-workspace-switcher-modal>

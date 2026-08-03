@@ -21,7 +21,7 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
   showPurposeInfo = false;
   showRespInfo = false;
   showCompInfo = false;
-  showDebtInfo = false;
+  showReadingOrderInfo = false;
   showCompClasses = false;
   showCompMethods = false;
   showCompImportsExports = false;
@@ -147,16 +147,6 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
     return this.expandedComponentGroupIndex === index;
   }
 
-  get debtHotspots(): Array<{ name: string; reason: string; narrative: string }> {
-    const hotspots = this.understanding?.technicalDebtHotspots ?? [];
-    const narratives = this.knowledgeModel?.ai?.debtHotspotsNarrative ?? [];
-    return hotspots.map((h, i) => ({
-      name: h.name,
-      reason: h.reason,
-      narrative: narratives[i] ?? h.impact,
-    }));
-  }
-
   get fileComponentClasses(): string[] {
     return (this.knowledgeModel?.ai?.fileComponentsNarrative?.items ?? [])
       .filter(i => i.kind === 'class')
@@ -175,6 +165,26 @@ export class SystemUnderstandingPage implements OnInit, OnDestroy {
 
   get fileComponentExports(): string[] {
     return this.knowledgeModel?.ai?.fileComponentsNarrative?.exports ?? [];
+  }
+
+  // ── Reading Order ─────────────────────────────────────────────────────────
+
+  get readingOrder(): Array<{ name: string; path: string; shortPath: string; role: string | null; inbound: number; outbound: number; callers: string[]; callees: string[]; narrative: string }> {
+    return (this.knowledgeModel?.ai?.readingOrder ?? []).slice(0, 6);
+  }
+
+  private expandedReadingItems = new Set<string>();
+
+  toggleReadingItem(path: string): void {
+    if (this.expandedReadingItems.has(path)) {
+      this.expandedReadingItems.delete(path);
+    } else {
+      this.expandedReadingItems.add(path);
+    }
+  }
+
+  isReadingItemExpanded(path: string): boolean {
+    return this.expandedReadingItems.has(path);
   }
 
   // ── LLM summary ───────────────────────────────────────────────────────────

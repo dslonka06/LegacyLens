@@ -154,7 +154,7 @@
       </div>
 
       <!-- ── Security Action Items ─────────────────────────────────────── -->
-      <div class="rec-card" *ngIf="hasSecurityActionItems">
+      <div class="rec-card">
         <div class="rec-card-header">
           <div class="rec-card-header-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -174,7 +174,7 @@
           </div>
         </div>
 
-        <div class="rec-list">
+        <div class="rec-list" *ngIf="hasSecurityActionItems; else noSecurityFixes">
           <div
             class="rec-item"
             *ngFor="let finding of securityActionItems"
@@ -217,6 +217,9 @@
             </div>
           </div>
         </div>
+        <ng-template #noSecurityFixes>
+          <p class="rec-none-text">No security action items — no Critical, High, or Medium findings were confirmed by the security scan.</p>
+        </ng-template>
       </div>
 
     </div>

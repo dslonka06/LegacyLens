@@ -26,6 +26,7 @@ export class DocumentationPage implements OnInit, OnDestroy {
   selectedIds = new Set<DocumentationSectionId>();
   previewText = '';
   isExporting = false;
+  isExportingPrint = false;
   panelWidths = [320];
 
   private sub: Subscription | null = null;
@@ -107,6 +108,16 @@ export class DocumentationPage implements OnInit, OnDestroy {
       await this.pdfExport.exportFromModel(this.model, Array.from(this.selectedIds));
     } finally {
       this.isExporting = false;
+    }
+  }
+
+  async exportPrintPdf(): Promise<void> {
+    if (!this.model || this.isExportingPrint || this.selectedIds.size === 0) return;
+    this.isExportingPrint = true;
+    try {
+      await this.pdfExport.exportFromModel(this.model, Array.from(this.selectedIds), 'print');
+    } finally {
+      this.isExportingPrint = false;
     }
   }
 

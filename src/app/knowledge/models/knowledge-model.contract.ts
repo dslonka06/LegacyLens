@@ -214,6 +214,8 @@ export interface KnowledgeAIResults {
   folderWorkflowsNarrative?: string[] | null;
   /** Repository scope only: per-hotspot narrative from DebtHotspotNarrativeEngine. */
   debtHotspotsNarrative?: string[] | null;
+  /** Folder + repo scope: top files by structural centrality, excluding learning path entries. */
+  readingOrder?: Array<{ name: string; path: string; shortPath: string; role: string | null; inbound: number; outbound: number; callers: string[]; callees: string[]; narrative: string }> | null;
   /** Security findings and risk surface produced by heuristic scanning. */
   security?: SecurityAnalysis;
   /** Actionable improvement recommendations from structural analysis. */

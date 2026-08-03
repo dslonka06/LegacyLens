@@ -54,7 +54,7 @@
         <div class="lp-info-popup-wrap">
           <button class="lp-info-btn" (click)="showRoadmapInfo = !showRoadmapInfo">i</button>
           <div class="lp-info-popup" *ngIf="showRoadmapInfo">
-            <p><strong>Learning Roadmap</strong> is built after the understanding phase completes, so it can draw on both structural data and the AI's interpretation of the codebase. It produces an ordered sequence of steps tailored to the scope — a file analysis gets 4–5 steps (Purpose → Responsibilities → Main Workflow → Most Important Parts → Broader Context); a folder or repo gets 5–6 steps (Business Purpose → Core Workflow → Architecture → Data Movement → Critical Components → Advanced Areas).</p>
+            <p><strong>Learning Roadmap</strong> is built after the understanding phase completes, so it can draw on both structural data and the AI's interpretation of the codebase. It scans the codebase for every concept that is genuinely present — things like OOP design, async patterns, authentication, reactive streams — and produces a minimum of 5 ordered steps, showing all detected concepts up to the full catalogue of 16. Steps are ordered from most foundational to most specialist.</p>
             <p>Expand any step to see a description of the concept, how it applies specifically to this codebase (<strong>In this codebase</strong>), the most relevant files to look at (<strong>Where you'll see this</strong>), and knowledge checkpoints to confirm before moving on (<strong>Before you move on</strong>). Code locations are picked from the dependency graph — the most-referenced files relevant to that step's focus area.</p>
           </div>
         </div>

@@ -486,3 +486,10 @@
     strong { color: var(--text-heading); font-weight: 600; }
   }
 }
+
+.sec-none-detected {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}

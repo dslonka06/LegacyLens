@@ -422,7 +422,8 @@ const CONCEPT_PRIORITY = {
   'testing':                16,
 };
 
-const MAX_STEPS = 7;
+const MIN_STEPS = 5;
+const MAX_STEPS = 16; // show all genuine findings — no artificial cap
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 
@@ -630,9 +631,22 @@ class LearningConceptEngine {
   }
 
   _sortAndCap(keys) {
-    return keys
+    const sorted = keys
       .sort((a, b) => (CONCEPT_PRIORITY[a] ?? 99) - (CONCEPT_PRIORITY[b] ?? 99))
       .slice(0, MAX_STEPS);
+
+    // Pad up to MIN_STEPS using the highest-priority concepts not already included.
+    // This guarantees a meaningful roadmap even for sparse or small targets.
+    if (sorted.length < MIN_STEPS) {
+      const allByPriority = Object.keys(CONCEPT_PRIORITY)
+        .sort((a, b) => CONCEPT_PRIORITY[a] - CONCEPT_PRIORITY[b]);
+      for (const k of allByPriority) {
+        if (sorted.length >= MIN_STEPS) break;
+        if (!sorted.includes(k)) sorted.push(k);
+      }
+    }
+
+    return sorted;
   }
 
   // ── Roadmap builder ────────────────────────────────────────────────────────

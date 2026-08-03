@@ -166,7 +166,7 @@
         </div>
 
         <!-- Verification Checks -->
-        <div class="sec-card sec-verification" *ngIf="hasVerificationChecks">
+        <div class="sec-card sec-verification">
           <div class="sec-card-header">
             <div class="sec-card-header-row">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -186,7 +186,7 @@
           </div>
           <p class="sec-verification-subtitle">Domains assessed based on detected patterns.</p>
 
-          <div class="sec-checks-list">
+          <div class="sec-checks-list" *ngIf="hasVerificationChecks; else noVerifChecks">
             <div
               class="sec-check-row"
               *ngFor="let check of verificationChecks"
@@ -210,6 +210,9 @@
               </div>
             </div>
           </div>
+          <ng-template #noVerifChecks>
+            <p class="sec-none-detected">No verification data — the scan did not produce enough evidence to assess security domains.</p>
+          </ng-template>
         </div>
 
       </ng-container>

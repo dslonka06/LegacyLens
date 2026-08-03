@@ -172,6 +172,24 @@ class ArchitectureAnalysisEngine {
         { layer: 'view',        patterns: [/view/i, /template/i, /page/i] },
         { layer: 'controller',  patterns: [/controller/i, /handler/i] },
       ],
+      'Feature-Sliced Design': [
+        { layer: 'pages',    patterns: [/page/i, /screen/i, /route/i] },
+        { layer: 'features', patterns: [/feature/i, /module/i, /slice/i] },
+        { layer: 'entities', patterns: [/entit/i, /model/i, /domain/i] },
+        { layer: 'shared',   patterns: [/shared/i, /common/i, /util/i, /helper/i] },
+      ],
+      'CQRS': [
+        { layer: 'commands',  patterns: [/command/i, /write/i, /mutation/i] },
+        { layer: 'queries',   patterns: [/quer/i, /read/i, /projection/i] },
+        { layer: 'handlers',  patterns: [/handler/i, /processor/i, /consumer/i] },
+      ],
+      'Hexagonal Architecture': [
+        { layer: 'domain',      patterns: [/domain/i, /entity/i, /aggregate/i] },
+        { layer: 'ports',       patterns: [/port/i, /interface/i, /contract/i] },
+        { layer: 'adapters',    patterns: [/adapter/i, /controller/i, /repositor/i] },
+      ],
+      // Angular Feature Module: let _genericFolderBreakdown use actual folder names
+      'Angular Feature Module': [],
     };
     return MAP[patternName] ?? [];
   }
@@ -210,9 +228,21 @@ class ArchitectureAnalysisEngine {
 
   _genericFolderBreakdown(folderTree) {
     if (!folderTree?.children?.length) return [];
-    return folderTree.children.slice(0, 6).map(child => ({
+
+    // Walk down single-child chains (e.g. repo/ → src/ → app/) until we find a
+    // node with at least 2 children — those children are the meaningful layers.
+    let node = folderTree;
+    while (node.children?.length === 1) {
+      node = node.children[0];
+    }
+
+    // If the deepest multi-child node still has fewer than 2 entries, fall back
+    // to the original root's children.
+    const candidates = (node.children?.length >= 2) ? node.children : folderTree.children;
+
+    return candidates.slice(0, 8).map(child => ({
       name:           child.name,
-      fileCount:      child.fileCount ?? 0,
+      fileCount:      child.totalFileCount ?? 0,
       responsibility: '',
       couplingNotes:  '',
     }));

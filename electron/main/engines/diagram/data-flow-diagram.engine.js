@@ -4,18 +4,18 @@
  * DataFlowDiagramEngine — produces a Mermaid flowchart LR string
  * showing how data moves through the codebase at runtime.
  *
- * Answers: "What happens to data and where does it go?"
+ * Answers: "What is the overall workflow of this repository?"
  * Contrast with ArchitectureDiagramEngine which answers: "How are the pieces structured?"
  *
- * Four rendering paths, in priority order:
- *   1. Workflow chains  — when primaryWorkflows have enrichedConnections (per-hop verb data).
- *      Renders each workflow as a horizontal left-to-right chain with labeled edges.
- *   2. Lite chains      — when workflows have node lists but no enriched verbs.
- *      Renders each workflow as a subgraph row of shaped nodes. Better than role buckets
- *      for Angular/Electron apps where every page shares the same downstream services.
- *   3. Role-grouped LR  — when a dependency graph is available but no workflow nodes.
+ * Rendering paths, in priority order:
+ *   1. Merged flow  — when primaryWorkflows have node lists (steps or enrichedConnections).
+ *      All workflows are merged into a single unified graph: each unique file appears once,
+ *      shared nodes visually connect multiple paths. Verb labels from enrichedConnections
+ *      where available. This reveals hub services, shared repositories, and the true shape
+ *      of the codebase's data flow rather than isolated per-workflow rows.
+ *   2. Role-grouped LR  — when a dependency graph is available but no workflow nodes.
  *      Groups nodes by data-flow role (Entry / Processing / Data / External), LR direction.
- *   4. Workflow summary — fallback when no graph. Shows workflow cards as named nodes.
+ *   3. Workflow summary — fallback when no graph. Shows workflow cards as named nodes.
  *
  * Visual differentiation from ArchitectureDiagramEngine:
  *   - flowchart LR  (architecture uses TD)
@@ -32,11 +32,11 @@ const REPO_PATTERNS     = [/repository/i, /repo\./i, /dao\./i, /store\./i, /stor
 const DB_PATTERNS       = [/^table:/i, /db\./i, /sql/i, /migration/i];
 const EXTERNAL_PATTERNS = [/client/i, /gateway/i, /provider/i, /adapter/i, /proxy/i, /connector/i, /integration/i, /webhook/i, /http/i];
 
-const MAX_REPS_PER_ROLE = 4;
-// Maximum workflows rendered in chain mode — keeps the diagram readable
-const MAX_WORKFLOW_CHAINS = 4;
-// Maximum workflows rendered in lite-chain mode (no enriched verbs)
-const MAX_LITE_CHAINS = 6;
+const MAX_REPS_PER_ROLE   = 4;
+// Hard cap on unique nodes in the merged flow diagram — keeps Mermaid readable
+const MAX_MERGED_NODES    = 24;
+// Maximum workflows fed into the merged diagram
+const MAX_MERGED_WORKFLOWS = 8;
 
 function inferRole(node) {
   const name = (node.name ?? '').toLowerCase();
@@ -202,26 +202,22 @@ class DataFlowDiagramEngine {
   build(dataFlowAnalysis, graph, dataFlowFacts) {
     const workflows = dataFlowAnalysis?.primaryWorkflows ?? [];
 
-    // Path 1: workflow chains — needs enrichedConnections on at least one workflow
-    const hasEnrichedChains = workflows.some(wf => wf.enrichedConnections?.length > 0);
-    if (hasEnrichedChains) {
-      return this._workflowChainDiagram(dataFlowAnalysis, dataFlowFacts);
-    }
-
-    // Path 2: lite chains — workflows with node lists but no enriched verbs.
-    // Better than role buckets for apps where static import analysis dominates
-    // (Angular/Electron, feature-area flows, component→service→provider chains).
-    const hasWorkflowNodes = workflows.some(wf => (wf.steps?.length ?? 0) >= 2);
+    // Path 1: merged flow — all workflows unified into one graph.
+    // Fires whenever any workflow has node data (steps or enrichedConnections).
+    // Shared nodes appear once; multiple paths flow through them naturally.
+    const hasWorkflowNodes = workflows.some(
+      wf => (wf.steps?.length ?? 0) >= 2 || (wf.enrichedConnections?.length ?? 0) > 0,
+    );
     if (hasWorkflowNodes) {
-      return this._liteChainDiagram(dataFlowAnalysis, dataFlowFacts);
+      return this._mergedFlowDiagram(dataFlowAnalysis, dataFlowFacts);
     }
 
-    // Path 3: role-grouped LR — needs a usable graph
+    // Path 2: role-grouped LR — needs a usable graph but no workflow nodes
     if (graph?.nodes?.length >= 3) {
       return this._roleDiagramLR(dataFlowAnalysis, graph, dataFlowFacts);
     }
 
-    // Path 4: fallback summary
+    // Path 3: fallback summary
     const entries = dataFlowAnalysis?.entryPoints ?? [];
     if (!workflows.length && !entries.length) {
       return 'flowchart LR\n  A(["No workflow data available"])';
@@ -229,162 +225,141 @@ class DataFlowDiagramEngine {
     return this._workflowSummaryDiagram(dataFlowAnalysis);
   }
 
-  // ── Path 1: per-workflow chain diagram ────────────────────────────────────────
-  // Each workflow is rendered as a horizontal chain: Entry → Process → DataStore
-  // with a labeled edge for each hop (verb from enrichedConnections).
+  // ── Path 1: merged flow diagram ──────────────────────────────────────────────
+  // All workflows are unified into a single graph. Each unique file appears once —
+  // shared services, repositories, and clients that appear in multiple workflows
+  // become visible hubs with multiple incoming/outgoing edges. This reveals the
+  // true topology of the codebase's data flow rather than isolated per-workflow rows.
+  //
+  // Node identity: canonical ID derived from step.id ?? step.path ?? step.name.
+  // Edge identity: source→target pair; duplicate edges (same file pair across
+  // workflows) are deduplicated so the diagram stays clean.
+  // Verb labels: taken from enrichedConnections when available; unlabeled otherwise.
+  // Node cap: MAX_MERGED_NODES unique nodes — workflows sorted by step count
+  // (longest first) to prioritise the most structurally significant paths.
 
-  _workflowChainDiagram(analysis, dataFlowFacts) {
-    const workflows = (analysis?.primaryWorkflows ?? [])
-      .filter(wf => wf.enrichedConnections?.length > 0)
-      .slice(0, MAX_WORKFLOW_CHAINS);
+  _mergedFlowDiagram(analysis, dataFlowFacts) {
+    const allWorkflows = (analysis?.primaryWorkflows ?? [])
+      .filter(wf => (wf.steps?.length ?? 0) >= 2 || (wf.enrichedConnections?.length ?? 0) > 0)
+      .sort((a, b) => (b.stepCount ?? b.steps?.length ?? 0) - (a.stepCount ?? a.steps?.length ?? 0))
+      .slice(0, MAX_MERGED_WORKFLOWS);
 
-    if (!workflows.length) return this._workflowSummaryDiagram(analysis);
-
-    // Build a facts lookup by path basename for role resolution
-    const factsMap = this._buildFactsMap(dataFlowFacts);
-
-    const lines = ['flowchart LR'];
-    lines.push('');
-
-    const seenIds = new Set();
-
-    for (let wi = 0; wi < workflows.length; wi++) {
-      const wf = workflows[wi];
-      const connections = wf.enrichedConnections;
-
-      // Collect all node IDs involved in this workflow's connections
-      const nodeIds = [];
-      for (const c of connections) {
-        if (!nodeIds.includes(c.sourceId)) nodeIds.push(c.sourceId);
-        if (!nodeIds.includes(c.targetId)) nodeIds.push(c.targetId);
-      }
-
-      // Emit node declarations (only once per unique node across all workflows)
-      for (const nodeId of nodeIds) {
-        const mid = safeId(nodeId);
-        if (seenIds.has(mid)) continue;
-        seenIds.add(mid);
-
-        const baseName = nodeId.split('/').pop()?.replace(/\.[^.]+$/, '') ?? nodeId;
-        const label = safeLabel(baseName);
-        const role = this._resolveNodeRole(nodeId, factsMap);
-        lines.push(`  ${nodeShape(role, mid, label)}`);
-      }
-
-      // Emit edges with verb labels
-      for (const c of connections) {
-        const src = safeId(c.sourceId);
-        const tgt = safeId(c.targetId);
-        const verb = safeVerb(c.verb);
-        lines.push(`  ${src} -->|${verb}| ${tgt}`);
-      }
-
-      lines.push('');
-    }
-
-    lines.push(this._styleBlock());
-    lines.push('');
-    lines.push(this._classAssignments(workflows, dataFlowFacts));
-
-    return lines.join('\n');
-  }
-
-  // ── Path 2: lite chain diagram ────────────────────────────────────────────────
-  // Renders discovered workflow node chains without requiring enriched verb data.
-  // Each workflow becomes its own left-to-right row of shaped nodes, grouped by
-  // a subgraph label so the feature context is visible (e.g. "repository-analysis").
-  // Nodes that appear in multiple workflows are deduplicated by ID but re-declared
-  // per-chain for clarity — Mermaid handles duplicate declarations gracefully.
-
-  _liteChainDiagram(analysis, dataFlowFacts) {
-    const workflows = (analysis?.primaryWorkflows ?? [])
-      .filter(wf => (wf.steps?.length ?? 0) >= 2)
-      .slice(0, MAX_LITE_CHAINS);
-
-    if (!workflows.length) return this._workflowSummaryDiagram(analysis);
+    if (!allWorkflows.length) return this._workflowSummaryDiagram(analysis);
 
     const factsMap      = this._buildFactsMap(dataFlowFacts);
     const bottleneckSet = new Set(analysis?.bottlenecks ?? []);
 
-    const lines          = ['flowchart LR'];
-    const bottleneckMids = [];
+    // ── Pass 1: collect all unique nodes across all workflows ─────────────────
+    // Map from canonical node ID → { label, role, isBn }
+    // Canonical ID: step.id > step.path > step.name (for steps-based workflows)
+    //               connection sourceId/targetId (for enrichedConnections-based)
+    const nodeMap  = new Map(); // canonicalId → { label, role, isBn }
+    const edgeSet  = new Set(); // "srcMid→tgtMid" dedup key
+    const edgeList = [];        // { srcMid, tgtMid, verb? }
+
+    const registerNode = (canonicalId, nameHint) => {
+      const mid = safeId(canonicalId);
+      if (!nodeMap.has(mid)) {
+        const label = safeLabel(nameHint ?? canonicalId.split('/').pop()?.replace(/\.[^.]+$/, '') ?? canonicalId);
+        const role  = this._resolveNodeRole(canonicalId, factsMap);
+        const isBn  = bottleneckSet.has(nameHint ?? '') || bottleneckSet.has(canonicalId.split('/').pop()?.replace(/\.[^.]+$/, '') ?? '');
+        nodeMap.set(mid, { label, role, isBn });
+      }
+      return mid;
+    };
+
+    for (const wf of allWorkflows) {
+      // Stop adding nodes once we hit the cap — still process edges between existing nodes
+      const hasEnriched = (wf.enrichedConnections?.length ?? 0) > 0;
+
+      if (hasEnriched) {
+        // Build id→name from steps for label resolution
+        const idToName = new Map((wf.steps ?? []).map(s => [s.id, s.name]));
+
+        for (const c of wf.enrichedConnections) {
+          if (nodeMap.size < MAX_MERGED_NODES) {
+            registerNode(c.sourceId, idToName.get(c.sourceId));
+          }
+          if (nodeMap.size < MAX_MERGED_NODES) {
+            registerNode(c.targetId, idToName.get(c.targetId));
+          }
+
+          const srcMid = safeId(c.sourceId);
+          const tgtMid = safeId(c.targetId);
+          if (!nodeMap.has(srcMid) || !nodeMap.has(tgtMid)) continue;
+
+          const edgeKey = `${srcMid}→${tgtMid}`;
+          if (!edgeSet.has(edgeKey)) {
+            edgeSet.add(edgeKey);
+            edgeList.push({ srcMid, tgtMid, verb: c.verb && c.verb !== 'calls' ? c.verb : null });
+          }
+        }
+      } else {
+        // Steps-only: sequential edges, no verb data
+        const steps = wf.steps ?? [];
+        const mids  = [];
+
+        for (const step of steps) {
+          const canonId = step.id ?? step.path ?? step.name ?? '';
+          if (canonId && nodeMap.size < MAX_MERGED_NODES) {
+            mids.push(registerNode(canonId, step.name));
+          } else if (canonId) {
+            mids.push(safeId(canonId));
+          }
+        }
+
+        for (let i = 0; i < mids.length - 1; i++) {
+          const srcMid = mids[i];
+          const tgtMid = mids[i + 1];
+          if (!nodeMap.has(srcMid) || !nodeMap.has(tgtMid)) continue;
+
+          const edgeKey = `${srcMid}→${tgtMid}`;
+          if (!edgeSet.has(edgeKey)) {
+            edgeSet.add(edgeKey);
+            edgeList.push({ srcMid, tgtMid, verb: null });
+          }
+        }
+      }
+    }
+
+    if (nodeMap.size === 0) return this._workflowSummaryDiagram(analysis);
+
+    // ── Pass 2: emit Mermaid ──────────────────────────────────────────────────
+    const lines = ['flowchart LR'];
     lines.push('');
 
-    for (let wi = 0; wi < workflows.length; wi++) {
-      const wf    = workflows[wi];
-      const steps = wf.steps ?? [];
-
-      // Workflow label: strip generic suffixes so it reads as a feature name
-      const wfLabel = (wf.workflowName ?? `Flow ${wi + 1}`)
-        .replace(/ Workflow$/i, '')
-        .replace(/ Flow$/i, '');
-
-      lines.push(`  subgraph sg_${wi}["${safeLabel(wfLabel)}"]`);
-      lines.push('    direction LR');
-
-      const chainIds = [];
-
-      for (let si = 0; si < steps.length; si++) {
-        const step  = steps[si];
-        const rawId = step.id ?? step.path ?? step.name ?? `${wi}_${si}`;
-        const mid   = `n_${wi}_${safeId(rawId).slice(2)}`;   // unique per workflow slot
-
-        const label = safeLabel(step.name ?? rawId);
-        const role  = this._resolveNodeRole(rawId, factsMap);
-        lines.push(`    ${nodeShape(role, mid, label)}`);
-        chainIds.push({ mid, role, name: step.name ?? '' });
-
-        if (bottleneckSet.has(step.name ?? '')) bottleneckMids.push(mid);
-      }
-
-      // Chain edges
-      for (let si = 0; si < chainIds.length - 1; si++) {
-        lines.push(`    ${chainIds[si].mid} --> ${chainIds[si + 1].mid}`);
-      }
-
-      lines.push('  end');
-      lines.push('');
+    // Node declarations
+    for (const [mid, { label, role }] of nodeMap) {
+      lines.push(`  ${nodeShape(role, mid, label)}`);
     }
+    lines.push('');
 
-    // Cross-workflow bottleneck callout — link bottleneck nodes to a warning node
-    if (bottleneckMids.length) {
-      const bwarn = 'bw_hotspot';
-      lines.push(`  ${bwarn}(["⚠ Shared Bottleneck"])`);
-      for (const mid of bottleneckMids.slice(0, 4)) {
-        lines.push(`  ${mid} -.-> ${bwarn}`);
+    // Edge declarations
+    for (const { srcMid, tgtMid, verb } of edgeList) {
+      if (verb) {
+        lines.push(`  ${srcMid} -->|${safeVerb(verb)}| ${tgtMid}`);
+      } else {
+        lines.push(`  ${srcMid} --> ${tgtMid}`);
       }
-      lines.push('');
     }
+    lines.push('');
 
     lines.push(this._styleBlock());
     lines.push('');
 
-    // Style assignments
-    for (let wi = 0; wi < workflows.length; wi++) {
-      const wf    = workflows[wi];
-      const steps = wf.steps ?? [];
-      for (let si = 0; si < steps.length; si++) {
-        const step  = steps[si];
-        const rawId = step.id ?? step.path ?? step.name ?? `${wi}_${si}`;
-        const mid   = `n_${wi}_${safeId(rawId).slice(2)}`;
-        if (bottleneckMids.includes(mid)) continue;
-        const role  = this._resolveNodeRole(rawId, factsMap);
+    // Class assignments
+    for (const [mid, { role, isBn }] of nodeMap) {
+      if (isBn) {
+        lines.push(`  class ${mid} bottleneck`);
+      } else {
         lines.push(`  class ${mid} ${this._nodeClass(role, role === 'External')}`);
       }
-    }
-
-    for (const mid of bottleneckMids) {
-      lines.push(`  class ${mid} bottleneck`);
-    }
-
-    if (bottleneckMids.length) {
-      lines.push(`  class bw_hotspot bottleneck`);
     }
 
     return lines.join('\n');
   }
 
-  // ── Path 3 (role-grouped LR) ──────────────────────────────────────────────────
+  // ── Path 2 (role-grouped LR) ──────────────────────────────────────────────────
   // Groups nodes by data-flow role, emits role header nodes with file nodes beneath.
   // Edges are labeled with verbs from dataFlowFacts where available.
 
@@ -513,7 +488,7 @@ class DataFlowDiagramEngine {
     return lines.join('\n');
   }
 
-  // ── Path 4 (workflow summary fallback) ───────────────────────────────────────
+  // ── Path 3 (workflow summary fallback) ───────────────────────────────────────
   // Shows each workflow as a single labeled node; no graph data required.
 
   _workflowSummaryDiagram(analysis) {
@@ -634,33 +609,6 @@ class DataFlowDiagramEngine {
     return null;
   }
 
-  /**
-   * Emit class assignments for all nodes that appear in workflow chains.
-   * Called at the end of _workflowChainDiagram.
-   */
-  _classAssignments(workflows, dataFlowFacts) {
-    const factsMap   = this._buildFactsMap(dataFlowFacts);
-    const seen       = new Set();
-    const lines      = [];
-
-    for (const wf of workflows) {
-      for (const c of (wf.enrichedConnections ?? [])) {
-        for (const nodeId of [c.sourceId, c.targetId]) {
-          const mid = safeId(nodeId);
-          if (seen.has(mid)) continue;
-          seen.add(mid);
-
-          const role      = this._resolveNodeRole(nodeId, factsMap);
-          const cssClass  = role === 'Processing' ? 'processNode'
-                          : role === 'Data'       ? 'storeNode'
-                          : 'externalNode';
-          lines.push(`  class ${mid} ${cssClass}`);
-        }
-      }
-    }
-
-    return lines.join('\n');
-  }
 }
 
 module.exports = { DataFlowDiagramEngine };

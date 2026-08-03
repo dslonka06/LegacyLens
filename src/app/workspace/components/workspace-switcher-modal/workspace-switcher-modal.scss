@@ -80,6 +80,26 @@
   }
 }
 
+.wsm-continue-btn {
+  display: flex;
+  align-items: center;
+  padding: 5px 12px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+}
+
 .wsm-close-btn {
   background: transparent;
   border: none;

@@ -188,13 +188,19 @@ export class WorkspaceManagerService {
     this.router.navigate([this.routeForType(ws.type)]);
   }
 
-  // Called by navigation guard — sets active to the first workspace of that
-  // type if one exists, or creates a blank one. Returns null if limit reached.
+  // Called by navigation guard — honours an already-active workspace of the
+  // correct type (e.g. one just created by startNewAnalysis on the home page),
+  // falls back to the most-recently-modified existing workspace of that type,
+  // or creates a blank one if none exist. Returns null if limit reached.
   activateOrCreateForType(type: WorkspaceType): Workspace | null {
+    const current = this.getActive();
+    if (current?.type === type) return current;
+
     const existing = this.getByType(type);
     if (existing.length > 0) {
-      const current = this.getActive();
-      const target = current?.type === type ? current : existing[0];
+      const target = existing.reduce((a, b) =>
+        a.lastModifiedAt >= b.lastModifiedAt ? a : b,
+      );
       this._activeId$.next(target.id);
       return target;
     }
@@ -497,7 +503,14 @@ export class WorkspaceManagerService {
       }));
       // Run inside NgZone so that subscribers (sidebar, hub pages) trigger
       // Angular CD when the restored workspaces land.
-      this.ngZone.run(() => this._workspaces$.next(hydrated));
+      // Merge with any workspaces created before restore completed (e.g. from
+      // a startNewAnalysis click that raced with the IPC call) so they aren't lost.
+      this.ngZone.run(() => {
+        const createdBeforeRestore = this._workspaces$.value.filter(
+          (w) => !hydrated.some((h) => h.id === w.id),
+        );
+        this._workspaces$.next([...hydrated, ...createdBeforeRestore]);
+      });
     } catch {
       // Storage unavailable — start fresh, no user-visible error needed
     }
