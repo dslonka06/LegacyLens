@@ -5,7 +5,6 @@ import { ThemeService } from '@app/core/services/theme.service';
 import { ElectronService, AiPreset, AiProviderStatus } from '@app/core/services/electron.service';
 import { ThemeToggle } from '@app/shared/components/theme-toggle/theme-toggle';
 
-type TestState = 'idle' | 'testing' | 'ok' | 'fail';
 type OllamaSetupState = 'not-installed' | 'no-models' | 'ready';
 type ConfirmAction = 'clearCache' | 'clearWorkspaces' | 'removeRepos' | 'factoryReset' | null;
 
@@ -35,8 +34,6 @@ export class SettingsPage implements OnInit {
   discoveringModels = false;
 
   // ── UI state ──────────────────────────────────────────────────────────────
-  testState: TestState = 'idle';
-  testReason = '';
   saved = false;
   keySaved = false;
   saveError = '';
@@ -149,12 +146,6 @@ export class SettingsPage implements OnInit {
     return this.isOllama ? 'Host' : 'Base URL';
   }
 
-  get canTestConnection(): boolean {
-    if (!this.selectedPresetId) return false;
-    if (this.selectedPreset?.requiresApiKey) return this.apiKeyConfigured || !!this.apiKeyInput;
-    return true;
-  }
-
   get canSave(): boolean {
     return !!this.selectedPresetId;
   }
@@ -177,7 +168,6 @@ export class SettingsPage implements OnInit {
     this.apiKeyInput = '';
     this.apiKeyConfigured = false;
     this.hostInput = '';
-    this.testState = 'idle';
     this.discoveredModels = [];
     this.ollamaSetupState = 'not-installed';
     this.showSetupHelp = false;
@@ -264,23 +254,7 @@ export class SettingsPage implements OnInit {
     this.activeModel = this.aiModel;
 
     this.saved = true;
-    this.testState = 'idle';
     setTimeout(() => { this.saved = false; }, 2000);
-  }
-
-  // ── Test connection ───────────────────────────────────────────────────────
-
-  async testConnection(): Promise<void> {
-    this.testState = 'testing';
-    this.testReason = '';
-    try {
-      const result = await this.electron.aiTestConnection();
-      this.testState = result.ok ? 'ok' : 'fail';
-      this.testReason = result.reason ?? '';
-    } catch (err) {
-      this.testState = 'fail';
-      this.testReason = err instanceof Error ? err.message : String(err);
-    }
   }
 
   copyToClipboard(text: string): void {

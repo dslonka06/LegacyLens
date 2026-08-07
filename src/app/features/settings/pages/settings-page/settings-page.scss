@@ -297,12 +297,6 @@
   padding: 2px 8px;
 }
 
-.ai-status-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 // ─── Welcome banner ───────────────────────────────────────
 .ai-welcome {
   background: var(--bg-card);
@@ -630,32 +624,6 @@
   font-size: 12px;
   color: #f87171;
   svg { width: 13px; height: 13px; flex-shrink: 0; }
-}
-
-// ─── Test result ──────────────────────────────────────────
-.test-result {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  &.ok  { color: #86efac; }
-  &.fail { color: #f87171; }
-}
-
-@keyframes settings-spin {
-  to { transform: rotate(360deg); }
-}
-
-.test-spinner {
-  display: inline-block;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  border: 1.5px solid color-mix(in srgb, var(--accent, #7c5cff) 30%, transparent);
-  border-top-color: var(--accent, #7c5cff);
-  animation: settings-spin 0.7s linear infinite;
-  flex-shrink: 0;
 }
 
 // ─── Ollama discover row ──────────────────────────────────

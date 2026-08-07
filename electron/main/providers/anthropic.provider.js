@@ -101,34 +101,42 @@ class AnthropicProvider extends BaseAiProvider {
           'x-api-key': apiKey,
           'anthropic-version': API_VERSION,
         },
-        timeout: timeoutMs,
       };
+
+      let settled = false;
+      const done = (fn) => { if (!settled) { settled = true; fn(); } };
+
+      const timer = setTimeout(() => {
+        done(() => {
+          req.destroy();
+          reject(new Error('Anthropic request timed out'));
+        });
+      }, timeoutMs);
 
       const req = https.request(options, (res) => {
         let data = '';
         res.on('data', chunk => { data += chunk; });
         res.on('end', () => {
-          if (res.statusCode < 200 || res.statusCode >= 300) {
-            let detail = data.slice(0, 300);
-            try { detail = JSON.parse(data)?.error?.message ?? detail; } catch {}
-            reject(new Error(`Anthropic API error ${res.statusCode}: ${detail}`));
-            return;
-          }
-          try {
-            const json = JSON.parse(data);
-            const text = json?.content?.[0]?.text ?? '';
-            resolve(text);
-          } catch {
-            reject(new Error('Anthropic returned non-JSON response'));
-          }
+          clearTimeout(timer);
+          done(() => {
+            if (res.statusCode < 200 || res.statusCode >= 300) {
+              let detail = data.slice(0, 300);
+              try { detail = JSON.parse(data)?.error?.message ?? detail; } catch {}
+              reject(new Error(`Anthropic API error ${res.statusCode}: ${detail}`));
+              return;
+            }
+            try {
+              const json = JSON.parse(data);
+              const text = json?.content?.[0]?.text ?? '';
+              resolve(text);
+            } catch {
+              reject(new Error('Anthropic returned non-JSON response'));
+            }
+          });
         });
       });
 
-      req.on('error', reject);
-      req.on('timeout', () => {
-        req.destroy();
-        reject(new Error('Anthropic request timed out'));
-      });
+      req.on('error', (err) => { clearTimeout(timer); done(() => reject(err)); });
 
       req.write(body);
       req.end();

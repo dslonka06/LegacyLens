@@ -389,19 +389,6 @@
               <span class="ai-cap">AI Chat</span>
               <span class="ai-cap">Documentation</span>
             </div>
-            <div class="ai-status-actions">
-              <button class="btn-secondary" (click)="testConnection()" [disabled]="testState === 'testing'">
-                {{ testState === 'testing' ? 'Testing…' : 'Retest Connection' }}
-              </button>
-            </div>
-            <div class="test-result" *ngIf="testState !== 'idle'" [class.ok]="testState === 'ok'" [class.fail]="testState === 'fail'">
-              <ng-container *ngIf="testState === 'testing'">
-                <span class="test-spinner"></span>
-                <span>Testing connection…</span>
-              </ng-container>
-              <span *ngIf="testState === 'ok'">Connection successful</span>
-              <span *ngIf="testState === 'fail'">Connection failed<ng-container *ngIf="testReason"> — {{ testReason }}</ng-container></span>
-            </div>
           </div>
 
           <!-- Welcome banner -->
@@ -552,7 +539,7 @@
                   <!-- Key saved confirmation -->
                   <div class="key-saved-notice" *ngIf="keySaved">
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,8 6,11 13,4"/></svg>
-                    API key saved — click <strong>Test Connection</strong> to verify
+                    API key saved
                   </div>
 
                   <!-- Save error -->
@@ -599,19 +586,7 @@
                     </div>
                   </div>
 
-                  <!-- Test result + actions -->
-                  <div class="test-result" *ngIf="testState !== 'idle'" [class.ok]="testState === 'ok'" [class.fail]="testState === 'fail'">
-                    <ng-container *ngIf="testState === 'testing'">
-                      <span class="test-spinner"></span>
-                      <span>Testing connection…</span>
-                    </ng-container>
-                    <span *ngIf="testState === 'ok'">Connection successful</span>
-                    <span *ngIf="testState === 'fail'">Failed<ng-container *ngIf="testReason"> — {{ testReason }}</ng-container></span>
-                  </div>
                   <div class="config-actions">
-                    <button class="btn-secondary" *ngIf="canTestConnection" [disabled]="testState === 'testing'" (click)="testConnection()">
-                      {{ testState === 'testing' ? 'Testing…' : 'Test Connection' }}
-                    </button>
                     <button class="btn-save" [disabled]="!canSave" (click)="saveSettings()">
                       {{ saved ? 'Saved ✓' : 'Save' }}
                     </button>
