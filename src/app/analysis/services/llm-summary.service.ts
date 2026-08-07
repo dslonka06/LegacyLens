@@ -15,6 +15,13 @@ const SECURITY_MAX_TOKENS = 4096;
 
 const LLM_TIMEOUT_MS = 300_000;
 
+function classifyError(message: string): LLMSummaryEntry['errorCode'] {
+  if (/\b(401|403|invalid.*key|api key|unauthorized|forbidden|authentication)\b/i.test(message)) return 'auth';
+  if (/timed? ?out/i.test(message)) return 'timeout';
+  if (/ECONNREFUSED|ENOTFOUND|ECONNRESET|network|socket|connect/i.test(message)) return 'network';
+  return 'unknown';
+}
+
 @Injectable({ providedIn: 'root' })
 export class LLMSummaryService {
   constructor(
@@ -247,7 +254,7 @@ export class LLMSummaryService {
       );
 
       if (raw === null || raw === undefined) {
-        const entry: LLMSummaryEntry = { content: '', status: 'failed', provider, model: modelId, generatedAt, error: 'No response received' };
+        const entry: LLMSummaryEntry = { content: '', status: 'failed', provider, model: modelId, generatedAt, error: 'No response received', errorCode: 'unknown' };
         this.ngZone.run(() => this.manager.mergeSummaryKey(workspaceId, 'security', entry, generation));
         return false;
       }
@@ -278,14 +285,14 @@ export class LLMSummaryService {
         return true;
       } else {
         console.error('[LLMSummary] security: JSON parse failed');
-        const entry: LLMSummaryEntry = { content: '', status: 'failed', provider, model: modelId, generatedAt, error: 'JSON parse failed' };
+        const entry: LLMSummaryEntry = { content: '', status: 'failed', provider, model: modelId, generatedAt, error: 'JSON parse failed', errorCode: 'unknown' };
         this.ngZone.run(() => this.manager.mergeSummaryKey(workspaceId, 'security', entry, generation));
         return false;
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error('[LLMSummary] FAILED key=security', message);
-      const entry: LLMSummaryEntry = { content: '', status: 'failed', provider, model: modelId, generatedAt, error: message };
+      const entry: LLMSummaryEntry = { content: '', status: 'failed', provider, model: modelId, generatedAt, error: message, errorCode: classifyError(message) };
       this.ngZone.run(() => this.manager.mergeSummaryKey(workspaceId, 'security', entry, generation));
       return false;
     }
@@ -309,7 +316,7 @@ export class LLMSummaryService {
       );
 
       if (text === null || text === undefined) {
-        const entry: LLMSummaryEntry = { content: '', status: 'failed', provider, model: modelId, generatedAt, error: 'No response received' };
+        const entry: LLMSummaryEntry = { content: '', status: 'failed', provider, model: modelId, generatedAt, error: 'No response received', errorCode: 'unknown' };
         this.ngZone.run(() => this.manager.mergeSummaryKey(workspaceId, key, entry, generation));
         return false;
       }
@@ -320,7 +327,7 @@ export class LLMSummaryService {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[LLMSummary] FAILED key=${key}`, message);
-      const entry: LLMSummaryEntry = { content: '', status: 'failed', provider, model: modelId, generatedAt, error: message };
+      const entry: LLMSummaryEntry = { content: '', status: 'failed', provider, model: modelId, generatedAt, error: message, errorCode: classifyError(message) };
       this.ngZone.run(() => this.manager.mergeSummaryKey(workspaceId, key, entry, generation));
       return false;
     }

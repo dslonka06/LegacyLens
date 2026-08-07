@@ -395,7 +395,10 @@
               </button>
             </div>
             <div class="test-result" *ngIf="testState !== 'idle'" [class.ok]="testState === 'ok'" [class.fail]="testState === 'fail'">
-              <span *ngIf="testState === 'testing'">Testing connection…</span>
+              <ng-container *ngIf="testState === 'testing'">
+                <span class="test-spinner"></span>
+                <span>Testing connection…</span>
+              </ng-container>
               <span *ngIf="testState === 'ok'">Connection successful</span>
               <span *ngIf="testState === 'fail'">Connection failed<ng-container *ngIf="testReason"> — {{ testReason }}</ng-container></span>
             </div>
@@ -546,6 +549,18 @@
                     </div>
                   </ng-container>
 
+                  <!-- Key saved confirmation -->
+                  <div class="key-saved-notice" *ngIf="keySaved">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,8 6,11 13,4"/></svg>
+                    API key saved — click <strong>Test Connection</strong> to verify
+                  </div>
+
+                  <!-- Save error -->
+                  <div class="save-error-notice" *ngIf="saveError">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>
+                    {{ saveError }}
+                  </div>
+
                   <!-- Setup help -->
                   <div class="setup-help">
                     <button class="setup-help-toggle" (click)="showSetupHelp = !showSetupHelp">
@@ -586,7 +601,10 @@
 
                   <!-- Test result + actions -->
                   <div class="test-result" *ngIf="testState !== 'idle'" [class.ok]="testState === 'ok'" [class.fail]="testState === 'fail'">
-                    <span *ngIf="testState === 'testing'">Testing connection…</span>
+                    <ng-container *ngIf="testState === 'testing'">
+                      <span class="test-spinner"></span>
+                      <span>Testing connection…</span>
+                    </ng-container>
                     <span *ngIf="testState === 'ok'">Connection successful</span>
                     <span *ngIf="testState === 'fail'">Failed<ng-container *ngIf="testReason"> — {{ testReason }}</ng-container></span>
                   </div>

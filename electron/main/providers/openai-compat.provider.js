@@ -31,7 +31,7 @@ class OpenAICompatibleProvider extends BaseAiProvider {
 
   async testConnection() {
     try {
-      await this._chat([{ role: 'user', content: 'Hi' }], 16);
+      await this._chat([{ role: 'user', content: 'Hi' }], 16, 15_000);
       return { ok: true };
     } catch (err) {
       return { ok: false, reason: this._sanitizeError(err) };
@@ -67,7 +67,7 @@ class OpenAICompatibleProvider extends BaseAiProvider {
     return this.settings.get('aiModel') ?? 'gpt-4o';
   }
 
-  _chat(messages, maxTokens) {
+  _chat(messages, maxTokens, timeoutMs = 300_000) {
     const baseUrl = this._getBaseUrl();
     const apiKey = this._getApiKey();
     const model = this._getModel();
@@ -95,7 +95,7 @@ class OpenAICompatibleProvider extends BaseAiProvider {
         path: parsed.pathname,
         method: 'POST',
         headers,
-        timeout: 300_000,
+        timeout: timeoutMs,
       };
 
       const req = lib.request(options, (res) => {

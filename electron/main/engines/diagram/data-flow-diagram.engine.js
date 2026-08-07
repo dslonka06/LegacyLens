@@ -129,7 +129,7 @@ class DataFlowDiagramEngine {
     const outputs = dataFlow?.outputs ?? [];
 
     if (!steps.length && !inputs.length && !outputs.length) {
-      return 'flowchart LR\n  A(["No data flow information available"])';
+      return null;
     }
 
     const lines = ['flowchart LR'];
@@ -220,7 +220,7 @@ class DataFlowDiagramEngine {
     // Path 3: fallback summary
     const entries = dataFlowAnalysis?.entryPoints ?? [];
     if (!workflows.length && !entries.length) {
-      return 'flowchart LR\n  A(["No workflow data available"])';
+      return null;
     }
     return this._workflowSummaryDiagram(dataFlowAnalysis);
   }
@@ -496,7 +496,7 @@ class DataFlowDiagramEngine {
     const entries   = analysis?.entryPoints ?? [];
 
     if (!workflows.length && !entries.length) {
-      return 'flowchart LR\n  A(["No workflow data available"])';
+      return null;
     }
 
     const lines = ['flowchart LR'];

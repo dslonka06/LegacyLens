@@ -46,6 +46,7 @@ class AnthropicProvider extends BaseAiProvider {
         [{ role: 'user', content: 'Hi' }],
         undefined,
         16,
+        15_000,
       );
       return { ok: true };
     } catch (err) {
@@ -80,7 +81,7 @@ class AnthropicProvider extends BaseAiProvider {
     return this.settings.get('aiModel') ?? DEFAULT_MODEL;
   }
 
-  _request(apiKey, model, messages, systemPrompt, maxTokens) {
+  _request(apiKey, model, messages, systemPrompt, maxTokens, timeoutMs = 300_000) {
     return new Promise((resolve, reject) => {
       const body = JSON.stringify({
         model,
@@ -100,7 +101,7 @@ class AnthropicProvider extends BaseAiProvider {
           'x-api-key': apiKey,
           'anthropic-version': API_VERSION,
         },
-        timeout: 300_000,
+        timeout: timeoutMs,
       };
 
       const req = https.request(options, (res) => {

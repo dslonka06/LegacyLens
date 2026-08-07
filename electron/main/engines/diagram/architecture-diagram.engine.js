@@ -182,7 +182,7 @@ class ArchitectureDiagramEngine {
 
   _patternOnlyDiagram(patterns) {
     if (!patterns.length) {
-      return 'flowchart TD\n  A(["No architecture data available"])';
+      return null;
     }
 
     const lines = ['flowchart TD'];

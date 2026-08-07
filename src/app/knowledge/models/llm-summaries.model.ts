@@ -5,6 +5,7 @@ export interface LLMSummaryEntry {
   model: string;
   generatedAt: string;
   error?: string;
+  errorCode?: 'auth' | 'network' | 'timeout' | 'unknown';
 }
 
 export interface LLMSummaries {

@@ -718,6 +718,26 @@ export class RepositoryAnalysisPage implements OnInit, OnDestroy {
     }
   }
 
+  get aiInsightsErrorHint(): string {
+    if (this.aiPipeline.noProvider) return 'No AI provider configured — go to Settings to add one.';
+    if (!this.aiPipeline.hasFailure || this.aiPipeline.isRunning) return '';
+
+    const summaries = this.model?.ai?.summaries;
+    if (!summaries) return 'Some stages failed.';
+
+    const failedEntries = Object.values(summaries).filter(e => e?.status === 'failed');
+    if (!failedEntries.length) return 'Some stages failed.';
+
+    const hasAuth    = failedEntries.some(e => e?.errorCode === 'auth');
+    const hasTimeout = failedEntries.some(e => e?.errorCode === 'timeout');
+    const hasNetwork = failedEntries.some(e => e?.errorCode === 'network');
+
+    if (hasAuth)    return 'API key rejected — update it in Settings and re-run analysis.';
+    if (hasNetwork) return 'Could not reach the AI provider — check your connection and Settings.';
+    if (hasTimeout) return 'AI provider timed out — the model may be overloaded. Try again.';
+    return 'Some stages failed — check Settings and re-run analysis.';
+  }
+
 
   get pipelineStages(): { key: string; label: string; state: 'complete' | 'failed' | 'running' | 'pending' }[] {
     const ai = this.model?.ai;

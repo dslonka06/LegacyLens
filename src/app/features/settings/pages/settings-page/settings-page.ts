@@ -38,6 +38,8 @@ export class SettingsPage implements OnInit {
   testState: TestState = 'idle';
   testReason = '';
   saved = false;
+  keySaved = false;
+  saveError = '';
   showSetupHelp = false;
   showAiConfig = false;
   showProviderConfig = false;
@@ -220,6 +222,9 @@ export class SettingsPage implements OnInit {
   async saveSettings(): Promise<void> {
     if (!this.electron.isElectron || !this.selectedPresetId) return;
 
+    this.saveError = '';
+    const savingKey = !!(this.selectedPreset?.requiresApiKey && this.apiKeyInput);
+
     const saves: Promise<void>[] = [
       this.electron.setSetting('activePresetId', this.selectedPresetId),
       this.electron.setSetting('aiModel', this.aiModel || null),
@@ -229,8 +234,6 @@ export class SettingsPage implements OnInit {
     if (preset) {
       if (preset.requiresApiKey && this.apiKeyInput) {
         saves.push(this.electron.aiSetApiKey(this.selectedPresetId, this.apiKeyInput));
-        this.apiKeyInput = '';
-        this.apiKeyConfigured = true;
       }
 
       if (preset.protocol === 'ollama') {
@@ -242,7 +245,19 @@ export class SettingsPage implements OnInit {
       }
     }
 
-    await Promise.all(saves);
+    try {
+      await Promise.all(saves);
+    } catch (err) {
+      this.saveError = err instanceof Error ? err.message : 'Save failed';
+      return;
+    }
+
+    if (savingKey) {
+      this.apiKeyInput = '';
+      this.apiKeyConfigured = true;
+      this.keySaved = true;
+      setTimeout(() => { this.keySaved = false; }, 4000);
+    }
 
     const statuses = await this.electron.aiGetProviders();
     this.activeStatus = statuses.find(s => s.active) ?? null;

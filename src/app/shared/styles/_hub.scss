@@ -1245,11 +1245,24 @@
   gap: 8px;
 }
 
+.pipeline-section-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
 .pipeline-section-title {
   font-size: 14px;
   font-weight: 700;
   color: var(--text-heading);
   letter-spacing: -0.1px;
+}
+
+.pipeline-section-subtitle {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 0;
 }
 
 .pipeline-section-status {
